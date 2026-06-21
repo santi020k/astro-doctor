@@ -3,8 +3,12 @@
 .eslintcache
 src/**
 scripts/**
+tests/**
 node_modules/**
+coverage/**
 *.vsix
 tsconfig.json
+tsconfig.test.json
+vitest.config.ts
 esbuild.config.js
 .gitignore

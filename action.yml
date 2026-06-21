@@ -93,9 +93,18 @@ runs:
 
     - name: Parse report and set outputs
       id: report
-      if: steps.diff.outputs.no_astro_changes != 'true'
       shell: bash
       run: |
+        if [ "${{ steps.diff.outputs.no_astro_changes }}" = "true" ]; then
+          echo "scan_failed=false" >> "$GITHUB_OUTPUT"
+          echo "total=0" >> "$GITHUB_OUTPUT"
+          echo "errors=0" >> "$GITHUB_OUTPUT"
+          echo "warnings=0" >> "$GITHUB_OUTPUT"
+          echo "score=100" >> "$GITHUB_OUTPUT"
+          echo "score_label=A" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
         if [ ! -f /tmp/astro-doctor-report.json ]; then
           echo "scan_failed=true" >> "$GITHUB_OUTPUT"
           echo "total=0" >> "$GITHUB_OUTPUT"
