@@ -103,6 +103,7 @@ export default {
 
   <pre><code>{`// doctor.config.jsonc
 {
+  "$schema": "https://doctor.santi020k.com/schema/config.json",
   // Comments are supported in .jsonc
   "rules": {
     "astro-doctor/no-client-load-overuse": "error"
@@ -112,6 +113,11 @@ export default {
 }`}
   </code>
   </pre>
+
+  <div class="callout callout-tip">
+    <strong>Tip:</strong> Adding <code>"$schema"</code> enables autocompletion and inline docs for
+    all rule names and values in VS Code, WebStorm, and any editor with JSON Schema support.
+  </div>
 
   <div class="callout callout-tip">
     <strong>Note:</strong> When using <code>doctor.config.ts</code>, your project must be able to
