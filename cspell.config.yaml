@@ -31,7 +31,18 @@ words:
   - turborepo
   - tsconfig
   - vitest
+  - vsce
+  - vscodeignore
+  - vsix
+  - vscode
+  - webview
   - workspaces
+  - quiescent
+  - nonce
+  - activitybar
+  - languageclient
+  - languageserver
+  - textdocument
 ignorePaths:
   - node_modules
   - dist

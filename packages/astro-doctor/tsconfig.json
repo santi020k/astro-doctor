@@ -4,7 +4,11 @@
     "rootDir": ".",
     "outDir": "dist",
     "noEmit": false,
-    "allowImportingTsExtensions": false
+    "allowImportingTsExtensions": false,
+    "paths": {
+      "vscode-languageserver/node": ["./node_modules/vscode-languageserver/node.d.ts"],
+      "vscode-languageserver-textdocument": ["./node_modules/vscode-languageserver-textdocument/lib/umd/main.d.ts"]
+    }
   },
   "include": [
     "src/**/*",
