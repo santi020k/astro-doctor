@@ -78,6 +78,7 @@ export default await defineConfig({
 | `no-set-html` | security | ⚠️ warn |
 | `prefer-class-list` | best-practices | ⚠️ warn |
 | `no-process-env` | best-practices | ⚠️ warn |
+| `prefer-content-collections` | best-practices | ⚠️ warn |
 
 ## See Also
 
