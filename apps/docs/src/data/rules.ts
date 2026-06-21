@@ -77,7 +77,7 @@ import hero from '../assets/hero.png'
     slug: 'no-missing-alt',
     category: 'accessibility',
     severity: 'error',
-    description: 'All <img> and <Image> elements must include a non-empty alt attribute.',
+    description: 'All <img>, <Image>, and <Picture> elements must include an alt attribute.',
     why: 'Missing alt text leaves screen-reader users with no context for images. An empty alt="" is only acceptable for decorative images that carry no information.',
     bad: {
       label: 'No alt attribute',
@@ -101,7 +101,7 @@ import logo from '../assets/logo.png'
     name: 'no-set-html',
     slug: 'no-set-html',
     category: 'security',
-    severity: 'error',
+    severity: 'warn',
     description: 'Avoid set:html to prevent cross-site scripting (XSS) vulnerabilities.',
     why: 'set:html injects raw HTML into the DOM without escaping. Any user-controlled or third-party content rendered this way is an XSS vector. Use Astro\'s JSX interpolation (which escapes by default) or sanitize the content first.',
     bad: {
@@ -154,7 +154,7 @@ const isActive = true
   }
 ]
 
-export const RULE_BY_SLUG = Object.fromEntries(RULES.map(r => [r.slug, r]))
+export const RULE_BY_SLUG = Object.fromEntries(RULES.map(rule => [rule.slug, rule]))
 
 export const CATEGORY_LABELS: Record<RuleCategory, string> = {
   performance: 'Performance',

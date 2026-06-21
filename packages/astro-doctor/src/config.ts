@@ -1,7 +1,8 @@
-import { existsSync,readFileSync } from 'node:fs'
-import { createRequire } from 'node:module'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { pathToFileURL } from 'node:url'
+
+import { parseJSON5 } from 'confbox'
+import { createJiti } from 'jiti'
 
 import type { AstroDoctorConfig } from './types.js'
 
@@ -14,68 +15,136 @@ const CONFIG_FILE_NAMES = [
   'doctor.config.jsonc',
 ] as const
 
-/**
- * Strips single-line (//) and block (/* *\/) comments from a JSON-like string
- * so JSONC files can be parsed with JSON.parse().
- */
-const stripJsonComments = (content: string): string =>
-  content
-    .replaceAll(/\/\/[^\n]*/g, '')
-    .replaceAll(/\/\*[\s\S]*?\*\//g, '')
+const jiti = createJiti(import.meta.url)
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
-/**
- * Extracts an AstroDoctorConfig from an imported module value (unknown at runtime).
- * Handles both `export default config` and bare object exports.
- */
+const VALID_FAIL_ON = new Set(['error', 'warning', 'off'])
+const VALID_RULE_VALUES = new Set(['error', 'warn', 'off'])
+
+const isFailOnValue = (value: unknown): value is NonNullable<AstroDoctorConfig['failOn']> =>
+  typeof value === 'string' && VALID_FAIL_ON.has(value)
+
+const isRuleSeverity = (
+  value: unknown,
+): value is NonNullable<AstroDoctorConfig['rules']>[string] =>
+  typeof value === 'string' && VALID_RULE_VALUES.has(value)
+
+const isStringArray = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every((item) => typeof item === 'string')
+
+const isRulesConfig = (value: unknown): value is NonNullable<AstroDoctorConfig['rules']> => {
+  if (!isPlainObject(value)) return false
+
+  return Object.values(value).every((ruleValue) => isRuleSeverity(ruleValue))
+}
+
+const describeConfigValue = (value: unknown): string => {
+  if (typeof value === 'string') return value
+
+  if (typeof value === 'number' || typeof value === 'boolean') return `${value}`
+
+  if (value === null) return 'null'
+
+  if (value === undefined) return 'undefined'
+
+  return JSON.stringify(value)
+}
+
+const validateFailOn = (failOn: unknown): AstroDoctorConfig['failOn'] => {
+  if (failOn === undefined) return undefined
+
+  if (isFailOnValue(failOn)) return failOn
+
+  throw new Error(
+    `Invalid failOn value "${describeConfigValue(failOn)}". Expected "error", "warning", or "off".`,
+  )
+}
+
+const validateThreshold = (threshold: unknown): AstroDoctorConfig['threshold'] => {
+  if (threshold === undefined) return undefined
+
+  if (typeof threshold !== 'number' || !Number.isFinite(threshold)) {
+    throw new TypeError(
+      `Invalid threshold: expected a number 0–100, got "${describeConfigValue(threshold)}".`,
+    )
+  }
+
+  if (threshold < 0 || threshold > 100) {
+    throw new RangeError(`threshold must be between 0 and 100, got ${threshold}.`)
+  }
+
+  return threshold
+}
+
+const validateIgnore = (ignore: unknown): AstroDoctorConfig['ignore'] => {
+  if (ignore === undefined) return undefined
+
+  if (isStringArray(ignore)) return ignore
+
+  throw new TypeError('Config ignore must be an array of glob strings.')
+}
+
+const validateRules = (rules: unknown): AstroDoctorConfig['rules'] => {
+  if (rules === undefined) return undefined
+
+  if (!isPlainObject(rules)) {
+    throw new TypeError('Config rules must be a plain object.')
+  }
+
+  for (const [ruleId, ruleValue] of Object.entries(rules)) {
+    if (!isRuleSeverity(ruleValue)) {
+      throw new Error(
+        `Invalid rule value for "${ruleId}": "${describeConfigValue(ruleValue)}". Expected "error", "warn", or "off".`,
+      )
+    }
+  }
+
+  return isRulesConfig(rules) ? rules : undefined
+}
+
+const validateConfig = (config: Record<string, unknown>): AstroDoctorConfig => {
+  const failOn = validateFailOn(config.failOn)
+  const threshold = validateThreshold(config.threshold)
+  const ignore = validateIgnore(config.ignore)
+  const rules = validateRules(config.rules)
+
+  return {
+    ...(failOn === undefined ? {} : { failOn }),
+    ...(threshold === undefined ? {} : { threshold }),
+    ...(ignore === undefined ? {} : { ignore }),
+    ...(rules === undefined || !isRulesConfig(rules) ? {} : { rules }),
+  }
+}
+
 const extractConfig = (imported: unknown): AstroDoctorConfig => {
   if (!isPlainObject(imported)) {
     throw new TypeError('Config module must export a plain object')
   }
 
-  // Handle ESM default export: `export default { ... }`
   const config = 'default' in imported ? imported.default : imported
 
   if (!isPlainObject(config)) {
     throw new TypeError('Config default export must be a plain object')
   }
 
-  // At this point we have confirmed it is a plain object — cast is the standard
-  // TypeScript pattern here since full runtime field-level validation is out of scope.
-  return config
+  return validateConfig(config)
 }
 
 const loadJsonConfig = (filePath: string): AstroDoctorConfig => {
   const content = readFileSync(filePath, 'utf8')
-  const parsed: unknown = JSON.parse(stripJsonComments(content))
+  const parsed: unknown = parseJSON5(content)
 
   return extractConfig(parsed)
 }
 
-const loadEsmConfig = async (filePath: string): Promise<AstroDoctorConfig> => {
-  const url = pathToFileURL(filePath).href
-  // Dynamic import with a string expression yields `any`; assigning to `unknown`
-  // forces us to narrow before use.
-  const imported: unknown = await import(url)
+const loadModuleConfig = async (filePath: string): Promise<AstroDoctorConfig> => {
+  const imported: unknown = await jiti.import(filePath)
 
   return extractConfig(imported)
 }
 
-const loadCjsConfig = (filePath: string): AstroDoctorConfig => {
-  const require_ = createRequire(import.meta.url)
-  // createRequire's call signature returns `any`; assign to unknown to narrow.
-  const imported: unknown = require_(filePath)
-
-  return extractConfig(imported)
-}
-
-/**
- * Finds and loads a doctor.config.* file from the given directory.
- * Supports .ts (requires tsx/ts-node), .js, .mjs, .cjs, .json, .jsonc.
- * Returns null if no config file is found.
- */
 export const loadConfig = async (directory: string): Promise<AstroDoctorConfig | null> => {
   for (const fileName of CONFIG_FILE_NAMES) {
     const filePath = resolve(directory, fileName)
@@ -87,12 +156,7 @@ export const loadConfig = async (directory: string): Promise<AstroDoctorConfig |
         return loadJsonConfig(filePath)
       }
 
-      if (fileName.endsWith('.cjs')) {
-        return loadCjsConfig(filePath)
-      }
-
-      // .ts / .js / .mjs — works natively with ts-node/tsx; .ts needs a loader
-      return await loadEsmConfig(filePath)
+      return await loadModuleConfig(filePath)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
 

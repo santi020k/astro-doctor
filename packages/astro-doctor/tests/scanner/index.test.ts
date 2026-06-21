@@ -1,4 +1,4 @@
-import { mkdirSync, rmSync,writeFileSync } from 'node:fs'
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -125,6 +125,19 @@ describe('scan', () => {
 
     expect(scanResult.fileCount).toBe(2)
     expect(scanResult.diagnostics.length).toBeGreaterThanOrEqual(2)
+  })
+
+  test('scans only provided changed files', async () => {
+    writeFileSync(join(testDirectory, 'changed.astro'), '---\n---\n<div>Clean</div>')
+    writeFileSync(join(testDirectory, 'unchanged.astro'), '---\n---\n<img src="/hero.png" />')
+
+    const scanResult = await scan({
+      directory: testDirectory,
+      files: ['changed.astro'],
+    })
+
+    expect(scanResult.fileCount).toBe(1)
+    expect(scanResult.diagnostics).toEqual([])
   })
 
   test('exposes the file path on each diagnostic', async () => {

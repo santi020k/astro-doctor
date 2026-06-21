@@ -2,6 +2,14 @@ import type { RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
 
 export type Severity = 'error' | 'warning'
 
+/** Per-category health scores (0–100 each, same scale as the overall score). */
+export interface ScoreBreakdown {
+  readonly performance: number
+  readonly accessibility: number
+  readonly security: number
+  readonly 'best-practices': number
+}
+
 /** Letter grade for the health score (A = 90–100, B = 75–89, C = 60–74, D = 40–59, F = 0–39) */
 export type ScoreLabel = 'A' | 'B' | 'C' | 'D' | 'F'
 
@@ -23,10 +31,13 @@ export interface ScanResult {
   /** Health score 0–100. Penalizes errors (×10) and warnings (×3) per file. */
   readonly score: number
   readonly scoreLabel: ScoreLabel
+  /** Per-category health scores using the same penalty formula as the overall score. */
+  readonly scoreBreakdown: ScoreBreakdown
 }
 
 export interface ScanOptions {
   readonly directory: string
+  readonly files?: readonly string[]
   readonly ignore?: readonly string[]
   readonly rules?: Record<string, 'error' | 'warn' | 'off'>
 }
@@ -42,6 +53,7 @@ export interface JsonReport {
   readonly warningCount: number
   readonly score: number
   readonly scoreLabel: ScoreLabel
+  readonly scoreBreakdown: ScoreBreakdown
   readonly diagnostics: readonly Diagnostic[]
 }
 

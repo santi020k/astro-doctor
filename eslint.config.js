@@ -57,6 +57,7 @@ export default await defineConfig(
       'no-console': 'off',
       'unicorn/no-process-exit': 'off',
       'n/no-unpublished-import': 'off',
+      'n/hashbang': 'off',
     },
   },
   {

@@ -11,11 +11,13 @@ catalog:
   "@types/node": ^22.15.32
   astro-eslint-parser: ^1.2.2
   commitizen: ^4.3.1
+  confbox: ^0.2.4
   cspell: ^9.1.2
   cz-conventional-changelog: ^3.3.0
   eslint: ^9.29.0
   glob: ^11.0.3
   husky: ^9.1.7
+  jiti: ^2.7.0
   knip: ^5.53.0
   lint-staged: ^16.1.2
   turbo: ^2.5.4

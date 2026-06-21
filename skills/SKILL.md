@@ -144,7 +144,7 @@ npx @santi020k/astro-doctor@latest install
 
 ## Configuration
 
-Create `astro-doctor.config.ts` in your project root:
+Create `doctor.config.ts` in your project root:
 
 ```ts
 import type { AstroDoctorConfig } from '@santi020k/astro-doctor'

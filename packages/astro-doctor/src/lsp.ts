@@ -30,7 +30,7 @@ In the meantime, use the ESLint plugin for inline editor diagnostics:
 
 Then add to your eslint.config.js:
   import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
-  export default [...astroDoctorPlugin.configs.recommended]
+  export default [astroDoctorPlugin.configs.recommended]
 `.trim()
 
 export const runLsp = (): void => {

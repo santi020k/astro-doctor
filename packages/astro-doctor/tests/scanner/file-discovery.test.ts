@@ -1,10 +1,10 @@
-import { mkdirSync, rmSync,writeFileSync } from 'node:fs'
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 
-import { discoverAstroFiles } from '../../src/scanner/file-discovery.js'
+import { discoverAstroFiles, resolveAstroFiles } from '../../src/scanner/file-discovery.js'
 
 describe('discoverAstroFiles', () => {
   let testDirectory: string
@@ -88,5 +88,18 @@ describe('discoverAstroFiles', () => {
     const discoveredFiles = await discoverAstroFiles(testDirectory)
 
     expect(discoveredFiles.every((filePath) => filePath.startsWith('/'))).toBe(true)
+  })
+
+  test('resolves existing changed Astro files', () => {
+    writeFileSync(join(testDirectory, 'index.astro'), '---\n---\n<h1>Hello</h1>')
+    writeFileSync(join(testDirectory, 'utils.ts'), 'export const value = 1')
+
+    const resolvedFiles = resolveAstroFiles(testDirectory, [
+      'index.astro',
+      'utils.ts',
+      'missing.astro',
+    ])
+
+    expect(resolvedFiles).toEqual([join(testDirectory, 'index.astro')])
   })
 })

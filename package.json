@@ -39,7 +39,8 @@
     "knip": "catalog:",
     "lint-staged": "catalog:",
     "turbo": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:"
   },
   "lint-staged": {
     "*.{js,ts,mjs,mts,astro}": [

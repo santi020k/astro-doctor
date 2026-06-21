@@ -1,3 +1,4 @@
+import { forEachAstroAttribute, reportAstroNode } from '../utils/astro-ast.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
 
 const SET_HTML_ATTRIBUTE_NAME = 'set:html'
@@ -23,11 +24,11 @@ export default createRule({
     if (!isAstroFile(context.filename)) return {}
 
     return {
-      [`VAttribute[key.name="${SET_HTML_ATTRIBUTE_NAME}"]`](node: unknown) {
-        context.report({
-           
-          node: node as never,
-          messageId: 'dangerousHtml',
+      Program() {
+        forEachAstroAttribute(context, (attributeNode) => {
+          if (attributeNode.name !== SET_HTML_ATTRIBUTE_NAME) return
+
+          reportAstroNode(context, attributeNode, 'dangerousHtml')
         })
       },
     }

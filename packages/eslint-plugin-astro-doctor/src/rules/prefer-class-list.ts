@@ -1,32 +1,20 @@
-import type { Rule } from 'eslint'
-
-import type { AstroNode } from '../types.js'
+import type { AstroAttributeNode } from '../utils/astro-ast.js'
+import { forEachAstroAttribute, reportAstroNode } from '../utils/astro-ast.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
 
-const isDynamicClassExpression = (attributeValue: unknown): boolean => {
-  if (!attributeValue) return false
+const CLASS_ATTRIBUTE_NAME = 'class'
+const EXPRESSION_ATTRIBUTE_KIND = 'expression'
 
-  const value = attributeValue as AstroNode
+const isDynamicClassExpression = (attributeNode: AstroAttributeNode): boolean => {
+  if (attributeNode.kind !== EXPRESSION_ATTRIBUTE_KIND) return false
 
-  // Template literal with expressions — e.g. `btn ${isActive ? 'active' : ''}`
-  if (value.type === 'VExpressionContainer') {
-     
-    const expression = value.expression
+  if (typeof attributeNode.value !== 'string') return false
 
-    if (!expression) return false
+  const expression = attributeNode.value.trim()
 
-    // TemplateLiteral with at least one expression (not purely static)
-    if (expression.type === 'TemplateLiteral' && (expression.expressions?.length ?? 0) > 0) {
-      return true
-    }
+  if (expression.startsWith('`') && expression.includes('${')) return true
 
-    // BinaryExpression used for string concatenation — e.g. "btn " + conditional
-    if (expression.type === 'BinaryExpression' && expression.operator === '+') {
-      return true
-    }
-  }
-
-  return false
+  return expression.includes('+')
 }
 
 export default createRule({
@@ -50,16 +38,14 @@ export default createRule({
     if (!isAstroFile(context.filename)) return {}
 
     return {
-      'VAttribute[key.name="class"]'(node: unknown) {
-         
-        const attributeNode = node as AstroNode
+      Program() {
+        forEachAstroAttribute(context, (attributeNode) => {
+          if (attributeNode.name !== CLASS_ATTRIBUTE_NAME) return
 
-        if (isDynamicClassExpression(attributeNode.value)) {
-          context.report({
-            node: attributeNode as Rule.Node,
-            messageId: 'preferClassList',
-          })
-        }
+          if (!isDynamicClassExpression(attributeNode)) return
+
+          reportAstroNode(context, attributeNode, 'preferClassList')
+        })
       },
     }
   },

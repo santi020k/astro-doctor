@@ -91,7 +91,7 @@ import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
   <pre><code>{`import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 
 export default [
-  ...astroDoctorPlugin.configs.recommended.config,
+  astroDoctorPlugin.configs.recommended,
   {
     rules: {
       // Upgrade to error

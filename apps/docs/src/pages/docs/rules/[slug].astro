@@ -76,7 +76,7 @@ if (!rule) {
 import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 
 export default [
-  ...astroDoctorPlugin.configs.recommended.config,
+  astroDoctorPlugin.configs.recommended,
   {
     rules: {
       '${rule.id}': 'error',   // or 'warn' or 'off'

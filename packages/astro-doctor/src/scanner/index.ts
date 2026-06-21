@@ -4,10 +4,10 @@ import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 import * as astroParser from 'astro-eslint-parser'
 import { ESLint } from 'eslint'
 
-import { computeScore, computeScoreLabel } from '../scorer.js'
+import { computeCategoryBreakdown, computeScore, computeScoreLabel } from '../scorer.js'
 import type { Diagnostic, ScanOptions, ScanResult, Severity } from '../types.js'
 
-import { discoverAstroFiles } from './file-discovery.js'
+import { discoverAstroFiles, resolveAstroFiles } from './file-discovery.js'
 
 const SEVERITY_MAP: Record<number, Severity> = {
   1: 'warning',
@@ -15,14 +15,18 @@ const SEVERITY_MAP: Record<number, Severity> = {
 }
 
 const RULE_CATEGORY_MAP: Record<string, RuleCategory> = {
-  'astro-doctor/use-astro-image': 'performance',
+  'astro-doctor/no-blocking-script': 'performance',
   'astro-doctor/no-client-load-overuse': 'performance',
   'astro-doctor/no-missing-alt': 'accessibility',
+  'astro-doctor/no-missing-lang': 'accessibility',
+  'astro-doctor/no-process-env': 'best-practices',
   'astro-doctor/no-set-html': 'security',
   'astro-doctor/prefer-class-list': 'best-practices',
+  'astro-doctor/use-astro-image': 'performance',
 }
 
 const buildEslintConfig = (options: ScanOptions): ESLint.Options => ({
+  cwd: options.directory,
   overrideConfigFile: true,
   overrideConfig: [
     {
@@ -46,7 +50,9 @@ const buildEslintConfig = (options: ScanOptions): ESLint.Options => ({
 })
 
 export const scan = async (options: ScanOptions): Promise<ScanResult> => {
-  const astroFiles = await discoverAstroFiles(options.directory, options.ignore)
+  const astroFiles = options.files
+    ? resolveAstroFiles(options.directory, options.files)
+    : await discoverAstroFiles(options.directory, options.ignore)
 
   if (astroFiles.length === 0) {
     return {
@@ -56,6 +62,7 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
       warningCount: 0,
       score: 100,
       scoreLabel: 'A',
+      scoreBreakdown: { performance: 100, accessibility: 100, security: 100, 'best-practices': 100 },
     }
   }
 
@@ -87,6 +94,7 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
   const warningCount = diagnostics.filter((diagnostic) => diagnostic.severity === 'warning').length
   const score = computeScore(errorCount, warningCount, astroFiles.length)
   const scoreLabel = computeScoreLabel(score)
+  const scoreBreakdown = computeCategoryBreakdown(diagnostics, astroFiles.length)
 
   return {
     diagnostics,
@@ -95,5 +103,6 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
     warningCount,
     score,
     scoreLabel,
+    scoreBreakdown,
   }
 }
