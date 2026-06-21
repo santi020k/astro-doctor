@@ -50,4 +50,6 @@ export interface AstroDoctorConfig {
   readonly rules?: Record<string, 'error' | 'warn' | 'off'>
   readonly ignore?: readonly string[]
   readonly failOn?: 'error' | 'warning' | 'off'
+  /** Exit 1 when the health score falls below this value (0–100). */
+  readonly threshold?: number
 }

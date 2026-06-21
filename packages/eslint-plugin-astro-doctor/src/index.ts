@@ -15,7 +15,7 @@ plugin.configs.recommended = {
   plugins: {
     'astro-doctor': plugin,
   },
-  rules: RECOMMENDED_RULES as any,
+  rules: RECOMMENDED_RULES,
 }
 
 export default plugin

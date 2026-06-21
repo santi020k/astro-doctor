@@ -1,19 +1,22 @@
+import type { Rule } from 'eslint'
+
+import type { AstroNode } from '../types.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
 
 const isDynamicClassExpression = (attributeValue: unknown): boolean => {
-   
-  const value = attributeValue as any
+  if (!attributeValue) return false
 
-  if (!value) return false
+  const value = attributeValue as AstroNode
 
   // Template literal with expressions — e.g. `btn ${isActive ? 'active' : ''}`
   if (value.type === 'VExpressionContainer') {
+     
     const expression = value.expression
 
     if (!expression) return false
 
     // TemplateLiteral with at least one expression (not purely static)
-    if (expression.type === 'TemplateLiteral' && expression.expressions.length > 0) {
+    if (expression.type === 'TemplateLiteral' && (expression.expressions?.length ?? 0) > 0) {
       return true
     }
 
@@ -49,11 +52,11 @@ export default createRule({
     return {
       'VAttribute[key.name="class"]'(node: unknown) {
          
-        const attributeNode = node as any
+        const attributeNode = node as AstroNode
 
         if (isDynamicClassExpression(attributeNode.value)) {
           context.report({
-            node: attributeNode,
+            node: attributeNode as Rule.Node,
             messageId: 'preferClassList',
           })
         }

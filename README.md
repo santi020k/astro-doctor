@@ -23,7 +23,7 @@ npx @santi020k/astro-doctor@latest
 
 Sample output:
 
-```
+```text
 Scanning /my-project...
 
   src/pages/index.astro  12:3  warning  Prefer client:idle over client:load  (no-client-load-overuse)

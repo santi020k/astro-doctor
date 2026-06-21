@@ -26,7 +26,7 @@ export default createRule({
       [`VAttribute[key.name="${SET_HTML_ATTRIBUTE_NAME}"]`](node: unknown) {
         context.report({
            
-          node: node as any,
+          node: node as never,
           messageId: 'dangerousHtml',
         })
       },

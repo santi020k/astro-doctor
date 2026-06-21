@@ -96,7 +96,7 @@ export const loadConfig = async (directory: string): Promise<AstroDoctorConfig |
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
 
-      throw new Error(`Failed to load ${fileName}: ${message}`)
+      throw new Error(`Failed to load ${fileName}: ${message}`, { cause: error })
     }
   }
 

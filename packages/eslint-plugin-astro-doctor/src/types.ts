@@ -26,3 +26,20 @@ export interface AstroDoctorRule extends Rule.RuleModule {
     readonly schema: Rule.RuleMetaData['schema']
   }
 }
+
+export interface AstroNode {
+  type?: string
+  name?: string
+  rawName?: string
+  value?: string | boolean | number | AstroNode
+  expression?: AstroNode
+  expressions?: AstroNode[]
+  operator?: string
+  key?: { name?: string }
+  startTag?: {
+    attributes?: AstroNode[]
+  }
+  parent?: AstroNode
+  attributes?: AstroNode[]
+  [key: string]: unknown
+}

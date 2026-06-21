@@ -28,7 +28,7 @@ For a full AI context file, see `llms.txt`.
 
 ## Package Layout
 
-```
+```text
 packages/
   eslint-plugin-astro-doctor/   PUBLISHED  the ESLint plugin with Astro-specific rules
     src/
