@@ -10,11 +10,11 @@
 
 ## What This Project Is
 
-Astro Doctor scans `.astro` files and reports issues across four categories with eight rules:
+Astro Doctor scans `.astro` files and reports issues across four categories with nine rules:
 - **Performance** — `no-client-load-overuse`, `use-astro-image`, `no-blocking-script`
 - **Accessibility** — `no-missing-alt`, `no-missing-lang`
 - **Security** — `no-set-html`
-- **Best Practices** — `prefer-class-list`, `no-process-env`
+- **Best Practices** — `prefer-class-list`, `no-process-env`, `prefer-content-collections`
 
 It ships as:
 1. A **CLI** (`@santi020k/astro-doctor`) — `npx @santi020k/astro-doctor@latest`
@@ -57,7 +57,7 @@ packages/
       index.ts                  Public API exports
     tests/                      Scanner and reporter tests
 .agents/skills/
-  astro-rules/SKILL.md          All 8 rules with before/after examples
+  astro-rules/SKILL.md          All 9 rules with before/after examples
   astro-performance/SKILL.md    Astro islands architecture performance patterns
   add-rule/SKILL.md             Workflow for adding a new rule to astro-doctor
 skills/

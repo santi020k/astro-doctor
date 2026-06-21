@@ -21,7 +21,8 @@
         "astro-doctor/no-missing-lang":        { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/no-set-html":            { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/prefer-class-list":      { "type": "string", "enum": ["error", "warn", "off"] },
-        "astro-doctor/no-process-env":         { "type": "string", "enum": ["error", "warn", "off"] }
+        "astro-doctor/no-process-env":         { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/prefer-content-collections": { "type": "string", "enum": ["error", "warn", "off"] }
       }
     },
     "ignore": {

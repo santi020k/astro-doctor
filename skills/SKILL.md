@@ -178,6 +178,24 @@ const siteUrl = import.meta.env.PUBLIC_SITE_URL
 ---
 ```
 
+#### `prefer-content-collections`
+**Severity: warning**
+
+`Astro.glob()` returns untyped frontmatter and runs at request time. Content Collections provide TypeScript types, build-time validation, and caching.
+
+```astro
+---
+// ❌ No types, no validation, no caching
+const posts = await Astro.glob('../content/blog/*.md')
+---
+
+---
+// ✅ Typed, validated at build time, cached
+import { getCollection } from 'astro:content'
+const posts = await getCollection('blog', ({ data }) => !data.draft)
+---
+```
+
 ## Running Astro Doctor
 
 ```bash

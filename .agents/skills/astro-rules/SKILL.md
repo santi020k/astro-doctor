@@ -172,6 +172,27 @@ const siteUrl = import.meta.env.PUBLIC_SITE_URL
 ---
 ```
 
+### `astro-doctor/prefer-content-collections` — best-practices, warning
+
+`Astro.glob()` returns untyped frontmatter objects and runs at request time. Use `getCollection()` from `astro:content` for typed, build-time-validated, cached content.
+
+```astro
+---
+// ❌ No types, no build-time validation, no caching
+const posts = await Astro.glob('../content/blog/*.md')
+---
+<ul>{posts.map(p => <li>{p.frontmatter.title}</li>)}</ul>
+
+---
+// ✅ Typed via schema, validated at build, cached
+import { getCollection } from 'astro:content'
+const posts = await getCollection('blog', ({ data }) => !data.draft)
+---
+<ul>{posts.map(p => <li>{p.data.title}</li>)}</ul>
+```
+
+Note: `import.meta.glob()` for non-content assets (images, JSON, etc.) is fine and not flagged.
+
 ## Configuration
 
 Create `doctor.config.ts` in your project root to override severities:

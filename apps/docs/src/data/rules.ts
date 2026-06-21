@@ -237,6 +237,41 @@ const publicUrl = import.meta.env.PUBLIC_SITE_URL
 ---
 <p>{publicUrl}</p>`
     }
+  },
+  {
+    id: 'astro-doctor/prefer-content-collections',
+    name: 'prefer-content-collections',
+    slug: 'prefer-content-collections',
+    category: 'best-practices',
+    severity: 'warn',
+    description: 'Prefer Content Collections over Astro.glob() for Markdown and MDX files.',
+    why: 'Astro.glob() returns untyped frontmatter objects and runs at request time. Content Collections provide TypeScript types via the schema you define, build-time validation that catches typos and missing fields before deploy, and caching for better performance. They are the recommended approach for any structured content.',
+    bad: {
+      label: 'Using Astro.glob()',
+      code: `---
+// No types, no validation, runs every request
+const posts = await Astro.glob('../content/blog/*.md')
+---
+<ul>
+  {posts.map(post => (
+    <li>{post.frontmatter.title}</li>
+  ))}
+</ul>`
+    },
+    good: {
+      label: 'Using Content Collections',
+      code: `---
+import { getCollection } from 'astro:content'
+
+// Typed, validated at build time, cached
+const posts = await getCollection('blog', ({ data }) => !data.draft)
+---
+<ul>
+  {posts.map(post => (
+    <li>{post.data.title}</li>
+  ))}
+</ul>`
+    }
   }
 ]
 

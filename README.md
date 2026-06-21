@@ -127,6 +127,7 @@ Pin to a commit SHA for hardened CI:
 | ---- | -------- | ----------- |
 | `prefer-class-list` | ⚠️ warning | Use `class:list` instead of template literals for dynamic class names |
 | `no-process-env` | ⚠️ warning | Use `import.meta.env` instead of `process.env` in Astro files |
+| `prefer-content-collections` | ⚠️ warning | Use Content Collections instead of `Astro.glob()` for typed, cached content |
 
 ---
 
@@ -258,7 +259,7 @@ Three skills are available for coding agents:
 
 | Skill | Location | Description |
 |-------|----------|-------------|
-| Astro Rules | `.agents/skills/astro-rules/` | All 8 rules with before/after examples |
+| Astro Rules | `.agents/skills/astro-rules/` | All 9 rules with before/after examples |
 | Astro Performance | `.agents/skills/astro-performance/` | Islands architecture patterns |
 | Add Rule | `.agents/skills/add-rule/` | How to add a new rule to astro-doctor |
 
