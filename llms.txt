@@ -1,0 +1,98 @@
+# @santi020k/astro-doctor
+
+> Your agent writes bad Astro. This catches it.
+
+## AI Assistant Context
+
+**Role**: Senior Software Engineer / Maintenance Agent.
+**Goal**: Maintain and extend Astro Doctor — a deterministic diagnostic CLI and ESLint plugin for Astro codebases.
+**Conventions**: See `AGENTS.md` for the full rule set.
+
+## What This Project Is
+
+Astro Doctor scans `.astro` files and reports issues across five categories:
+- **Performance** — `no-client-load-overuse`, `use-astro-image`
+- **Accessibility** — `no-missing-alt`
+- **Security** — `no-set-html`
+- **Best Practices** — `prefer-class-list`
+
+It ships as:
+1. A **CLI** (`@santi020k/astro-doctor`) — `npx @santi020k/astro-doctor@latest`
+2. An **ESLint plugin** (`@santi020k/eslint-plugin-astro-doctor`) — for inline editor diagnostics
+3. A **GitHub Action** — for CI pull-request checks
+4. An **agent skill** (`skills/SKILL.md`) — installed into Claude Code, Cursor, Codex, etc.
+
+## Inspiration
+
+Astro Doctor is directly inspired by **[react-doctor](https://github.com/millionco/react-doctor)** by Million Software, Inc. The CLI experience, GitHub Action pattern, and agent skill workflow are modelled after react-doctor.
+
+## Project Architecture
+
+This is a pnpm + Turborepo monorepo.
+
+```
+packages/
+  eslint-plugin-astro-doctor/   PUBLISHED  The ESLint plugin with all rules
+    src/
+      rules/                    One file per rule (no-client-load-overuse, etc.)
+      utils/rule.ts             createRule() helper + isAstroFile()
+      types.ts                  RuleCategory, AstroDoctorRule interfaces
+      index.ts                  Plugin entry — exports plugin + recommended config
+    tests/rules/                One test file per rule (written TDD: tests first)
+  astro-doctor/                 PUBLISHED  The CLI + public API
+    bin/astro-doctor.ts         Entry point
+    src/
+      cli.ts                    Argument parsing + orchestration
+      scanner/                  File discovery (glob) + ESLint runner
+      report/                   Console and JSON formatters
+      types.ts                  Diagnostic, ScanResult, ScanOptions
+      index.ts                  Public scan() + formatConsoleReport() API
+    tests/                      Scanner and reporter tests
+skills/
+  SKILL.md                      Installable agent skill for Astro best practices
+```
+
+## Key Technical Decisions
+
+- **Parser**: `astro-eslint-parser` (extends vue-eslint-parser) for `.astro` files
+- **Rule nodes**: Template elements use `VElement`/`VAttribute` node types from the parser
+- **Test framework**: Vitest + ESLint's `RuleTester` (globals wired: `RuleTester.describe = describe`)
+- **Build**: `tsc` directly (no bundler) — simple, no magic, matches your eslint-config-basic pattern
+- **ESLint config**: `@santi020k/eslint-config-basic` with `Preset.Monorepo`, `Extension.Boundaries`, `Extension.Unicorn`, `Tool.CSpell`, `Runtime.Node` on the CLI package
+- **Versioning**: Changesets with linked packages (both packages version together)
+
+## Commands
+
+```bash
+pnpm install            # Install all workspace deps
+pnpm run build          # Build all packages (tsc)
+pnpm run test           # Run all tests with Vitest
+pnpm run lint           # ESLint + CSpell + Knip
+pnpm run typecheck      # TypeScript across all packages
+pnpm run ok             # Full check: build + test + lint + typecheck
+
+# Per-package
+pnpm --filter @santi020k/eslint-plugin-astro-doctor run test
+pnpm --filter @santi020k/astro-doctor run test
+```
+
+## Adding a New Rule (workflow)
+
+1. Write the test first in `packages/eslint-plugin-astro-doctor/tests/rules/<rule-name>.test.ts`
+2. Add the rule implementation in `packages/eslint-plugin-astro-doctor/src/rules/<rule-name>.ts`
+3. Register it in `packages/eslint-plugin-astro-doctor/src/rules/index.ts`
+4. Add it to `RECOMMENDED_RULES` with a default severity
+5. Document it in `skills/SKILL.md` and `README.md`
+6. Run `pnpm run test` — verify RED → GREEN
+
+## ESLint Plugin Node Types (astro-eslint-parser)
+
+For `.astro` template content, the parser emits HTML AST nodes:
+- `VElement` — any HTML or Astro component element
+- `VElement[rawName="img"]` — raw `<img>` tag selector
+- `VAttribute` — element attribute
+- `VAttribute[key.name="client:load"]` — Astro client directive selector
+- `VAttribute[key.name="set:html"]` — Astro set:html directive selector
+- `VAttribute[key.name="class"]` — class attribute
+
+Rules check `context.filename` via `isAstroFile()` before any AST traversal.

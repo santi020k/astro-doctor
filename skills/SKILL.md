@@ -2,6 +2,8 @@
 
 Your agent writes bad Astro. This catches it.
 
+> Inspired by [react-doctor](https://github.com/millionco/react-doctor) by Million Software, Inc — the same concept, built for Astro.
+
 ## What This Skill Does
 
 Astro Doctor scans your codebase and reports issues across five categories:
@@ -125,13 +127,13 @@ const variant = 'primary'
 
 ```bash
 # One-time scan
-npx astro-doctor@latest
+npx @santi020k/astro-doctor@latest
 
 # Scan a specific directory
-npx astro-doctor@latest --dir ./src
+npx @santi020k/astro-doctor@latest --dir ./src
 
 # Install the agent skill (once you have a scan)
-npx astro-doctor@latest install
+npx @santi020k/astro-doctor@latest install
 ```
 
 ## Using in CI (GitHub Actions)
@@ -145,7 +147,7 @@ npx astro-doctor@latest install
 Create `astro-doctor.config.ts` in your project root:
 
 ```ts
-import type { AstroDoctorConfig } from 'astro-doctor/api'
+import type { AstroDoctorConfig } from '@santi020k/astro-doctor'
 
 export default {
   rules: {
@@ -154,3 +156,10 @@ export default {
   },
 } satisfies AstroDoctorConfig
 ```
+
+## Credits
+
+Astro Doctor is inspired by **[react-doctor](https://github.com/millionco/react-doctor)** by Million Software, Inc.
+The same diagnostic philosophy, the same agent skill pattern — brought to Astro.
+
+ESLint configuration powered by [`@santi020k/eslint-config-basic`](https://github.com/santi020k/eslint-config-basic).

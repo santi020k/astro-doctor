@@ -1,3 +1,13 @@
+## Project Context
+
+Astro Doctor is a diagnostic CLI and ESLint plugin for Astro codebases.
+It was inspired by **[react-doctor](https://github.com/millionco/react-doctor)** by Million Software, Inc —
+an excellent tool that does the same for React. Same concept, same philosophy, built for Astro.
+
+ESLint configuration powered by [`@santi020k/eslint-config-basic`](https://github.com/santi020k/eslint-config-basic).
+
+For a full AI context file, see `llms.txt`.
+
 ## General Rules
 
 - MUST: Use `pnpm` for package management. Use `pnpm add` to install, `pnpm run SCRIPT` to execute.

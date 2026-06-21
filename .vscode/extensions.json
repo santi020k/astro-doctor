@@ -1,0 +1,21 @@
+{
+  "recommendations": [
+    // Core dev experience
+    "dbaeumer.vscode-eslint",
+    "editorconfig.editorconfig",
+    "streetsidesoftware.code-spell-checker",
+
+    // Markdown / documentation
+    "davidanson.vscode-markdownlint",
+
+    // Astro
+    "astro-build.astro-vscode",
+
+    // Format / syntax support
+    "redhat.vscode-yaml"
+  ],
+  "unwantedRecommendations": [
+    "hookyqr.beautify",
+    "dbaeumer.jshint"
+  ]
+}
