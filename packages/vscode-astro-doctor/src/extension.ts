@@ -1,4 +1,3 @@
-import * as fs from 'node:fs'
 import * as path from 'node:path'
 
 import * as vscode from 'vscode'
@@ -18,7 +17,6 @@ import { AstroDoctorSidebarProvider, type HealthScoreData, type TopIssueData } f
 const CLIENT_ID = 'astroDoctor'
 const CLIENT_NAME = 'Astro Doctor'
 const COMMAND_SCAN_FILE = 'astro-doctor.scanFile'
-const COMMAND_SCAN_WORKSPACE = 'astro-doctor.scanWorkspace'
 const COMMAND_FIX_ALL = 'astro-doctor.fixAll'
 const COMMAND_RESTART = 'astro-doctor.restart'
 const COMMAND_SHOW_OUTPUT = 'astro-doctor.showOutput'
@@ -51,7 +49,7 @@ interface ResolvedServer {
   readonly shell: boolean
 }
 
-const resolveRuntime = (context: vscode.ExtensionContext): ExtensionRuntime => {
+export const resolveRuntime = (context: vscode.ExtensionContext): ExtensionRuntime => {
   const configuredEnvironment = process.env.ASTRO_DOCTOR_EXTENSION_ENV?.trim()
 
   if (configuredEnvironment === ENV_LOCAL) {
@@ -69,7 +67,7 @@ const resolveRuntime = (context: vscode.ExtensionContext): ExtensionRuntime => {
   return { environment: ENV_PRODUCTION, preferWorkspaceServer: false }
 }
 
-const resolveConfiguredServer = (
+export const resolveConfiguredServer = (
   configuration: vscode.WorkspaceConfiguration,
 ): ResolvedServer | undefined => {
   const explicitPath = configuration.get<string>('serverPath', '').trim()
@@ -81,7 +79,7 @@ const resolveConfiguredServer = (
   return undefined
 }
 
-const resolveDevelopmentServer = (extensionPath: string): ResolvedServer | undefined => {
+export const resolveDevelopmentServer = async (extensionPath: string): Promise<ResolvedServer | undefined> => {
   const developmentServer = path.join(
     extensionPath,
     '..',
@@ -91,60 +89,68 @@ const resolveDevelopmentServer = (extensionPath: string): ResolvedServer | undef
     'astro-doctor.js',
   )
 
-  if (fs.existsSync(developmentServer)) {
+  try {
+    await vscode.workspace.fs.stat(vscode.Uri.file(developmentServer))
+
     return {
       args: [developmentServer, 'experimental-lsp'],
       command: process.execPath,
       shell: false,
     }
+  } catch {
+    return undefined
   }
-
-  return undefined
 }
 
-const resolveWorkspaceServer = (): ResolvedServer | undefined => {
+export const resolveWorkspaceServer = async (): Promise<ResolvedServer | undefined> => {
   const binName = IS_WINDOWS ? 'astro-doctor.cmd' : 'astro-doctor'
 
   for (const folder of vscode.workspace.workspaceFolders ?? []) {
     const localBin = path.join(folder.uri.fsPath, 'node_modules', '.bin', binName)
 
-    if (fs.existsSync(localBin)) {
+    try {
+      await vscode.workspace.fs.stat(vscode.Uri.file(localBin))
+
       return { args: ['experimental-lsp'], command: localBin, shell: IS_WINDOWS }
+    } catch {
+      // ignore
     }
   }
 
   return undefined
 }
 
-const resolveBundledServer = (extensionPath: string): string | undefined => {
+export const resolveBundledServer = async (extensionPath: string): Promise<string | undefined> => {
   const bundledServer = path.join(extensionPath, 'dist', 'server.mjs')
 
-  if (fs.existsSync(bundledServer)) {
-    return bundledServer
-  }
+  try {
+    await vscode.workspace.fs.stat(vscode.Uri.file(bundledServer))
 
-  return undefined
+    return bundledServer
+  } catch {
+    return undefined
+  }
 }
 
-const showMissingServer = (
+const showMissingServer = async (
   outputChannel: vscode.OutputChannel,
-): void => {
+): Promise<void> => {
   const message = `${CLIENT_NAME}: language server not found. Reinstall the extension, install @santi020k/astro-doctor locally, or set astroDoctor.serverPath.`
 
   outputChannel.appendLine(message)
 
-  void vscode.window.showErrorMessage(message)
+  await vscode.window.showErrorMessage(message)
 }
 
-const showStartFailure = (
+const showStartFailure = async (
   outputChannel: vscode.OutputChannel,
   error: unknown,
-): void => {
+): Promise<void> => {
   outputChannel.appendLine(
     `Failed to start the Astro Doctor language server: ${error instanceof Error ? error.message : String(error)}`,
   )
 
-  void vscode.window.showErrorMessage(
+  await vscode.window.showErrorMessage(
     `${CLIENT_NAME}: failed to start. Reinstall the extension, install @santi020k/astro-doctor locally, or set astroDoctor.serverPath.`,
   )
 }
@@ -176,42 +182,42 @@ const createBundledServerOptions = (serverModule: string): ServerOptions => ({
   },
 })
 
-const createServerOptions = (
+export const createServerOptions = async (
   configuration: vscode.WorkspaceConfiguration,
   extensionPath: string,
   outputChannel: vscode.OutputChannel,
   runtime: ExtensionRuntime,
-): ServerOptions | undefined => {
+): Promise<ServerOptions | undefined> => {
   const configuredServer = resolveConfiguredServer(configuration)
 
   if (configuredServer) return createExecutableServerOptions(configuredServer)
 
   if (runtime.preferWorkspaceServer) {
-    const developmentServer = resolveDevelopmentServer(extensionPath)
+    const developmentServer = await resolveDevelopmentServer(extensionPath)
 
     if (developmentServer) return createExecutableServerOptions(developmentServer)
 
-    const workspaceServer = resolveWorkspaceServer()
+    const workspaceServer = await resolveWorkspaceServer()
 
     if (workspaceServer) return createExecutableServerOptions(workspaceServer)
   }
 
-  const bundledServer = resolveBundledServer(extensionPath)
+  const bundledServer = await resolveBundledServer(extensionPath)
 
   if (bundledServer) return createBundledServerOptions(bundledServer)
 
   if (!runtime.preferWorkspaceServer) {
-    const workspaceServer = resolveWorkspaceServer()
+    const workspaceServer = await resolveWorkspaceServer()
 
     if (workspaceServer) return createExecutableServerOptions(workspaceServer)
   }
 
-  showMissingServer(outputChannel)
+  await showMissingServer(outputChannel)
 
   return undefined
 }
 
-const renderStatus = (item: vscode.StatusBarItem, status: ServerStatusParams): void => {
+export const renderStatus = (item: vscode.StatusBarItem, status: ServerStatusParams): void => {
   if (!status.quiescent) {
     item.text = '$(sync~spin) Astro Doctor'
 
@@ -231,8 +237,10 @@ const renderStatus = (item: vscode.StatusBarItem, status: ServerStatusParams): v
   item.tooltip = status.message ?? `${CLIENT_NAME}: ready`
 }
 
-const createServerStatusFeature = (): StaticFeature => ({
-  clear() {},
+export const createServerStatusFeature = (): StaticFeature => ({
+  clear() {
+    
+  },
   fillClientCapabilities(capabilities: ClientCapabilities) {
     const experimental = (
       capabilities.experimental ?? (capabilities.experimental = {})
@@ -243,7 +251,9 @@ const createServerStatusFeature = (): StaticFeature => ({
   getState(): FeatureState {
     return { kind: 'static' }
   },
-  initialize() {},
+  initialize() {
+    
+  },
 })
 
 export const activate = async (context: vscode.ExtensionContext): Promise<void> => {
@@ -253,7 +263,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
 
   const runtime = resolveRuntime(context)
   const outputChannel = vscode.window.createOutputChannel(CLIENT_NAME)
-  const serverOptions = createServerOptions(configuration, context.extensionPath, outputChannel, runtime)
+  const serverOptions = await createServerOptions(configuration, context.extensionPath, outputChannel, runtime)
 
   if (!serverOptions) return
 
@@ -268,24 +278,32 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
       scanOnType: configuration.get<boolean>('scanOnType', true),
     },
     middleware: {
-      executeCommand: (command, commandArguments, forwardToServer) => {
-        if (command === COMMAND_RESTART) return client?.restart()
+      executeCommand: async (command, commandArguments, forwardToServer) => {
+        if (command === COMMAND_RESTART) {
+          await client?.restart()
+
+          return
+        }
 
         if (!ACTIVE_FILE_COMMANDS.has(command) || commandArguments.length > 0) {
-          return forwardToServer(command, commandArguments)
+          const result = await Promise.resolve(forwardToServer(command, commandArguments))
+
+          return result as unknown
         }
 
         const activeDocumentUri = vscode.window.activeTextEditor?.document.uri.toString()
 
         if (activeDocumentUri === undefined) {
-          void vscode.window.showInformationMessage(
+          await vscode.window.showInformationMessage(
             `${CLIENT_NAME}: open an Astro file in the editor to run this command.`,
           )
 
           return
         }
 
-        return forwardToServer(command, [{ uri: activeDocumentUri }])
+        const result = await Promise.resolve(forwardToServer(command, [{ uri: activeDocumentUri }]))
+
+        return result as unknown
       },
     },
     outputChannel,
@@ -324,33 +342,11 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
       sidebarProvider,
     ),
     vscode.commands.registerCommand(COMMAND_SHOW_OUTPUT, () => { outputChannel.show(); }),
-    vscode.commands.registerCommand(COMMAND_OPEN_DOCS, (url: string) => {
-      void vscode.env.openExternal(vscode.Uri.parse(url))
+    vscode.commands.registerCommand(COMMAND_OPEN_DOCS, async (url: string) => {
+      await vscode.env.openExternal(vscode.Uri.parse(url))
     }),
-    vscode.commands.registerCommand(COMMAND_RESTART, () => {
-      void client?.restart()
-    }),
-    vscode.commands.registerCommand(COMMAND_SCAN_WORKSPACE, () => {
-      void languageClient.sendRequest('workspace/executeCommand', {
-        arguments: [],
-        command: COMMAND_SCAN_WORKSPACE,
-      })
-    }),
-    vscode.commands.registerCommand(COMMAND_SCAN_FILE, () => {
-      const uri = vscode.window.activeTextEditor?.document.uri.toString()
-
-      if (!uri) {
-        void vscode.window.showInformationMessage(
-          `${CLIENT_NAME}: open an Astro file to scan.`,
-        )
-
-        return
-      }
-
-      void languageClient.sendRequest('workspace/executeCommand', {
-        arguments: [{ uri }],
-        command: COMMAND_SCAN_FILE,
-      })
+    vscode.commands.registerCommand(COMMAND_RESTART, async () => {
+      await client?.restart()
     }),
   )
 
@@ -361,14 +357,14 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
       renderStatus(statusBarItem, status)
 
       if (!status.quiescent) {
-        sidebarProvider.setLoading()
+        void sidebarProvider.setLoading()
       } else if (status.health === 'error') {
-        sidebarProvider.setError(status.message ?? 'Server error')
+        void sidebarProvider.setError(status.message ?? 'Server error')
       }
     })
 
     languageClient.onNotification(HEALTH_SCORE_METHOD, (data: HealthScoreData) => {
-      sidebarProvider.update(data)
+      void sidebarProvider.update(data)
 
       // Update status bar score text
       const label = data.scoreLabel
@@ -386,7 +382,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
     })
 
     languageClient.onNotification(TOP_ISSUES_METHOD, (issues: TopIssueData[]) => {
-      sidebarProvider.updateTopIssues(issues)
+      void sidebarProvider.updateTopIssues(issues)
     })
 
     sidebarProvider.onOpenFile(({ filePath, line }) => {
@@ -412,9 +408,9 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
       quiescent: true,
     })
 
-    sidebarProvider.setError('Failed to start. Ensure Node.js is installed and astro-doctor is available.')
+    await sidebarProvider.setError('Failed to start. Ensure Node.js is installed and astro-doctor is available.')
 
-    showStartFailure(outputChannel, error)
+    await showStartFailure(outputChannel, error)
   }
 }
 

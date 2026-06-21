@@ -31,7 +31,7 @@ type WebviewMessage =
   | { readonly message: string; readonly type: 'error' }
   | { readonly type: 'loading' }
 
-const buildSidebarHtml = (nonce: string): string => `<!DOCTYPE html>
+export const buildSidebarHtml = (nonce: string): string => `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -626,11 +626,11 @@ export class AstroDoctorSidebarProvider implements vscode.WebviewViewProvider {
     this.openFileCallback = callback
   }
 
-  public resolveWebviewView(
+  public async resolveWebviewView(
     webviewView: vscode.WebviewView,
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken,
-  ): void {
+  ): Promise<void> {
     this.view = webviewView
 
     webviewView.webview.options = {
@@ -655,37 +655,37 @@ export class AstroDoctorSidebarProvider implements vscode.WebviewViewProvider {
         type: 'update',
       }
 
-      void this.view.webview.postMessage(msg)
+      await this.view.webview.postMessage(msg)
     }
   }
 
-  public setError(message: string): void {
+  public async setError(message: string): Promise<void> {
     if (!this.view) return
 
     const msg: WebviewMessage = { message, type: 'error' }
 
-    void this.view.webview.postMessage(msg)
+    await this.view.webview.postMessage(msg)
   }
 
-  public setLoading(): void {
+  public async setLoading(): Promise<void> {
     if (!this.view) return
 
     const message: WebviewMessage = { type: 'loading' }
 
-    void this.view.webview.postMessage(message)
+    await this.view.webview.postMessage(message)
   }
 
-  public update(data: HealthScoreData): void {
+  public async update(data: HealthScoreData): Promise<void> {
     this.latestHealthData = data
 
     if (!this.view) return
 
     const message: WebviewMessage = { data, topIssues: this.latestTopIssues, type: 'update' }
 
-    void this.view.webview.postMessage(message)
+    await this.view.webview.postMessage(message)
   }
 
-  public updateTopIssues(issues: TopIssueData[]): void {
+  public async updateTopIssues(issues: TopIssueData[]): Promise<void> {
     this.latestTopIssues = issues
 
     if (!this.view || !this.latestHealthData) return
@@ -696,7 +696,7 @@ export class AstroDoctorSidebarProvider implements vscode.WebviewViewProvider {
       type: 'update',
     }
 
-    void this.view.webview.postMessage(message)
+    await this.view.webview.postMessage(message)
   }
 
   private getNonce(): string {
