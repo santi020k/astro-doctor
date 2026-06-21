@@ -1,0 +1,33 @@
+name: Astro Doctor
+description: Your agent writes bad Astro. This catches it.
+author: santi020k
+
+inputs:
+  working-directory:
+    description: Directory to scan (defaults to repo root)
+    required: false
+    default: '.'
+  fail-on:
+    description: Minimum severity to fail the check (error | warning | off)
+    required: false
+    default: 'error'
+  json-report:
+    description: Path to write a JSON report
+    required: false
+    default: ''
+
+outputs:
+  total:
+    description: Total number of diagnostics found
+  errors:
+    description: Number of error-severity diagnostics
+  warnings:
+    description: Number of warning-severity diagnostics
+
+runs:
+  using: node20
+  main: dist/action.js
+
+branding:
+  icon: activity
+  color: orange

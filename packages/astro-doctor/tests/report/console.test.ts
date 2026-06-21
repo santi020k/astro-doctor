@@ -1,0 +1,71 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import type { Diagnostic, ScanResult } from '../../src/types.js'
+import { formatConsoleReport } from '../../src/report/console.js'
+
+const makeDiagnostic = (overrides: Partial<Diagnostic> = {}): Diagnostic => ({
+  ruleId: 'astro-doctor/use-astro-image',
+  severity: 'warning',
+  message: 'Use <Image> instead of <img>.',
+  filePath: '/project/src/pages/index.astro',
+  line: 5,
+  column: 1,
+  category: 'performance',
+  ...overrides,
+})
+
+const makeScanResult = (overrides: Partial<ScanResult> = {}): ScanResult => ({
+  diagnostics: [],
+  fileCount: 1,
+  errorCount: 0,
+  warningCount: 0,
+  ...overrides,
+})
+
+describe('formatConsoleReport', () => {
+  it('returns a clean message when there are no diagnostics', () => {
+    const output = formatConsoleReport(makeScanResult())
+    expect(output).toMatch(/no issues/i)
+  })
+
+  it('includes the file path in the output', () => {
+    const diagnostic = makeDiagnostic()
+    const output = formatConsoleReport(makeScanResult({ diagnostics: [diagnostic], warningCount: 1 }))
+    expect(output).toContain('index.astro')
+  })
+
+  it('includes the rule ID in the output', () => {
+    const diagnostic = makeDiagnostic()
+    const output = formatConsoleReport(makeScanResult({ diagnostics: [diagnostic], warningCount: 1 }))
+    expect(output).toContain('use-astro-image')
+  })
+
+  it('includes the diagnostic message in the output', () => {
+    const diagnostic = makeDiagnostic({ message: 'Use <Image> instead of <img>.' })
+    const output = formatConsoleReport(makeScanResult({ diagnostics: [diagnostic], warningCount: 1 }))
+    expect(output).toContain('Use <Image> instead of <img>.')
+  })
+
+  it('includes line and column numbers in the output', () => {
+    const diagnostic = makeDiagnostic({ line: 10, column: 3 })
+    const output = formatConsoleReport(makeScanResult({ diagnostics: [diagnostic], warningCount: 1 }))
+    expect(output).toContain('10')
+    expect(output).toContain('3')
+  })
+
+  it('shows a summary with total counts', () => {
+    const diagnostics: Diagnostic[] = [
+      makeDiagnostic({ severity: 'error' }),
+      makeDiagnostic({ severity: 'warning' }),
+    ]
+    const output = formatConsoleReport(
+      makeScanResult({ diagnostics, errorCount: 1, warningCount: 1, fileCount: 2 })
+    )
+    expect(output).toContain('1 error')
+    expect(output).toContain('1 warning')
+  })
+
+  it('shows the number of files scanned', () => {
+    const output = formatConsoleReport(makeScanResult({ fileCount: 42 }))
+    expect(output).toContain('42')
+  })
+})

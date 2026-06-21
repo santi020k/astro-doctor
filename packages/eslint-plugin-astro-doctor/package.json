@@ -1,0 +1,60 @@
+{
+  "name": "eslint-plugin-astro-doctor",
+  "version": "0.1.0",
+  "description": "ESLint plugin for Astro Doctor: diagnose Astro codebases for performance, accessibility, security, and best-practice issues",
+  "keywords": [
+    "astro",
+    "eslint",
+    "eslint-plugin",
+    "linter",
+    "accessibility",
+    "performance",
+    "security"
+  ],
+  "homepage": "https://github.com/santi020k/astro-doctor#readme",
+  "bugs": {
+    "url": "https://github.com/santi020k/astro-doctor/issues"
+  },
+  "license": "MIT",
+  "author": "santi020k",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/santi020k/astro-doctor.git",
+    "directory": "packages/eslint-plugin-astro-doctor"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "dev": "tsc --project tsconfig.json --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "astro-eslint-parser": "^1.2.2"
+  },
+  "peerDependencies": {
+    "eslint": ">=9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.32",
+    "eslint": "^9.29.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.13.0"
+  }
+}

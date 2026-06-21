@@ -1,0 +1,63 @@
+{
+  "name": "astro-doctor",
+  "version": "0.1.0",
+  "description": "Your agent writes bad Astro. This catches it.",
+  "keywords": [
+    "astro",
+    "linter",
+    "cli",
+    "accessibility",
+    "performance",
+    "security",
+    "agents"
+  ],
+  "homepage": "https://github.com/santi020k/astro-doctor#readme",
+  "bugs": {
+    "url": "https://github.com/santi020k/astro-doctor/issues"
+  },
+  "license": "MIT",
+  "author": "santi020k",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/santi020k/astro-doctor.git",
+    "directory": "packages/astro-doctor"
+  },
+  "bin": {
+    "astro-doctor": "./bin/astro-doctor.js"
+  },
+  "files": [
+    "bin/**",
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "dev": "tsc --project tsconfig.json --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "astro-eslint-parser": "^1.2.2",
+    "eslint": "^9.29.0",
+    "eslint-plugin-astro-doctor": "workspace:*",
+    "glob": "^11.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.32",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.13.0"
+  }
+}
