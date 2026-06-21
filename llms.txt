@@ -19,8 +19,9 @@ Astro Doctor scans `.astro` files and reports issues across five categories:
 It ships as:
 1. A **CLI** (`@santi020k/astro-doctor`) — `npx @santi020k/astro-doctor@latest`
 2. An **ESLint plugin** (`@santi020k/eslint-plugin-astro-doctor`) — for inline editor diagnostics
-3. A **GitHub Action** — for CI pull-request checks
-4. An **agent skill** (`skills/SKILL.md`) — installed into Claude Code, Cursor, Codex, etc.
+3. A **GitHub Action** — PR diff mode, sticky summary comment, health score output
+4. **Agent skills** (`.agents/skills/`) — installed into Claude Code, Cursor, Codex, etc.
+5. An **experimental LSP** — `astro-doctor experimental-lsp --stdio`
 
 ## Inspiration
 
@@ -42,14 +43,26 @@ packages/
   astro-doctor/                 PUBLISHED  The CLI + public API
     bin/astro-doctor.ts         Entry point
     src/
-      cli.ts                    Argument parsing + orchestration
+      cli.ts                    Argument parsing + orchestration (--json, --no-score, --fail-on)
+      config.ts                 loadConfig() — doctor.config.ts/js/json/jsonc loader
+      scorer.ts                 computeScore() / computeScoreLabel() — 0-100 health score
+      install.ts                runInstall() — copies agent skills into the user's project
+      lsp.ts                    runLsp() — experimental LSP stub
       scanner/                  File discovery (glob) + ESLint runner
-      report/                   Console and JSON formatters
-      types.ts                  Diagnostic, ScanResult, ScanOptions
-      index.ts                  Public scan() + formatConsoleReport() API
+      report/
+        console.ts              formatConsoleReport() — terminal output with score
+        json.ts                 formatJsonReport() — JsonReport shape for --json
+      types.ts                  Diagnostic, ScanResult, ScanOptions, ScoreLabel,
+                                JsonReport, AstroDoctorConfig
+      index.ts                  Public API exports
     tests/                      Scanner and reporter tests
+.agents/skills/
+  astro-rules/SKILL.md          All 5 rules with before/after examples
+  astro-performance/SKILL.md    Astro islands architecture performance patterns
+  add-rule/SKILL.md             Workflow for adding a new rule to astro-doctor
 skills/
-  SKILL.md                      Installable agent skill for Astro best practices
+  SKILL.md                      Legacy install target (copied by `astro-doctor install`)
+action.yml                      GitHub Action (composite, PR diff mode, sticky comment)
 ```
 
 ## Key Technical Decisions
@@ -60,6 +73,10 @@ skills/
 - **Build**: `tsc` directly (no bundler) — simple, no magic, matches your eslint-config-basic pattern
 - **ESLint config**: `@santi020k/eslint-config-basic` with `Preset.Monorepo`, `Extension.Boundaries`, `Extension.Unicorn`, `Tool.CSpell`, `Runtime.Node` on the CLI package
 - **Versioning**: Changesets with linked packages (both packages version together)
+- **Score formula**: `max(0, 100 - (errors×10 + warnings×3) / fileCount)` — penalises density, not raw count
+- **GitHub Action**: Composite action (no pre-bundled JS). Uses `npx` + `jq` + `actions/github-script`
+- **Config files**: `doctor.config.*` (following react-doctor's naming). Supports TS/JS/JSON/JSONC via native import() + readFileSync
+- **Agent skills**: Three skills in `.agents/skills/` (rules, performance, add-rule). `install` subcommand copies to user's project.
 
 ## Commands
 

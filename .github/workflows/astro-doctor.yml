@@ -1,0 +1,32 @@
+name: Astro Doctor
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: astro-doctor-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  astro-doctor:
+    name: Astro Doctor scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0 is required for diff mode (comparing against merge-base)
+          fetch-depth: 0
+
+      - uses: santi020k/astro-doctor@v1
+        with:
+          working-directory: .
+          fail-on: error
+          comment: true
+          diff-only: true

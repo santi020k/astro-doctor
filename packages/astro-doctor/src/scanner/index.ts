@@ -2,6 +2,7 @@ import { ESLint } from 'eslint'
 import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 import * as astroParser from 'astro-eslint-parser'
 import type { Diagnostic, ScanOptions, ScanResult, Severity } from '../types.js'
+import { computeScore, computeScoreLabel } from '../scorer.js'
 import { discoverAstroFiles } from './file-discovery.js'
 
 const SEVERITY_MAP: Record<number, Severity> = {
@@ -41,10 +42,17 @@ const buildEslintConfig = (options: ScanOptions): ESLint.Options => ({
 })
 
 export const scan = async (options: ScanOptions): Promise<ScanResult> => {
-  const astroFiles = await discoverAstroFiles(options.directory)
+  const astroFiles = await discoverAstroFiles(options.directory, options.ignore)
 
   if (astroFiles.length === 0) {
-    return { diagnostics: [], fileCount: 0, errorCount: 0, warningCount: 0 }
+    return {
+      diagnostics: [],
+      fileCount: 0,
+      errorCount: 0,
+      warningCount: 0,
+      score: 100,
+      scoreLabel: 'A',
+    }
   }
 
   const eslint = new ESLint(buildEslintConfig(options))
@@ -74,11 +82,15 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
 
   const errorCount = diagnostics.filter((diagnostic) => diagnostic.severity === 'error').length
   const warningCount = diagnostics.filter((diagnostic) => diagnostic.severity === 'warning').length
+  const score = computeScore(errorCount, warningCount, astroFiles.length)
+  const scoreLabel = computeScoreLabel(score)
 
   return {
     diagnostics,
     fileCount: astroFiles.length,
     errorCount,
     warningCount,
+    score,
+    scoreLabel,
   }
 }

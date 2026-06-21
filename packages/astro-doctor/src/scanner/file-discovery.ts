@@ -1,15 +1,20 @@
 import { glob } from 'glob'
 
-const IGNORED_DIRECTORIES = ['node_modules', 'dist', '.astro', '.turbo', 'coverage']
+const DEFAULT_IGNORED_DIRECTORIES = ['node_modules', 'dist', '.astro', '.turbo', 'coverage']
 
-const buildIgnorePattern = (): string[] =>
-  IGNORED_DIRECTORIES.map((directory) => `**/${directory}/**`)
+const buildIgnorePatterns = (extraIgnore: readonly string[] = []): string[] => [
+  ...DEFAULT_IGNORED_DIRECTORIES.map((directory) => `**/${directory}/**`),
+  ...extraIgnore,
+]
 
-export const discoverAstroFiles = async (rootDirectory: string): Promise<string[]> => {
+export const discoverAstroFiles = async (
+  rootDirectory: string,
+  ignore: readonly string[] = [],
+): Promise<string[]> => {
   const discoveredFiles = await glob('**/*.astro', {
     cwd: rootDirectory,
     absolute: true,
-    ignore: buildIgnorePattern(),
+    ignore: buildIgnorePatterns(ignore),
   })
 
   return discoveredFiles.sort()

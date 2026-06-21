@@ -18,6 +18,8 @@ const makeScanResult = (overrides: Partial<ScanResult> = {}): ScanResult => ({
   fileCount: 1,
   errorCount: 0,
   warningCount: 0,
+  score: 100,
+  scoreLabel: 'A',
   ...overrides,
 })
 
@@ -67,5 +69,16 @@ describe('formatConsoleReport', () => {
   it('shows the number of files scanned', () => {
     const output = formatConsoleReport(makeScanResult({ fileCount: 42 }))
     expect(output).toContain('42')
+  })
+
+  it('shows the health score by default', () => {
+    const output = formatConsoleReport(makeScanResult({ score: 85, scoreLabel: 'B' }))
+    expect(output).toContain('85/100')
+    expect(output).toContain('B')
+  })
+
+  it('hides the score when showScore is false', () => {
+    const output = formatConsoleReport(makeScanResult({ score: 85, scoreLabel: 'B' }), process.cwd(), false)
+    expect(output).not.toContain('85/100')
   })
 })

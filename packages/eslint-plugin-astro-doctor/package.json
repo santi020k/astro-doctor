@@ -53,7 +53,7 @@
     "eslint": ">=9.0.0"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "^0.17.5",
+    "@arethetypeswrong/cli": "^0.18.3",
     "@types/node": "^22.15.32",
     "eslint": "^9.29.0",
     "typescript": "^5.8.3",

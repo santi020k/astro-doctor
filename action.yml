@@ -11,22 +11,183 @@ inputs:
     description: Minimum severity to fail the check (error | warning | off)
     required: false
     default: 'error'
+  comment:
+    description: Post a sticky summary comment on pull requests (true | false)
+    required: false
+    default: 'true'
+  diff-only:
+    description: On PRs, scan only files changed in this PR (true | false)
+    required: false
+    default: 'true'
   json-report:
-    description: Path to write a JSON report
+    description: Path to write a JSON report (leave empty to skip)
     required: false
     default: ''
 
 outputs:
   total:
     description: Total number of diagnostics found
+    value: ${{ steps.report.outputs.total }}
   errors:
     description: Number of error-severity diagnostics
+    value: ${{ steps.report.outputs.errors }}
   warnings:
     description: Number of warning-severity diagnostics
+    value: ${{ steps.report.outputs.warnings }}
+  score:
+    description: Health score 0–100
+    value: ${{ steps.report.outputs.score }}
+  score-label:
+    description: Health score letter grade (A–F)
+    value: ${{ steps.report.outputs.score_label }}
 
 runs:
-  using: node20
-  main: dist/action.js
+  using: composite
+  steps:
+    - name: Detect changed Astro files (PR diff mode)
+      id: diff
+      if: github.event_name == 'pull_request' && inputs.diff-only == 'true'
+      shell: bash
+      run: |
+        BASE_SHA=${{ github.event.pull_request.base.sha }}
+        CHANGED=$(git diff --name-only "$BASE_SHA"...HEAD -- '*.astro' | tr '\n' ',')
+        echo "changed_files=$CHANGED" >> "$GITHUB_OUTPUT"
+        echo "is_pr=true" >> "$GITHUB_OUTPUT"
+        if [ -z "$CHANGED" ]; then
+          echo "no_astro_changes=true" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Skip scan (no Astro changes)
+      if: steps.diff.outputs.no_astro_changes == 'true'
+      shell: bash
+      run: |
+        echo "No .astro files changed in this PR — skipping Astro Doctor scan."
+
+    - name: Run Astro Doctor scan
+      id: scan
+      if: steps.diff.outputs.no_astro_changes != 'true'
+      shell: bash
+      env:
+        ASTRO_DOCTOR_JSON_OUT: /tmp/astro-doctor-report.json
+      run: |
+        JSON_FLAG="--json /tmp/astro-doctor-report.json"
+        FAIL_FLAG="--fail-on ${{ inputs.fail-on }}"
+        DIR_FLAG="--dir ${{ inputs.working-directory }}"
+
+        npx --yes @santi020k/astro-doctor@latest $DIR_FLAG $JSON_FLAG $FAIL_FLAG || true
+
+    - name: Parse report and set outputs
+      id: report
+      if: steps.diff.outputs.no_astro_changes != 'true'
+      shell: bash
+      run: |
+        if [ ! -f /tmp/astro-doctor-report.json ]; then
+          echo "total=0" >> "$GITHUB_OUTPUT"
+          echo "errors=0" >> "$GITHUB_OUTPUT"
+          echo "warnings=0" >> "$GITHUB_OUTPUT"
+          echo "score=100" >> "$GITHUB_OUTPUT"
+          echo "score_label=A" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        TOTAL=$(jq '.errorCount + .warningCount' /tmp/astro-doctor-report.json)
+        ERRORS=$(jq '.errorCount' /tmp/astro-doctor-report.json)
+        WARNINGS=$(jq '.warningCount' /tmp/astro-doctor-report.json)
+        SCORE=$(jq '.score' /tmp/astro-doctor-report.json)
+        LABEL=$(jq -r '.scoreLabel' /tmp/astro-doctor-report.json)
+
+        echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+        echo "errors=$ERRORS" >> "$GITHUB_OUTPUT"
+        echo "warnings=$WARNINGS" >> "$GITHUB_OUTPUT"
+        echo "score=$SCORE" >> "$GITHUB_OUTPUT"
+        echo "score_label=$LABEL" >> "$GITHUB_OUTPUT"
+
+    - name: Copy JSON report to requested path
+      if: inputs.json-report != '' && steps.diff.outputs.no_astro_changes != 'true'
+      shell: bash
+      run: cp /tmp/astro-doctor-report.json "${{ inputs.json-report }}"
+
+    - name: Post PR summary comment
+      if: |
+        github.event_name == 'pull_request' &&
+        inputs.comment == 'true' &&
+        steps.diff.outputs.no_astro_changes != 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs')
+          const report = JSON.parse(fs.readFileSync('/tmp/astro-doctor-report.json', 'utf8'))
+
+          const scoreEmoji = { A: '✅', B: '🟢', C: '🟡', D: '🟠', F: '🔴' }[report.scoreLabel] ?? '🟡'
+          const diffMode = '${{ steps.diff.outputs.is_pr }}' === 'true' && '${{ inputs.diff-only }}' === 'true'
+          const scopeNote = diffMode ? ' _(changed files only)_' : ''
+
+          const rows = report.diagnostics.slice(0, 25).map(d => {
+            const rel = d.filePath.replace('${{ github.workspace }}/', '')
+            const icon = d.severity === 'error' ? '🔴' : '🟡'
+            return `| ${icon} | \`${rel}\` | ${d.line}:${d.column} | ${d.message} | \`${d.ruleId.replace('astro-doctor/', '')}\` |`
+          }).join('\n')
+
+          const truncated = report.diagnostics.length > 25
+            ? `\n> ⚠ Showing 25 of ${report.diagnostics.length} diagnostics. Run \`npx @santi020k/astro-doctor@latest\` locally to see all.`
+            : ''
+
+          const issuesSection = report.errorCount + report.warningCount === 0
+            ? '**No issues found!** 🎉'
+            : `| | File | Location | Message | Rule |\n|---|---|---|---|---|\n${rows}${truncated}`
+
+          const body = [
+            `<!-- astro-doctor-comment -->`,
+            `## Astro Doctor ${scoreEmoji} ${report.score}/100 (${report.scoreLabel})${scopeNote}`,
+            '',
+            issuesSection,
+            '',
+            `**${report.errorCount} error${report.errorCount === 1 ? '' : 's'}, ${report.warningCount} warning${report.warningCount === 1 ? '' : 's'}** across ${report.fileCount} file${report.fileCount === 1 ? '' : 's'}`,
+            '',
+            `<sub>Powered by [Astro Doctor](https://github.com/santi020k/astro-doctor)</sub>`,
+          ].join('\n')
+
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          })
+
+          const existing = comments.find(c => c.body?.includes('<!-- astro-doctor-comment -->'))
+
+          if (existing) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existing.id,
+              body,
+            })
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            })
+          }
+
+    - name: Fail check on violations
+      if: steps.diff.outputs.no_astro_changes != 'true'
+      shell: bash
+      run: |
+        ERRORS=${{ steps.report.outputs.errors || 0 }}
+        WARNINGS=${{ steps.report.outputs.warnings || 0 }}
+        FAIL_ON="${{ inputs.fail-on }}"
+
+        if [ "$FAIL_ON" = "error" ] && [ "$ERRORS" -gt 0 ]; then
+          echo "::error::Astro Doctor found $ERRORS error(s). Fix them or set fail-on: 'off'."
+          exit 1
+        fi
+
+        if [ "$FAIL_ON" = "warning" ] && [ $((ERRORS + WARNINGS)) -gt 0 ]; then
+          echo "::error::Astro Doctor found $((ERRORS + WARNINGS)) issue(s). Fix them or set fail-on: 'error'."
+          exit 1
+        fi
 
 branding:
   icon: activity
