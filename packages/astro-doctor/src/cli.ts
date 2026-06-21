@@ -17,6 +17,7 @@ interface CliOptions {
   readonly help: boolean
   readonly json: string | boolean
   readonly noScore: boolean
+  readonly quiet: boolean
   readonly failOn: 'error' | 'warning' | 'off'
   readonly format: OutputFormat
   readonly threshold: number
@@ -80,6 +81,7 @@ const parseArguments = (argv: string[]): CliOptions => {
     help: argv.includes('--help') || argv.includes('-h'),
     json: getJsonOption(argv),
     noScore: argv.includes('--no-score'),
+    quiet: argv.includes('--quiet'),
     failOn,
     format,
     threshold,
@@ -108,6 +110,8 @@ Options:
       --changed-files-from <path>
                            Scan newline-separated changed files from a path
       --no-score           Omit the health score from the report
+      --quiet              Only show errors; suppress warnings from the output
+                           (score and exit-code thresholds still reflect all diagnostics)
       --fail-on <level>    Exit 1 when this severity is found: error | warning | off
                            (default: error)
   -h, --help               Show this help message
@@ -159,7 +163,13 @@ const printReport = (scanResult: ScanResult, options: CliOptions): boolean => {
     if (githubOutput) console.log(githubOutput)
   } else {
     // Default: colored console output grouped by file
-    const report = formatConsoleReport(scanResult, options.directory, !options.noScore)
+    // --quiet filters warning diagnostics from the display (thresholds still see the full result)
+    const displayResult =
+      options.quiet
+        ? { ...scanResult, diagnostics: scanResult.diagnostics.filter((d) => d.severity === 'error') }
+        : scanResult
+
+    const report = formatConsoleReport(displayResult, options.directory, !options.noScore)
 
     console.log(report)
   }
@@ -190,10 +200,19 @@ const getEffectiveThreshold = (options: CliOptions, config: AstroDoctorConfig | 
 
 const executeScan = async (options: CliOptions): Promise<void> => {
   const config = await loadConfig(options.directory)
+  const changedFiles = options.changedFilesFrom ? readChangedFiles(options.changedFilesFrom) : undefined
+
+  if (changedFiles !== undefined && changedFiles.length > 0 && !changedFiles.some((f) => f.endsWith('.astro'))) {
+    if (options.json !== true) {
+      console.log('No .astro files found in the changed files list — nothing to scan.\n')
+    }
+
+    return
+  }
 
   const scanOptions = {
     directory: options.directory,
-    files: options.changedFilesFrom ? readChangedFiles(options.changedFilesFrom) : undefined,
+    files: changedFiles,
     ignore: config?.ignore,
     rules: config?.rules,
   }
@@ -203,7 +222,19 @@ const executeScan = async (options: CliOptions): Promise<void> => {
 
   if (options.json !== true) console.log(`\nScanning ${options.directory}...\n`)
 
-  const scanResult = await scan(scanOptions)
+  let scanResult: ScanResult
+
+  try {
+    scanResult = await scan(scanOptions)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+
+    console.error(`\nFailed to scan: ${message}`)
+
+    process.exitCode = 1
+
+    return
+  }
 
   if (printReport(scanResult, options)) return
 

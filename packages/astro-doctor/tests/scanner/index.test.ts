@@ -63,14 +63,16 @@ describe('scan', () => {
     expect(useAstroImageDiagnostic).toBeDefined()
   })
 
-  test('detects client:load overuse', async () => {
+  test('detects client:load overuse when more than one per file is used', async () => {
     writeFileSync(
       join(testDirectory, 'index.astro'),
       [
         '---',
         "import Counter from './Counter.tsx'",
+        "import Nav from './Nav.tsx'",
         '---',
         '<Counter client:load />',
+        '<Nav client:load />',
       ].join('\n')
     )
 

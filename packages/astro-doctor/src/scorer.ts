@@ -1,11 +1,32 @@
 import type { Diagnostic, ScoreBreakdown, ScoreLabel } from './types.js'
 
-export const computeScore = (errorCount: number, warningCount: number, fileCount: number): number => {
+/**
+ * Compute a health score (0–100) using per-file averaging.
+ * Each file is scored independently (errors cost 10 pts, warnings cost 3 pts, clamped to [0,100]),
+ * then the per-file scores are averaged. This prevents a single heavily-broken file from
+ * dragging down the score of large, otherwise-clean projects beyond its actual impact.
+ */
+export const computeScore = (diagnostics: readonly Diagnostic[], fileCount: number): number => {
   if (fileCount === 0) return 100
 
-  const penalty = (errorCount * 10 + warningCount * 3) / fileCount
+  // Accumulate penalty per file path
+  const penaltyByFile = new Map<string, number>()
 
-  return Math.max(0, Math.min(100, Math.round(100 - penalty)))
+  for (const diagnostic of diagnostics) {
+    const existing = penaltyByFile.get(diagnostic.filePath) ?? 0
+
+    penaltyByFile.set(diagnostic.filePath, existing + (diagnostic.severity === 'error' ? 10 : 3))
+  }
+
+  // Clean files (not in the map) score 100; dirty files are clamped to [0, 100]
+  const cleanFileTotal = (fileCount - penaltyByFile.size) * 100
+  let dirtyFileTotal = 0
+
+  for (const penalty of penaltyByFile.values()) {
+    dirtyFileTotal += Math.max(0, 100 - penalty)
+  }
+
+  return Math.round((cleanFileTotal + dirtyFileTotal) / fileCount)
 }
 
 const computeScoreForCategory = (
@@ -14,10 +35,8 @@ const computeScoreForCategory = (
   fileCount: number,
 ): number => {
   const categoryDiagnostics = diagnostics.filter((diagnostic) => diagnostic.category === category)
-  const errorCount = categoryDiagnostics.filter((diagnostic) => diagnostic.severity === 'error').length
-  const warningCount = categoryDiagnostics.filter((diagnostic) => diagnostic.severity === 'warning').length
 
-  return computeScore(errorCount, warningCount, fileCount)
+  return computeScore(categoryDiagnostics, fileCount)
 }
 
 export const computeCategoryBreakdown = (
