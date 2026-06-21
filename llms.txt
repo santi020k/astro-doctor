@@ -97,10 +97,17 @@ pnpm --filter @santi020k/astro-doctor run test
 
 1. Write the test first in `packages/eslint-plugin-astro-doctor/tests/rules/<rule-name>.test.ts`
 2. Add the rule implementation in `packages/eslint-plugin-astro-doctor/src/rules/<rule-name>.ts`
-3. Register it in `packages/eslint-plugin-astro-doctor/src/rules/index.ts`
-4. Add it to `RECOMMENDED_RULES` with a default severity
-5. Document it in `skills/SKILL.md` and `README.md`
-6. Run `pnpm run test` — verify RED → GREEN
+3. Register it in `packages/eslint-plugin-astro-doctor/src/rules/index.ts` + `RECOMMENDED_RULES`
+4. Run `pnpm run test` — verify RED → GREEN
+5. Add an entry to `apps/docs/src/data/rules.ts` (id, name, slug, category, severity, description, why, bad, good)
+6. Update rule count in `apps/docs/src/pages/index.astro` and category list in `apps/docs/src/pages/docs/rules/index.astro`
+7. Add the rule to `apps/docs/public/schema/config.json` under `properties.rules.properties`
+8. Add before/after examples to `skills/SKILL.md` and `.agents/skills/astro-rules/SKILL.md`
+9. Update the rules tables in root `README.md` and `packages/eslint-plugin-astro-doctor/README.md`
+10. Update `llms.txt` rule list
+11. Run `pnpm changeset` — select `minor`, message: `feat(eslint-plugin): add <rule-name> rule`
+
+Full workflow with AST selectors: see `.agents/skills/add-rule/SKILL.md`.
 
 ## ESLint Plugin Node Types (astro-eslint-parser)
 

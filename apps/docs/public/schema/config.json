@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://doctor.santi020k.com/schema/config.json",
+  "title": "Astro Doctor Config",
+  "description": "Configuration schema for doctor.config.json / doctor.config.jsonc",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "rules": {
+      "description": "Override default rule severities. Omit to use recommended defaults.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "enum": ["error", "warn", "off"]
+      },
+      "properties": {
+        "astro-doctor/no-client-load-overuse": { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/use-astro-image":        { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/no-blocking-script":     { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/no-missing-alt":         { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/no-missing-lang":        { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/no-set-html":            { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/prefer-class-list":      { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/no-process-env":         { "type": "string", "enum": ["error", "warn", "off"] }
+      }
+    },
+    "ignore": {
+      "description": "Glob patterns of files to exclude from scanning.",
+      "type": "array",
+      "items": { "type": "string" },
+      "examples": [["src/legacy/**", "**/*.test.astro"]]
+    },
+    "failOn": {
+      "description": "Minimum severity that causes a non-zero exit code.",
+      "type": "string",
+      "enum": ["error", "warning", "off"],
+      "default": "error"
+    },
+    "threshold": {
+      "description": "Minimum health score (0–100) required to pass. -1 disables the threshold check.",
+      "type": "integer",
+      "minimum": -1,
+      "maximum": 100,
+      "default": -1
+    }
+  }
+}
