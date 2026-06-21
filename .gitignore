@@ -4,6 +4,7 @@ dist
 coverage
 *.tsbuildinfo
 .eslintcache
+.cspellcache
 .env
 .env.local
 *.vsix

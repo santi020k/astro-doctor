@@ -135,7 +135,7 @@ Pin to a commit SHA for hardened CI:
 
 Every scan produces a score from **0 to 100** with a letter grade (A–F).
 
-The score penalises errors (×10) and warnings (×3) per file, so the penalty scales with issue density rather than raw count — large projects aren't punished just for having more files.
+The score penalizes errors (×10) and warnings (×3) per file, so the penalty scales with issue density rather than raw count — large projects aren't punished just for having more files.
 
 | Grade | Score | Meaning |
 |-------|-------|---------|
@@ -239,15 +239,28 @@ Or in JSON:
 
 ---
 
-## Experimental LSP
+## Editor Integrations
 
-Astro Doctor ships an experimental language server for live diagnostics as you type:
+### VS Code & Cursor
+
+Astro Doctor has an official extension for VS Code and Cursor. It provides:
+- **Live Diagnostics:** Real-time linting as you type.
+- **Quick Fixes:** Automatically fix common Astro anti-patterns.
+- **Health Sidebar:** A visual health report with a score ring and category breakdown inside the VS Code Sidebar.
+- **Hover Info:** Detailed explanations when hovering over issues.
+
+Commands available in the Command Palette:
+- `Astro Doctor: Scan Workspace`
+- `Astro Doctor: Scan Current File`
+- `Astro Doctor: Suppress All Issues in File`
+
+### Other Editors (Experimental LSP)
+
+Any LSP-capable editor (like Zed or Neovim) can run the language server directly over stdio:
 
 ```bash
 astro-doctor experimental-lsp --stdio
 ```
-
-Companion extensions for VS Code/Cursor and Zed are coming. Any LSP-capable editor can run the command above directly over stdio.
 
 > The LSP is experimental — its protocol may change between releases.
 

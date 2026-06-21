@@ -62,6 +62,22 @@ const all = await Astro.glob('./**/*.mdx')
     },
     {
       code: `---
+const posts = import.meta.glob('../content/**/*.md')
+---
+<div></div>`,
+      filename: 'test.astro',
+      errors: [{ messageId: 'preferContentCollections' }],
+    },
+    {
+      code: `---
+const docs = import.meta.glob('./**/*.{md,mdx}')
+---
+<div></div>`,
+      filename: 'test.astro',
+      errors: [{ messageId: 'preferContentCollections' }],
+    },
+    {
+      code: `---
 const posts = Astro.glob('../content/**/*.md')
 ---
 <div></div>`,

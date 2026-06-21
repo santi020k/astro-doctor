@@ -8,6 +8,7 @@ import { computeCategoryBreakdown, computeScore, computeScoreLabel } from '../sc
 import type { Diagnostic, ScanOptions, ScanResult, Severity } from '../types.js'
 
 import { discoverAstroFiles, resolveAstroFiles } from './file-discovery.js'
+import { auditProject } from './project-audit.js'
 
 const SEVERITY_MAP: Record<number, Severity> = {
   1: 'warning',
@@ -20,6 +21,16 @@ const getRuleCategory = (ruleId: string): RuleCategory => {
 
   return rule?.meta.docs.category ?? 'best-practices'
 }
+
+const EMPTY_RESULT = (fileCount = 0): ScanResult => ({
+  diagnostics: [],
+  fileCount,
+  errorCount: 0,
+  warningCount: 0,
+  score: 100,
+  scoreLabel: 'A',
+  scoreBreakdown: { performance: 100, accessibility: 100, security: 100, 'best-practices': 100 },
+})
 
 const buildEslintConfig = (options: ScanOptions): ESLint.Options => ({
   cwd: options.directory,
@@ -43,6 +54,8 @@ const buildEslintConfig = (options: ScanOptions): ESLint.Options => ({
     },
   ],
   ignore: false,
+  // Audit mode: report all issues even when eslint-disable comments are present
+  ...(options.noRespectInlineDisables ? { reportUnusedDisableDirectives: 'error' } : {}),
 })
 
 export const scan = async (options: ScanOptions): Promise<ScanResult> => {
@@ -50,50 +63,63 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
     ? resolveAstroFiles(options.directory, options.files)
     : await discoverAstroFiles(options.directory, options.ignore)
 
-  if (astroFiles.length === 0) {
-    return {
-      diagnostics: [],
-      fileCount: 0,
-      errorCount: 0,
-      warningCount: 0,
-      score: 100,
-      scoreLabel: 'A',
-      scoreBreakdown: { performance: 100, accessibility: 100, security: 100, 'best-practices': 100 },
+  if (options.noLint) return EMPTY_RESULT(astroFiles.length)
+
+  const projectDiagnostics = auditProject({
+    directory: options.directory,
+    files: options.files,
+    rules: options.rules,
+  })
+
+  if (astroFiles.length === 0 && projectDiagnostics.length === 0) return EMPTY_RESULT(0)
+
+  const allDiagnostics: Diagnostic[] = []
+
+  if (astroFiles.length > 0) {
+    const eslint = new ESLint(buildEslintConfig(options))
+    const eslintResults = await eslint.lintFiles(astroFiles)
+
+    for (const fileResult of eslintResults) {
+      for (const message of fileResult.messages) {
+        if (!message.ruleId) continue
+
+        const severity = SEVERITY_MAP[message.severity] ?? 'warning'
+        const category = getRuleCategory(message.ruleId)
+
+        allDiagnostics.push({
+          ruleId: message.ruleId,
+          severity,
+          message: message.message,
+          filePath: fileResult.filePath,
+          line: message.line,
+          column: message.column,
+          category,
+        })
+      }
     }
   }
 
-  const eslint = new ESLint(buildEslintConfig(options))
-  const eslintResults = await eslint.lintFiles(astroFiles)
-  const diagnostics: Diagnostic[] = []
+  allDiagnostics.push(...projectDiagnostics)
 
-  for (const fileResult of eslintResults) {
-    for (const message of fileResult.messages) {
-      if (!message.ruleId) continue
+  const fileCount = new Set([
+    ...astroFiles,
+    ...allDiagnostics.map((diagnostic) => diagnostic.filePath),
+  ]).size
+  const score = computeScore(allDiagnostics, fileCount)
+  const scoreLabel = computeScoreLabel(score)
+  const scoreBreakdown = computeCategoryBreakdown(allDiagnostics, fileCount)
 
-      const severity = SEVERITY_MAP[message.severity] ?? 'warning'
-      const category = getRuleCategory(message.ruleId)
-
-      diagnostics.push({
-        ruleId: message.ruleId,
-        severity,
-        message: message.message,
-        filePath: fileResult.filePath,
-        line: message.line,
-        column: message.column,
-        category,
-      })
-    }
-  }
+  const diagnostics =
+    options.categories && options.categories.length > 0
+      ? allDiagnostics.filter((d) => options.categories!.includes(d.category))
+      : allDiagnostics
 
   const errorCount = diagnostics.filter((diagnostic) => diagnostic.severity === 'error').length
   const warningCount = diagnostics.filter((diagnostic) => diagnostic.severity === 'warning').length
-  const score = computeScore(diagnostics, astroFiles.length)
-  const scoreLabel = computeScoreLabel(score)
-  const scoreBreakdown = computeCategoryBreakdown(diagnostics, astroFiles.length)
 
   return {
     diagnostics,
-    fileCount: astroFiles.length,
+    fileCount,
     errorCount,
     warningCount,
     score,

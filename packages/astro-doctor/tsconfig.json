@@ -6,7 +6,7 @@
     "noEmit": false,
     "allowImportingTsExtensions": false,
     "paths": {
-      "vscode-languageserver/node.js": ["./node_modules/vscode-languageserver/node.d.ts"],
+      "vscode-languageserver/node.js": ["./node_modules/vscode-languageserver/lib/node/main.d.ts"],
       "vscode-languageserver-textdocument": ["./node_modules/vscode-languageserver-textdocument/lib/umd/main.d.ts"]
     }
   },

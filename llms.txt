@@ -63,6 +63,7 @@ packages/
       extension.ts              Activates on Astro files; starts LSP child process;
                                 registers commands (scan, fix-all, restart, open-docs)
       sidebar-provider.ts       Sidebar health panel webview: score ring, grade, category bars
+    tests/                      Extension tests (vitest + mocked vscode API)
     scripts/
       vsce-package.cjs          Temporarily resolves catalog: refs for vsce packaging
 .agents/skills/
@@ -82,10 +83,20 @@ action.yml                      GitHub Action (composite, PR diff mode, sticky c
 - **Build**: `tsc` directly (no bundler) — simple, no magic, matches your eslint-config-basic pattern
 - **ESLint config**: `@santi020k/eslint-config-basic` with `Preset.Monorepo`, `Extension.Boundaries`, `Extension.Unicorn`, `Tool.Cspell`, `Runtime.Node` on the CLI package
 - **Versioning**: Changesets with linked packages (both packages version together)
-- **Score formula**: `max(0, 100 - (errors×10 + warnings×3) / fileCount)` — penalises density, not raw count
+- **Score formula**: `max(0, 100 - (errors×10 + warnings×3) / fileCount)` — penalizes density, not raw count
 - **GitHub Action**: Composite action (no pre-bundled JS). Uses `npx` + `jq` + `actions/github-script`
 - **Config files**: `doctor.config.*` (following react-doctor's naming). Supports TS/JS/JSON/JSONC via native import() + readFileSync. JSON/JSONC configs support `"$schema": "https://doctor.santi020k.com/schema/config.json"` for IDE autocompletion.
 - **Agent skills**: Three skills in `.agents/skills/` (rules, performance, add-rule). `install` subcommand copies to user's project.
+
+## Environment Variables
+
+The project uses several environment variables, primarily for CI/CD and deployment:
+- `PA_TOKEN`: GitHub Personal Access Token for releases and changelogs.
+- `NPM_TOKEN`: npm token to publish the CLI and ESLint plugin.
+- `VSCE_PAT` & `OVSX_PAT`: Access tokens to publish the VS Code extension to the Marketplace and Open VSX.
+- `ASTRO_DOCTOR_EXTENSION_ENV`: VS Code extension runtime mode (`local` or `production`).
+- `CLOUDFLARE_API_TOKEN` & `CLOUDFLARE_ACCOUNT_ID`: Used to deploy the docs site to Cloudflare Pages.
+- `TURBO_TOKEN` & `TURBO_TEAM`: Remote caching for Turborepo.
 
 ## Commands
 

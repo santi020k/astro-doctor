@@ -43,6 +43,20 @@ words:
   - languageclient
   - languageserver
   - textdocument
+  - evenodd
+  - linecap
+  - linejoin
+  - testnonce
+  - mynonce
+  - uniquenonce
+  - confbox
+  - esbuild
+  - jiti
+  - Contentful
+  - WCAG
+  - frontmatter
+  - OVSX
+  - ACMR
 ignorePaths:
   - node_modules
   - dist

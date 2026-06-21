@@ -53,6 +53,7 @@ packages/
     src/
       extension.ts              Extension entry + LSP client setup + status bar
       sidebar-provider.ts       Sidebar health panel webview (score ring, category breakdown)
+    tests/                      Extension tests (vitest + mocked vscode API)
     scripts/
       vsce-package.cjs          Resolves catalog: refs before packaging with vsce
 ```
@@ -72,6 +73,7 @@ Tests live in each package's `tests/` directory. Framework is `vitest`.
 
 - `packages/eslint-plugin-astro-doctor/tests/rules/` — one test file per rule using ESLint's `RuleTester`.
 - `packages/astro-doctor/tests/` — scanner and CLI tests.
+- `packages/vscode-astro-doctor/tests/` — VS Code extension testing using `vitest` with mocked `vscode` API.
 
 Run all checks before committing:
 
