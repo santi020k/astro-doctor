@@ -118,7 +118,7 @@ pnpm --filter @santi020k/eslint-plugin-astro-doctor run test
 
 1. **Docs site** — Add an entry to `apps/docs/src/data/rules.ts` with all fields: `id`, `name`, `slug`, `category`, `severity`, `description`, `why`, `bad`, `good`. The `[slug].astro` page generates automatically.
 2. **Docs rules index** — Add the rule name to the appropriate category section in `apps/docs/src/pages/docs/rules/index.astro`.
-3. **Landing page** — Update the rule count in `apps/docs/src/pages/index.astro` (search for "Eight rules" or the current count).
+3. **Landing page** — Update the rule count in `apps/docs/src/pages/index.astro` (search for "Nine rules" or the current count).
 4. **Agent skills** — Add the rule with before/after examples to `skills/SKILL.md` and `.agents/skills/astro-rules/SKILL.md`.
 5. **READMEs** — Add it to the rules table in the root `README.md` and in `packages/eslint-plugin-astro-doctor/README.md`.
 6. **Schema** — Add the rule name to `apps/docs/public/schema/config.json` under `properties.rules.properties`.
@@ -139,4 +139,4 @@ Select `minor` for a new rule (new public surface). Write: `feat(eslint-plugin):
 | `performance` | `warn` | `no-client-load-overuse`, `use-astro-image`, `no-blocking-script` |
 | `accessibility` | `error` | `no-missing-alt`, `no-missing-lang` |
 | `security` | `warn` | `no-set-html` |
-| `best-practices` | `warn` | `prefer-class-list`, `no-process-env` |
+| `best-practices` | `warn` | `prefer-class-list`, `no-process-env`, `prefer-content-collections` |
