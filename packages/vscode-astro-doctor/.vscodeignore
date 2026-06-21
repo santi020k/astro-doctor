@@ -1,5 +1,8 @@
 .vscode/**
+.turbo/**
+.eslintcache
 src/**
+scripts/**
 node_modules/**
 *.vsix
 tsconfig.json

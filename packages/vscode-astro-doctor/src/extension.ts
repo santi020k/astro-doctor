@@ -41,11 +41,13 @@ interface ResolvedServer {
   readonly shell: boolean
 }
 
-const resolveServer = (configuration: vscode.WorkspaceConfiguration): ResolvedServer => {
+const resolveServer = (
+  configuration: vscode.WorkspaceConfiguration,
+): ResolvedServer | undefined => {
   const explicitPath = configuration.get<string>('serverPath', '').trim()
 
   if (explicitPath.length > 0) {
-    return { args: ['experimental-lsp', '--stdio'], command: explicitPath, shell: false }
+    return { args: ['experimental-lsp'], command: explicitPath, shell: false }
   }
 
   const binName = IS_WINDOWS ? 'astro-doctor.cmd' : 'astro-doctor'
@@ -54,15 +56,89 @@ const resolveServer = (configuration: vscode.WorkspaceConfiguration): ResolvedSe
     const localBin = path.join(folder.uri.fsPath, 'node_modules', '.bin', binName)
 
     if (fs.existsSync(localBin)) {
-      return { args: ['experimental-lsp', '--stdio'], command: localBin, shell: IS_WINDOWS }
+      return { args: ['experimental-lsp'], command: localBin, shell: IS_WINDOWS }
     }
   }
 
-  return {
-    args: ['-y', 'astro-doctor@latest', 'experimental-lsp', '--stdio'],
-    command: IS_WINDOWS ? 'npx.cmd' : 'npx',
-    shell: IS_WINDOWS,
+  return undefined
+}
+
+const resolveBundledServer = (extensionPath: string): string | undefined => {
+  const bundledServer = path.join(extensionPath, 'dist', 'server.mjs')
+
+  if (fs.existsSync(bundledServer)) {
+    return bundledServer
   }
+
+  return undefined
+}
+
+const showMissingServer = (
+  outputChannel: vscode.OutputChannel,
+): void => {
+  const message = `${CLIENT_NAME}: language server not found. Reinstall the extension, install @santi020k/astro-doctor locally, or set astroDoctor.serverPath.`
+
+  outputChannel.appendLine(message)
+
+  void vscode.window.showErrorMessage(message)
+}
+
+const showStartFailure = (
+  outputChannel: vscode.OutputChannel,
+  error: unknown,
+): void => {
+  outputChannel.appendLine(
+    `Failed to start the Astro Doctor language server: ${error instanceof Error ? error.message : String(error)}`,
+  )
+
+  void vscode.window.showErrorMessage(
+    `${CLIENT_NAME}: failed to start. Reinstall the extension, install @santi020k/astro-doctor locally, or set astroDoctor.serverPath.`,
+  )
+}
+
+const createExecutable = (resolved: ResolvedServer): Executable => ({
+  args: resolved.args,
+  command: resolved.command,
+  options: { shell: resolved.shell },
+  transport: TransportKind.stdio,
+})
+
+const createExecutableServerOptions = (resolved: ResolvedServer): ServerOptions => {
+  const executable = createExecutable(resolved)
+
+  return {
+    debug: executable,
+    run: executable,
+  }
+}
+
+const createBundledServerOptions = (serverModule: string): ServerOptions => ({
+  debug: {
+    module: serverModule,
+    transport: TransportKind.stdio,
+  },
+  run: {
+    module: serverModule,
+    transport: TransportKind.stdio,
+  },
+})
+
+const createServerOptions = (
+  configuration: vscode.WorkspaceConfiguration,
+  extensionPath: string,
+  outputChannel: vscode.OutputChannel,
+): ServerOptions | undefined => {
+  const resolved = resolveServer(configuration)
+
+  if (resolved) return createExecutableServerOptions(resolved)
+
+  const bundledServer = resolveBundledServer(extensionPath)
+
+  if (bundledServer) return createBundledServerOptions(bundledServer)
+
+  showMissingServer(outputChannel)
+
+  return undefined
 }
 
 const renderStatus = (item: vscode.StatusBarItem, status: ServerStatusParams): void => {
@@ -106,16 +182,10 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
   if (!configuration.get<boolean>('enable', true)) return
 
   const outputChannel = vscode.window.createOutputChannel(CLIENT_NAME)
-  const resolved = resolveServer(configuration)
+  const serverOptions = createServerOptions(configuration, context.extensionPath, outputChannel)
 
-  const executable: Executable = {
-    args: resolved.args,
-    command: resolved.command,
-    options: { shell: resolved.shell },
-    transport: TransportKind.stdio,
-  }
+  if (!serverOptions) return
 
-  const serverOptions: ServerOptions = { debug: executable, run: executable }
   // Sidebar
   const sidebarProvider = new AstroDoctorSidebarProvider()
 
@@ -243,13 +313,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
 
     sidebarProvider.setError('Failed to start. Ensure Node.js is installed and astro-doctor is available.')
 
-    outputChannel.appendLine(
-      `Failed to start the Astro Doctor language server: ${error instanceof Error ? error.message : String(error)}`,
-    )
-
-    void vscode.window.showErrorMessage(
-      `${CLIENT_NAME}: failed to start. Ensure Node.js is installed and "astro-doctor" is available (npm i -D astro-doctor).`,
-    )
+    showStartFailure(outputChannel, error)
   }
 }
 
