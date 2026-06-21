@@ -6,11 +6,11 @@ Your agent writes bad Astro. This catches it.
 
 ## What This Skill Does
 
-Astro Doctor scans your codebase and reports issues across four categories with nine rules:
-- **Performance** — client directive overuse, unoptimized images, render-blocking scripts
-- **Accessibility** — missing alt text, missing HTML lang attribute
-- **Security** — unsafe `set:html` usage
-- **Best Practices** — dynamic class patterns, environment variable access, content management
+Astro Doctor scans your codebase and reports issues across four categories with 14 ESLint rules plus project-level audits:
+- **Performance** — client directive overuse, unoptimized images, missing image dimensions, render-blocking scripts, unprocessed script opt-outs
+- **Accessibility** — missing alt text, missing HTML lang attribute, missing island fallback content
+- **Security** — unsafe `set:html` usage, public env vars that look like secrets
+- **Best Practices** — dynamic class patterns, environment variable access, content management, package/config hygiene
 
 ## Rules
 
@@ -79,6 +79,43 @@ import heroImage from '../assets/hero.jpg'
 <script src="/app.js" type="module"></script>
 ```
 
+#### `no-unprocessed-script-surprises`
+**Severity: warning**
+
+Astro processes scripts with no attributes other than `src`. Adding attributes such as `type`, `defer`, `async`, `data-*`, or `is:inline` opts out of bundling, TypeScript processing, and deduplication.
+
+```astro
+<!-- ❌ Opts out of Astro processing -->
+<script type="module">
+  console.log('raw browser script')
+</script>
+
+<!-- ✅ Processed by Astro -->
+<script>
+  console.log('bundled and deduped')
+</script>
+```
+
+#### `require-image-dimensions`
+**Severity: warning**
+
+Astro can infer dimensions for imported images from `src/`, but public and remote image strings need dimensions or `inferSize` to avoid layout shift.
+
+```astro
+---
+import { Image } from 'astro:assets'
+---
+
+<!-- ❌ public image without dimensions -->
+<Image src="/hero.png" alt="Hero" />
+
+<!-- ✅ public image with dimensions -->
+<Image src="/hero.png" alt="Hero" width="1200" height="630" />
+
+<!-- ✅ remote image with inferred dimensions -->
+<Image src="https://cdn.example.com/hero.png" alt="Hero" inferSize />
+```
+
 ### Accessibility
 
 #### `no-missing-alt`
@@ -117,6 +154,25 @@ The `<html>` element must have a `lang` attribute. Screen readers and search eng
 </html>
 ```
 
+#### `require-island-fallback`
+**Severity: warning**
+
+`client:only` skips server rendering and `server:defer` renders later on demand. Provide fallback content so users do not see an empty region while the island loads.
+
+```astro
+---
+import Chart from '../components/Chart.tsx'
+---
+
+<!-- ❌ Empty until the client component loads -->
+<Chart client:only="react" />
+
+<!-- ✅ Useful initial UI -->
+<Chart client:only="react">
+  <div slot="fallback">Loading chart...</div>
+</Chart>
+```
+
 ### Security
 
 #### `no-set-html`
@@ -138,6 +194,24 @@ const userContent = await getUserPost() // ⚠️ untrusted
 <!-- ✅ If you must use set:html, sanitize first -->
 import DOMPurify from 'isomorphic-dompurify'
 <div set:html={DOMPurify.sanitize(userContent)} />
+```
+
+#### `no-public-secret-env`
+**Severity: warning**
+
+Variables prefixed with `PUBLIC_` are exposed to browser code. Names like `PUBLIC_TOKEN`, `PUBLIC_SECRET`, `PUBLIC_PASSWORD`, and `PUBLIC_API_KEY` usually indicate accidental secret exposure.
+
+```astro
+---
+// ❌ Exposed to the client bundle
+const apiKey = import.meta.env.PUBLIC_API_KEY
+---
+
+---
+// ✅ Server-only secret, public non-secret URL
+const apiKey = import.meta.env.API_KEY
+const apiUrl = import.meta.env.PUBLIC_API_URL
+---
 ```
 
 ### Best Practices
@@ -181,12 +255,17 @@ const siteUrl = import.meta.env.PUBLIC_SITE_URL
 #### `prefer-content-collections`
 **Severity: warning**
 
-`Astro.glob()` returns untyped frontmatter and runs at request time. Content Collections provide TypeScript types, build-time validation, and caching.
+`Astro.glob()` and content-focused `import.meta.glob()` return untyped content objects. Content Collections provide TypeScript types, build-time validation, and caching.
 
 ```astro
 ---
 // ❌ No types, no validation, no caching
 const posts = await Astro.glob('../content/blog/*.md')
+---
+
+---
+// ❌ Also untyped for structured content
+const posts = import.meta.glob('../content/blog/*.md')
 ---
 
 ---
@@ -200,13 +279,13 @@ const posts = await getCollection('blog', ({ data }) => !data.draft)
 
 ```bash
 # One-time scan
-npx @santi020k/astro-doctor@latest
+pnpm dlx @santi020k/astro-doctor@latest
 
 # Scan a specific directory
-npx @santi020k/astro-doctor@latest --dir ./src
+pnpm dlx @santi020k/astro-doctor@latest --dir ./src
 
 # Install the agent skill (once you have a scan)
-npx @santi020k/astro-doctor@latest install
+pnpm dlx @santi020k/astro-doctor@latest install
 ```
 
 ## Using in CI (GitHub Actions)
@@ -223,6 +302,7 @@ Create `doctor.config.ts` in your project root:
 import type { AstroDoctorConfig } from '@santi020k/astro-doctor'
 
 export default {
+  preset: 'recommended',
   rules: {
     'astro-doctor/no-client-load-overuse': 'error', // promote to error
     'astro-doctor/no-set-html': 'off',               // disable if you sanitize elsewhere

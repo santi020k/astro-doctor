@@ -18,7 +18,7 @@ Works as a **CLI**, an **ESLint plugin**, and a **GitHub Action**.
 ### 1. Quick scan (no install needed)
 
 ```bash
-npx @santi020k/astro-doctor@latest
+pnpm dlx @santi020k/astro-doctor@latest
 ```
 
 Sample output:
@@ -39,7 +39,7 @@ Astro Doctor Score: 86/100 (B) 🟢
 For inline editor diagnostics via ESLint:
 
 ```bash
-npm install -D @santi020k/eslint-plugin-astro-doctor
+pnpm add -D @santi020k/eslint-plugin-astro-doctor
 ```
 
 ```js
@@ -56,7 +56,7 @@ export default [
 Once you have a scan, install skills so your coding agent learns from the findings:
 
 ```bash
-npx @santi020k/astro-doctor@latest install
+pnpm dlx @santi020k/astro-doctor@latest install
 ```
 
 This copies skills to your project that work with Claude Code, Cursor, Codex, OpenCode, and any `AGENTS.md`-compatible tool.
@@ -106,7 +106,9 @@ Pin to a commit SHA for hardened CI:
 | ---- | -------- | ----------- |
 | `no-client-load-overuse` | ⚠️ warning | Prefer `client:idle` or `client:visible` over `client:load` |
 | `use-astro-image` | ⚠️ warning | Use `<Image>` from `astro:assets` instead of raw `<img>` |
+| `require-image-dimensions` | ⚠️ warning | Add dimensions for public and remote Astro image components |
 | `no-blocking-script` | ⚠️ warning | Add `defer`, `async`, or `type="module"` to `<script src="...">` tags |
+| `no-unprocessed-script-surprises` | ⚠️ warning | Warn when script attributes opt out of Astro processing |
 
 ### Accessibility
 
@@ -114,12 +116,14 @@ Pin to a commit SHA for hardened CI:
 | ---- | -------- | ----------- |
 | `no-missing-alt` | ❌ error | All image elements must have an `alt` attribute |
 | `no-missing-lang` | ❌ error | The `<html>` element must have a `lang` attribute |
+| `require-island-fallback` | ⚠️ warning | Add fallback content for `client:only` and `server:defer` islands |
 
 ### Security
 
 | Rule | Severity | Description |
 | ---- | -------- | ----------- |
 | `no-set-html` | ⚠️ warning | `set:html` is a potential XSS vector — sanitize before use |
+| `no-public-secret-env` | ⚠️ warning | Avoid `PUBLIC_` env names that look like secrets |
 
 ### Best Practices
 
@@ -127,7 +131,19 @@ Pin to a commit SHA for hardened CI:
 | ---- | -------- | ----------- |
 | `prefer-class-list` | ⚠️ warning | Use `class:list` instead of template literals for dynamic class names |
 | `no-process-env` | ⚠️ warning | Use `import.meta.env` instead of `process.env` in Astro files |
-| `prefer-content-collections` | ⚠️ warning | Use Content Collections instead of `Astro.glob()` for typed, cached content |
+| `prefer-content-collections` | ⚠️ warning | Use Content Collections instead of `Astro.glob()` / `import.meta.glob()` for typed, cached content |
+
+### Project Audits
+
+The CLI also checks project files such as `astro.config.*`, `package.json`, `.env.example`, and `src/content/`.
+
+| Check | Severity | Description |
+| ----- | -------- | ----------- |
+| `no-disabled-origin-check` | ⚠️ warning | Keep Astro's CSRF origin check enabled |
+| `no-open-allowed-domains` | ⚠️ warning | Avoid `security.allowedDomains: [{}]` |
+| `prefer-env-schema` | ⚠️ warning | Define an Astro env schema for documented env vars |
+| `prefer-pnpm` | ⚠️ warning | Use pnpm consistently and avoid npm/yarn lockfiles |
+| `require-content-config` | ⚠️ warning | Add a content config when using `src/content/` |
 
 ---
 
@@ -153,31 +169,37 @@ Use `--no-score` to hide the score from output.
 
 ```bash
 # Scan the current directory
-npx @santi020k/astro-doctor@latest
+pnpm dlx @santi020k/astro-doctor@latest
 
 # Scan a specific path
-npx @santi020k/astro-doctor@latest --dir ./src
+pnpm dlx @santi020k/astro-doctor@latest --dir ./src
+
+# Scaffold config, ESLint setup, and GitHub Action
+pnpm dlx @santi020k/astro-doctor@latest init
 
 # Output a JSON report (to stdout)
-npx @santi020k/astro-doctor@latest --json
+pnpm dlx @santi020k/astro-doctor@latest --json
 
 # Output a JSON report to a file
-npx @santi020k/astro-doctor@latest --json ./report.json
+pnpm dlx @santi020k/astro-doctor@latest --json ./report.json
 
 # Fail on warnings too (default: only errors)
-npx @santi020k/astro-doctor@latest --fail-on warning
+pnpm dlx @santi020k/astro-doctor@latest --fail-on warning
+
+# Use the CI preset (fail on warnings, score threshold 90)
+pnpm dlx @santi020k/astro-doctor@latest --preset ci
 
 # Hide the health score
-npx @santi020k/astro-doctor@latest --no-score
+pnpm dlx @santi020k/astro-doctor@latest --no-score
 
 # Install agent skills
-npx @santi020k/astro-doctor@latest install
+pnpm dlx @santi020k/astro-doctor@latest install
 
 # Experimental language server (LSP)
-npx @santi020k/astro-doctor@latest experimental-lsp --stdio
+pnpm dlx @santi020k/astro-doctor@latest experimental-lsp --stdio
 
 # Show help
-npx @santi020k/astro-doctor@latest --help
+pnpm dlx @santi020k/astro-doctor@latest --help
 ```
 
 ---
@@ -191,6 +213,7 @@ Create a `doctor.config.ts` (or `.js`, `.mjs`, `.cjs`, `.json`, `.jsonc`) in you
 import type { AstroDoctorConfig } from '@santi020k/astro-doctor'
 
 export default {
+  preset: 'recommended',
   rules: {
     // Promote to error — no client:load allowed in this project
     'astro-doctor/no-client-load-overuse': 'error',
@@ -207,6 +230,7 @@ Or in JSON:
 ```json
 {
   "$schema": "https://doctor.santi020k.com/schema/config.json",
+  "preset": "ci",
   "rules": {
     "astro-doctor/no-client-load-overuse": "error"
   }
@@ -223,7 +247,7 @@ Or in JSON:
     working-directory: '.'      # directory to scan
     fail-on: 'error'            # error | warning | off
     comment: 'true'             # post sticky PR summary comment
-    diff-only: 'true'           # on PRs, scan only changed .astro files
+    diff-only: 'true'           # on PRs, scan only changed Astro Doctor files
     json-report: ''             # path to write JSON report (optional)
 ```
 
@@ -272,14 +296,14 @@ Three skills are available for coding agents:
 
 | Skill | Location | Description |
 |-------|----------|-------------|
-| Astro Rules | `.agents/skills/astro-rules/` | All 9 rules with before/after examples |
+| Astro Rules | `.agents/skills/astro-rules/` | All 14 rules with before/after examples |
 | Astro Performance | `.agents/skills/astro-performance/` | Islands architecture patterns |
 | Add Rule | `.agents/skills/add-rule/` | How to add a new rule to astro-doctor |
 
 Install all of them:
 
 ```bash
-npx @santi020k/astro-doctor@latest install
+pnpm dlx @santi020k/astro-doctor@latest install
 ```
 
 ---

@@ -54,6 +54,25 @@ import heroImage from '../assets/hero.jpg'
 <Image src={heroImage} alt="Hero" />
 ```
 
+### `astro-doctor/require-image-dimensions` — performance, warning
+
+Public and remote string image sources need dimensions or `inferSize`; Astro can only infer dimensions automatically for imported images from `src/`.
+
+```astro
+---
+import { Image } from 'astro:assets'
+---
+
+<!-- ❌ May cause layout shift -->
+<Image src="/hero.png" alt="Hero" />
+
+<!-- ✅ Explicit dimensions for public image -->
+<Image src="/hero.png" alt="Hero" width="1200" height="630" />
+
+<!-- ✅ Remote dimensions inferred -->
+<Image src="https://cdn.example.com/hero.png" alt="Hero" inferSize />
+```
+
 ### `astro-doctor/no-missing-alt` — accessibility, error
 
 All `<img>`, `<Image>`, and `<Picture>` elements must have `alt`.
@@ -88,6 +107,23 @@ const userContent = await getUserPost()
 <!-- ✅ If you must inject HTML, sanitize first -->
 import DOMPurify from 'isomorphic-dompurify'
 <div set:html={DOMPurify.sanitize(userContent)} />
+```
+
+### `astro-doctor/no-public-secret-env` — security, warning
+
+`PUBLIC_` variables are exposed to client-side code. Do not put secret-looking names behind the public prefix.
+
+```astro
+---
+// ❌ Exposed to browser code
+const token = import.meta.env.PUBLIC_API_KEY
+---
+
+---
+// ✅ Keep secrets server-only
+const token = import.meta.env.API_KEY
+const apiUrl = import.meta.env.PUBLIC_API_URL
+---
 ```
 
 ### `astro-doctor/prefer-class-list` — best-practices, warning
@@ -131,6 +167,22 @@ const variant = 'primary'
 <script src="/app.js" type="module"></script>
 ```
 
+### `astro-doctor/no-unprocessed-script-surprises` — performance, warning
+
+Astro processes scripts with no attributes other than `src`. Other attributes and `is:inline` intentionally skip bundling, TypeScript processing, and deduplication.
+
+```astro
+<!-- ❌ Opts out of Astro processing -->
+<script type="module">
+  console.log('raw')
+</script>
+
+<!-- ✅ Processed by Astro -->
+<script>
+  console.log('bundled')
+</script>
+```
+
 ### `astro-doctor/no-missing-lang` — accessibility, error
 
 All `<html>` elements must have a `lang` attribute. Screen readers and search engines use it to determine page language. Missing `lang` is a WCAG 2.1 Level A failure (SC 3.1.1).
@@ -154,6 +206,24 @@ All `<html>` elements must have a `lang` attribute. Screen readers and search en
 </html>
 ```
 
+### `astro-doctor/require-island-fallback` — accessibility, warning
+
+`client:only` and `server:defer` islands should include fallback content so users have useful initial UI while the island loads.
+
+```astro
+---
+import Chart from '../components/Chart.tsx'
+---
+
+<!-- ❌ Empty until hydrated -->
+<Chart client:only="react" />
+
+<!-- ✅ Fallback is visible immediately -->
+<Chart client:only="react">
+  <div slot="fallback">Loading chart...</div>
+</Chart>
+```
+
 ### `astro-doctor/no-process-env` — best-practices, warning
 
 `process.env` is Node.js-only and doesn't work in client code or respect Astro's `PUBLIC_` prefix rules. Use `import.meta.env` everywhere.
@@ -174,7 +244,7 @@ const siteUrl = import.meta.env.PUBLIC_SITE_URL
 
 ### `astro-doctor/prefer-content-collections` — best-practices, warning
 
-`Astro.glob()` returns untyped frontmatter objects and runs at request time. Use `getCollection()` from `astro:content` for typed, build-time-validated, cached content.
+`Astro.glob()` and content-focused `import.meta.glob()` return untyped content objects. Use `getCollection()` from `astro:content` for typed, build-time-validated, cached content.
 
 ```astro
 ---
@@ -182,6 +252,11 @@ const siteUrl = import.meta.env.PUBLIC_SITE_URL
 const posts = await Astro.glob('../content/blog/*.md')
 ---
 <ul>{posts.map(p => <li>{p.frontmatter.title}</li>)}</ul>
+
+---
+// ❌ Also untyped for structured content
+const posts = import.meta.glob('../content/blog/*.md')
+---
 
 ---
 // ✅ Typed via schema, validated at build, cached
@@ -201,6 +276,7 @@ Create `doctor.config.ts` in your project root to override severities:
 import type { AstroDoctorConfig } from '@santi020k/astro-doctor'
 
 export default {
+  preset: 'recommended',
   rules: {
     'astro-doctor/no-client-load-overuse': 'error',  // promote to error
     'astro-doctor/no-set-html': 'off',                // disable if you sanitize globally
@@ -213,8 +289,8 @@ Also supports: `doctor.config.js`, `.mjs`, `.cjs`, `.json`, `.jsonc`
 ## Running
 
 ```bash
-npx @santi020k/astro-doctor@latest            # scan current directory
-npx @santi020k/astro-doctor@latest --dir src  # scan ./src
-npx @santi020k/astro-doctor@latest --json     # JSON output to stdout
-npx @santi020k/astro-doctor@latest install    # install agent skills
+pnpm dlx @santi020k/astro-doctor@latest            # scan current directory
+pnpm dlx @santi020k/astro-doctor@latest --dir src  # scan ./src
+pnpm dlx @santi020k/astro-doctor@latest --json     # JSON output to stdout
+pnpm dlx @santi020k/astro-doctor@latest install    # install agent skills
 ```

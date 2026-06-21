@@ -10,14 +10,14 @@
 
 ## What This Project Is
 
-Astro Doctor scans `.astro` files and reports issues across four categories with nine rules:
-- **Performance** — `no-client-load-overuse`, `use-astro-image`, `no-blocking-script`
-- **Accessibility** — `no-missing-alt`, `no-missing-lang`
-- **Security** — `no-set-html`
-- **Best Practices** — `prefer-class-list`, `no-process-env`, `prefer-content-collections`
+Astro Doctor scans `.astro` files and project config files, reporting issues across four categories with 14 ESLint rules plus project audits:
+- **Performance** — `no-client-load-overuse`, `use-astro-image`, `require-image-dimensions`, `no-blocking-script`, `no-unprocessed-script-surprises`
+- **Accessibility** — `no-missing-alt`, `no-missing-lang`, `require-island-fallback`
+- **Security** — `no-set-html`, `no-public-secret-env`
+- **Best Practices** — `prefer-class-list`, `no-process-env`, `prefer-content-collections`, project package/env/content config checks
 
 It ships as:
-1. A **CLI** (`@santi020k/astro-doctor`) — `npx @santi020k/astro-doctor@latest`
+1. A **CLI** (`@santi020k/astro-doctor`) — `pnpm dlx @santi020k/astro-doctor@latest`
 2. An **ESLint plugin** (`@santi020k/eslint-plugin-astro-doctor`) — for inline editor diagnostics
 3. A **GitHub Action** — PR diff mode, sticky summary comment, health score output
 4. **Agent skills** (`.agents/skills/`) — installed into Claude Code, Cursor, Codex, etc.
@@ -50,7 +50,7 @@ packages/
       install.ts                runInstall() — copies agent skills into the user's project
       lsp.ts                    runLsp() — experimental LSP server (diagnostics, hover, code actions,
                                            health score notifications via experimental/ methods)
-      scanner/                  File discovery (glob) + ESLint runner
+      scanner/                  File discovery (glob) + ESLint runner + project audits
       report/
         console.ts              formatConsoleReport() — terminal output with score
         json.ts                 formatJsonReport() — JsonReport shape for --json
@@ -67,7 +67,7 @@ packages/
     scripts/
       vsce-package.cjs          Temporarily resolves catalog: refs for vsce packaging
 .agents/skills/
-  astro-rules/SKILL.md          All 9 rules with before/after examples
+  astro-rules/SKILL.md          All 14 rules with before/after examples
   astro-performance/SKILL.md    Astro islands architecture performance patterns
   add-rule/SKILL.md             Workflow for adding a new rule to astro-doctor
 skills/

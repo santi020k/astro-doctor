@@ -44,7 +44,7 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Detect changed Astro files (PR diff mode)
+    - name: Detect changed Astro Doctor files (PR diff mode)
       id: diff
       if: github.event_name == 'pull_request' && inputs.diff-only == 'true'
       shell: bash
@@ -53,7 +53,9 @@ runs:
         CHANGED_FILES_FILE="${RUNNER_TEMP:-/tmp}/astro-doctor-changed-files.txt"
         WORKING_DIRECTORY="${{ inputs.working-directory }}"
 
-        git -C "$WORKING_DIRECTORY" diff --name-only --diff-filter=AMR --relative "$BASE_SHA"...HEAD -- '*.astro' > "$CHANGED_FILES_FILE"
+        git -C "$WORKING_DIRECTORY" diff --name-only --diff-filter=AMR --relative "$BASE_SHA"...HEAD \
+          | grep -E '(\.astro$|(^|/)astro\.config\.(ts|mjs|js|cjs|mts|cts)$|(^|/)package\.json$|(^|/)package-lock\.json$|(^|/)yarn\.lock$|(^|/)\.env\.example$|(^|/)src/content\.config\.(ts|mjs|js)$|(^|/)src/content/config\.(ts|mjs|js)$|(^|/)src/content/)' \
+          > "$CHANGED_FILES_FILE" || true
 
         echo "changed_files_from=$CHANGED_FILES_FILE" >> "$GITHUB_OUTPUT"
         echo "is_pr=true" >> "$GITHUB_OUTPUT"
@@ -61,11 +63,11 @@ runs:
           echo "no_astro_changes=true" >> "$GITHUB_OUTPUT"
         fi
 
-    - name: Skip scan (no Astro changes)
+    - name: Skip scan (no Astro Doctor changes)
       if: steps.diff.outputs.no_astro_changes == 'true'
       shell: bash
       run: |
-        echo "No .astro files changed in this PR — skipping Astro Doctor scan."
+        echo "No Astro Doctor relevant files changed in this PR — skipping Astro Doctor scan."
 
     - name: Run Astro Doctor scan
       id: scan
@@ -156,7 +158,7 @@ runs:
           }).join('\n')
 
           const truncated = report.diagnostics.length > 25
-            ? `\n> ⚠ Showing 25 of ${report.diagnostics.length} diagnostics. Run \`npx @santi020k/astro-doctor@latest\` locally to see all.`
+            ? `\n> ⚠ Showing 25 of ${report.diagnostics.length} diagnostics. Run \`pnpm dlx @santi020k/astro-doctor@latest\` locally to see all.`
             : ''
 
           const issuesSection = report.errorCount + report.warningCount === 0
