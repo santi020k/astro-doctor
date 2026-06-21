@@ -80,13 +80,13 @@ jobs:
       </tr>
       <tr>
         <td><code>diff-only</code></td>
-        <td><code>false</code></td>
+        <td><code>true</code></td>
         <td>Scan only files changed in the PR</td>
       </tr>
       <tr>
         <td><code>json-report</code></td>
-        <td><code>astro-doctor-report.json</code></td>
-        <td>Path for the intermediate JSON report</td>
+        <td><em>empty</em></td>
+        <td>Path to write a JSON report; leave empty to skip</td>
       </tr>
     </tbody>
   </table>
@@ -145,20 +145,16 @@ jobs:
 
   <p>When <code>comment: true</code>, the action posts a comment like:</p>
 
-  <pre><code>{`## 🏥 Astro Doctor Report
+  <pre><code>{`## Astro Doctor 🟢 85/100 (B) _(changed files only)_
 
-| Metric  | Value |
-|---------|-------|
-| Score   | 85/100 (B) 🟡 |
-| Files   | 14 |
-| Errors  | 1 |
-| Warnings | 2 |
+| | File | Location | Message | Rule |
+|---|---|---|---|---|
+| 🔴 | \`src/pages/blog.astro\` | 12:5 | img element is missing a non-empty alt attribute | \`no-missing-alt\` |
+| 🟡 | \`src/components/Counter.astro\` | 3:1 | prefer client:idle or client:visible over client:load | \`no-client-load-overuse\` |
 
-### Findings
-| File | Line | Rule | Severity |
-|------|------|------|----------|
-| src/pages/blog.astro | 12 | no-missing-alt | ❌ error |
-...`}
+**1 error, 1 warning** across 14 files
+
+<sub>Powered by [Astro Doctor](https://github.com/santi020k/astro-doctor)</sub>`}
        </code>
   </pre>
 
