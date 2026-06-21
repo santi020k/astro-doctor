@@ -11,13 +11,16 @@ The CLI for Astro Doctor — scans your Astro project and reports issues across 
 
 ```bash
 # One-time scan (no install)
-npx @santi020k/astro-doctor@latest
+pnpm dlx @santi020k/astro-doctor@latest
 
 # Scan a specific directory
-npx @santi020k/astro-doctor@latest --dir ./src
+pnpm dlx @santi020k/astro-doctor@latest --dir ./src
+
+# Scaffold config, ESLint setup, and GitHub Action
+pnpm dlx @santi020k/astro-doctor@latest init
 
 # Install the agent skill after scanning
-npx @santi020k/astro-doctor@latest install
+pnpm dlx @santi020k/astro-doctor@latest install
 ```
 
 ## Programmatic API
@@ -31,7 +34,7 @@ console.log(formatConsoleReport(result))
 // result.diagnostics  — array of findings
 // result.errorCount   — number of errors
 // result.warningCount — number of warnings
-// result.fileCount    — number of .astro files scanned
+// result.fileCount    — number of files included in scoring
 ```
 
 ## GitHub Actions

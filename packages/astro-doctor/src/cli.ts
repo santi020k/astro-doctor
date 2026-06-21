@@ -236,7 +236,7 @@ Commands:
 Scan options:
   -d, --dir <path>                  Directory to scan (default: cwd)
       --diff [base]                 Scan files changed vs. a base branch (default: main/master)
-      --staged                      Scan only git-staged .astro files (pre-commit)
+      --staged                      Scan only git-staged Astro Doctor files (pre-commit)
       --changed-files-from <path>   Scan newline-separated changed files from a file
       --category <cat>              Filter to one category (repeat for multiple)
                                     Categories: performance | accessibility | security | best-practices

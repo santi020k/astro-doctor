@@ -24,7 +24,7 @@ const git = (args: string[], cwd: string): string[] => {
 }
 
 /**
- * Return absolute paths of .astro files currently staged (git add-ed) in the given directory.
+ * Return absolute paths of Astro Doctor files currently staged (git add-ed) in the given directory.
  */
 export const getStagedAstroFiles = (cwd: string): string[] => {
   const lines = git(['diff', '--cached', '--name-only', '--diff-filter=ACMR'], cwd)
@@ -35,7 +35,7 @@ export const getStagedAstroFiles = (cwd: string): string[] => {
 }
 
 /**
- * Return absolute paths of .astro files changed compared to a base ref.
+ * Return absolute paths of Astro Doctor files changed compared to a base ref.
  * Defaults to auto-detecting the default branch (main → master → HEAD~1).
  */
 export const getDiffAstroFiles = (cwd: string, base?: string): string[] => {

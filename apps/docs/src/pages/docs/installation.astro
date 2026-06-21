@@ -4,7 +4,7 @@ import Docs from '@/layouts/Docs.astro'
 
 <Docs
   title="Installation"
-  description="Install astro-doctor via npm, pnpm, or yarn."
+  description="Install astro-doctor with pnpm."
   editPath="apps/docs/src/pages/docs/installation.astro"
 >
   <h1>Installation</h1>
@@ -13,7 +13,7 @@ import Docs from '@/layouts/Docs.astro'
 
   <p>Run astro-doctor without installing it at all:</p>
 
-  <pre><code>npx @santi020k/astro-doctor</code></pre>
+  <pre><code>pnpm dlx @santi020k/astro-doctor@latest</code></pre>
 
   <p>This scans the current directory and prints a health report with score.</p>
 
@@ -21,14 +21,7 @@ import Docs from '@/layouts/Docs.astro'
 
   <p>Add to your project so it's always available and pinned to a version:</p>
 
-  <pre><code># pnpm
-    pnpm add -D @santi020k/astro-doctor
-
-    # npm
-    npm install -D @santi020k/astro-doctor
-
-    # yarn
-    yarn add -D @santi020k/astro-doctor
+  <pre><code>pnpm add -D @santi020k/astro-doctor
        </code>
   </pre>
 
@@ -90,7 +83,7 @@ export default [
 
   <p>
     See <a href="/docs/github-action">GitHub Action</a> for full setup instructions. No extra
-    installation is required — the action runs <code>npx</code> internally.
+    installation is required — the action runs astro-doctor internally.
   </p>
 
   <h2>Works alongside eslint-plugin-astro</h2>

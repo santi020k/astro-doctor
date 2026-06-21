@@ -8,9 +8,9 @@
 ## Install
 
 ```bash
-npm install -D @santi020k/eslint-plugin-astro-doctor
+pnpm add -D @santi020k/eslint-plugin-astro-doctor
 # also requires astro-eslint-parser for .astro file parsing
-npm install -D astro-eslint-parser
+pnpm add -D astro-eslint-parser
 ```
 
 ## Usage
@@ -41,9 +41,13 @@ export default [
     rules: {
       'astro-doctor/no-client-load-overuse': 'warn',
       'astro-doctor/use-astro-image': 'warn',
+      'astro-doctor/require-image-dimensions': 'warn',
       'astro-doctor/no-blocking-script': 'warn',
+      'astro-doctor/no-unprocessed-script-surprises': 'warn',
       'astro-doctor/no-missing-alt': 'error',
       'astro-doctor/no-missing-lang': 'error',
+      'astro-doctor/require-island-fallback': 'warn',
+      'astro-doctor/no-public-secret-env': 'warn',
       'astro-doctor/no-set-html': 'warn',
       'astro-doctor/prefer-class-list': 'warn',
       'astro-doctor/no-process-env': 'warn',
@@ -73,9 +77,13 @@ export default await defineConfig({
 | ---- | -------- | ------- |
 | `no-client-load-overuse` | performance | ⚠️ warn |
 | `use-astro-image` | performance | ⚠️ warn |
+| `require-image-dimensions` | performance | ⚠️ warn |
 | `no-blocking-script` | performance | ⚠️ warn |
+| `no-unprocessed-script-surprises` | performance | ⚠️ warn |
 | `no-missing-alt` | accessibility | ❌ error |
 | `no-missing-lang` | accessibility | ❌ error |
+| `require-island-fallback` | accessibility | ⚠️ warn |
+| `no-public-secret-env` | security | ⚠️ warn |
 | `no-set-html` | security | ⚠️ warn |
 | `prefer-class-list` | best-practices | ⚠️ warn |
 | `no-process-env` | best-practices | ⚠️ warn |
