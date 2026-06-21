@@ -1,0 +1,21 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "vscode-astro-doctor: build",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "--filter",
+        "vscode-astro-doctor",
+        "run",
+        "build"
+      ],
+      "group": "build",
+      "presentation": {
+        "reveal": "silent"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

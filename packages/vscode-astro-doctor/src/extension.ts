@@ -24,6 +24,8 @@ const COMMAND_SHOW_OUTPUT = 'astro-doctor.showOutput'
 const COMMAND_OPEN_DOCS = 'astro-doctor.openDocs'
 const SERVER_STATUS_METHOD = 'experimental/serverStatus'
 const HEALTH_SCORE_METHOD = 'experimental/healthScore'
+const ENV_LOCAL = 'local'
+const ENV_PRODUCTION = 'production'
 
 interface ServerStatusParams {
   readonly health: 'error' | 'ok' | 'warning'
@@ -35,13 +37,36 @@ const IS_WINDOWS = process.platform === 'win32'
 const ACTIVE_FILE_COMMANDS = new Set([COMMAND_FIX_ALL, COMMAND_SCAN_FILE])
 let client: LanguageClient | undefined
 
+interface ExtensionRuntime {
+  readonly environment: string
+  readonly preferWorkspaceServer: boolean
+}
+
 interface ResolvedServer {
   readonly args: string[]
   readonly command: string
   readonly shell: boolean
 }
 
-const resolveServer = (
+const resolveRuntime = (context: vscode.ExtensionContext): ExtensionRuntime => {
+  const configuredEnvironment = process.env.ASTRO_DOCTOR_EXTENSION_ENV?.trim()
+
+  if (configuredEnvironment === ENV_LOCAL) {
+    return { environment: ENV_LOCAL, preferWorkspaceServer: true }
+  }
+
+  if (configuredEnvironment === ENV_PRODUCTION) {
+    return { environment: ENV_PRODUCTION, preferWorkspaceServer: false }
+  }
+
+  if (context.extensionMode === vscode.ExtensionMode.Development) {
+    return { environment: ENV_LOCAL, preferWorkspaceServer: true }
+  }
+
+  return { environment: ENV_PRODUCTION, preferWorkspaceServer: false }
+}
+
+const resolveConfiguredServer = (
   configuration: vscode.WorkspaceConfiguration,
 ): ResolvedServer | undefined => {
   const explicitPath = configuration.get<string>('serverPath', '').trim()
@@ -50,6 +75,10 @@ const resolveServer = (
     return { args: ['experimental-lsp'], command: explicitPath, shell: false }
   }
 
+  return undefined
+}
+
+const resolveWorkspaceServer = (): ResolvedServer | undefined => {
   const binName = IS_WINDOWS ? 'astro-doctor.cmd' : 'astro-doctor'
 
   for (const folder of vscode.workspace.workspaceFolders ?? []) {
@@ -127,14 +156,27 @@ const createServerOptions = (
   configuration: vscode.WorkspaceConfiguration,
   extensionPath: string,
   outputChannel: vscode.OutputChannel,
+  runtime: ExtensionRuntime,
 ): ServerOptions | undefined => {
-  const resolved = resolveServer(configuration)
+  const configuredServer = resolveConfiguredServer(configuration)
 
-  if (resolved) return createExecutableServerOptions(resolved)
+  if (configuredServer) return createExecutableServerOptions(configuredServer)
+
+  if (runtime.preferWorkspaceServer) {
+    const workspaceServer = resolveWorkspaceServer()
+
+    if (workspaceServer) return createExecutableServerOptions(workspaceServer)
+  }
 
   const bundledServer = resolveBundledServer(extensionPath)
 
   if (bundledServer) return createBundledServerOptions(bundledServer)
+
+  if (!runtime.preferWorkspaceServer) {
+    const workspaceServer = resolveWorkspaceServer()
+
+    if (workspaceServer) return createExecutableServerOptions(workspaceServer)
+  }
 
   showMissingServer(outputChannel)
 
@@ -181,10 +223,13 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
 
   if (!configuration.get<boolean>('enable', true)) return
 
+  const runtime = resolveRuntime(context)
   const outputChannel = vscode.window.createOutputChannel(CLIENT_NAME)
-  const serverOptions = createServerOptions(configuration, context.extensionPath, outputChannel)
+  const serverOptions = createServerOptions(configuration, context.extensionPath, outputChannel, runtime)
 
   if (!serverOptions) return
+
+  outputChannel.appendLine(`${CLIENT_NAME}: using ${runtime.environment} environment`)
 
   // Sidebar
   const sidebarProvider = new AstroDoctorSidebarProvider()

@@ -101,7 +101,7 @@
           "type": "string",
           "default": "",
           "scope": "machine-overridable",
-          "description": "Optional path to the astro-doctor executable. When empty, the project's local install is used, falling back to the bundled language server."
+          "description": "Optional path to the astro-doctor executable. When empty, local development uses the workspace install first; production uses the bundled language server first."
         },
         "astroDoctor.scanOnType": {
           "type": "boolean",
