@@ -6,11 +6,11 @@ Your agent writes bad Astro. This catches it.
 
 ## What This Skill Does
 
-Astro Doctor scans your codebase and reports issues across five categories:
-- **Performance** — client directive overuse, unoptimized images
-- **Accessibility** — missing alt text on images
+Astro Doctor scans your codebase and reports issues across four categories with eight rules:
+- **Performance** — client directive overuse, unoptimized images, render-blocking scripts
+- **Accessibility** — missing alt text, missing HTML lang attribute
 - **Security** — unsafe `set:html` usage
-- **Best Practices** — dynamic class patterns, Astro idioms
+- **Best Practices** — dynamic class patterns, environment variable access
 
 ## Rules
 
@@ -60,6 +60,25 @@ import heroImage from '../assets/hero.jpg'
 <Image src={heroImage} alt="Hero" />
 ```
 
+#### `no-blocking-script`
+**Severity: warning**
+
+`<script src="...">` without `defer`, `async`, or `type="module"` blocks HTML parsing and delays First Contentful Paint.
+
+```astro
+<!-- ❌ Blocks HTML parsing until downloaded + executed -->
+<script src="/analytics.js"></script>
+
+<!-- ✅ defer — preserves execution order, non-blocking -->
+<script src="/analytics.js" defer></script>
+
+<!-- ✅ async — fires as soon as downloaded -->
+<script src="/widget.js" async></script>
+
+<!-- ✅ type="module" — always deferred -->
+<script src="/app.js" type="module"></script>
+```
+
 ### Accessibility
 
 #### `no-missing-alt`
@@ -78,6 +97,24 @@ All `<img>`, `<Image>`, and `<Picture>` elements must have an `alt` attribute.
 
 <!-- ✅ Decorative image -->
 <img src="/divider.svg" alt="" role="presentation" />
+```
+
+#### `no-missing-lang`
+**Severity: error**
+
+The `<html>` element must have a `lang` attribute. Screen readers and search engines use it to determine page language. Missing `lang` is a WCAG 2.1 Level A failure (SC 3.1.1).
+
+```astro
+<!-- ❌ Missing lang — WCAG SC 3.1.1 failure -->
+<html>
+  <head><title>My Site</title></head>
+  <body>...</body>
+</html>
+
+<!-- ✅ Always set lang -->
+<html lang="en">
+  ...
+</html>
 ```
 
 ### Security
@@ -121,6 +158,24 @@ const variant = 'primary'
 
 <!-- ✅ class:list — idiomatic Astro -->
 <button class:list={['btn', `btn-${variant}`, { active: isActive }]}>Click</button>
+```
+
+#### `no-process-env`
+**Severity: warning**
+
+`process.env` is Node.js-only and doesn't work in client-side code or respect Astro's `PUBLIC_` prefix visibility rules. Use `import.meta.env` instead.
+
+```astro
+---
+// ❌ Node.js-only — breaks in client context, no PUBLIC_ support
+const apiKey = process.env.API_KEY
+---
+
+---
+// ✅ Works server and client, respects PUBLIC_ visibility
+const apiKey = import.meta.env.API_KEY
+const siteUrl = import.meta.env.PUBLIC_SITE_URL
+---
 ```
 
 ## Running Astro Doctor

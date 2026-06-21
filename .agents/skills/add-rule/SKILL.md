@@ -133,7 +133,7 @@ Select `minor` for a new rule (new public surface). Write: `feat(eslint-plugin):
 
 | Category | Default severity | Examples |
 |----------|-----------------|---------|
-| `performance` | `warn` | `no-client-load-overuse`, `use-astro-image` |
-| `accessibility` | `error` | `no-missing-alt` |
+| `performance` | `warn` | `no-client-load-overuse`, `use-astro-image`, `no-blocking-script` |
+| `accessibility` | `error` | `no-missing-alt`, `no-missing-lang` |
 | `security` | `warn` | `no-set-html` |
-| `best-practices` | `warn` | `prefer-class-list` |
+| `best-practices` | `warn` | `prefer-class-list`, `no-process-env` |

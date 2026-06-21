@@ -107,6 +107,71 @@ const variant = 'primary'
 <button class:list={['btn', `btn-${variant}`, { active: isActive }]}>Click</button>
 ```
 
+### `astro-doctor/no-blocking-script` — performance, warning
+
+`<script src="...">` without `defer`, `async`, or `type="module"` blocks HTML parsing and delays First Contentful Paint.
+
+| Strategy | Behavior | Best for |
+|----------|----------|----------|
+| `defer` | Downloads async, executes in order after parse | Scripts that depend on each other |
+| `async` | Downloads async, executes immediately on load | Independent scripts (analytics) |
+| `type="module"` | Always deferred, supports ESM imports | Modern bundled code |
+
+```astro
+<!-- ❌ Blocks HTML parsing until downloaded + executed -->
+<script src="/analytics.js"></script>
+
+<!-- ✅ Deferred — preserves execution order -->
+<script src="/analytics.js" defer></script>
+
+<!-- ✅ Async — fires as soon as downloaded -->
+<script src="/widget.js" async></script>
+
+<!-- ✅ ES module — always deferred -->
+<script src="/app.js" type="module"></script>
+```
+
+### `astro-doctor/no-missing-lang` — accessibility, error
+
+All `<html>` elements must have a `lang` attribute. Screen readers and search engines use it to determine page language. Missing `lang` is a WCAG 2.1 Level A failure (SC 3.1.1).
+
+```astro
+<!-- ❌ Missing lang — screen readers may mispronounce content -->
+<html>
+  <head><title>My Site</title></head>
+  <body>...</body>
+</html>
+
+<!-- ✅ Explicit lang -->
+<html lang="en">
+  <head><title>My Site</title></head>
+  <body>...</body>
+</html>
+
+<!-- ✅ Dynamic lang (i18n) -->
+<html lang={Astro.currentLocale ?? 'en'}>
+  ...
+</html>
+```
+
+### `astro-doctor/no-process-env` — best-practices, warning
+
+`process.env` is Node.js-only and doesn't work in client code or respect Astro's `PUBLIC_` prefix rules. Use `import.meta.env` everywhere.
+
+```astro
+---
+// ❌ Doesn't work in client context, no PUBLIC_ support
+const apiKey = process.env.API_KEY
+const siteUrl = process.env.PUBLIC_SITE_URL
+---
+
+---
+// ✅ Works server and client, respects PUBLIC_ visibility
+const apiKey = import.meta.env.API_KEY
+const siteUrl = import.meta.env.PUBLIC_SITE_URL
+---
+```
+
 ## Configuration
 
 Create `doctor.config.ts` in your project root to override severities:
