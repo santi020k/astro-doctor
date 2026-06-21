@@ -38,8 +38,8 @@
     "eslint": "catalog:",
     "glob": "catalog:",
     "jiti": "catalog:",
-    "vscode-languageserver": "^9.0.1",
-    "vscode-languageserver-textdocument": "^1.0.12"
+    "vscode-languageserver": "catalog:",
+    "vscode-languageserver-textdocument": "catalog:"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",

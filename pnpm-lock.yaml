@@ -27,6 +27,9 @@ catalogs:
     '@types/node':
       specifier: ^22.15.32
       version: 22.20.0
+    '@types/vscode':
+      specifier: ^1.85.0
+      version: 1.125.0
     astro-eslint-parser:
       specifier: ^1.2.2
       version: 1.4.0
@@ -42,6 +45,9 @@ catalogs:
     cz-conventional-changelog:
       specifier: ^3.3.0
       version: 3.3.0
+    esbuild:
+      specifier: ^0.25.0
+      version: 0.25.12
     eslint:
       specifier: ^9.29.0
       version: 9.39.4
@@ -72,6 +78,15 @@ catalogs:
     vitest:
       specifier: ^3.2.4
       version: 3.2.6
+    vscode-languageclient:
+      specifier: ^9.0.1
+      version: 9.0.1
+    vscode-languageserver:
+      specifier: ^9.0.1
+      version: 9.0.1
+    vscode-languageserver-textdocument:
+      specifier: ^1.0.12
+      version: 1.0.12
 
 importers:
 
@@ -175,10 +190,10 @@ importers:
         specifier: 'catalog:'
         version: 2.7.0
       vscode-languageserver:
-        specifier: ^9.0.1
+        specifier: 'catalog:'
         version: 9.0.1
       vscode-languageserver-textdocument:
-        specifier: ^1.0.12
+        specifier: 'catalog:'
         version: 1.0.12
     devDependencies:
       '@arethetypeswrong/cli':
@@ -219,20 +234,20 @@ importers:
   packages/vscode-astro-doctor:
     dependencies:
       vscode-languageclient:
-        specifier: ^9.0.1
+        specifier: 'catalog:'
         version: 9.0.1
     devDependencies:
       '@types/node':
-        specifier: ^22.15.32
+        specifier: 'catalog:'
         version: 22.20.0
       '@types/vscode':
-        specifier: ^1.85.0
+        specifier: 'catalog:'
         version: 1.125.0
       esbuild:
-        specifier: ^0.25.0
+        specifier: 'catalog:'
         version: 0.25.12
       typescript:
-        specifier: ^5.8.3
+        specifier: 'catalog:'
         version: 5.9.3
 
 packages:
@@ -11476,11 +11491,11 @@ snapshots:
 
   '@types/concat-stream@2.0.3':
     dependencies:
-      '@types/node': 22.20.0
+      '@types/node': 24.13.2
 
   '@types/conventional-commits-parser@5.0.2':
     dependencies:
-      '@types/node': 22.20.0
+      '@types/node': 24.13.2
 
   '@types/css-tree@2.3.11': {}
 
@@ -11534,7 +11549,7 @@ snapshots:
 
   '@types/sax@1.2.7':
     dependencies:
-      '@types/node': 22.20.0
+      '@types/node': 24.13.2
 
   '@types/supports-color@8.1.3': {}
 
@@ -11550,7 +11565,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 22.20.0
+      '@types/node': 24.13.2
 
   '@typescript-eslint/eslint-plugin@8.61.1(@typescript-eslint/parser@8.61.1(eslint@10.5.0(jiti@2.7.0))(typescript@5.9.3))(eslint@10.5.0(jiti@2.7.0))(typescript@5.9.3)':
     dependencies:
@@ -17094,7 +17109,7 @@ snapshots:
       '@vitest/expect': 3.2.4
       '@vitest/spy': 3.2.4
       '@webcontainer/env': 1.1.1
-      esbuild: 0.25.12
+      esbuild: 0.27.7
       open: 10.2.0
       oxc-parser: 0.127.0
       oxc-resolver: 11.21.3

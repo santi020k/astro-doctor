@@ -19,25 +19,6 @@ type WebviewMessage =
   | { readonly message: string; readonly type: 'error'; }
   | { readonly type: 'loading' }
 
-const getScoreColor = (score: number): string => {
-  if (score >= 90) return '#3fb950' // green
-
-  if (score >= 75) return '#d29922' // yellow
-
-  if (score >= 60) return '#e3833c' // orange
-
-  return '#f85149' // red
-}
-
-const getScoreLabelColor = (label: string): string => {
-  if (label === 'A') return '#3fb950'
-
-  if (label === 'B') return '#d29922'
-
-  if (label === 'C') return '#e3833c'
-
-  return '#f85149'
-}
 
 const buildSidebarHtml = (nonce: string): string => `<!DOCTYPE html>
 <html lang="en">
