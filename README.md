@@ -47,7 +47,7 @@ npm install -D @santi020k/eslint-plugin-astro-doctor
 import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 
 export default [
-  ...astroDoctorPlugin.configs.recommended,
+  astroDoctorPlugin.configs.recommended,
 ]
 ```
 

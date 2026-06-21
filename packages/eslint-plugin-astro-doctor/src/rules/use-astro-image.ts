@@ -1,4 +1,7 @@
+import { forEachAstroElement, reportAstroNode } from '../utils/astro-ast.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
+
+const IMAGE_ELEMENT_NAME = 'img'
 
 export default createRule({
   meta: {
@@ -21,12 +24,11 @@ export default createRule({
     if (!isAstroFile(context.filename)) return {}
 
     return {
-      // In astro-eslint-parser, raw HTML elements in the template are VElement nodes.
-      // The rawName property holds the original tag name from source.
-      'VElement[rawName="img"]'(node: unknown) {
-        context.report({
-          node: node as never,
-          messageId: 'useAstroImage',
+      Program() {
+        forEachAstroElement(context, (elementNode) => {
+          if (elementNode.name !== IMAGE_ELEMENT_NAME) return
+
+          reportAstroNode(context, elementNode, 'useAstroImage')
         })
       },
     }

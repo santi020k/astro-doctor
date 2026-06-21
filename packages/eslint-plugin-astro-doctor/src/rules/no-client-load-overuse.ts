@@ -1,4 +1,7 @@
+import { forEachAstroAttribute, reportAstroNode } from '../utils/astro-ast.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
+
+const CLIENT_LOAD_ATTRIBUTE_NAME = 'client:load'
 
 export default createRule({
   meta: {
@@ -20,14 +23,11 @@ export default createRule({
     if (!isAstroFile(context.filename)) return {}
 
     return {
-      // astro-eslint-parser exposes template attribute nodes via the HTML AST.
-      // Client directives like client:load appear as VAttribute nodes where
-      // the key name equals the directive string (e.g. "client:load").
-      'VAttribute[key.name="client:load"]'(node: unknown) {
-        context.report({
-           
-          node: node as never,
-          messageId: 'preferLazyDirective',
+      Program() {
+        forEachAstroAttribute(context, (attributeNode) => {
+          if (attributeNode.name !== CLIENT_LOAD_ATTRIBUTE_NAME) return
+
+          reportAstroNode(context, attributeNode, 'preferLazyDirective')
         })
       },
     }

@@ -49,11 +49,15 @@ runs:
       if: github.event_name == 'pull_request' && inputs.diff-only == 'true'
       shell: bash
       run: |
-        BASE_SHA=${{ github.event.pull_request.base.sha }}
-        CHANGED=$(git diff --name-only "$BASE_SHA"...HEAD -- '*.astro' | tr '\n' ',')
-        echo "changed_files=$CHANGED" >> "$GITHUB_OUTPUT"
+        BASE_SHA="${{ github.event.pull_request.base.sha }}"
+        CHANGED_FILES_FILE="${RUNNER_TEMP:-/tmp}/astro-doctor-changed-files.txt"
+        WORKING_DIRECTORY="${{ inputs.working-directory }}"
+
+        git -C "$WORKING_DIRECTORY" diff --name-only --diff-filter=AMR --relative "$BASE_SHA"...HEAD -- '*.astro' > "$CHANGED_FILES_FILE"
+
+        echo "changed_files_from=$CHANGED_FILES_FILE" >> "$GITHUB_OUTPUT"
         echo "is_pr=true" >> "$GITHUB_OUTPUT"
-        if [ -z "$CHANGED" ]; then
+        if [ ! -s "$CHANGED_FILES_FILE" ]; then
           echo "no_astro_changes=true" >> "$GITHUB_OUTPUT"
         fi
 
@@ -70,11 +74,22 @@ runs:
       env:
         ASTRO_DOCTOR_JSON_OUT: /tmp/astro-doctor-report.json
       run: |
-        JSON_FLAG="--json /tmp/astro-doctor-report.json"
-        FAIL_FLAG="--fail-on ${{ inputs.fail-on }}"
-        DIR_FLAG="--dir ${{ inputs.working-directory }}"
+        JSON_REPORT_PATH="/tmp/astro-doctor-report.json"
+        JSON_FLAG=(--json "$JSON_REPORT_PATH")
+        FAIL_FLAG=(--fail-on "${{ inputs.fail-on }}")
+        DIR_FLAG=(--dir "${{ inputs.working-directory }}")
+        CHANGED_FLAG=()
 
-        npx --yes @santi020k/astro-doctor@latest $DIR_FLAG $JSON_FLAG $FAIL_FLAG || true
+        if [ -n "${{ steps.diff.outputs.changed_files_from }}" ]; then
+          CHANGED_FLAG=(--changed-files-from "${{ steps.diff.outputs.changed_files_from }}")
+        fi
+
+        set +e
+        npx --yes @santi020k/astro-doctor@latest "${DIR_FLAG[@]}" "${JSON_FLAG[@]}" "${FAIL_FLAG[@]}" "${CHANGED_FLAG[@]}"
+        SCAN_STATUS=$?
+        set -e
+
+        echo "exit_code=$SCAN_STATUS" >> "$GITHUB_OUTPUT"
 
     - name: Parse report and set outputs
       id: report
@@ -82,6 +97,7 @@ runs:
       shell: bash
       run: |
         if [ ! -f /tmp/astro-doctor-report.json ]; then
+          echo "scan_failed=true" >> "$GITHUB_OUTPUT"
           echo "total=0" >> "$GITHUB_OUTPUT"
           echo "errors=0" >> "$GITHUB_OUTPUT"
           echo "warnings=0" >> "$GITHUB_OUTPUT"
@@ -90,6 +106,7 @@ runs:
           exit 0
         fi
 
+        echo "scan_failed=false" >> "$GITHUB_OUTPUT"
         TOTAL=$(jq '.errorCount + .warningCount' /tmp/astro-doctor-report.json)
         ERRORS=$(jq '.errorCount' /tmp/astro-doctor-report.json)
         WARNINGS=$(jq '.warningCount' /tmp/astro-doctor-report.json)
@@ -103,7 +120,7 @@ runs:
         echo "score_label=$LABEL" >> "$GITHUB_OUTPUT"
 
     - name: Copy JSON report to requested path
-      if: inputs.json-report != '' && steps.diff.outputs.no_astro_changes != 'true'
+      if: inputs.json-report != '' && steps.diff.outputs.no_astro_changes != 'true' && steps.report.outputs.scan_failed != 'true'
       shell: bash
       run: cp /tmp/astro-doctor-report.json "${{ inputs.json-report }}"
 
@@ -111,7 +128,8 @@ runs:
       if: |
         github.event_name == 'pull_request' &&
         inputs.comment == 'true' &&
-        steps.diff.outputs.no_astro_changes != 'true'
+        steps.diff.outputs.no_astro_changes != 'true' &&
+        steps.report.outputs.scan_failed != 'true'
       uses: actions/github-script@v7
       with:
         script: |
@@ -175,9 +193,16 @@ runs:
       if: steps.diff.outputs.no_astro_changes != 'true'
       shell: bash
       run: |
+        SCAN_FAILED="${{ steps.report.outputs.scan_failed || 'false' }}"
+        SCAN_STATUS="${{ steps.scan.outputs.exit_code || 1 }}"
         ERRORS=${{ steps.report.outputs.errors || 0 }}
         WARNINGS=${{ steps.report.outputs.warnings || 0 }}
         FAIL_ON="${{ inputs.fail-on }}"
+
+        if [ "$SCAN_FAILED" = "true" ]; then
+          echo "::error::Astro Doctor scan failed before writing a report."
+          exit "$SCAN_STATUS"
+        fi
 
         if [ "$FAIL_ON" = "error" ] && [ "$ERRORS" -gt 0 ]; then
           echo "::error::Astro Doctor found $ERRORS error(s). Fix them or set fail-on: 'off'."

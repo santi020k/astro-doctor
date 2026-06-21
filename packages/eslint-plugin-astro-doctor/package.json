@@ -4,6 +4,8 @@
   "description": "ESLint plugin for Astro Doctor: diagnose Astro codebases for performance, accessibility, security, and best-practice issues",
   "type": "module",
   "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

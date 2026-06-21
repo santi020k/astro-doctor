@@ -2,23 +2,15 @@ import { relative } from 'node:path'
 
 import type { Diagnostic, ScanResult } from '../types.js'
 
-// ---------------------------------------------------------------------------
-// ANSI color helpers — only applied when stdout supports color
-// ---------------------------------------------------------------------------
-
 const useColor = (): boolean => process.stdout.isTTY && process.env.NO_COLOR === undefined
 const ansi = (code: string) => (text: string) => useColor() ? `\x1b[${code}m${text}\x1b[0m` : text
-const bold      = ansi('1')
-const dim       = ansi('2')
+const bold = ansi('1')
+const dim = ansi('2')
 const underline = ansi('4')
-const red       = ansi('31')
-const yellow    = ansi('33')
-const green     = ansi('32')
-const cyan      = ansi('36')
-
-// ---------------------------------------------------------------------------
-// Score display
-// ---------------------------------------------------------------------------
+const red = ansi('31')
+const yellow = ansi('33')
+const green = ansi('32')
+const cyan = ansi('36')
 
 const SCORE_EMOJI: Record<string, string> = {
   A: '✅',
@@ -38,11 +30,7 @@ const colorScore = (score: number, label: string): string => {
   return red(`${score}/100 (${label})`)
 }
 
-// ---------------------------------------------------------------------------
-// Per-diagnostic formatting (used inside a file group)
-// ---------------------------------------------------------------------------
-
-const PAD_LOCATION = 8  // "123:45  " — enough for most files
+const PAD_LOCATION = 8
 
 const formatDiagnosticRow = (diagnostic: Diagnostic): string => {
   const location = dim(`${diagnostic.line}:${diagnostic.column}`.padEnd(PAD_LOCATION))
@@ -57,37 +45,29 @@ const formatDiagnosticRow = (diagnostic: Diagnostic): string => {
   return `  ${location}  ${severityText}  ${diagnostic.message}${ruleShortName}`
 }
 
-// ---------------------------------------------------------------------------
-// Group diagnostics by file (ESLint-style)
-// ---------------------------------------------------------------------------
-
 const groupByFile = (diagnostics: readonly Diagnostic[]): Map<string, Diagnostic[]> => {
-  const map = new Map<string, Diagnostic[]>()
+  const diagnosticsByFile = new Map<string, Diagnostic[]>()
 
-  for (const d of diagnostics) {
-    const existing = map.get(d.filePath)
+  for (const diagnostic of diagnostics) {
+    const existingDiagnostics = diagnosticsByFile.get(diagnostic.filePath)
 
-    if (existing) {
-      existing.push(d)
+    if (existingDiagnostics) {
+      existingDiagnostics.push(diagnostic)
     } else {
-      map.set(d.filePath, [d])
+      diagnosticsByFile.set(diagnostic.filePath, [diagnostic])
     }
   }
 
-  return map
+  return diagnosticsByFile
 }
 
 const formatFileGroup = (filePath: string, diagnostics: Diagnostic[], rootDirectory: string): string => {
   const relPath = relative(rootDirectory, filePath)
   const header = bold(underline(relPath))
-  const rows = diagnostics.map((d) => formatDiagnosticRow(d)).join('\n')
+  const rows = diagnostics.map((diagnostic) => formatDiagnosticRow(diagnostic)).join('\n')
 
   return `${header}\n${rows}`
 }
-
-// ---------------------------------------------------------------------------
-// Summary + score lines
-// ---------------------------------------------------------------------------
 
 const formatSummaryLine = (result: ScanResult): string => {
   const { errorCount, warningCount, fileCount } = result
@@ -99,18 +79,30 @@ const formatSummaryLine = (result: ScanResult): string => {
   return totalIssues > 0 ? bold(red(`✖ ${summary}`)) : summary
 }
 
+const formatBreakdownLine = (result: ScanResult): string => {
+  const { scoreBreakdown } = result
+
+  const categories: [string, number][] = [
+    ['perf', scoreBreakdown.performance],
+    ['a11y', scoreBreakdown.accessibility],
+    ['sec', scoreBreakdown.security],
+    ['practices', scoreBreakdown['best-practices']],
+  ]
+
+  const parts = categories.map(([label, score]) => `${label}: ${colorScore(score, '')}`.replace(' ()', ''))
+
+  return dim(`  ${parts.join('  ')}`)
+}
+
 const formatScoreLine = (result: ScanResult, showScore: boolean): string => {
   if (!showScore) return ''
 
   const emoji = SCORE_EMOJI[result.scoreLabel] ?? '🟡'
   const score = colorScore(result.score, result.scoreLabel)
+  const breakdown = formatBreakdownLine(result)
 
-  return `\nAstro Doctor Score: ${score} ${emoji}`
+  return `\nAstro Doctor Score: ${score} ${emoji}\n${breakdown}`
 }
-
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
 
 export const formatConsoleReport = (
   result: ScanResult,

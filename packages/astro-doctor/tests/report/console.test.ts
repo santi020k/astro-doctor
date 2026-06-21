@@ -21,6 +21,13 @@ const makeScanResult = (overrides: Partial<ScanResult> = {}): ScanResult => ({
   warningCount: 0,
   score: 100,
   scoreLabel: 'A',
+  scoreBreakdown: {
+    performance: 100,
+    accessibility: 100,
+    security: 100,
+    'best-practices': 100,
+    architecture: 100,
+  },
   ...overrides,
 })
 

@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 import { formatConsoleReport } from './report/console.js'
@@ -15,56 +15,75 @@ type OutputFormat = 'console' | 'github'
 interface CliOptions {
   readonly directory: string
   readonly help: boolean
-  readonly json: string | boolean  // false = off, true = stdout, string = file path
+  readonly json: string | boolean
   readonly noScore: boolean
   readonly failOn: 'error' | 'warning' | 'off'
   readonly format: OutputFormat
-  /** Exit 1 when health score falls below this threshold (0–100). -1 = not set. */
   readonly threshold: number
+  readonly changedFilesFrom?: string
 }
 
+const getOptionValue = (
+  argv: readonly string[],
+  optionName: string,
+  alias?: string,
+): string | undefined => {
+  const inlinePrefix = `${optionName}=`
+  const inlineArgument = argv.find((argument) => argument.startsWith(inlinePrefix))
+
+  if (inlineArgument) return inlineArgument.slice(inlinePrefix.length)
+
+  const optionIndex = argv.findIndex(
+    (argument) => argument === optionName || (alias !== undefined && argument === alias),
+  )
+
+  if (optionIndex === -1) return undefined
+
+  const optionValue = argv[optionIndex + 1]
+
+  return optionValue?.startsWith('-') ? undefined : optionValue
+}
+
+const getJsonOption = (argv: readonly string[]): CliOptions['json'] => {
+  const jsonValue = getOptionValue(argv, '--json')
+
+  if (jsonValue !== undefined) return jsonValue
+
+  if (argv.includes('--json')) return true
+
+  return false
+}
+
+const readChangedFiles = (filePath: string): string[] =>
+  readFileSync(filePath, 'utf8')
+    .split(/\r?\n/u)
+    .map((changedFilePath) => changedFilePath.trim())
+    .filter(Boolean)
+
 const parseArguments = (argv: string[]): CliOptions => {
-  const directory = (() => {
-    const directoryIndex = argv.findIndex((argument) => argument === '--dir' || argument === '-d')
-    const directoryArg = directoryIndex === -1 ? undefined : argv[directoryIndex + 1]
-
-    return directoryArg ? resolve(directoryArg) : process.cwd()
-  })()
-
-  const jsonIndex = argv.findIndex((argument) => argument === '--json')
-
-  const json: CliOptions['json'] = (() => {
-    if (jsonIndex === -1) return false
-
-    const nextArg = argv[jsonIndex + 1]
-
-    if (nextArg && !nextArg.startsWith('-')) return nextArg
-
-    return true
-  })()
-
-  const failOnIndex = argv.findIndex((argument) => argument === '--fail-on')
-  const failOnValue = failOnIndex === -1 ? undefined : argv[failOnIndex + 1]
+  const directoryArg = getOptionValue(argv, '--dir', '-d')
+  const directory = directoryArg ? resolve(directoryArg) : process.cwd()
+  const failOnValue = getOptionValue(argv, '--fail-on')
 
   const failOn: CliOptions['failOn'] =
     failOnValue === 'warning' || failOnValue === 'off' ? failOnValue : 'error'
 
-  const formatIndex = argv.findIndex((argument) => argument === '--format')
-  const formatValue = formatIndex === -1 ? undefined : argv[formatIndex + 1]
+  const formatValue = getOptionValue(argv, '--format')
   const format: OutputFormat = formatValue === 'github' ? 'github' : 'console'
-  const thresholdIndex = argv.findIndex((argument) => argument === '--threshold')
-  const thresholdValue = thresholdIndex === -1 ? undefined : argv[thresholdIndex + 1]
+  const thresholdValue = getOptionValue(argv, '--threshold')
   const thresholdParsed = thresholdValue === undefined ? Number.NaN : Number.parseInt(thresholdValue, 10)
   const threshold = Number.isNaN(thresholdParsed) ? -1 : Math.min(100, Math.max(0, thresholdParsed))
+  const changedFilesFrom = getOptionValue(argv, '--changed-files-from')
 
   return {
     directory,
     help: argv.includes('--help') || argv.includes('-h'),
-    json,
+    json: getJsonOption(argv),
     noScore: argv.includes('--no-score'),
     failOn,
     format,
     threshold,
+    changedFilesFrom,
   }
 }
 
@@ -86,17 +105,26 @@ Options:
       --format <fmt>       Output format: console (default) | github
                            Use --format=github for GitHub Actions inline annotations
       --threshold <score>  Exit 1 when health score falls below this value (0–100)
+      --changed-files-from <path>
+                           Scan newline-separated changed files from a path
       --no-score           Omit the health score from the report
       --fail-on <level>    Exit 1 when this severity is found: error | warning | off
                            (default: error)
   -h, --help               Show this help message
 
 Rules checked:
-  no-client-load-overuse   Prefer client:idle / client:visible over client:load
-  use-astro-image          Use <Image> from astro:assets instead of <img>
-  no-missing-alt           All images must have an alt attribute
-  no-set-html              Avoid set:html to prevent XSS
-  prefer-class-list        Use class:list for dynamic class names
+  Performance:
+    no-blocking-script       <script src> must have defer, async, or type="module"
+    no-client-load-overuse   Prefer client:idle / client:visible over client:load
+    use-astro-image          Use <Image> from astro:assets instead of <img>
+  Accessibility:
+    no-missing-alt           All images must have an alt attribute
+    no-missing-lang          <html> must have a lang attribute
+  Security:
+    no-set-html              Avoid set:html to prevent XSS
+  Best practices:
+    no-process-env           Use import.meta.env instead of process.env
+    prefer-class-list        Use class:list for dynamic class names
 
 Configuration:
   Add a doctor.config.ts (or .js, .mjs, .cjs, .json, .jsonc) to your project root.
@@ -123,19 +151,19 @@ const handleJsonOutput = (scanResult: ScanResult, options: CliOptions): boolean 
 
 // eslint-disable-next-line complexity
 const executeScan = async (options: CliOptions): Promise<void> => {
-  const config = await loadConfig(options.directory).catch(() => null)
+  const config = await loadConfig(options.directory)
 
   const scanOptions = {
     directory: options.directory,
+    files: options.changedFilesFrom ? readChangedFiles(options.changedFilesFrom) : undefined,
     ignore: config?.ignore,
     rules: config?.rules,
   }
 
   const effectiveFailOn = options.failOn === 'error' ? (config?.failOn ?? 'error') : options.failOn
-  // CLI flag wins; fall back to config; -1 means "not set"
   const effectiveThreshold = options.threshold === -1 ? (config?.threshold ?? -1) : options.threshold
 
-  console.log(`\nScanning ${options.directory}...\n`)
+  if (options.json !== true) console.log(`\nScanning ${options.directory}...\n`)
 
   const scanResult = await scan(scanOptions)
 
