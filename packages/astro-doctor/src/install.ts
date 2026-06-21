@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
-import { resolve, join, dirname } from 'node:path'
+import { resolve, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const SKILLS_SOURCE_DIR = resolve(fileURLToPath(import.meta.url), '../../../..')

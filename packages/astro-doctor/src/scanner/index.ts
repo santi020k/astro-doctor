@@ -1,5 +1,6 @@
 import { ESLint } from 'eslint'
 import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
+import type { RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
 import * as astroParser from 'astro-eslint-parser'
 import type { Diagnostic, ScanOptions, ScanResult, Severity } from '../types.js'
 import { computeScore, computeScoreLabel } from '../scorer.js'
@@ -10,7 +11,7 @@ const SEVERITY_MAP: Record<number, Severity> = {
   2: 'error',
 }
 
-const RULE_CATEGORY_MAP: Record<string, string> = {
+const RULE_CATEGORY_MAP: Record<string, RuleCategory> = {
   'astro-doctor/use-astro-image': 'performance',
   'astro-doctor/no-client-load-overuse': 'performance',
   'astro-doctor/no-missing-alt': 'accessibility',
@@ -65,7 +66,8 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
       if (!message.ruleId) continue
 
       const severity = SEVERITY_MAP[message.severity] ?? 'warning'
-      const category = RULE_CATEGORY_MAP[message.ruleId] ?? 'best-practices'
+      // noUncheckedIndexedAccess: map lookup returns RuleCategory | undefined; fallback is safe
+      const category: RuleCategory = RULE_CATEGORY_MAP[message.ruleId] ?? 'best-practices'
 
       diagnostics.push({
         ruleId: message.ruleId,
@@ -74,8 +76,7 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
         filePath: fileResult.filePath,
         line: message.line,
         column: message.column,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        category: category as any,
+        category,
       })
     }
   }
