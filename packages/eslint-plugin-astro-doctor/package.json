@@ -1,5 +1,5 @@
 {
-  "name": "eslint-plugin-astro-doctor",
+  "name": "@santi020k/eslint-plugin-astro-doctor",
   "version": "0.1.0",
   "description": "ESLint plugin for Astro Doctor: diagnose Astro codebases for performance, accessibility, security, and best-practice issues",
   "keywords": [
@@ -39,7 +39,11 @@
     "dev": "tsc --project tsconfig.json --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
+    "lint": "eslint src tests --cache --no-warn-ignored",
+    "lint:fix": "eslint src tests --cache --fix --no-warn-ignored",
+    "check:exports": "attw --pack .",
     "clean": "rm -rf dist"
   },
   "dependencies": {
@@ -49,6 +53,7 @@
     "eslint": ">=9.0.0"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.17.5",
     "@types/node": "^22.15.32",
     "eslint": "^9.29.0",
     "typescript": "^5.8.3",

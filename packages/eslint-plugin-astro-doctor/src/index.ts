@@ -3,7 +3,7 @@ import { rules, RECOMMENDED_RULES } from './rules/index.js'
 
 const plugin = {
   meta: {
-    name: 'astro-doctor',
+    name: '@santi020k/eslint-plugin-astro-doctor',
     version: '0.1.0',
   },
   rules,

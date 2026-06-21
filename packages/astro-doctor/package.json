@@ -1,5 +1,5 @@
 {
-  "name": "astro-doctor",
+  "name": "@santi020k/astro-doctor",
   "version": "0.1.0",
   "description": "Your agent writes bad Astro. This catches it.",
   "keywords": [
@@ -43,16 +43,21 @@
     "dev": "tsc --project tsconfig.json --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
+    "lint": "eslint src tests bin --cache --no-warn-ignored",
+    "lint:fix": "eslint src tests bin --cache --fix --no-warn-ignored",
+    "check:exports": "attw --pack .",
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@santi020k/eslint-plugin-astro-doctor": "workspace:*",
     "astro-eslint-parser": "^1.2.2",
     "eslint": "^9.29.0",
-    "eslint-plugin-astro-doctor": "workspace:*",
     "glob": "^11.0.3"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.17.5",
     "@types/node": "^22.15.32",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"

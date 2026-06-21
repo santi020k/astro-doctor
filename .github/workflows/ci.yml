@@ -4,27 +4,48 @@ on:
   push:
     branches: [main]
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+
+permissions:
+  contents: read
 
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build-and-test:
-    name: Build & Test
+  build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    strategy:
+      matrix:
+        node-version: [22.x, 24.x]
+
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ matrix.node-version }}
           cache: pnpm
+
+      - name: Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ matrix.node-version }}-${{ hashFiles('pnpm-lock.yaml', 'turbo.json') }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-${{ matrix.node-version }}-
+            ${{ runner.os }}-turbo-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -32,11 +53,40 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Type check
-        run: pnpm run typecheck
+      - name: Run CI checks (Node 22.x)
+        if: matrix.node-version == '22.x'
+        run: pnpm exec turbo run typecheck lint test:coverage //#lint:spell //#lint:knip //#lint:repo
 
-      - name: Test
-        run: pnpm run test
+      - name: Run CI checks (Node 24.x)
+        if: matrix.node-version == '24.x'
+        run: pnpm exec turbo run typecheck lint test:coverage
 
-      - name: Lint
-        run: pnpm run lint
+      - name: Check exports (Node 22.x)
+        if: matrix.node-version == '22.x'
+        run: pnpm run check:exports
+
+  windows-smoke:
+    name: Windows smoke
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (serialised to avoid native-binary contention on Windows)
+        run: pnpm exec turbo run build --concurrency=1 --output-logs=new-only
+
+      - name: Run scanner tests on Windows
+        run: pnpm --filter @santi020k/astro-doctor exec vitest run tests/scanner/file-discovery.test.ts --maxWorkers=1

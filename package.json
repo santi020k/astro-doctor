@@ -1,5 +1,5 @@
 {
-  "name": "@astro-doctor/root",
+  "name": "@santi020k/astro-doctor-root",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -9,21 +9,34 @@
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean && rm -rf node_modules",
     "test": "turbo run test",
-    "test:run": "turbo run test --filter=!@astro-doctor/root",
-    "lint": "eslint . --cache --no-warn-ignored",
-    "lint:fix": "eslint . --cache --fix --no-warn-ignored",
-    "ok": "pnpm install --reporter=silent && turbo run build && turbo run test && pnpm run lint && turbo run typecheck",
+    "test:coverage": "turbo run test:coverage",
+    "lint": "pnpm run lint:repo && turbo run lint",
+    "lint:repo": "eslint . --cache --no-warn-ignored",
+    "lint:fix": "pnpm run lint:repo:fix && turbo run lint:fix",
+    "lint:repo:fix": "eslint . --cache --fix --no-warn-ignored",
+    "lint:spell": "cspell \"**\" --gitignore --cache --show-suggestions --show-context",
+    "lint:knip": "knip",
+    "ok": "pnpm install --reporter=silent && turbo run build && turbo run test && pnpm run lint:repo && turbo run lint && turbo run typecheck",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "turbo run build && changeset publish",
-    "prepare": "husky"
+    "check:exports": "turbo run check:exports",
+    "prepare": "husky",
+    "pre-commit": "lint-staged",
+    "commit": "cz"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.5",
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "@santi020k/eslint-config-basic": "latest",
     "@types/node": "^22.15.32",
+    "commitizen": "^4.3.1",
+    "cspell": "^9.1.2",
+    "cz-conventional-changelog": "^3.3.0",
     "husky": "^9.1.7",
+    "knip": "^5.53.0",
     "lint-staged": "^16.1.2",
     "turbo": "^2.5.4",
     "typescript": "^5.8.3"
@@ -32,6 +45,11 @@
     "*.{js,ts,mjs,mts,astro}": [
       "eslint --fix --no-warn-ignored"
     ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   },
   "engines": {
     "node": "^20.19.0 || >=22.13.0"

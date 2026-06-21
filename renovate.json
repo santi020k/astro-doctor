@@ -1,0 +1,79 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    "group:monorepos"
+  ],
+  "baseBranches": ["main"],
+  "labels": ["dependencies", "skip-changelog"],
+  "schedule": ["before 9am on Monday"],
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 3,
+  "rebaseWhen": "behind-base-branch",
+  "packageRules": [
+    {
+      "description": "ESLint core and all plugins — group together",
+      "matchPackageNames": [
+        "eslint",
+        "@eslint/*",
+        "eslint-*",
+        "@typescript-eslint/*",
+        "typescript-eslint",
+        "astro-eslint-parser"
+      ],
+      "groupName": "ESLint",
+      "groupSlug": "eslint"
+    },
+    {
+      "description": "TypeScript",
+      "matchPackageNames": ["typescript"],
+      "groupName": "TypeScript",
+      "groupSlug": "typescript"
+    },
+    {
+      "description": "Build tooling — turbo",
+      "matchPackageNames": ["turbo", "@turbo/*"],
+      "groupName": "build tools",
+      "groupSlug": "build-tools"
+    },
+    {
+      "description": "Testing — vitest and related",
+      "matchPackageNames": ["vitest", "@vitest/*"],
+      "groupName": "Vitest",
+      "groupSlug": "vitest"
+    },
+    {
+      "description": "CSpell spell checking",
+      "matchPackageNames": ["cspell", "@cspell/*"],
+      "groupName": "CSpell",
+      "groupSlug": "cspell"
+    },
+    {
+      "description": "Git hooks and commit tooling",
+      "matchPackageNames": ["husky", "lint-staged", "commitizen", "cz-*", "@commitlint/*"],
+      "groupName": "git hooks",
+      "groupSlug": "git-hooks"
+    },
+    {
+      "description": "Auto-merge non-breaking GitHub Actions updates",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "automergeType": "pr",
+      "groupName": "GitHub Actions",
+      "groupSlug": "github-actions"
+    },
+    {
+      "description": "Auto-merge patch-level devDependency updates when CI is green",
+      "matchUpdateTypes": ["patch"],
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true,
+      "automergeType": "pr"
+    }
+  ],
+  "pnpm": {
+    "enabled": true
+  }
+}

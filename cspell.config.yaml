@@ -1,0 +1,38 @@
+version: "0.2"
+language: en
+words:
+  - astro
+  - astrojs
+  - attw
+  - arethetypeswrong
+  - changeset
+  - changesets
+  - cspell
+  - commitizen
+  - commitlint
+  - eslint
+  - gitignore
+  - jsonc
+  - knip
+  - lint-staged
+  - linter
+  - monorepo
+  - packagemanager
+  - santi
+  - santi020k
+  - turbo
+  - turborepo
+  - tsconfig
+  - vitest
+  - workspaces
+ignorePaths:
+  - node_modules
+  - dist
+  - coverage
+  - .turbo
+  - .git
+  - .changeset
+  - pnpm-lock.yaml
+  - "*.log"
+  - "**/*.test.ts.snap"
+  - .vscode

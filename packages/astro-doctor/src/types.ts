@@ -1,4 +1,4 @@
-import type { RuleCategory } from 'eslint-plugin-astro-doctor'
+import type { RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
 
 export type Severity = 'error' | 'warning'
 

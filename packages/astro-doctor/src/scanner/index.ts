@@ -1,5 +1,5 @@
 import { ESLint } from 'eslint'
-import astroDoctorPlugin from 'eslint-plugin-astro-doctor'
+import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 import * as astroParser from 'astro-eslint-parser'
 import type { Diagnostic, ScanOptions, ScanResult, Severity } from '../types.js'
 import { discoverAstroFiles } from './file-discovery.js'
