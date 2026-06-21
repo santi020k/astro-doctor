@@ -6,11 +6,11 @@ Your agent writes bad Astro. This catches it.
 
 ## What This Skill Does
 
-Astro Doctor scans your codebase and reports issues across four categories with eight rules:
+Astro Doctor scans your codebase and reports issues across four categories with nine rules:
 - **Performance** — client directive overuse, unoptimized images, render-blocking scripts
 - **Accessibility** — missing alt text, missing HTML lang attribute
 - **Security** — unsafe `set:html` usage
-- **Best Practices** — dynamic class patterns, environment variable access
+- **Best Practices** — dynamic class patterns, environment variable access, content management
 
 ## Rules
 

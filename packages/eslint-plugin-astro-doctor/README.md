@@ -47,6 +47,7 @@ export default [
       'astro-doctor/no-set-html': 'warn',
       'astro-doctor/prefer-class-list': 'warn',
       'astro-doctor/no-process-env': 'warn',
+      'astro-doctor/prefer-content-collections': 'warn',
     },
   },
 ]
