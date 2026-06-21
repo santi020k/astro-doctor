@@ -43,7 +43,7 @@ packages/
       astro-doctor.ts           CLI entry point
     src/
       cli.ts                    CLI command definitions
-      config.ts                 Config file loading (astro-doctor.config.ts)
+      config.ts                 Config file loading (doctor.config.ts)
       scanner/                  File discovery + ESLint orchestration
       report/                   Console and JSON reporters
       index.ts                  Public programmatic API (scan())

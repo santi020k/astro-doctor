@@ -21,7 +21,7 @@ export default await defineConfig(
       },
     },
     testing: [Testing.Vitest],
-    tools: [Tool.Pnpm, Tool.CSpell, Tool.GithubActions],
+    tools: [Tool.Pnpm, Tool.Cspell, Tool.GithubActions],
     tsconfigRootDir: import.meta.dirname,
     typescript: {
       projectService: {

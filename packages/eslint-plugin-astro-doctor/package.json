@@ -25,7 +25,7 @@
     "test:watch": "vitest",
     "lint": "eslint src tests --cache --no-warn-ignored",
     "lint:fix": "eslint src tests --cache --fix --no-warn-ignored",
-    "check:exports": "attw --pack .",
+    "check:exports": "attw --pack . --profile esm-only",
     "clean": "rm -rf dist"
   },
   "dependencies": {

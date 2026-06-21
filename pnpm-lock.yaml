@@ -33,6 +33,9 @@ catalogs:
     commitizen:
       specifier: ^4.3.1
       version: 4.3.2
+    confbox:
+      specifier: ^0.2.4
+      version: 0.2.4
     cspell:
       specifier: ^9.1.2
       version: 9.8.0
@@ -48,6 +51,9 @@ catalogs:
     husky:
       specifier: ^9.1.7
       version: 9.1.7
+    jiti:
+      specifier: ^2.7.0
+      version: 2.7.0
     knip:
       specifier: ^5.53.0
       version: 5.88.1
@@ -157,7 +163,7 @@ importers:
         specifier: 'catalog:'
         version: 1.4.0
       confbox:
-        specifier: ^0.2.4
+        specifier: 'catalog:'
         version: 0.2.4
       eslint:
         specifier: 'catalog:'
@@ -166,7 +172,7 @@ importers:
         specifier: 'catalog:'
         version: 11.1.0
       jiti:
-        specifier: ^2.7.0
+        specifier: 'catalog:'
         version: 2.7.0
     devDependencies:
       '@arethetypeswrong/cli':
