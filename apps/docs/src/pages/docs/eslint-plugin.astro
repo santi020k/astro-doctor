@@ -1,0 +1,72 @@
+---
+import Docs from '@/layouts/Docs.astro'
+---
+
+<Docs
+  title="ESLint Plugin"
+  description="The core engine behind Astro Doctor, available as a standalone ESLint plugin."
+  editPath="apps/docs/src/pages/docs/eslint-plugin.astro"
+>
+  <h1>ESLint Plugin</h1>
+
+  <p>
+    Under the hood, Astro Doctor is powered by an ESLint plugin: <code>@santi020k/eslint-plugin-astro-doctor</code>.
+    While the CLI and GitHub Action wrap this plugin to provide a health score and easy integration, you can also use the plugin directly in your editor or existing linting pipeline!
+  </p>
+
+  <h2>Installation</h2>
+
+  <p>Install the plugin and the Astro parser as development dependencies:</p>
+
+  <pre><code>pnpm add -D @santi020k/eslint-plugin-astro-doctor astro-eslint-parser</code></pre>
+
+  <h2>Usage</h2>
+
+  <p>
+    Astro Doctor fully supports the new ESLint "flat config" format. Import the plugin and add the <code>recommended</code> config to your <code>eslint.config.js</code> file:
+  </p>
+
+  <pre><code>{`// eslint.config.js
+import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
+
+export default [
+  // ...your other configs
+
+  astroDoctorPlugin.configs.recommended,
+]`}</code></pre>
+
+  <p>
+    The <code>recommended</code> config automatically sets up <code>astro-eslint-parser</code> for <code>*.astro</code> files and enables all of the Astro Doctor rules with their default severities.
+  </p>
+
+  <h2>Customizing Rules</h2>
+
+  <p>
+    If you are using the ESLint plugin directly, you can override the default severity of any rule just like any other ESLint plugin:
+  </p>
+
+  <pre><code>{`// eslint.config.js
+import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
+
+export default [
+  astroDoctorPlugin.configs.recommended,
+  {
+    rules: {
+      // Upgrade this rule to an error
+      'astro-doctor/no-client-load-overuse': 'error',
+      // Disable this rule completely
+      'astro-doctor/prefer-class-list': 'off',
+    }
+  }
+]`}</code></pre>
+
+  <div class="callout callout-tip">
+    <strong>Tip:</strong> If you are using the Astro Doctor CLI instead of running ESLint directly, you can customize rule severities using a <code>doctor.config.ts</code> file. See the <a href="/docs/configuration">Configuration</a> page.
+  </div>
+
+  <h2>Available Rules</h2>
+
+  <p>
+    To see the full list of rules, what they catch, and how to fix them, check out the <a href="/docs/rules">Rules Overview</a>.
+  </p>
+</Docs>

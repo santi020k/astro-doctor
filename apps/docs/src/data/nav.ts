@@ -22,6 +22,7 @@ export const DOCS_NAV: readonly NavSection[] = [
   {
     title: 'Reference',
     items: [
+      { label: 'ESLint Plugin', href: '/docs/eslint-plugin' },
       { label: 'CLI', href: '/docs/cli' },
       { label: 'GitHub Action', href: '/docs/github-action' },
       { label: 'VS Code Extension', href: '/docs/vscode-extension' },
