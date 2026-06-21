@@ -13,17 +13,20 @@ import {
   TransportKind,
 } from 'vscode-languageclient/node'
 
-import { AstroDoctorSidebarProvider, type HealthScoreData } from './sidebar-provider'
+import { AstroDoctorSidebarProvider, type HealthScoreData, type TopIssueData } from './sidebar-provider'
 
 const CLIENT_ID = 'astroDoctor'
 const CLIENT_NAME = 'Astro Doctor'
 const COMMAND_SCAN_FILE = 'astro-doctor.scanFile'
+const COMMAND_SCAN_WORKSPACE = 'astro-doctor.scanWorkspace'
 const COMMAND_FIX_ALL = 'astro-doctor.fixAll'
 const COMMAND_RESTART = 'astro-doctor.restart'
 const COMMAND_SHOW_OUTPUT = 'astro-doctor.showOutput'
 const COMMAND_OPEN_DOCS = 'astro-doctor.openDocs'
 const SERVER_STATUS_METHOD = 'experimental/serverStatus'
 const HEALTH_SCORE_METHOD = 'experimental/healthScore'
+const TOP_ISSUES_METHOD = 'experimental/topIssues'
+const STATUS_BAR_PRIORITY = 100
 const ENV_LOCAL = 'local'
 const ENV_PRODUCTION = 'production'
 
@@ -301,7 +304,10 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
   languageClient.registerFeature(createServerStatusFeature())
 
   // Status bar item (footer)
-  const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left)
+  const statusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Left,
+    STATUS_BAR_PRIORITY,
+  )
 
   statusBarItem.command = COMMAND_SHOW_OUTPUT
 
@@ -323,6 +329,12 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
     }),
     vscode.commands.registerCommand(COMMAND_RESTART, () => {
       void client?.restart()
+    }),
+    vscode.commands.registerCommand(COMMAND_SCAN_WORKSPACE, () => {
+      void languageClient.sendRequest('workspace/executeCommand', {
+        arguments: [],
+        command: COMMAND_SCAN_WORKSPACE,
+      })
     }),
     vscode.commands.registerCommand(COMMAND_SCAN_FILE, () => {
       const uri = vscode.window.activeTextEditor?.document.uri.toString()
@@ -371,6 +383,25 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
       }
 
       statusBarItem.tooltip = `Astro Doctor: Grade ${label} (${score}/100) — ${data.fileCount} files, ${data.errorCount} errors, ${data.warningCount} warnings`
+    })
+
+    languageClient.onNotification(TOP_ISSUES_METHOD, (issues: TopIssueData[]) => {
+      sidebarProvider.updateTopIssues(issues)
+    })
+
+    sidebarProvider.onOpenFile(({ filePath, line }) => {
+      const uri = vscode.Uri.file(filePath)
+
+      void vscode.window.showTextDocument(uri).then((editor) => {
+        const targetPosition = new vscode.Position(Math.max(0, line - 1), 0)
+
+        editor.revealRange(
+          new vscode.Range(targetPosition, targetPosition),
+          vscode.TextEditorRevealType.InCenter,
+        )
+
+        editor.selection = new vscode.Selection(targetPosition, targetPosition)
+      })
     })
 
     renderStatus(statusBarItem, { health: 'ok', quiescent: true })

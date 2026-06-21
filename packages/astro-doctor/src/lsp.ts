@@ -45,6 +45,8 @@ import type { AstroDoctorConfig, Diagnostic as AstroDiagnostic, ScoreBreakdown }
 
 const SERVER_STATUS_METHOD = 'experimental/serverStatus'
 const HEALTH_SCORE_METHOD = 'experimental/healthScore'
+const TOP_ISSUES_METHOD = 'experimental/topIssues'
+const TOP_ISSUES_COUNT = 5
 
 interface ServerStatusParams {
   readonly health: 'ok' | 'warning' | 'error'
@@ -59,6 +61,16 @@ interface HealthScoreParams {
   readonly fileCount: number
   readonly errorCount: number
   readonly warningCount: number
+}
+
+interface TopIssueParams {
+  readonly ruleId: string
+  readonly severity: 'error' | 'warning'
+  readonly message: string
+  readonly filePath: string
+  readonly line: number
+  readonly column: number
+  readonly category: string
 }
 
 const eslintSeverityToAstro: Record<number, AstroDiagnostic['severity']> = {
@@ -206,6 +218,28 @@ export const runLsp = (): void => {
     void connection.sendNotification(HEALTH_SCORE_METHOD, computeHealthScore())
   }
 
+  const publishTopIssues = (): void => {
+    const allDiags = [...fileAstroDiagnostics.values()].flat()
+
+    const sorted = [...allDiags].sort((firstDiag, secondDiag) => {
+      const severityOrder = { error: 0, warning: 1 }
+
+      return severityOrder[firstDiag.severity] - severityOrder[secondDiag.severity]
+    })
+
+    const topIssues: TopIssueParams[] = sorted.slice(0, TOP_ISSUES_COUNT).map((diagnostic) => ({
+      ruleId: diagnostic.ruleId,
+      severity: diagnostic.severity,
+      message: diagnostic.message,
+      filePath: diagnostic.filePath,
+      line: diagnostic.line,
+      column: diagnostic.column,
+      category: diagnostic.category,
+    }))
+
+    void connection.sendNotification(TOP_ISSUES_METHOD, topIssues)
+  }
+
   const doInitialScan = async (): Promise<void> => {
     sendStatus({ health: 'ok', quiescent: false, message: 'Scanning workspace…' })
 
@@ -267,6 +301,8 @@ export const runLsp = (): void => {
 
       publishHealthScore()
 
+      publishTopIssues()
+
       sendStatus({ health: 'ok', quiescent: true })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -310,6 +346,8 @@ export const runLsp = (): void => {
 
       publishHealthScore()
 
+      publishTopIssues()
+
       sendStatus({ health: 'ok', quiescent: true })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -333,6 +371,9 @@ export const runLsp = (): void => {
       capabilities: {
         textDocumentSync: TextDocumentSyncKind.Full,
         hoverProvider: true,
+        executeCommandProvider: {
+          commands: ['astro-doctor.scanWorkspace'],
+        },
         codeActionProvider: {
           codeActionKinds: [CodeActionKind.QuickFix],
         },
@@ -342,6 +383,10 @@ export const runLsp = (): void => {
 
   connection.onInitialized((): void => {
     void doInitialScan()
+  })
+
+  connection.onExecuteCommand(({ command }): void => {
+    if (command === 'astro-doctor.scanWorkspace') void doInitialScan()
   })
 
   documents.onDidOpen(({ document }) => {

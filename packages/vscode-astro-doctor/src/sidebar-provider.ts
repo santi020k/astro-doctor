@@ -14,11 +14,22 @@ export interface HealthScoreData {
   readonly warningCount: number
 }
 
-type WebviewMessage =
-  | { readonly data: HealthScoreData; readonly type: 'update'; }
-  | { readonly message: string; readonly type: 'error'; }
-  | { readonly type: 'loading' }
+export interface TopIssueData {
+  readonly category: string
+  readonly column: number
+  readonly filePath: string
+  readonly line: number
+  readonly message: string
+  readonly ruleId: string
+  readonly severity: 'error' | 'warning'
+}
 
+type OpenFileCallback = (params: { filePath: string; line: number }) => void
+
+type WebviewMessage =
+  | { readonly data: HealthScoreData; readonly topIssues: TopIssueData[]; readonly type: 'update' }
+  | { readonly message: string; readonly type: 'error' }
+  | { readonly type: 'loading' }
 
 const buildSidebarHtml = (nonce: string): string => `<!DOCTYPE html>
 <html lang="en">
@@ -40,17 +51,97 @@ const buildSidebarHtml = (nonce: string): string => `<!DOCTYPE html>
       line-height: 1.4;
     }
 
-    .loading, .error {
+    /* ── States ── */
+    .state-center {
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 120px;
-      color: var(--vscode-descriptionForeground);
-      font-size: 12px;
+      min-height: 140px;
+      gap: 8px;
       text-align: center;
     }
 
+    .state-icon {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .state-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .state-body {
+      font-size: 11px;
+      color: var(--vscode-descriptionForeground);
+      max-width: 180px;
+    }
+
     .error { color: var(--vscode-errorForeground); }
+
+    /* ── Skeleton ── */
+    @keyframes shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position:  200% 0; }
+    }
+
+    .skeleton {
+      background: linear-gradient(
+        90deg,
+        var(--vscode-input-background) 25%,
+        var(--vscode-panel-border)     50%,
+        var(--vscode-input-background) 75%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 4px;
+    }
+
+    .skeleton-circle {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+    }
+
+    .skeleton-line {
+      height: 10px;
+      border-radius: 4px;
+    }
+
+    .skeleton-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 0 12px;
+    }
+
+    .skeleton-stats {
+      display: flex;
+      gap: 0;
+      width: 100%;
+      border: 1px solid var(--vscode-panel-border);
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+
+    .skeleton-stat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 4px;
+      border-right: 1px solid var(--vscode-panel-border);
+    }
+
+    .skeleton-stat:last-child { border-right: none; }
+
+    .skeleton-categories { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+
+    .skeleton-category { display: flex; flex-direction: column; gap: 6px; }
 
     /* ── Score circle ── */
     .score-section {
@@ -194,15 +285,118 @@ const buildSidebarHtml = (nonce: string): string => `<!DOCTYPE html>
       transition: width 0.5s ease, background 0.4s ease;
     }
 
+    /* ── Divider ── */
     .divider {
       height: 1px;
       background: var(--vscode-panel-border);
       margin: 14px 0;
     }
+
+    /* ── Top Issues ── */
+    .issues { display: flex; flex-direction: column; gap: 6px; }
+
+    .issue {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 7px 9px;
+      border-radius: 5px;
+      background: var(--vscode-input-background);
+      cursor: pointer;
+      transition: background 0.15s ease;
+      border: 1px solid transparent;
+    }
+
+    .issue:hover {
+      background: var(--vscode-list-hoverBackground);
+      border-color: var(--vscode-panel-border);
+    }
+
+    .issue-header {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .issue-badge {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 1px 5px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .issue-badge.error  { background: rgba(248,81,73,0.18); color: #f85149; }
+    .issue-badge.warn   { background: rgba(210,153,34,0.18); color: #d29922; }
+
+    .issue-rule {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--vscode-foreground);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .issue-message {
+      font-size: 11px;
+      color: var(--vscode-descriptionForeground);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .issue-location {
+      font-size: 10px;
+      color: var(--vscode-descriptionForeground);
+      opacity: 0.7;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   </style>
 </head>
 <body>
-  <div id="root"><div class="loading">Connecting to Astro Doctor…</div></div>
+  <div id="root"><div id="skeleton">
+    <div class="skeleton-section">
+      <div class="skeleton skeleton-circle"></div>
+      <div class="skeleton skeleton-line" style="width:70px"></div>
+    </div>
+    <div class="skeleton-stats">
+      <div class="skeleton-stat">
+        <div class="skeleton skeleton-line" style="width:28px;height:14px"></div>
+        <div class="skeleton skeleton-line" style="width:38px"></div>
+      </div>
+      <div class="skeleton-stat">
+        <div class="skeleton skeleton-line" style="width:28px;height:14px"></div>
+        <div class="skeleton skeleton-line" style="width:38px"></div>
+      </div>
+      <div class="skeleton-stat">
+        <div class="skeleton skeleton-line" style="width:28px;height:14px"></div>
+        <div class="skeleton skeleton-line" style="width:38px"></div>
+      </div>
+    </div>
+    <div class="skeleton-categories">
+      <div class="skeleton-category">
+        <div class="skeleton skeleton-line" style="width:100%"></div>
+        <div class="skeleton skeleton-line" style="width:100%;height:4px"></div>
+      </div>
+      <div class="skeleton-category">
+        <div class="skeleton skeleton-line" style="width:100%"></div>
+        <div class="skeleton skeleton-line" style="width:100%;height:4px"></div>
+      </div>
+      <div class="skeleton-category">
+        <div class="skeleton skeleton-line" style="width:100%"></div>
+        <div class="skeleton skeleton-line" style="width:100%;height:4px"></div>
+      </div>
+      <div class="skeleton-category">
+        <div class="skeleton skeleton-line" style="width:100%"></div>
+        <div class="skeleton skeleton-line" style="width:100%;height:4px"></div>
+      </div>
+    </div>
+  </div></div>
 
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi()
@@ -240,8 +434,59 @@ const buildSidebarHtml = (nonce: string): string => `<!DOCTYPE html>
       return map[key] || key
     }
 
-    function render(data) {
+    function basename(filePath) {
+      return filePath.replace(/\\\\/g, '/').split('/').pop() || filePath
+    }
+
+    function renderTopIssues(issues) {
+      if (!issues || issues.length === 0) return ''
+
+      const items = issues.map((issue, index) => \`
+        <div class="issue" data-index="\${index}" tabindex="0" role="button"
+             aria-label="Open \${basename(issue.filePath)} at line \${issue.line}">
+          <div class="issue-header">
+            <span class="issue-badge \${issue.severity === 'error' ? 'error' : 'warn'}">
+              \${issue.severity}
+            </span>
+            <span class="issue-rule">\${issue.ruleId.replace('astro-doctor/', '')}</span>
+          </div>
+          <div class="issue-message">\${issue.message}</div>
+          <div class="issue-location">\${basename(issue.filePath)}:\${issue.line}</div>
+        </div>
+      \`).join('')
+
+      return \`
+        <div class="divider"></div>
+        <div class="section-title">Top Issues</div>
+        <div class="issues" id="issues-list">\${items}</div>
+      \`
+    }
+
+    function render(data, topIssues) {
       const { score, scoreLabel, scoreBreakdown, fileCount, errorCount, warningCount } = data
+
+      if (fileCount === 0) {
+        root.innerHTML = \`
+          <div class="state-center">
+            <div class="state-icon">🔭</div>
+            <div class="state-title">No Astro files found</div>
+            <div class="state-body">Open a workspace that contains <code>.astro</code> files to see your health report.</div>
+          </div>
+        \`
+        return
+      }
+
+      if (score === 100) {
+        root.innerHTML = \`
+          <div class="state-center">
+            <div class="state-icon">🎉</div>
+            <div class="state-title">Perfect score!</div>
+            <div class="state-body">All \${fileCount} file\${fileCount !== 1 ? 's' : ''} are clean. Keep it up!</div>
+          </div>
+        \`
+        return
+      }
+
       const dashOffset = SCORE_CIRCUMFERENCE * (1 - score / 100)
       const color = scoreColor(score)
       const gColor = gradeColor(scoreLabel)
@@ -296,16 +541,73 @@ const buildSidebarHtml = (nonce: string): string => `<!DOCTYPE html>
         <div class="divider"></div>
         <div class="section-title">By Category</div>
         <div class="categories">\${categories}</div>
+        \${renderTopIssues(topIssues)}
       \`
+
+      // Wire up click handlers after DOM is set
+      const issuesList = document.getElementById('issues-list')
+      if (issuesList && topIssues && topIssues.length > 0) {
+        issuesList.querySelectorAll('.issue').forEach((el) => {
+          const index = Number(el.getAttribute('data-index'))
+          const issue = topIssues[index]
+          if (!issue) return
+          const activate = () => {
+            vscode.postMessage({ type: 'openFile', filePath: issue.filePath, line: issue.line })
+          }
+          el.addEventListener('click', activate)
+          el.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') activate()
+          })
+        })
+      }
     }
 
     window.addEventListener('message', ({ data }) => {
       if (data.type === 'loading') {
-        root.innerHTML = '<div class="loading">Scanning…</div>'
+        root.innerHTML = \`
+          <div class="skeleton-section">
+            <div class="skeleton skeleton-circle"></div>
+            <div class="skeleton skeleton-line" style="width:70px"></div>
+          </div>
+          <div class="skeleton-stats">
+            <div class="skeleton-stat">
+              <div class="skeleton skeleton-line" style="width:28px;height:14px"></div>
+              <div class="skeleton skeleton-line" style="width:38px"></div>
+            </div>
+            <div class="skeleton-stat">
+              <div class="skeleton skeleton-line" style="width:28px;height:14px"></div>
+              <div class="skeleton skeleton-line" style="width:38px"></div>
+            </div>
+            <div class="skeleton-stat">
+              <div class="skeleton skeleton-line" style="width:28px;height:14px"></div>
+              <div class="skeleton skeleton-line" style="width:38px"></div>
+            </div>
+          </div>
+          <div class="skeleton-categories">
+            <div class="skeleton-category">
+              <div class="skeleton skeleton-line" style="width:100%"></div>
+              <div class="skeleton skeleton-line" style="width:100%;height:4px"></div>
+            </div>
+            <div class="skeleton-category">
+              <div class="skeleton skeleton-line" style="width:100%"></div>
+              <div class="skeleton skeleton-line" style="width:100%;height:4px"></div>
+            </div>
+            <div class="skeleton-category">
+              <div class="skeleton skeleton-line" style="width:100%"></div>
+              <div class="skeleton skeleton-line" style="width:100%;height:4px"></div>
+            </div>
+          </div>
+        \`
       } else if (data.type === 'error') {
-        root.innerHTML = \`<div class="error">\${data.message}</div>\`
+        root.innerHTML = \`
+          <div class="state-center error">
+            <div class="state-icon">⚠️</div>
+            <div class="state-title">Something went wrong</div>
+            <div class="state-body">\${data.message}</div>
+          </div>
+        \`
       } else if (data.type === 'update') {
-        render(data.data)
+        render(data.data, data.topIssues)
       }
     })
   </script>
@@ -315,7 +617,14 @@ const buildSidebarHtml = (nonce: string): string => `<!DOCTYPE html>
 export class AstroDoctorSidebarProvider implements vscode.WebviewViewProvider {
   public static readonly VIEW_TYPE = 'astroDoctor.sidebar'
 
+  private latestHealthData?: HealthScoreData
+  private latestTopIssues: TopIssueData[] = []
+  private openFileCallback?: OpenFileCallback
   private view?: vscode.WebviewView
+
+  public onOpenFile(callback: OpenFileCallback): void {
+    this.openFileCallback = callback
+  }
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -331,6 +640,23 @@ export class AstroDoctorSidebarProvider implements vscode.WebviewViewProvider {
     const nonce = this.getNonce()
 
     webviewView.webview.html = buildSidebarHtml(nonce)
+
+    webviewView.webview.onDidReceiveMessage((message: { filePath?: string; line?: number; type: string; }) => {
+      if (message.type === 'openFile' && message.filePath && message.line !== undefined) {
+        this.openFileCallback?.({ filePath: message.filePath, line: message.line })
+      }
+    })
+
+    // Re-send latest data when the view becomes visible again
+    if (this.latestHealthData) {
+      const msg: WebviewMessage = {
+        data: this.latestHealthData,
+        topIssues: this.latestTopIssues,
+        type: 'update',
+      }
+
+      void this.view.webview.postMessage(msg)
+    }
   }
 
   public setError(message: string): void {
@@ -350,9 +676,25 @@ export class AstroDoctorSidebarProvider implements vscode.WebviewViewProvider {
   }
 
   public update(data: HealthScoreData): void {
+    this.latestHealthData = data
+
     if (!this.view) return
 
-    const message: WebviewMessage = { data, type: 'update' }
+    const message: WebviewMessage = { data, topIssues: this.latestTopIssues, type: 'update' }
+
+    void this.view.webview.postMessage(message)
+  }
+
+  public updateTopIssues(issues: TopIssueData[]): void {
+    this.latestTopIssues = issues
+
+    if (!this.view || !this.latestHealthData) return
+
+    const message: WebviewMessage = {
+      data: this.latestHealthData,
+      topIssues: issues,
+      type: 'update',
+    }
 
     void this.view.webview.postMessage(message)
   }
@@ -361,7 +703,7 @@ export class AstroDoctorSidebarProvider implements vscode.WebviewViewProvider {
     let text = ''
     const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 
-    for (let i = 0; i < 32; i++) {
+    for (let index = 0; index < 32; index++) {
       text += possible.charAt(Math.floor(Math.random() * possible.length))
     }
 
