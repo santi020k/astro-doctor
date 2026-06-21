@@ -44,10 +44,17 @@ packages/
     src/
       cli.ts                    CLI command definitions
       config.ts                 Config file loading (doctor.config.ts)
+      lsp.ts                    runLsp() — experimental LSP server (diagnostics, hover, code actions)
       scanner/                  File discovery + ESLint orchestration
       report/                   Console and JSON reporters
       index.ts                  Public programmatic API (scan())
     tests/                      CLI + scanner tests
+  vscode-astro-doctor/          PRIVATE    VS Code extension
+    src/
+      extension.ts              Extension entry + LSP client setup + status bar
+      sidebar-provider.ts       Sidebar health panel webview (score ring, category breakdown)
+    scripts/
+      vsce-package.cjs          Resolves catalog: refs before packaging with vsce
 ```
 
 ## ESLint Rule Conventions
