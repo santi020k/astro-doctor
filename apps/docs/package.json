@@ -15,17 +15,17 @@
     "clean": "rm -rf dist .astro node_modules"
   },
   "dependencies": {
-    "@astrojs/mdx": "^4.3.0",
-    "@astrojs/sitemap": "^3.4.1",
-    "@tailwindcss/vite": "^4.1.10",
-    "astro": "^5.10.0",
-    "tailwindcss": "^4.1.10"
+    "@astrojs/mdx": "^6.0.3",
+    "@astrojs/sitemap": "^3.7.3",
+    "@tailwindcss/vite": "^4.3.1",
+    "astro": "^6.4.8",
+    "tailwindcss": "^4.3.1"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.4",
+    "@astrojs/check": "^0.9.9",
     "@santi020k/eslint-config-basic": "latest",
     "eslint": "^10.5.0",
-    "typescript": "^5.8.3"
+    "typescript": "^6.0.3"
   },
   "engines": {
     "node": ">=20.0.0"

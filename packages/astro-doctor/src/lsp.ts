@@ -17,7 +17,7 @@
 
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
-import type { RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
+import type { AstroDoctorRule, RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
 import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 
 import * as astroParser from 'astro-eslint-parser'
@@ -83,16 +83,11 @@ const eslintSeverityToLsp: Record<number, DiagnosticSeverity> = {
   2: DiagnosticSeverity.Error,
 }
 
-const RULE_CATEGORY_MAP: Record<string, RuleCategory> = {
-  'astro-doctor/no-blocking-script': 'performance',
-  'astro-doctor/no-client-load-overuse': 'performance',
-  'astro-doctor/no-missing-alt': 'accessibility',
-  'astro-doctor/no-missing-lang': 'accessibility',
-  'astro-doctor/no-process-env': 'best-practices',
-  'astro-doctor/no-set-html': 'security',
-  'astro-doctor/prefer-class-list': 'best-practices',
-  'astro-doctor/prefer-content-collections': 'best-practices',
-  'astro-doctor/use-astro-image': 'performance',
+const getRuleCategory = (ruleId: string): RuleCategory => {
+  const shortName = ruleId.replace('astro-doctor/', '')
+  const rule = astroDoctorPlugin.rules[shortName] as AstroDoctorRule | undefined
+
+  return rule?.meta.docs.category ?? 'best-practices'
 }
 
 const buildEslintInstance = (
@@ -174,7 +169,7 @@ const lintFileContent = async (
       filePath,
       line: msg.line,
       column: msg.column,
-      category: RULE_CATEGORY_MAP[msg.ruleId] ?? 'best-practices',
+      category: getRuleCategory(msg.ruleId),
     })
   }
 
@@ -202,7 +197,7 @@ export const runLsp = (): void => {
     const allDiags = [...fileAstroDiagnostics.values()].flat()
     const errorCount = allDiags.filter((d) => d.severity === 'error').length
     const warningCount = allDiags.filter((d) => d.severity === 'warning').length
-    const score = computeScore(errorCount, warningCount, workspaceFileCount)
+    const score = computeScore(allDiags, workspaceFileCount)
 
     return {
       score,
@@ -427,7 +422,7 @@ export const runLsp = (): void => {
       | { docs?: { description?: string; url?: string }; messages?: Record<string, string> }
       | undefined
 
-    const category = RULE_CATEGORY_MAP[diag.code] ?? 'best-practices'
+    const category = getRuleCategory(diag.code)
     const description = ruleMeta?.docs?.description ?? diag.message
     const docsUrl = ruleMeta?.docs?.url
 
