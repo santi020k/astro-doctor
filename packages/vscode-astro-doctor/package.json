@@ -1,0 +1,131 @@
+{
+  "name": "vscode-astro-doctor",
+  "displayName": "Astro Doctor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Astro Doctor diagnostics, hovers, and quick fixes in your editor.",
+  "categories": [
+    "Linters",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "astro",
+    "diagnostics",
+    "lint",
+    "lsp",
+    "astro-doctor",
+    "performance",
+    "accessibility",
+    "security"
+  ],
+  "homepage": "https://doctor.santi020k.com",
+  "bugs": {
+    "url": "https://github.com/santi020k/astro-doctor/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/santi020k/astro-doctor.git",
+    "directory": "packages/vscode-astro-doctor"
+  },
+  "publisher": "santi020k",
+  "main": "./dist/extension.js",
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js",
+    "typecheck": "tsc --noEmit",
+    "dev": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js --watch",
+    "package": "pnpm run build && npx --yes @vscode/vsce package --no-dependencies -o astro-doctor.vsix",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.32",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.3"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "astro-doctor.scanWorkspace",
+        "title": "Astro Doctor: Scan Workspace"
+      },
+      {
+        "command": "astro-doctor.scanFile",
+        "title": "Astro Doctor: Scan Current File"
+      },
+      {
+        "command": "astro-doctor.fixAll",
+        "title": "Astro Doctor: Suppress All Issues in File"
+      },
+      {
+        "command": "astro-doctor.restart",
+        "title": "Astro Doctor: Restart Server"
+      },
+      {
+        "command": "astro-doctor.showOutput",
+        "title": "Astro Doctor: Show Output"
+      },
+      {
+        "command": "astro-doctor.openDocs",
+        "title": "Astro Doctor: Open Documentation"
+      }
+    ],
+    "configuration": {
+      "title": "Astro Doctor",
+      "properties": {
+        "astroDoctor.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Astro Doctor diagnostics, hovers, and quick fixes."
+        },
+        "astroDoctor.serverPath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine-overridable",
+          "description": "Optional path to the astro-doctor executable. When empty, the project's local install is used, falling back to `npx astro-doctor@latest`."
+        },
+        "astroDoctor.scanOnType": {
+          "type": "boolean",
+          "default": true,
+          "description": "Re-scan files live as you type (from the unsaved buffer). Disable to scan only on open and save."
+        },
+        "astroDoctor.trace.server": {
+          "type": "string",
+          "enum": ["off", "messages", "verbose"],
+          "default": "off",
+          "scope": "window",
+          "description": "Trace the communication between the editor and the Astro Doctor language server."
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "astro-doctor",
+          "title": "Astro Doctor",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "astro-doctor": [
+        {
+          "type": "webview",
+          "id": "astroDoctor.sidebar",
+          "name": "Health Report",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    }
+  },
+  "activationEvents": [
+    "onLanguage:astro"
+  ],
+  "engines": {
+    "node": "^20.19.0 || >=22.13.0",
+    "vscode": "^1.85.0"
+  }
+}

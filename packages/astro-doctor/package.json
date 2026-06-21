@@ -37,7 +37,9 @@
     "confbox": "catalog:",
     "eslint": "catalog:",
     "glob": "catalog:",
-    "jiti": "catalog:"
+    "jiti": "catalog:",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.12"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
