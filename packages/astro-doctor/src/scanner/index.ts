@@ -1,4 +1,4 @@
-import type { RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
+import type { AstroDoctorRule, RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
 import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 
 import * as astroParser from 'astro-eslint-parser'
@@ -14,15 +14,11 @@ const SEVERITY_MAP: Record<number, Severity> = {
   2: 'error',
 }
 
-const RULE_CATEGORY_MAP: Record<string, RuleCategory> = {
-  'astro-doctor/no-blocking-script': 'performance',
-  'astro-doctor/no-client-load-overuse': 'performance',
-  'astro-doctor/no-missing-alt': 'accessibility',
-  'astro-doctor/no-missing-lang': 'accessibility',
-  'astro-doctor/no-process-env': 'best-practices',
-  'astro-doctor/no-set-html': 'security',
-  'astro-doctor/prefer-class-list': 'best-practices',
-  'astro-doctor/use-astro-image': 'performance',
+const getRuleCategory = (ruleId: string): RuleCategory => {
+  const shortName = ruleId.replace('astro-doctor/', '')
+  const rule = astroDoctorPlugin.rules[shortName] as AstroDoctorRule | undefined
+
+  return rule?.meta.docs.category ?? 'best-practices'
 }
 
 const buildEslintConfig = (options: ScanOptions): ESLint.Options => ({
@@ -75,8 +71,7 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
       if (!message.ruleId) continue
 
       const severity = SEVERITY_MAP[message.severity] ?? 'warning'
-      // noUncheckedIndexedAccess: map lookup returns RuleCategory | undefined; fallback is safe
-      const category: RuleCategory = RULE_CATEGORY_MAP[message.ruleId] ?? 'best-practices'
+      const category = getRuleCategory(message.ruleId)
 
       diagnostics.push({
         ruleId: message.ruleId,
@@ -92,7 +87,7 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
 
   const errorCount = diagnostics.filter((diagnostic) => diagnostic.severity === 'error').length
   const warningCount = diagnostics.filter((diagnostic) => diagnostic.severity === 'warning').length
-  const score = computeScore(errorCount, warningCount, astroFiles.length)
+  const score = computeScore(diagnostics, astroFiles.length)
   const scoreLabel = computeScoreLabel(score)
   const scoreBreakdown = computeCategoryBreakdown(diagnostics, astroFiles.length)
 

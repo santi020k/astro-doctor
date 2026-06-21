@@ -1,37 +1,92 @@
 import { describe, expect, test } from 'vitest'
 
 import { computeScore, computeScoreLabel } from '../src/scorer.js'
+import type { Diagnostic } from '../src/types.js'
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const makeError = (filePath = 'file.astro'): Diagnostic => ({
+  ruleId: 'astro-doctor/no-missing-alt',
+  severity: 'error',
+  message: 'test error',
+  filePath,
+  line: 1,
+  column: 1,
+  category: 'accessibility',
+})
+
+const makeWarning = (filePath = 'file.astro'): Diagnostic => ({
+  ruleId: 'astro-doctor/no-process-env',
+  severity: 'warning',
+  message: 'test warning',
+  filePath,
+  line: 1,
+  column: 1,
+  category: 'best-practices',
+})
+
+// ---------------------------------------------------------------------------
+// computeScore
+// ---------------------------------------------------------------------------
 
 describe('computeScore', () => {
   test('returns 100 for zero files', () => {
-    expect(computeScore(0, 0, 0)).toBe(100)
+    expect(computeScore([], 0)).toBe(100)
   })
 
   test('returns 100 for a clean project', () => {
-    expect(computeScore(0, 0, 10)).toBe(100)
+    expect(computeScore([], 10)).toBe(100)
   })
 
   test('penalizes errors more than warnings', () => {
-    const withError = computeScore(1, 0, 1)
-    const withWarning = computeScore(0, 1, 1)
+    const withError = computeScore([makeError()], 1)
+    const withWarning = computeScore([makeWarning()], 1)
+
     expect(withError).toBeLessThan(withWarning)
   })
 
-  test('normalizes by file count (density not raw count)', () => {
-    // 10 warnings across 10 files = same density as 1 warning across 1 file
-    const small = computeScore(0, 1, 1)
-    const large = computeScore(0, 10, 10)
+  test('same issue density across files yields the same score', () => {
+    // 1 warning in 1 file vs 1 warning per file across 10 files — identical density
+    const small = computeScore([makeWarning('a.astro')], 1)
+    const large = computeScore(
+      Array.from({ length: 10 }, (_, i) => makeWarning(`file-${i}.astro`)),
+      10,
+    )
+
     expect(small).toBe(large)
   })
 
-  test('clamps to 0 at minimum', () => {
-    expect(computeScore(100, 100, 1)).toBe(0)
+  test('issues concentrated in one file hurt less than the same count spread across all files', () => {
+    // 10 errors in a single file out of 10 → only that file is dragged down
+    const concentrated = computeScore(
+      Array.from({ length: 10 }, () => makeError('bad.astro')),
+      10,
+    )
+    // 1 error in each of 10 files → every file is dragged down
+    const distributed = computeScore(
+      Array.from({ length: 10 }, (_, i) => makeError(`file-${i}.astro`)),
+      10,
+    )
+
+    expect(concentrated).toBeGreaterThan(distributed)
   })
 
-  test('clamps to 100 at maximum', () => {
-    expect(computeScore(0, 0, 50)).toBe(100)
+  test('clamps to 0 at minimum (single file with many errors)', () => {
+    const manyErrors = Array.from({ length: 20 }, () => makeError())
+
+    expect(computeScore(manyErrors, 1)).toBe(0)
+  })
+
+  test('clamps to 100 at maximum (no issues)', () => {
+    expect(computeScore([], 50)).toBe(100)
   })
 })
+
+// ---------------------------------------------------------------------------
+// computeScoreLabel
+// ---------------------------------------------------------------------------
 
 describe('computeScoreLabel', () => {
   test('returns A for 90–100', () => {
