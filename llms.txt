@@ -71,7 +71,7 @@ action.yml                      GitHub Action (composite, PR diff mode, sticky c
 - **Rule nodes**: Template elements use `VElement`/`VAttribute` node types from the parser
 - **Test framework**: Vitest + ESLint's `RuleTester` (globals wired: `RuleTester.describe = describe`)
 - **Build**: `tsc` directly (no bundler) — simple, no magic, matches your eslint-config-basic pattern
-- **ESLint config**: `@santi020k/eslint-config-basic` with `Preset.Monorepo`, `Extension.Boundaries`, `Extension.Unicorn`, `Tool.CSpell`, `Runtime.Node` on the CLI package
+- **ESLint config**: `@santi020k/eslint-config-basic` with `Preset.Monorepo`, `Extension.Boundaries`, `Extension.Unicorn`, `Tool.Cspell`, `Runtime.Node` on the CLI package
 - **Versioning**: Changesets with linked packages (both packages version together)
 - **Score formula**: `max(0, 100 - (errors×10 + warnings×3) / fileCount)` — penalises density, not raw count
 - **GitHub Action**: Composite action (no pre-bundled JS). Uses `npx` + `jq` + `actions/github-script`

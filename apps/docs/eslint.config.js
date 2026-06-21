@@ -7,7 +7,7 @@ export default await defineConfig(
     formats: [Format.Markdown],
     frameworks: { astro: true },
     preset: Preset.Browser,
-    tools: [Tool.CSpell],
+    tools: [Tool.Cspell],
     tsconfigRootDir: import.meta.dirname,
     typescript: true
   }, {
@@ -19,7 +19,8 @@ export default await defineConfig(
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@stylistic/indent': 'off',
       '@stylistic/jsx-closing-tag-location': 'off',
-      '@stylistic/max-len': 'off'
+      '@stylistic/max-len': 'off',
+      'better-tailwindcss/no-unknown-classes': 'off'
     }
   }, {
     files: ['src/env.d.ts'],
