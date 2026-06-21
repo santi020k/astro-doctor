@@ -24,6 +24,7 @@ export const DOCS_NAV: readonly NavSection[] = [
     items: [
       { label: 'CLI', href: '/docs/cli' },
       { label: 'GitHub Action', href: '/docs/github-action' },
+      { label: 'VS Code Extension', href: '/docs/vscode-extension' },
       { label: 'Editor Integration', href: '/docs/editor-integration', badge: 'LSP' },
       { label: 'Agent Skills', href: '/docs/agent-skills', badge: 'AI' }
     ]

@@ -18,9 +18,10 @@ import Docs from '@/layouts/Docs.astro'
   <h2>VS Code &amp; Cursor</h2>
 
   <p>
-    Install the <strong>Astro Doctor</strong> extension from the VS Code Marketplace. It automatically
-    starts the LSP server using the version installed in your project, or falls back to
-    <code>npx astro-doctor@latest</code> if none is found locally.
+    Use the <a href="/docs/vscode-extension">VS Code Extension</a> for the native editor
+    experience in VS Code and VS Code-compatible editors such as Cursor. It activates for
+    <code>.astro</code> files, starts the Astro Doctor language server, and wires diagnostics,
+    hovers, quick fixes, status bar updates, and the Health Report sidebar into the editor.
   </p>
 
   <h3>Features</h3>
@@ -31,40 +32,6 @@ import Docs from '@/layouts/Docs.astro'
     <li><strong>Status bar</strong> — shows health score and issue counts at a glance</li>
     <li><strong>Sidebar panel</strong> — score ring, letter grade, per-category breakdown</li>
   </ul>
-
-  <h3>Extension settings</h3>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Setting</th>
-        <th>Default</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>astroDoctor.enable</code></td>
-        <td><code>true</code></td>
-        <td>Enable or disable the extension</td>
-      </tr>
-      <tr>
-        <td><code>astroDoctor.scanOnType</code></td>
-        <td><code>true</code></td>
-        <td>Re-scan from the unsaved buffer as you type. Disable to scan only on open/save.</td>
-      </tr>
-      <tr>
-        <td><code>astroDoctor.serverPath</code></td>
-        <td><code>""</code></td>
-        <td>Explicit path to the <code>astro-doctor</code> binary. Leave empty to auto-resolve.</td>
-      </tr>
-      <tr>
-        <td><code>astroDoctor.trace.server</code></td>
-        <td><code>"off"</code></td>
-        <td>Trace LSP messages. Set to <code>"verbose"</code> for debugging connection issues.</td>
-      </tr>
-    </tbody>
-  </table>
 
   <h2>Other LSP-capable editors</h2>
 
