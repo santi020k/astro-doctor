@@ -1,4 +1,5 @@
 import type { Rule } from 'eslint'
+
 import noClientLoadOveruse from './no-client-load-overuse.js'
 import noMissingAlt from './no-missing-alt.js'
 import noSetHtml from './no-set-html.js'

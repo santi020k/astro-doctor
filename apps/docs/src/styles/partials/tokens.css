@@ -1,0 +1,102 @@
+/* ─── Design Tokens ──────────────────────────────────────────────────────────
+ * CSS custom properties (raw HSL values) for astro-doctor docs.
+ * Orange brand palette — Astro ecosystem feel.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+@custom-variant dark ([data-theme="dark"] &);
+
+/* ─── Dark mode (default) ───────────────────────────────────────────────────── */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Backgrounds */
+  --theme-bg:       222 28% 5%;
+  --surface:        222 22% 8%;
+  --surface-muted:  222 20% 11%;
+  --surface-strong: 222 16% 17%;
+  --line:           222 12% 22%;
+
+  /* Text */
+  --ink:            220 10% 92%;
+  --ink-soft:       220 7%  68%;
+  --ink-muted:      220 5%  46%;
+
+  /* Brand: Astro orange */
+  --brand:          25 95% 58%;
+  --brand-solid:    25 88% 50%;
+  --brand-soft:     25 75% 11%;
+
+  /* Accent: warm amber */
+  --accent:         38 92% 62%;
+  --accent-soft:    38 80% 10%;
+
+  /* Glow for gradients */
+  --glow:           25 90% 42%;
+
+  /* Semantic */
+  --success:        142 71% 45%;
+  --warning:        38 92% 55%;
+  --danger:         0 84% 65%;
+  --info:           210 90% 60%;
+}
+
+/* ─── Light mode ─────────────────────────────────────────────────────────────── */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --theme-bg:       30 25% 97%;
+  --surface:        0 0% 100%;
+  --surface-muted:  30 20% 95%;
+  --surface-strong: 30 15% 89%;
+  --line:           30 12% 82%;
+
+  --ink:            222 20% 14%;
+  --ink-soft:       222 12% 34%;
+  --ink-muted:      222 8%  50%;
+
+  --brand:          25 95% 48%;
+  --brand-solid:    25 88% 42%;
+  --brand-soft:     25 90% 92%;
+
+  --accent:         38 92% 50%;
+  --accent-soft:    38 90% 90%;
+
+  --glow:           25 90% 58%;
+
+  --success:        142 76% 36%;
+  --warning:        38 92% 45%;
+  --danger:         0 84% 58%;
+  --info:           210 90% 50%;
+}
+
+/* ─── Tailwind v4 theme tokens ───────────────────────────────────────────────── */
+@theme {
+  /* Colors mapped from CSS vars */
+  --color-bg:             hsl(var(--theme-bg));
+  --color-surface:        hsl(var(--surface));
+  --color-surface-muted:  hsl(var(--surface-muted));
+  --color-surface-strong: hsl(var(--surface-strong));
+  --color-line:           hsl(var(--line));
+  --color-ink:            hsl(var(--ink));
+  --color-ink-soft:       hsl(var(--ink-soft));
+  --color-ink-muted:      hsl(var(--ink-muted));
+  --color-brand:          hsl(var(--brand));
+  --color-brand-solid:    hsl(var(--brand-solid));
+  --color-brand-soft:     hsl(var(--brand-soft));
+  --color-accent:         hsl(var(--accent));
+  --color-accent-soft:    hsl(var(--accent-soft));
+  --color-success:        hsl(var(--success));
+  --color-warning:        hsl(var(--warning));
+  --color-danger:         hsl(var(--danger));
+  --color-info:           hsl(var(--info));
+
+  /* Typography */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', 'Fira Code', Menlo, Consolas, monospace;
+
+  /* Animations */
+  --animate-fade-in:    fade-in 0.4s ease both;
+  --animate-slide-up:   slide-up 0.5s ease both;
+  --animate-scale-in:   scale-in 0.35s ease both;
+}

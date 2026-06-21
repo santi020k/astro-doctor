@@ -1,0 +1,93 @@
+---
+import Docs from '@/layouts/Docs.astro'
+---
+
+<Docs
+  title="Quick Start"
+  description="Get astro-doctor running in your project in 5 minutes."
+  editPath="apps/docs/src/pages/docs/quick-start.astro"
+>
+  <h1>Quick Start</h1>
+
+  <p>Get up and running in about 5 minutes.</p>
+
+  <h2>Step 1 — Install</h2>
+
+  <pre><code>pnpm add -D @santi020k/astro-doctor @santi020k/eslint-plugin-astro-doctor</code></pre>
+
+  <h2>Step 2 — Configure ESLint</h2>
+
+  <p>Add the plugin to your existing <code>eslint.config.js</code> (flat config):</p>
+
+  <pre><code>{`// eslint.config.js
+import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
+
+export default [
+  // your existing config...
+  ...astroDoctorPlugin.configs.recommended.config,
+]`}
+       </code>
+  </pre>
+
+  <h2>Step 3 — Run a scan</h2>
+
+  <pre><code>npx astro-doctor</code></pre>
+
+  <p>You'll see output like:</p>
+
+  <pre><code>{`Scanning /my-project...
+
+  ✗  error  src/pages/blog.astro:12:5
+     no-missing-alt — img element is missing a non-empty alt attribute
+
+  ⚠  warn   src/components/Counter.astro:3:1
+     no-client-load-overuse — prefer client:idle or client:visible over client:load
+
+14 files scanned · 1 error · 1 warning
+
+Astro Doctor Score: 85/100 (B) 🟡`}
+       </code>
+  </pre>
+
+  <h2>Step 4 — Add to package.json</h2>
+
+  <pre><code>{`{
+  "scripts": {
+    "astro:check": "astro-doctor",
+    "astro:check:json": "astro-doctor --json report.json"
+  }
+}`}
+       </code>
+  </pre>
+
+  <h2>Step 5 — Add to CI (optional)</h2>
+
+  <p>Drop this into <code>.github/workflows/astro-doctor.yml</code>:</p>
+
+  <pre><code>{`name: Astro Doctor
+on:
+  pull_request:
+    paths: ['**/*.astro']
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: santi020k/astro-doctor@v1
+        with:
+          diff-only: true
+          comment: true
+          fail-on: error`}
+       </code>
+  </pre>
+
+  <div class="callout callout-tip">
+    <strong>Next steps:</strong> Read the <a href="/docs/configuration">configuration guide</a> to
+    tune rules, ignore paths, and set fail thresholds.
+  </div>
+</Docs>

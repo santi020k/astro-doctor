@@ -1,9 +1,12 @@
-import { ESLint } from 'eslint'
-import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 import type { RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
+import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
+
 import * as astroParser from 'astro-eslint-parser'
-import type { Diagnostic, ScanOptions, ScanResult, Severity } from '../types.js'
+import { ESLint } from 'eslint'
+
 import { computeScore, computeScoreLabel } from '../scorer.js'
+import type { Diagnostic, ScanOptions, ScanResult, Severity } from '../types.js'
+
 import { discoverAstroFiles } from './file-discovery.js'
 
 const SEVERITY_MAP: Record<number, Severity> = {
@@ -34,7 +37,7 @@ const buildEslintConfig = (options: ScanOptions): ESLint.Options => ({
         },
       },
       rules: {
-        ...astroDoctorPlugin.configs['recommended']?.rules,
+        ...astroDoctorPlugin.configs.recommended?.rules,
         ...options.rules,
       },
     },
@@ -58,7 +61,6 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
 
   const eslint = new ESLint(buildEslintConfig(options))
   const eslintResults = await eslint.lintFiles(astroFiles)
-
   const diagnostics: Diagnostic[] = []
 
   for (const fileResult of eslintResults) {

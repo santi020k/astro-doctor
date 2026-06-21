@@ -1,5 +1,6 @@
 import type { Linter } from 'eslint'
-import { rules, RECOMMENDED_RULES } from './rules/index.js'
+
+import { RECOMMENDED_RULES,rules } from './rules/index.js'
 
 const plugin = {
   meta: {
@@ -10,13 +11,13 @@ const plugin = {
   configs: {} as Record<string, Linter.Config>,
 }
 
-plugin.configs['recommended'] = {
+plugin.configs.recommended = {
   plugins: {
     'astro-doctor': plugin,
   },
-  rules: RECOMMENDED_RULES,
+  rules: RECOMMENDED_RULES as any,
 }
 
 export default plugin
-export { rules, RECOMMENDED_RULES }
-export type { RuleCategory, AstroDoctorRule } from './types.js'
+export { RECOMMENDED_RULES,rules }
+export type { AstroDoctorRule,RuleCategory } from './types.js'

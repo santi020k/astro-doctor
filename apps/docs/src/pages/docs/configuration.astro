@@ -1,0 +1,121 @@
+---
+import Docs from '@/layouts/Docs.astro'
+---
+
+<Docs
+  title="Configuration"
+  description="Configure astro-doctor with a doctor.config.* file."
+  editPath="apps/docs/src/pages/docs/configuration.astro"
+>
+  <h1>Configuration</h1>
+
+  <p>
+    astro-doctor looks for a <code>doctor.config.*</code> file in the directory you scan.
+    All configuration is optional — the defaults are sensible out of the box.
+  </p>
+
+  <h2>Supported formats</h2>
+
+  <p>Any of the following file names are detected, in priority order:</p>
+
+  <pre><code>doctor.config.ts
+    doctor.config.js
+    doctor.config.mjs
+    doctor.config.cjs
+    doctor.config.json
+    doctor.config.jsonc
+       </code>
+  </pre>
+
+  <h2>Schema</h2>
+
+  <pre><code>{`// doctor.config.ts
+import type { AstroDoctorConfig } from '@santi020k/astro-doctor'
+
+export default {
+  // Override rule severities
+  rules: {
+    'astro-doctor/no-client-load-overuse': 'error',   // upgrade to error
+    'astro-doctor/prefer-class-list': 'off',           // disable a rule
+  },
+
+  // Glob patterns to ignore (relative to scanned directory)
+  ignore: ['src/legacy/**', 'src/vendor/**'],
+
+  // When to exit with code 1: 'error' | 'warning' | 'off'
+  // CLI flag --fail-on overrides this
+  failOn: 'error',
+} satisfies AstroDoctorConfig`}
+  </code>
+  </pre>
+
+  <h2>Fields</h2>
+
+  <h3><code>rules</code></h3>
+
+  <p>
+    Override the default severity of any rule. Accepted values: <code>'error'</code>,
+    <code>'warn'</code>, <code>'off'</code>.
+  </p>
+
+  <h3><code>ignore</code></h3>
+
+  <p>
+    An array of glob patterns (relative to the scanned directory) to exclude from the scan.
+    Useful for generated code, vendored components, or legacy directories you're not ready to
+    fix yet.
+  </p>
+
+  <h3><code>failOn</code></h3>
+
+  <p>
+    Controls when astro-doctor exits with a non-zero exit code:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Value</th>
+        <th>Exits with 1 when…</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>'error'</code> (default)</td>
+        <td>Any error-severity finding exists</td>
+      </tr>
+      <tr>
+        <td><code>'warning'</code></td>
+        <td>Any error or warning finding exists</td>
+      </tr>
+      <tr>
+        <td><code>'off'</code></td>
+        <td>Never (useful for reporting without blocking)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    The <code>--fail-on</code> CLI flag takes precedence over the config file value.
+  </p>
+
+  <h2>JSON / JSONC example</h2>
+
+  <pre><code>{`// doctor.config.jsonc
+{
+  // Comments are supported in .jsonc
+  "rules": {
+    "astro-doctor/no-client-load-overuse": "error"
+  },
+  "ignore": ["src/vendor/**"],
+  "failOn": "warning"
+}`}
+  </code>
+  </pre>
+
+  <div class="callout callout-tip">
+    <strong>Note:</strong> When using <code>doctor.config.ts</code>, your project must be able to
+    execute TypeScript files (e.g. via tsx, ts-node, or Bun). If that's not available, use
+    <code>doctor.config.js</code> (ESM) instead.
+  </div>
+</Docs>

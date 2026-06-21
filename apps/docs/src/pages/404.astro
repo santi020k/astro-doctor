@@ -1,0 +1,27 @@
+---
+import Base from '@/layouts/Base.astro'
+---
+
+<Base title="Page not found">
+  <div class="container-docs flex min-h-[60vh] flex-col items-center justify-center py-20 text-center">
+    <div class="mb-6 text-8xl font-black text-[hsl(var(--brand)/0.15)]">404</div>
+    <h1 class="mb-4 text-3xl font-bold text-[hsl(var(--ink))]">Page not found</h1>
+    <p class="mb-8 text-[hsl(var(--ink-soft))]">
+      This page doesn't exist. Maybe the docs moved?
+    </p>
+    <div class="flex gap-3">
+      <a
+        href="/"
+        class="rounded-xl bg-[hsl(var(--brand))] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[hsl(var(--brand-solid))] transition-colors no-underline"
+      >
+        Go home
+      </a>
+      <a
+        href="/docs"
+        class="rounded-xl border border-[hsl(var(--line))] px-5 py-2.5 text-sm font-medium text-[hsl(var(--ink))] hover:bg-[hsl(var(--surface-muted))] transition-colors no-underline"
+      >
+        Read docs
+      </a>
+    </div>
+  </div>
+</Base>

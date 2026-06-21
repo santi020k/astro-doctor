@@ -1,0 +1,98 @@
+---
+import Docs from '@/layouts/Docs.astro'
+---
+
+<Docs
+  title="Introduction"
+  description="What is astro-doctor and why you need it in your Astro projects."
+  editPath="apps/docs/src/pages/docs/index.astro"
+>
+  <h1>Introduction</h1>
+
+  <p>
+    <strong>astro-doctor</strong> is an ESLint-based quality tool for Astro projects.
+    It ships five opinionated rules that catch the most common mistakes developers (and AI agents) make
+    when writing <code>.astro</code> files — from missing image alt text to accidental XSS vectors.
+  </p>
+
+  <p>
+    Each scan produces a <strong>health score from 0 to 100</strong> with an A–F grade, so you always
+    know how your codebase compares to best practice and can track improvement over time.
+  </p>
+
+  <h2>What it checks</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Rule</th>
+        <th>Category</th>
+        <th>Default severity</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a href="/docs/rules/no-client-load-overuse">no-client-load-overuse</a></td>
+        <td>Performance</td>
+        <td>warn</td>
+      </tr>
+      <tr>
+        <td><a href="/docs/rules/use-astro-image">use-astro-image</a></td>
+        <td>Performance</td>
+        <td>warn</td>
+      </tr>
+      <tr>
+        <td><a href="/docs/rules/no-missing-alt">no-missing-alt</a></td>
+        <td>Accessibility</td>
+        <td>error</td>
+      </tr>
+      <tr>
+        <td><a href="/docs/rules/no-set-html">no-set-html</a></td>
+        <td>Security</td>
+        <td>error</td>
+      </tr>
+      <tr>
+        <td><a href="/docs/rules/prefer-class-list">prefer-class-list</a></td>
+        <td>Best Practices</td>
+        <td>warn</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Why astro-doctor?</h2>
+
+  <p>
+    AI coding agents are prolific writers of Astro code — and they make the same mistakes humans do:
+    raw <code>&lt;img&gt;</code> tags instead of <code>&lt;Image&gt;</code>, <code>client:load</code>
+    on every island, missing alt text, and so on. astro-doctor adds a fast, deterministic safety net
+    to every commit and pull request.
+  </p>
+
+  <p>
+    It is inspired by <a href="https://react.doctor" target="_blank" rel="noopener noreferrer">react-doctor</a>
+    and follows the same philosophy: a small, focused tool that does one thing well.
+  </p>
+
+  <h2>Packages</h2>
+
+  <p>The project is a monorepo with two public packages:</p>
+
+  <ul>
+    <li>
+      <strong><code>@santi020k/astro-doctor</code></strong> — the CLI. Run
+      <code>npx @santi020k/astro-doctor</code> to scan any directory without any setup.
+    </li>
+    <li>
+      <strong><code>@santi020k/eslint-plugin-astro-doctor</code></strong> — the ESLint plugin.
+      Import and add to your <code>eslint.config.js</code> for live editor integration.
+    </li>
+  </ul>
+
+  <h2>Requirements</h2>
+
+  <ul>
+    <li>Node.js <code>^20.19.0 || &gt;=22.13.0</code></li>
+    <li>ESLint 9 (flat config)</li>
+    <li>Astro project with <code>.astro</code> files</li>
+  </ul>
+</Docs>

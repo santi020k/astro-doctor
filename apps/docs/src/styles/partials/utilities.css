@@ -1,0 +1,107 @@
+/* ─── Utility Classes ─────────────────────────────────────────────────────────
+ * Reusable @utility blocks for surfaces, badges, and decorative effects.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+/* stylelint-disable at-rule-no-unknown */
+
+/* ─── Surface & Card ────────────────────────────────────────────────────────── */
+
+@utility panel-surface {
+  background: linear-gradient(
+    160deg,
+    hsl(var(--surface) / 0.9),
+    hsl(var(--surface-muted) / 0.7)
+  );
+  border: 1px solid hsl(var(--line) / 0.5);
+  box-shadow:
+    0 16px 40px hsl(220 30% 2% / 0.3),
+    inset 0 1px 0 hsl(0 0% 100% / 0.05);
+  backdrop-filter: blur(12px);
+}
+
+@utility panel-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid hsl(var(--line) / 0.4);
+  background: linear-gradient(
+    145deg,
+    hsl(var(--surface) / 0.8),
+    hsl(var(--surface-muted) / 0.5)
+  );
+  transition: border-color 0.2s, transform 0.2s;
+
+  &:hover {
+    border-color: hsl(var(--brand) / 0.4);
+    transform: translateY(-2px);
+  }
+}
+
+/* ─── Brand gradient text ───────────────────────────────────────────────────── */
+
+@utility gradient-text {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--brand)) 0%,
+    hsl(var(--accent)) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Glow effects ──────────────────────────────────────────────────────────── */
+
+@utility brand-glow {
+  box-shadow:
+    0 0 24px hsl(var(--brand) / 0.2),
+    0 0 48px hsl(var(--brand) / 0.08);
+}
+
+/* ─── Section layout ────────────────────────────────────────────────────────── */
+
+@utility section-shell {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  padding: 2rem 1.5rem;
+  background: linear-gradient(
+    180deg,
+    hsl(var(--surface) / 0.8),
+    hsl(var(--surface-muted) / 0.5)
+  );
+  border: 1px solid hsl(var(--line) / 0.4);
+}
+
+@utility container-docs {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+/* ─── Badge variants ────────────────────────────────────────────────────────── */
+
+@utility badge-performance {
+  background: hsl(25 90% 12%);
+  color: hsl(25 90% 65%);
+  border: 1px solid hsl(25 60% 25%);
+}
+
+@utility badge-security {
+  background: hsl(0 80% 10%);
+  color: hsl(0 80% 65%);
+  border: 1px solid hsl(0 55% 25%);
+}
+
+@utility badge-accessibility {
+  background: hsl(210 80% 10%);
+  color: hsl(210 80% 65%);
+  border: 1px solid hsl(210 55% 25%);
+}
+
+@utility badge-best-practices {
+  background: hsl(142 60% 8%);
+  color: hsl(142 60% 55%);
+  border: 1px solid hsl(142 40% 20%);
+}

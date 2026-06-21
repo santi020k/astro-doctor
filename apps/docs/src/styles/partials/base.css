@@ -1,0 +1,110 @@
+/* ─── Base Styles ─────────────────────────────────────────────────────────────
+ * Element resets, scrollbar styling, focus rings, code blocks.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+    overflow-wrap: break-word;
+  }
+
+  html {
+    background-color: hsl(var(--theme-bg));
+    color: hsl(var(--ink));
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+    scroll-padding-top: 5rem;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(
+        ellipse at 10% 0%,
+        hsl(var(--glow) / 0.1),
+        transparent 40%
+      ),
+      radial-gradient(
+        ellipse at 90% 0%,
+        hsl(var(--accent) / 0.06),
+        transparent 35%
+      ),
+      hsl(var(--theme-bg));
+  }
+
+  /* Focus ring */
+  :focus-visible {
+    outline: 2px solid hsl(var(--brand));
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* Selection */
+  ::selection {
+    background-color: hsl(var(--brand) / 0.25);
+    color: hsl(var(--ink));
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--surface));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--line));
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--ink-muted));
+  }
+
+  /* Code elements */
+  code:not(pre code) {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    background: hsl(var(--surface-muted));
+    border: 1px solid hsl(var(--line));
+    border-radius: 0.25rem;
+    padding: 0.125rem 0.375rem;
+    color: hsl(var(--brand));
+  }
+
+  pre {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1.7;
+    overflow-x: auto;
+    border-radius: 0.75rem;
+    border: 1px solid hsl(var(--line));
+    background: hsl(var(--surface));
+    padding: 1.25rem 1.5rem;
+    tab-size: 2;
+  }
+
+  /* Headings */
+  h1, h2, h3, h4 {
+    letter-spacing: -0.02em;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  a {
+    color: hsl(var(--brand));
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}

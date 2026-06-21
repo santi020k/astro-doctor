@@ -2,34 +2,6 @@
   "name": "@santi020k/astro-doctor",
   "version": "0.1.0",
   "description": "Your agent writes bad Astro. This catches it.",
-  "keywords": [
-    "astro",
-    "linter",
-    "cli",
-    "accessibility",
-    "performance",
-    "security",
-    "agents"
-  ],
-  "homepage": "https://github.com/santi020k/astro-doctor#readme",
-  "bugs": {
-    "url": "https://github.com/santi020k/astro-doctor/issues"
-  },
-  "license": "MIT",
-  "author": "santi020k",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/santi020k/astro-doctor.git",
-    "directory": "packages/astro-doctor"
-  },
-  "bin": {
-    "astro-doctor": "./bin/astro-doctor.js"
-  },
-  "files": [
-    "bin/**",
-    "dist/**/*.js",
-    "dist/**/*.d.ts"
-  ],
   "type": "module",
   "sideEffects": false,
   "exports": {
@@ -37,6 +9,14 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "files": [
+    "bin/**",
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ],
+  "bin": {
+    "astro-doctor": "./bin/astro-doctor.js"
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",
@@ -52,17 +32,37 @@
   },
   "dependencies": {
     "@santi020k/eslint-plugin-astro-doctor": "workspace:*",
-    "astro-eslint-parser": "^1.2.2",
-    "eslint": "^9.29.0",
-    "glob": "^11.0.3"
+    "astro-eslint-parser": "catalog:",
+    "eslint": "catalog:",
+    "glob": "catalog:"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "^0.18.3",
-    "@types/node": "^22.15.32",
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
+    "@arethetypeswrong/cli": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
     "node": "^20.19.0 || >=22.13.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/santi020k/astro-doctor.git",
+    "directory": "packages/astro-doctor"
+  },
+  "homepage": "https://github.com/santi020k/astro-doctor#readme",
+  "bugs": {
+    "url": "https://github.com/santi020k/astro-doctor/issues"
+  },
+  "keywords": [
+    "astro",
+    "linter",
+    "cli",
+    "accessibility",
+    "performance",
+    "security",
+    "agents"
+  ],
+  "author": "santi020k",
+  "license": "MIT"
 }

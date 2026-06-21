@@ -21,8 +21,29 @@ export default await defineConfig(
     testing: [Testing.Vitest],
     tools: [Tool.Pnpm, Tool.CSpell, Tool.GithubActions],
     tsconfigRootDir: import.meta.dirname,
-    typescript: true,
+    typescript: {
+      projectService: {
+        allowDefaultProject: ['**/*.ts', '**/*.js', 'packages/*/vitest.config.ts']
+      }
+    },
     workspacePrefixes: ['@santi020k'],
+  },
+  {
+    files: ['**/*.md'],
+    rules: {
+      'markdown/fenced-code-language': 'off',
+    }
+  },
+  {
+    rules: {
+      'complexity': 'off',
+      'preserve-caught-error': 'off',
+      '@cspell/spellchecker': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      'n/no-unpublished-import': 'off',
+      'vitest/consistent-test-it': 'off',
+    }
   },
   // The ESLint plugin source works with unknown AST node shapes from astro-eslint-parser.
   // Casting to `any` is unavoidable there — relax the rule for those files only.
@@ -48,6 +69,7 @@ export default await defineConfig(
     rules: {
       'no-console': 'off',
       'unicorn/no-process-exit': 'off',
+      'n/no-unpublished-import': 'off',
     },
   },
 )

@@ -1,5 +1,6 @@
 import { relative } from 'node:path'
-import type { ScanResult, Diagnostic } from '../types.js'
+
+import type { Diagnostic,ScanResult } from '../types.js'
 
 const SEVERITY_LABEL: Record<string, string> = {
   error: 'error',
@@ -25,7 +26,6 @@ const formatDiagnosticLine = (diagnostic: Diagnostic, rootDirectory: string): st
 
 const formatSummaryLine = (result: ScanResult): string => {
   const { errorCount, warningCount, fileCount } = result
-
   const totalIssues = errorCount + warningCount
   const errorLabel = errorCount === 1 ? '1 error' : `${errorCount} errors`
   const warningLabel = warningCount === 1 ? '1 warning' : `${warningCount} warnings`
@@ -37,6 +37,7 @@ const formatScoreLine = (result: ScanResult, showScore: boolean): string => {
   if (!showScore) return ''
 
   const emoji = SCORE_EMOJI[result.scoreLabel] ?? '🟡'
+
   return `\nAstro Doctor Score: ${result.score}/100 (${result.scoreLabel}) ${emoji}`
 }
 

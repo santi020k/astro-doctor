@@ -32,5 +32,6 @@ Then add to your eslint.config.js:
 
 export const runLsp = (): void => {
   console.error(EXPERIMENTAL_LSP_NOTICE)
+
   process.exitCode = 1
 }

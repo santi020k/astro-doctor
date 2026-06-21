@@ -1,6 +1,7 @@
-import { RuleTester } from 'eslint'
 import * as astroParser from 'astro-eslint-parser'
-import { describe, it } from 'vitest'
+import { RuleTester } from 'eslint'
+import { describe } from 'vitest'
+
 import rule from '../../src/rules/use-astro-image.js'
 
 RuleTester.describe = describe

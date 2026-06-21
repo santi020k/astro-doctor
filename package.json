@@ -26,20 +26,20 @@
     "commit": "cz"
   },
   "devDependencies": {
-    "@changesets/changelog-github": "^0.5.1",
-    "@changesets/cli": "^2.29.5",
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^19.8.1",
-    "@santi020k/eslint-config-basic": "latest",
-    "@types/node": "^22.15.32",
-    "commitizen": "^4.3.1",
-    "cspell": "^9.1.2",
-    "cz-conventional-changelog": "^3.3.0",
-    "husky": "^9.1.7",
-    "knip": "^5.53.0",
-    "lint-staged": "^16.1.2",
-    "turbo": "^2.5.4",
-    "typescript": "^5.8.3"
+    "@changesets/changelog-github": "catalog:",
+    "@changesets/cli": "catalog:",
+    "@commitlint/cli": "catalog:",
+    "@commitlint/config-conventional": "catalog:",
+    "@santi020k/eslint-config-basic": "catalog:",
+    "@types/node": "catalog:",
+    "commitizen": "catalog:",
+    "cspell": "catalog:",
+    "cz-conventional-changelog": "catalog:",
+    "husky": "catalog:",
+    "knip": "catalog:",
+    "lint-staged": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:"
   },
   "lint-staged": {
     "*.{js,ts,mjs,mts,astro}": [

@@ -1,0 +1,33 @@
+{
+  "name": "@santi020k/astro-doctor-docs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Documentation website for astro-doctor",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "typecheck": "astro check",
+    "lint": "eslint . --no-warn-ignored",
+    "lint:fix": "eslint . --fix --no-warn-ignored",
+    "clean": "rm -rf dist .astro node_modules"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^4.3.0",
+    "@astrojs/sitemap": "^3.4.1",
+    "@tailwindcss/vite": "^4.1.10",
+    "astro": "^5.10.0",
+    "tailwindcss": "^4.1.10"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@santi020k/eslint-config-basic": "latest",
+    "eslint": "^10.5.0",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

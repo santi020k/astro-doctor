@@ -1,13 +1,15 @@
 import { createRule, isAstroFile } from '../utils/rule.js'
 
 const isDynamicClassExpression = (attributeValue: unknown): boolean => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const value = attributeValue as any
+
   if (!value) return false
 
   // Template literal with expressions — e.g. `btn ${isActive ? 'active' : ''}`
   if (value.type === 'VExpressionContainer') {
     const expression = value.expression
+
     if (!expression) return false
 
     // TemplateLiteral with at least one expression (not purely static)
@@ -46,7 +48,7 @@ export default createRule({
 
     return {
       'VAttribute[key.name="class"]'(node: unknown) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const attributeNode = node as any
 
         if (isDynamicClassExpression(attributeNode.value)) {

@@ -37,6 +37,14 @@
       "dependsOn": ["build"],
       "outputLogs": "errors-only"
     },
+    "check": {
+      "dependsOn": ["^build"],
+      "outputLogs": "errors-only"
+    },
+    "preview": {
+      "cache": false,
+      "persistent": true
+    },
     "//#lint:spell": {
       "outputLogs": "errors-only"
     },

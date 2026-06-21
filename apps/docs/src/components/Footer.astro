@@ -1,0 +1,60 @@
+---
+const year = new Date().getFullYear()
+---
+
+<footer class="mt-24 border-t border-[hsl(var(--line)/0.4)] py-12">
+  <div class="container-docs">
+    <div class="flex flex-col gap-8 sm:flex-row sm:justify-between">
+      <!-- Brand -->
+      <div class="flex flex-col gap-3">
+        <div class="flex items-center gap-2.5">
+          <span class="flex h-7 w-7 items-center justify-center rounded-md bg-[hsl(var(--brand))] text-white font-black text-xs">
+            Rx
+          </span>
+          <span class="font-semibold text-[hsl(var(--ink))]">astro-doctor</span>
+        </div>
+        <p class="text-sm text-[hsl(var(--ink-muted))] max-w-xs">
+          Your agent writes bad Astro. This catches it.
+        </p>
+        <p class="text-xs text-[hsl(var(--ink-muted))]">
+          Inspired by <a href="https://react.doctor" target="_blank" rel="noopener noreferrer" class="hover:text-[hsl(var(--brand))] transition-colors">react-doctor</a>
+        </p>
+      </div>
+
+      <!-- Links -->
+      <div class="grid grid-cols-2 gap-8 sm:grid-cols-3">
+        <div class="flex flex-col gap-2">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-[hsl(var(--ink-muted))]">Docs</h3>
+          <a href="/docs" class="text-sm text-[hsl(var(--ink-soft))] hover:text-[hsl(var(--brand))] transition-colors">Introduction</a>
+          <a href="/docs/installation" class="text-sm text-[hsl(var(--ink-soft))] hover:text-[hsl(var(--brand))] transition-colors">Installation</a>
+          <a href="/docs/quick-start" class="text-sm text-[hsl(var(--ink-soft))] hover:text-[hsl(var(--brand))] transition-colors">Quick Start</a>
+          <a href="/docs/configuration" class="text-sm text-[hsl(var(--ink-soft))] hover:text-[hsl(var(--brand))] transition-colors">Configuration</a>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-[hsl(var(--ink-muted))]">Reference</h3>
+          <a href="/docs/rules" class="text-sm text-[hsl(var(--ink-soft))] hover:text-[hsl(var(--brand))] transition-colors">Rules</a>
+          <a href="/docs/cli" class="text-sm text-[hsl(var(--ink-soft))] hover:text-[hsl(var(--brand))] transition-colors">CLI</a>
+          <a href="/docs/github-action" class="text-sm text-[hsl(var(--ink-soft))] hover:text-[hsl(var(--brand))] transition-colors">GitHub Action</a>
+          <a href="/docs/agent-skills" class="text-sm text-[hsl(var(--ink-soft))] hover:text-[hsl(var(--brand))] transition-colors">Agent Skills</a>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-[hsl(var(--ink-muted))]">Project</h3>
+          <a href="https://github.com/santi020k/astro-doctor" target="_blank" rel="noopener noreferrer" class="text-sm text-[hsl(var(--ink-soft))] hover:text-[hsl(var(--brand))] transition-colors">GitHub</a>
+          <a href="https://www.npmjs.com/package/@santi020k/astro-doctor" target="_blank" rel="noopener noreferrer" class="text-sm text-[hsl(var(--ink-soft))] hover:text-[hsl(var(--brand))] transition-colors">npm</a>
+          <a href="https://github.com/santi020k/astro-doctor/blob/main/CHANGELOG.md" class="text-sm text-[hsl(var(--ink-soft))] hover:text-[hsl(var(--brand))] transition-colors">Changelog</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-10 border-t border-[hsl(var(--line)/0.4)] pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-[hsl(var(--ink-muted))]">
+        &copy; {year} <a href="https://santi020k.com" target="_blank" rel="noopener noreferrer" class="hover:text-[hsl(var(--brand))] transition-colors">Santiago Molina</a>. MIT License.
+      </p>
+      <p class="text-xs text-[hsl(var(--ink-muted))]">
+        Built with <a href="https://astro.build" target="_blank" rel="noopener noreferrer" class="hover:text-[hsl(var(--brand))] transition-colors">Astro</a> · Deployed on <a href="https://pages.cloudflare.com" target="_blank" rel="noopener noreferrer" class="hover:text-[hsl(var(--brand))] transition-colors">Cloudflare Pages</a>
+      </p>
+    </div>
+  </div>
+</footer>

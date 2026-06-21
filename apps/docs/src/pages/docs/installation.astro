@@ -1,0 +1,81 @@
+---
+import Docs from '@/layouts/Docs.astro'
+---
+
+<Docs
+  title="Installation"
+  description="Install astro-doctor via npm, pnpm, or yarn."
+  editPath="apps/docs/src/pages/docs/installation.astro"
+>
+  <h1>Installation</h1>
+
+  <h2>CLI only (no config required)</h2>
+
+  <p>Run astro-doctor without installing it at all:</p>
+
+  <pre><code>npx @santi020k/astro-doctor</code></pre>
+
+  <p>This scans the current directory and prints a health report with score.</p>
+
+  <h2>Install as a dev dependency</h2>
+
+  <p>Add to your project so it's always available and pinned to a version:</p>
+
+  <pre><code># pnpm
+    pnpm add -D @santi020k/astro-doctor
+
+    # npm
+    npm install -D @santi020k/astro-doctor
+
+    # yarn
+    yarn add -D @santi020k/astro-doctor
+       </code>
+  </pre>
+
+  <h2>ESLint plugin (editor integration)</h2>
+
+  <p>
+    For live in-editor diagnostics (VS Code, Neovim, WebStorm, etc.), install the ESLint plugin
+    and add it to your flat config:
+  </p>
+
+  <pre><code>pnpm add -D @santi020k/eslint-plugin-astro-doctor astro-eslint-parser</code></pre>
+
+  <pre><code>{`// eslint.config.js
+import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
+
+export default [
+  ...astroDoctorPlugin.configs.recommended.config,
+  // Add your other config here
+]`}
+  </code>
+  </pre>
+
+  <p>
+    The <code>recommended</code> config includes <code>astro-eslint-parser</code> as the parser for
+    <code>*.astro</code> files and enables all rules at their default severities.
+  </p>
+
+  <h2>Agent skills</h2>
+
+  <p>
+    To install the AI agent skills into your project (so Claude, Cursor, and Copilot Workspace know
+    the rules and how to fix them):
+  </p>
+
+  <pre><code>astro-doctor install</code></pre>
+
+  <p>This copies three skill files to <code>.agents/skills/</code> in your project root.</p>
+
+  <div class="callout callout-tip">
+    <strong>Tip:</strong> Commit the <code>.agents/skills/</code> folder to your repository so all
+    contributors and their AI tools benefit from the same context.
+  </div>
+
+  <h2>GitHub Action</h2>
+
+  <p>
+    See <a href="/docs/github-action">GitHub Action</a> for full setup instructions. No extra
+    installation is required — the action runs <code>npx</code> internally.
+  </p>
+</Docs>
