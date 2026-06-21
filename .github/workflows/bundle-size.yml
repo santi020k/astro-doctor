@@ -1,0 +1,67 @@
+name: Bundle Size
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/astro-doctor/src/**'
+      - 'packages/astro-doctor/package.json'
+      - 'packages/eslint-plugin-astro-doctor/src/**'
+      - 'packages/eslint-plugin-astro-doctor/package.json'
+      - 'pnpm-lock.yaml'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: bundle-size-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  bundle-size:
+    name: Check bundle size
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm run build
+
+      - name: Check size — @santi020k/astro-doctor (CLI)
+        uses: pkg-size/action@v1
+        id: size-cli
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          build-script: "echo 'already built'"
+          display-threshold: "1"
+          comment-report: "true"
+          package-manager: pnpm
+          include-packages: "@santi020k/astro-doctor"
+
+      - name: Check size — @santi020k/eslint-plugin-astro-doctor
+        uses: pkg-size/action@v1
+        id: size-plugin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          build-script: "echo 'already built'"
+          display-threshold: "1"
+          comment-report: "true"
+          package-manager: pnpm
+          include-packages: "@santi020k/eslint-plugin-astro-doctor"

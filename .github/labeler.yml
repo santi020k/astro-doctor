@@ -1,0 +1,69 @@
+# Auto-labeler configuration for actions/labeler
+# Applies labels to PRs based on changed file paths.
+
+"pkg: eslint-plugin":
+  - changed-files:
+    - any-glob-to-any-file: "packages/eslint-plugin-astro-doctor/**"
+
+"pkg: cli":
+  - changed-files:
+    - any-glob-to-any-file: "packages/astro-doctor/**"
+
+"pkg: vscode":
+  - changed-files:
+    - any-glob-to-any-file: "packages/vscode-astro-doctor/**"
+
+"pkg: docs":
+  - changed-files:
+    - any-glob-to-any-file: "apps/docs/**"
+
+"pkg: action":
+  - changed-files:
+    - any-glob-to-any-file: "action.yml"
+
+"type: ci":
+  - changed-files:
+    - any-glob-to-any-file: ".github/**"
+
+"type: docs":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "**/*.md"
+      - "apps/docs/**"
+      - "llms.txt"
+      - "skills/**"
+      - ".agents/**"
+
+"rule: performance":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "packages/eslint-plugin-astro-doctor/src/rules/no-client-load-overuse.ts"
+      - "packages/eslint-plugin-astro-doctor/src/rules/use-astro-image.ts"
+      - "packages/eslint-plugin-astro-doctor/src/rules/no-blocking-script.ts"
+      - "packages/eslint-plugin-astro-doctor/tests/rules/no-client-load-overuse.test.ts"
+      - "packages/eslint-plugin-astro-doctor/tests/rules/use-astro-image.test.ts"
+      - "packages/eslint-plugin-astro-doctor/tests/rules/no-blocking-script.test.ts"
+
+"rule: accessibility":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "packages/eslint-plugin-astro-doctor/src/rules/no-missing-alt.ts"
+      - "packages/eslint-plugin-astro-doctor/src/rules/no-missing-lang.ts"
+      - "packages/eslint-plugin-astro-doctor/tests/rules/no-missing-alt.test.ts"
+      - "packages/eslint-plugin-astro-doctor/tests/rules/no-missing-lang.test.ts"
+
+"rule: security":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "packages/eslint-plugin-astro-doctor/src/rules/no-set-html.ts"
+      - "packages/eslint-plugin-astro-doctor/tests/rules/no-set-html.test.ts"
+
+"rule: best-practices":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "packages/eslint-plugin-astro-doctor/src/rules/prefer-class-list.ts"
+      - "packages/eslint-plugin-astro-doctor/src/rules/no-process-env.ts"
+      - "packages/eslint-plugin-astro-doctor/src/rules/prefer-content-collections.ts"
+      - "packages/eslint-plugin-astro-doctor/tests/rules/prefer-class-list.test.ts"
+      - "packages/eslint-plugin-astro-doctor/tests/rules/no-process-env.test.ts"
+      - "packages/eslint-plugin-astro-doctor/tests/rules/prefer-content-collections.test.ts"

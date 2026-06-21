@@ -1,0 +1,103 @@
+# GitHub Labels
+# Synced automatically by .github/workflows/labels.yml
+
+# --- Type ---
+- name: "type: bug"
+  color: "d73a4a"
+  description: Something isn't working
+
+- name: "type: feature"
+  color: "a2eeef"
+  description: New feature or request
+
+- name: "type: chore"
+  color: "e4e669"
+  description: Maintenance, refactor, or tooling
+
+- name: "type: docs"
+  color: "0075ca"
+  description: Documentation changes
+
+- name: "type: ci"
+  color: "f9d0c4"
+  description: CI/CD and GitHub Actions changes
+
+- name: "type: security"
+  color: "e11d48"
+  description: Security-related changes
+
+# --- Package ---
+- name: "pkg: eslint-plugin"
+  color: "7c3aed"
+  description: "@santi020k/eslint-plugin-astro-doctor"
+
+- name: "pkg: cli"
+  color: "6d28d9"
+  description: "@santi020k/astro-doctor CLI"
+
+- name: "pkg: vscode"
+  color: "5b21b6"
+  description: "vscode-astro-doctor extension"
+
+- name: "pkg: docs"
+  color: "4c1d95"
+  description: "Documentation site"
+
+- name: "pkg: action"
+  color: "3b0764"
+  description: "GitHub Action (action.yml)"
+
+# --- Rule category ---
+- name: "rule: performance"
+  color: "fbbf24"
+  description: Performance rules
+
+- name: "rule: accessibility"
+  color: "34d399"
+  description: Accessibility rules
+
+- name: "rule: security"
+  color: "f87171"
+  description: Security rules
+
+- name: "rule: best-practices"
+  color: "60a5fa"
+  description: Best-practices rules
+
+# --- Status ---
+- name: "status: needs review"
+  color: "fbca04"
+  description: Awaiting code review
+
+- name: "status: in progress"
+  color: "0e8a16"
+  description: Work in progress
+
+- name: "status: blocked"
+  color: "b60205"
+  description: Blocked by another issue or PR
+
+- name: "status: stale"
+  color: "cfd3d7"
+  description: No recent activity — will be closed soon
+
+# --- Size ---
+- name: "size: XS"
+  color: "3cbf00"
+  description: "Tiny change (<10 lines)"
+
+- name: "size: S"
+  color: "5d9c00"
+  description: "Small change (10–49 lines)"
+
+- name: "size: M"
+  color: "e6b800"
+  description: "Medium change (50–149 lines)"
+
+- name: "size: L"
+  color: "e06000"
+  description: "Large change (150–499 lines)"
+
+- name: "size: XL"
+  color: "b60205"
+  description: "Very large change (500+ lines)"
