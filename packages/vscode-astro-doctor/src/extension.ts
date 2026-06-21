@@ -165,11 +165,11 @@ const createExecutableServerOptions = (resolved: ResolvedServer): ServerOptions 
 const createBundledServerOptions = (serverModule: string): ServerOptions => ({
   debug: {
     module: serverModule,
-    transport: TransportKind.stdio,
+    transport: TransportKind.ipc,
   },
   run: {
     module: serverModule,
-    transport: TransportKind.stdio,
+    transport: TransportKind.ipc,
   },
 })
 
