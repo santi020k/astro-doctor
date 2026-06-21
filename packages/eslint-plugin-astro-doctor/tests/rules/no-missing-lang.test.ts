@@ -38,6 +38,16 @@ ruleTester.run('no-missing-lang', rule, {
       code: `---\n---\n<div><slot /></div>`,
       filename: 'test.astro',
     },
+    // lang="" is present (attribute exists) — this rule checks presence not value
+    {
+      code: `---\n---\n<html lang=""><head></head><body></body></html>`,
+      filename: 'test.astro',
+    },
+    // dynamic lang for i18n (Astro.currentLocale pattern)
+    {
+      code: `---\n---\n<html lang={Astro.currentLocale ?? 'en'}><head></head><body></body></html>`,
+      filename: 'test.astro',
+    },
     // Non-astro files are ignored
     {
       code: `<html><head></head><body></body></html>`,

@@ -60,5 +60,13 @@ const all = await Astro.glob('./**/*.mdx')
       filename: 'test.astro',
       errors: [{ messageId: 'preferContentCollections' }],
     },
+    {
+      code: `---
+const posts = Astro.glob('../content/**/*.md')
+---
+<div></div>`,
+      filename: 'test.astro',
+      errors: [{ messageId: 'preferContentCollections' }],
+    },
   ],
 })
