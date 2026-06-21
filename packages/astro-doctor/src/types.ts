@@ -40,6 +40,12 @@ export interface ScanOptions {
   readonly files?: readonly string[]
   readonly ignore?: readonly string[]
   readonly rules?: Record<string, 'error' | 'warn' | 'off'>
+  /** Filter results to only these categories. When empty/undefined all categories are shown. */
+  readonly categories?: readonly RuleCategory[]
+  /** When true, skip lint entirely and return a clean result. */
+  readonly noLint?: boolean
+  /** When true, ignore eslint-disable comments (audit mode). */
+  readonly noRespectInlineDisables?: boolean
 }
 
 /** Shape of the machine-readable JSON report written by --json */
@@ -59,6 +65,7 @@ export interface JsonReport {
 
 /** Shape of doctor.config.ts / doctor.config.json */
 export interface AstroDoctorConfig {
+  readonly preset?: 'recommended' | 'strict' | 'ci'
   readonly rules?: Record<string, 'error' | 'warn' | 'off'>
   readonly ignore?: readonly string[]
   readonly failOn?: 'error' | 'warning' | 'off'

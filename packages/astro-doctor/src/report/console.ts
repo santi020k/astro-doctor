@@ -104,17 +104,52 @@ const formatScoreLine = (result: ScanResult, showScore: boolean): string => {
   return `\nAstro Doctor Score: ${score} ${emoji}\n${breakdown}`
 }
 
+const RULE_DOCS: Record<string, string> = {
+  'no-blocking-script': 'Performance · <script src> must use defer, async, or type="module"',
+  'no-client-load-overuse': 'Performance · Prefer client:idle / client:visible over client:load',
+  'use-astro-image': 'Performance · Use <Image> from astro:assets instead of raw <img>',
+  'no-missing-alt': 'Accessibility · All images must have an alt attribute',
+  'no-missing-lang': 'Accessibility · <html> must have a lang attribute',
+  'no-set-html': 'Security · Avoid set:html to prevent XSS',
+  'no-process-env': 'Best Practices · Use import.meta.env instead of process.env',
+  'prefer-class-list': 'Best Practices · Use class:list for dynamic class names',
+  'prefer-content-collections': 'Best Practices · Use getCollection() instead of Astro.glob()',
+}
+
+const formatVerboseRuleSummary = (diagnostics: readonly Diagnostic[]): string => {
+  const countByRule = new Map<string, number>()
+
+  for (const d of diagnostics) {
+    const short = d.ruleId.replace('astro-doctor/', '')
+
+    countByRule.set(short, (countByRule.get(short) ?? 0) + 1)
+  }
+
+  const lines = Object.entries(RULE_DOCS).map(([ruleId, doc]) => {
+    const count = countByRule.get(ruleId) ?? 0
+    const status = count === 0 ? green('✔') : red(`✖ ${count}`)
+
+    return `  ${status}  ${dim(doc)}`
+  })
+
+  return `\nRule summary:\n${lines.join('\n')}`
+}
+
+export const formatScoreOnly = (result: ScanResult): string => String(result.score)
+
 export const formatConsoleReport = (
   result: ScanResult,
   rootDirectory = process.cwd(),
   showScore = true,
+  verbose = false,
 ): string => {
   const scoreLine = formatScoreLine(result, showScore)
+  const verboseSummary = verbose ? formatVerboseRuleSummary(result.diagnostics) : ''
 
   if (result.diagnostics.length === 0) {
     const fileLabel = result.fileCount === 1 ? '1 file' : `${result.fileCount} files`
 
-    return `\n${green('✔')} No issues found across ${fileLabel}. Your Astro is healthy!${scoreLine}\n`
+    return `\n${green('✔')} No issues found across ${fileLabel}. Your Astro is healthy!${verboseSummary}${scoreLine}\n`
   }
 
   const grouped = groupByFile(result.diagnostics)
@@ -125,5 +160,5 @@ export const formatConsoleReport = (
 
   const summaryLine = formatSummaryLine(result)
 
-  return `\n${fileBlocks}\n\n${summaryLine}${scoreLine}\n`
+  return `\n${fileBlocks}\n\n${summaryLine}${verboseSummary}${scoreLine}\n`
 }

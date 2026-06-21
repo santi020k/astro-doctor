@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 import { parseJSON5 } from 'confbox'
 import { createJiti } from 'jiti'
 
+import { isPresetName } from './presets.js'
 import type { AstroDoctorConfig } from './types.js'
 
 const CONFIG_FILE_NAMES = [
@@ -62,6 +63,16 @@ const validateFailOn = (failOn: unknown): AstroDoctorConfig['failOn'] => {
   )
 }
 
+const validatePreset = (preset: unknown): AstroDoctorConfig['preset'] => {
+  if (preset === undefined) return undefined
+
+  if (isPresetName(preset)) return preset
+
+  throw new Error(
+    `Invalid preset value "${describeConfigValue(preset)}". Expected "recommended", "strict", or "ci".`,
+  )
+}
+
 const validateThreshold = (threshold: unknown): AstroDoctorConfig['threshold'] => {
   if (threshold === undefined) return undefined
 
@@ -105,12 +116,14 @@ const validateRules = (rules: unknown): AstroDoctorConfig['rules'] => {
 }
 
 const validateConfig = (config: Record<string, unknown>): AstroDoctorConfig => {
+  const preset = validatePreset(config.preset)
   const failOn = validateFailOn(config.failOn)
   const threshold = validateThreshold(config.threshold)
   const ignore = validateIgnore(config.ignore)
   const rules = validateRules(config.rules)
 
   return {
+    ...(preset === undefined ? {} : { preset }),
     ...(failOn === undefined ? {} : { failOn }),
     ...(threshold === undefined ? {} : { threshold }),
     ...(ignore === undefined ? {} : { ignore }),

@@ -153,4 +153,73 @@ describe('scan', () => {
     expect(scanResult.diagnostics.every((diagnostic) => Boolean(diagnostic.filePath))).toBe(true)
     expect(scanResult.diagnostics[0]?.filePath).toMatch(/index\.astro$/)
   })
+
+  test('detects project package manager issues without Astro files', async () => {
+    writeFileSync(
+      join(testDirectory, 'package.json'),
+      JSON.stringify({ name: 'test-project', packageManager: 'npm@10.0.0' })
+    )
+
+    const scanResult = await scan({ directory: testDirectory, files: ['package.json'] })
+
+    const packageManagerDiagnostic = scanResult.diagnostics.find(
+      (diagnostic) => diagnostic.ruleId === 'astro-doctor/prefer-pnpm'
+    )
+
+    expect(scanResult.fileCount).toBe(1)
+    expect(packageManagerDiagnostic).toBeDefined()
+  })
+
+  test('detects unsafe Astro security config', async () => {
+    writeFileSync(
+      join(testDirectory, 'astro.config.mjs'),
+      [
+        "import { defineConfig } from 'astro/config'",
+        'export default defineConfig({',
+        "  output: 'server',",
+        '  security: {',
+        '    checkOrigin: false,',
+        '    allowedDomains: [{}],',
+        '  },',
+        '})',
+      ].join('\n')
+    )
+
+    const scanResult = await scan({ directory: testDirectory, files: ['astro.config.mjs'] })
+    const ruleIds = scanResult.diagnostics.map((diagnostic) => diagnostic.ruleId)
+
+    expect(ruleIds).toContain('astro-doctor/no-disabled-origin-check')
+    expect(ruleIds).toContain('astro-doctor/no-open-allowed-domains')
+  })
+
+  test('detects public secret env names and missing env schema', async () => {
+    writeFileSync(
+      join(testDirectory, '.env.example'),
+      ['PUBLIC_API_URL=https://example.com', 'PUBLIC_API_KEY=replace-me'].join('\n')
+    )
+
+    const scanResult = await scan({ directory: testDirectory, files: ['.env.example'] })
+    const ruleIds = scanResult.diagnostics.map((diagnostic) => diagnostic.ruleId)
+
+    expect(ruleIds).toContain('astro-doctor/no-public-secret-env')
+    expect(ruleIds).toContain('astro-doctor/prefer-env-schema')
+  })
+
+  test('detects content collections without a content config', async () => {
+    const contentDirectory = join(testDirectory, 'src/content/blog')
+
+    mkdirSync(contentDirectory, { recursive: true })
+    writeFileSync(join(contentDirectory, 'hello.md'), '# Hello')
+
+    const scanResult = await scan({
+      directory: testDirectory,
+      files: ['src/content/blog/hello.md'],
+    })
+
+    const contentConfigDiagnostic = scanResult.diagnostics.find(
+      (diagnostic) => diagnostic.ruleId === 'astro-doctor/require-content-config'
+    )
+
+    expect(contentConfigDiagnostic).toBeDefined()
+  })
 })

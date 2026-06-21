@@ -16,3 +16,6 @@ export const formatJsonReport = (result: ScanResult, directory: string): JsonRep
   scoreBreakdown: result.scoreBreakdown,
   diagnostics: result.diagnostics,
 })
+
+export const serializeJsonReport = (report: JsonReport, compact: boolean): string =>
+  compact ? JSON.stringify(report) : JSON.stringify(report, null, 2)
