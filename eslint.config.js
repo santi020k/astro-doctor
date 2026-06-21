@@ -35,10 +35,12 @@ export default await defineConfig(
       '@typescript-eslint/no-unsafe-argument': 'off',
     },
   },
-  // The CLI and bin entry point intentionally write to stdout/stderr.
+  // The CLI, install helper, and LSP stub intentionally write to stdout/stderr.
   {
     files: [
       'packages/astro-doctor/src/cli.ts',
+      'packages/astro-doctor/src/install.ts',
+      'packages/astro-doctor/src/lsp.ts',
       'packages/astro-doctor/src/report/console.ts',
       'packages/astro-doctor/bin/**/*.ts',
     ],

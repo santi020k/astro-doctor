@@ -10,7 +10,7 @@ import { runLsp } from './lsp.js'
 interface CliOptions {
   readonly directory: string
   readonly help: boolean
-  readonly json: string | true | false  // false = off, true = stdout, string = file path
+  readonly json: string | boolean  // false = off, true = stdout, string = file path
   readonly noScore: boolean
   readonly failOn: 'error' | 'warning' | 'off'
 }
@@ -18,9 +18,8 @@ interface CliOptions {
 const parseArguments = (argv: string[]): CliOptions => {
   const directory = (() => {
     const directoryIndex = argv.findIndex((argument) => argument === '--dir' || argument === '-d')
-    return directoryIndex !== -1 && argv[directoryIndex + 1]
-      ? resolve(argv[directoryIndex + 1] as string)
-      : process.cwd()
+    const directoryArg = directoryIndex !== -1 ? argv[directoryIndex + 1] : undefined
+    return directoryArg ? resolve(directoryArg) : process.cwd()
   })()
 
   const jsonIndex = argv.findIndex((argument) => argument === '--json')

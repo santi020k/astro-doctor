@@ -22,21 +22,49 @@ const stripJsonComments = (content: string): string =>
     .replace(/\/\/[^\n]*/g, '')
     .replace(/\/\*[\s\S]*?\*\//g, '')
 
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+
+/**
+ * Extracts an AstroDoctorConfig from an imported module value (unknown at runtime).
+ * Handles both `export default config` and bare object exports.
+ */
+const extractConfig = (imported: unknown): AstroDoctorConfig => {
+  if (!isPlainObject(imported)) {
+    throw new TypeError('Config module must export a plain object')
+  }
+
+  // Handle ESM default export: `export default { ... }`
+  const config = 'default' in imported ? imported['default'] : imported
+
+  if (!isPlainObject(config)) {
+    throw new TypeError('Config default export must be a plain object')
+  }
+
+  // At this point we have confirmed it is a plain object — cast is the standard
+  // TypeScript pattern here since full runtime field-level validation is out of scope.
+  return config as AstroDoctorConfig
+}
+
 const loadJsonConfig = (filePath: string): AstroDoctorConfig => {
   const content = readFileSync(filePath, 'utf8')
   const parsed: unknown = JSON.parse(stripJsonComments(content))
-  return parsed as AstroDoctorConfig
+  return extractConfig(parsed)
 }
 
 const loadEsmConfig = async (filePath: string): Promise<AstroDoctorConfig> => {
   const url = pathToFileURL(filePath).href
-  const module_: { default?: AstroDoctorConfig } = await import(url)
-  return module_.default ?? (module_ as unknown as AstroDoctorConfig)
+  // Dynamic import with a string expression yields `any`; assigning to `unknown`
+  // forces us to narrow before use.
+  const imported: unknown = await import(url)
+  return extractConfig(imported)
 }
 
 const loadCjsConfig = (filePath: string): AstroDoctorConfig => {
   const require_ = createRequire(import.meta.url)
-  return require_(filePath) as AstroDoctorConfig
+  // createRequire's call signature returns `any`; assign to unknown to narrow.
+  const imported: unknown = require_(filePath)
+  return extractConfig(imported)
 }
 
 /**
