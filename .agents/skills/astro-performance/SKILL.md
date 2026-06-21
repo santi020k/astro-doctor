@@ -68,6 +68,26 @@ import heroImage from '../assets/hero.jpg'
 />
 ```
 
+## External Scripts — Defer or Async
+
+A `<script src="...">` without `defer`, `async`, or `type="module"` blocks HTML parsing and delays FCP. The browser stops parsing until the script is downloaded and executed.
+
+```astro
+<!-- ❌ Blocks HTML parsing on every page load -->
+<script src="/analytics.js"></script>
+
+<!-- ✅ defer — preserves order, non-blocking -->
+<script src="/analytics.js" defer></script>
+
+<!-- ✅ async — fires as soon as downloaded (order not guaranteed) -->
+<script src="/widget.js" async></script>
+
+<!-- ✅ type="module" — always deferred, scoped, strict -->
+<script src="/app.js" type="module"></script>
+```
+
+Use `defer` for scripts that depend on the DOM. Use `async` only for truly independent scripts (analytics, ads). Inline Astro `<script>` tags are automatically bundled and module-scoped — no attribute needed.
+
 ## Content Collections vs. Direct Imports
 
 Use `getCollection()` / `getEntry()` over direct `import` for large sets of content — Astro's Content Collections are type-safe, cached, and paginated.
