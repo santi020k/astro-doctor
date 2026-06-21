@@ -38,13 +38,13 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "vscode-languageclient": "^9.0.1"
+    "vscode-languageclient": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "^22.15.32",
-    "@types/vscode": "^1.85.0",
-    "esbuild": "^0.25.0",
-    "typescript": "^5.8.3"
+    "@types/node": "catalog:",
+    "@types/vscode": "catalog:",
+    "esbuild": "catalog:",
+    "typescript": "catalog:"
   },
   "contributes": {
     "commands": [
