@@ -20,7 +20,7 @@ export interface ScanResult {
   readonly fileCount: number
   readonly errorCount: number
   readonly warningCount: number
-  /** Health score 0–100. Penalises errors (×10) and warnings (×3) per file. */
+  /** Health score 0–100. Penalizes errors (×10) and warnings (×3) per file. */
   readonly score: number
   readonly scoreLabel: ScoreLabel
 }

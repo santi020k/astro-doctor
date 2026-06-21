@@ -23,28 +23,13 @@ export default await defineConfig(
     tsconfigRootDir: import.meta.dirname,
     typescript: {
       projectService: {
-        allowDefaultProject: ['**/*.ts', '**/*.js', 'packages/*/vitest.config.ts']
+        allowDefaultProject: ['*.ts', '*.js', '**/*.ts', '**/*.js', '**/*.cjs', '**/*.mjs'],
+        defaultProject: 'tsconfig.eslint.json',
       }
     },
     workspacePrefixes: ['@santi020k'],
   },
-  {
-    files: ['**/*.md'],
-    rules: {
-      'markdown/fenced-code-language': 'off',
-    }
-  },
-  {
-    rules: {
-      'complexity': 'off',
-      'preserve-caught-error': 'off',
-      '@cspell/spellchecker': 'off',
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      'n/no-unpublished-import': 'off',
-      'vitest/consistent-test-it': 'off',
-    }
-  },
+
   // The ESLint plugin source works with unknown AST node shapes from astro-eslint-parser.
   // Casting to `any` is unavoidable there — relax the rule for those files only.
   {
@@ -72,4 +57,27 @@ export default await defineConfig(
       'n/no-unpublished-import': 'off',
     },
   },
+  {
+    files: ['**/*.config.ts', '**/*.config.js'],
+    languageOptions: {
+      parserOptions: {
+        projectService: false,
+      }
+    },
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/dot-notation': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/await-thenable': 'off',
+      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/restrict-plus-operands': 'off',
+      '@typescript-eslint/unbound-method': 'off',
+    }
+  }
 )

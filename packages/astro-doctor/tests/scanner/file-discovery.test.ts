@@ -2,7 +2,7 @@ import { mkdirSync, rmSync,writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { afterEach,beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 
 import { discoverAstroFiles } from '../../src/scanner/file-discovery.js'
 
@@ -18,12 +18,12 @@ describe('discoverAstroFiles', () => {
     rmSync(testDirectory, { recursive: true, force: true })
   })
 
-  it('returns empty array when no .astro files exist', async () => {
+  test('returns empty array when no .astro files exist', async () => {
     const discoveredFiles = await discoverAstroFiles(testDirectory)
     expect(discoveredFiles).toEqual([])
   })
 
-  it('discovers .astro files in the root directory', async () => {
+  test('discovers .astro files in the root directory', async () => {
     writeFileSync(join(testDirectory, 'index.astro'), '---\n---\n<h1>Hello</h1>')
     writeFileSync(join(testDirectory, 'about.astro'), '---\n---\n<h1>About</h1>')
 
@@ -34,7 +34,7 @@ describe('discoverAstroFiles', () => {
     expect(discoveredFiles.some((filePath) => filePath.endsWith('about.astro'))).toBe(true)
   })
 
-  it('discovers .astro files recursively in subdirectories', async () => {
+  test('discovers .astro files recursively in subdirectories', async () => {
     mkdirSync(join(testDirectory, 'pages'), { recursive: true })
     mkdirSync(join(testDirectory, 'components'), { recursive: true })
 
@@ -46,7 +46,7 @@ describe('discoverAstroFiles', () => {
     expect(discoveredFiles).toHaveLength(2)
   })
 
-  it('ignores non-.astro files', async () => {
+  test('ignores non-.astro files', async () => {
     writeFileSync(join(testDirectory, 'index.astro'), '---\n---\n<h1>Hello</h1>')
     writeFileSync(join(testDirectory, 'utils.ts'), 'export const add = (a: number, b: number) => a + b')
     writeFileSync(join(testDirectory, 'styles.css'), 'body { margin: 0 }')
@@ -57,7 +57,7 @@ describe('discoverAstroFiles', () => {
     expect(discoveredFiles[0]).toMatch(/index\.astro$/)
   })
 
-  it('ignores node_modules directory', async () => {
+  test('ignores node_modules directory', async () => {
     mkdirSync(join(testDirectory, 'node_modules', 'some-pkg'), { recursive: true })
     writeFileSync(
       join(testDirectory, 'node_modules', 'some-pkg', 'component.astro'),
@@ -71,7 +71,7 @@ describe('discoverAstroFiles', () => {
     expect(discoveredFiles.some((filePath) => filePath.includes('node_modules'))).toBe(false)
   })
 
-  it('ignores dist directory', async () => {
+  test('ignores dist directory', async () => {
     mkdirSync(join(testDirectory, 'dist'), { recursive: true })
     writeFileSync(join(testDirectory, 'dist', 'index.astro'), '---\n---\n<div />')
     writeFileSync(join(testDirectory, 'index.astro'), '---\n---\n<h1>Hello</h1>')
@@ -82,7 +82,7 @@ describe('discoverAstroFiles', () => {
     expect(discoveredFiles.some((filePath) => filePath.includes('/dist/'))).toBe(false)
   })
 
-  it('returns absolute paths', async () => {
+  test('returns absolute paths', async () => {
     writeFileSync(join(testDirectory, 'index.astro'), '---\n---\n<h1>Hello</h1>')
 
     const discoveredFiles = await discoverAstroFiles(testDirectory)

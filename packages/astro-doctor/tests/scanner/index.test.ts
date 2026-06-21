@@ -2,7 +2,7 @@ import { mkdirSync, rmSync,writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { afterEach,beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 
 import { scan } from '../../src/scanner/index.js'
 
@@ -18,7 +18,7 @@ describe('scan', () => {
     rmSync(testDirectory, { recursive: true, force: true })
   })
 
-  it('returns a ScanResult with zero diagnostics for an empty project', async () => {
+  test('returns a ScanResult with zero diagnostics for an empty project', async () => {
     const scanResult = await scan({ directory: testDirectory })
 
     expect(scanResult.diagnostics).toEqual([])
@@ -29,7 +29,7 @@ describe('scan', () => {
     expect(scanResult.scoreLabel).toBe('A')
   })
 
-  it('returns a ScanResult with zero diagnostics for a clean Astro file', async () => {
+  test('returns a ScanResult with zero diagnostics for a clean Astro file', async () => {
     writeFileSync(
       join(testDirectory, 'index.astro'),
       [
@@ -47,7 +47,7 @@ describe('scan', () => {
     expect(scanResult.errorCount).toBe(0)
   })
 
-  it('detects a raw <img> tag and returns a diagnostic', async () => {
+  test('detects a raw <img> tag and returns a diagnostic', async () => {
     writeFileSync(
       join(testDirectory, 'index.astro'),
       '---\n---\n<img src="/hero.png" alt="hero" />'
@@ -63,7 +63,7 @@ describe('scan', () => {
     expect(useAstroImageDiagnostic).toBeDefined()
   })
 
-  it('detects client:load overuse', async () => {
+  test('detects client:load overuse', async () => {
     writeFileSync(
       join(testDirectory, 'index.astro'),
       [
@@ -83,7 +83,7 @@ describe('scan', () => {
     expect(overuseDiagnostic?.severity).toBe('warning')
   })
 
-  it('detects missing alt on <img>', async () => {
+  test('detects missing alt on <img>', async () => {
     writeFileSync(
       join(testDirectory, 'index.astro'),
       '---\n---\n<img src="/hero.png" />'
@@ -98,7 +98,7 @@ describe('scan', () => {
     expect(altDiagnostic?.severity).toBe('error')
   })
 
-  it('detects set:html usage', async () => {
+  test('detects set:html usage', async () => {
     writeFileSync(
       join(testDirectory, 'index.astro'),
       [
@@ -117,7 +117,7 @@ describe('scan', () => {
     expect(setHtmlDiagnostic).toBeDefined()
   })
 
-  it('accumulates diagnostics across multiple files', async () => {
+  test('accumulates diagnostics across multiple files', async () => {
     writeFileSync(join(testDirectory, 'page-a.astro'), '---\n---\n<img src="/a.png" />')
     writeFileSync(join(testDirectory, 'page-b.astro'), '---\n---\n<img src="/b.png" />')
 
@@ -127,7 +127,7 @@ describe('scan', () => {
     expect(scanResult.diagnostics.length).toBeGreaterThanOrEqual(2)
   })
 
-  it('exposes the file path on each diagnostic', async () => {
+  test('exposes the file path on each diagnostic', async () => {
     writeFileSync(
       join(testDirectory, 'index.astro'),
       '---\n---\n<img src="/hero.png" />'
