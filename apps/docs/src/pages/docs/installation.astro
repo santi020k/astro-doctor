@@ -78,4 +78,65 @@ export default [
     See <a href="/docs/github-action">GitHub Action</a> for full setup instructions. No extra
     installation is required — the action runs <code>npx</code> internally.
   </p>
+
+  <h2>Works alongside eslint-plugin-astro</h2>
+
+  <p>
+    astro-doctor is designed to complement
+    <a href="https://ota-meshi.github.io/eslint-plugin-astro/" target="_blank" rel="noopener noreferrer">eslint-plugin-astro</a>
+    (the official community plugin), not replace it. The two cover different ground:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Coverage area</th>
+        <th>eslint-plugin-astro</th>
+        <th>astro-doctor</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Syntax correctness</td>
+        <td>✅</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>A11Y (30+ jsx-a11y rules)</td>
+        <td>✅</td>
+        <td>Focused subset</td>
+      </tr>
+      <tr>
+        <td>Performance (client directives, images, scripts)</td>
+        <td>—</td>
+        <td>✅</td>
+      </tr>
+      <tr>
+        <td>Security (<code>set:html</code>)</td>
+        <td>✅</td>
+        <td>✅</td>
+      </tr>
+      <tr>
+        <td>Best practices (<code>class:list</code>, env vars)</td>
+        <td>Partial</td>
+        <td>✅</td>
+      </tr>
+      <tr>
+        <td>CLI health score + CI reports</td>
+        <td>—</td>
+        <td>✅</td>
+      </tr>
+      <tr>
+        <td>AI agent skills</td>
+        <td>—</td>
+        <td>✅</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    If you already use <code>eslint-plugin-astro</code> (e.g. via
+    <a href="https://github.com/santi020k/eslint-config-basic" target="_blank" rel="noopener noreferrer">eslint-config-basic</a>),
+    add astro-doctor on top for performance scanning, health scoring, and AI context.
+  </p>
 </Docs>
