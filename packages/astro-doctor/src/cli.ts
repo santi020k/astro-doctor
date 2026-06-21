@@ -8,7 +8,7 @@ import { scan } from './scanner/index.js'
 import { loadConfig } from './config.js'
 import { runInstall } from './install.js'
 import { runLsp } from './lsp.js'
-import type { ScanResult } from './types.js'
+import type { AstroDoctorConfig, ScanResult } from './types.js'
 
 type OutputFormat = 'console' | 'github'
 
@@ -149,26 +149,9 @@ const handleJsonOutput = (scanResult: ScanResult, options: CliOptions): boolean 
   return true
 }
 
-// eslint-disable-next-line complexity
-const executeScan = async (options: CliOptions): Promise<void> => {
-  const config = await loadConfig(options.directory)
-
-  const scanOptions = {
-    directory: options.directory,
-    files: options.changedFilesFrom ? readChangedFiles(options.changedFilesFrom) : undefined,
-    ignore: config?.ignore,
-    rules: config?.rules,
-  }
-
-  const effectiveFailOn = options.failOn === 'error' ? (config?.failOn ?? 'error') : options.failOn
-  const effectiveThreshold = options.threshold === -1 ? (config?.threshold ?? -1) : options.threshold
-
-  if (options.json !== true) console.log(`\nScanning ${options.directory}...\n`)
-
-  const scanResult = await scan(scanOptions)
-
+const printReport = (scanResult: ScanResult, options: CliOptions): boolean => {
   if (options.json !== false) {
-    if (handleJsonOutput(scanResult, options)) return
+    if (handleJsonOutput(scanResult, options)) return true
   } else if (options.format === 'github') {
     const githubOutput = formatGithubReport(scanResult)
 
@@ -180,6 +163,10 @@ const executeScan = async (options: CliOptions): Promise<void> => {
     console.log(report)
   }
 
+  return false
+}
+
+const checkThresholds = (scanResult: ScanResult, effectiveFailOn: string, effectiveThreshold: number): void => {
   // Exit code: severity gate
   const shouldFailOnSeverity =
     (effectiveFailOn === 'error' && scanResult.errorCount > 0) ||
@@ -195,6 +182,31 @@ const executeScan = async (options: CliOptions): Promise<void> => {
 
     process.exitCode = 1
   }
+}
+
+const getEffectiveFailOn = (options: CliOptions, config: AstroDoctorConfig | null) => options.failOn === 'error' ? (config?.failOn ?? 'error') : options.failOn
+const getEffectiveThreshold = (options: CliOptions, config: AstroDoctorConfig | null) => options.threshold === -1 ? (config?.threshold ?? -1) : options.threshold
+
+const executeScan = async (options: CliOptions): Promise<void> => {
+  const config = await loadConfig(options.directory)
+
+  const scanOptions = {
+    directory: options.directory,
+    files: options.changedFilesFrom ? readChangedFiles(options.changedFilesFrom) : undefined,
+    ignore: config?.ignore,
+    rules: config?.rules,
+  }
+
+  const effectiveFailOn = getEffectiveFailOn(options, config)
+  const effectiveThreshold = getEffectiveThreshold(options, config)
+
+  if (options.json !== true) console.log(`\nScanning ${options.directory}...\n`)
+
+  const scanResult = await scan(scanOptions)
+
+  if (printReport(scanResult, options)) return
+
+  checkThresholds(scanResult, effectiveFailOn, effectiveThreshold)
 }
 
 export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<void> => {

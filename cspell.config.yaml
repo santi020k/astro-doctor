@@ -20,7 +20,9 @@ words:
   - linter
   - llms
   - llmstxt
+  - lspconfig
   - monorepo
+  - nvim
   - packagemanager
   - santi
   - santi020k

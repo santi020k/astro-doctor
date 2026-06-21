@@ -4,6 +4,16 @@ import Nav from '@/components/Nav.astro'
 
 import '@/styles/global.css'
 
+import {
+  AUTHOR,
+  AUTHOR_URL,
+  GITHUB_URL,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+  TWITTER_HANDLE
+} from '@/site.config'
+
 interface Props {
   title: string
   description?: string
@@ -11,49 +21,46 @@ interface Props {
   noIndex?: boolean
 }
 
-const SITE_URL = 'https://doctor.santi020k.com'
-
 const {
   title,
-  description = 'astro-doctor — ESLint rules and CLI for finding common Astro mistakes. Score your codebase, scan in CI, and ship better Astro apps.',
+  description = SITE_DESCRIPTION,
   ogImage = `${SITE_URL}/og.svg`,
   noIndex = false
 } = Astro.props
 
 const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE_URL).href
-const fullTitle = title === 'astro-doctor' ? title : `${title} · astro-doctor`
+const fullTitle = title === SITE_NAME ? title : `${title} · ${SITE_NAME}`
 
 const websiteJsonLd = JSON.stringify({
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   '@id': `${SITE_URL}/#website`,
-  name: 'astro-doctor',
+  name: SITE_NAME,
   url: `${SITE_URL}/`,
   description,
   inLanguage: 'en',
   author: {
     '@type': 'Person',
-    name: 'Santiago Molina',
-    alternateName: 'santi020k',
-    url: 'https://santi020k.com'
+    name: AUTHOR,
+    url: AUTHOR_URL
   }
 })
 
 const softwareJsonLd = JSON.stringify({
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
-  name: 'astro-doctor',
+  name: SITE_NAME,
   applicationCategory: 'DeveloperApplication',
   operatingSystem: 'Any',
   description: 'ESLint plugin, CLI, and GitHub Action for diagnosing Astro codebases.',
   url: `${SITE_URL}/`,
   author: {
     '@type': 'Person',
-    name: 'Santiago Molina',
-    url: 'https://santi020k.com'
+    name: AUTHOR,
+    url: AUTHOR_URL
   },
   license: 'https://opensource.org/licenses/MIT',
-  codeRepository: 'https://github.com/santi020k/astro-doctor'
+  codeRepository: GITHUB_URL
 })
 ---
 
@@ -66,7 +73,7 @@ const softwareJsonLd = JSON.stringify({
 
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    <meta name="author" content="Santiago Molina" />
+    <meta name="author" content={AUTHOR} />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#7c3aed" />
     {noIndex ?
@@ -90,13 +97,13 @@ const softwareJsonLd = JSON.stringify({
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content={`${fullTitle} — astro-doctor`} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:site_name" content="astro-doctor" />
+    <meta property="og:site_name" content={SITE_NAME} />
     <meta property="og:locale" content="en_US" />
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@santi020k" />
-    <meta name="twitter:creator" content="@santi020k" />
+    <meta name="twitter:site" content={TWITTER_HANDLE} />
+    <meta name="twitter:creator" content={TWITTER_HANDLE} />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
