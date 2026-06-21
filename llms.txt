@@ -75,7 +75,7 @@ action.yml                      GitHub Action (composite, PR diff mode, sticky c
 - **Versioning**: Changesets with linked packages (both packages version together)
 - **Score formula**: `max(0, 100 - (errors×10 + warnings×3) / fileCount)` — penalises density, not raw count
 - **GitHub Action**: Composite action (no pre-bundled JS). Uses `npx` + `jq` + `actions/github-script`
-- **Config files**: `doctor.config.*` (following react-doctor's naming). Supports TS/JS/JSON/JSONC via native import() + readFileSync
+- **Config files**: `doctor.config.*` (following react-doctor's naming). Supports TS/JS/JSON/JSONC via native import() + readFileSync. JSON/JSONC configs support `"$schema": "https://doctor.santi020k.com/schema/config.json"` for IDE autocompletion.
 - **Agent skills**: Three skills in `.agents/skills/` (rules, performance, add-rule). `install` subcommand copies to user's project.
 
 ## Commands
@@ -100,7 +100,7 @@ pnpm --filter @santi020k/astro-doctor run test
 3. Register it in `packages/eslint-plugin-astro-doctor/src/rules/index.ts` + `RECOMMENDED_RULES`
 4. Run `pnpm run test` — verify RED → GREEN
 5. Add an entry to `apps/docs/src/data/rules.ts` (id, name, slug, category, severity, description, why, bad, good)
-6. Update rule count in `apps/docs/src/pages/index.astro` and category list in `apps/docs/src/pages/docs/rules/index.astro`
+6. Update rule count in `apps/docs/src/pages/index.astro`, category list in `apps/docs/src/pages/docs/rules/index.astro`, and add the rule to `apps/docs/src/data/nav.ts` under the Rules section
 7. Add the rule to `apps/docs/public/schema/config.json` under `properties.rules.properties`
 8. Add before/after examples to `skills/SKILL.md` and `.agents/skills/astro-rules/SKILL.md`
 9. Update the rules tables in root `README.md` and `packages/eslint-plugin-astro-doctor/README.md`
