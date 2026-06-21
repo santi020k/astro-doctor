@@ -41,6 +41,7 @@ jobs:
         run: pnpm --filter @santi020k/astro-doctor-docs build
 
       - name: Deploy to Cloudflare Pages
+        if: github.event_name == 'push'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
