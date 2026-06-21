@@ -451,7 +451,7 @@ export const buildSidebarHtml = (nonce: string): string => `<!DOCTYPE html>
             <span class="issue-rule">\${issue.ruleId.replace('astro-doctor/', '')}</span>
           </div>
           <div class="issue-message">\${issue.message}</div>
-          <div class="issue-location">\${basename(issue.filePath)}:\${issue.line}</div>
+          <div class="issue-location">\${basename(issue.filePath)}:\${issue.line}:\${issue.column} &bull; \${categoryLabel(issue.category)}</div>
         </div>
       \`).join('')
 
@@ -476,16 +476,7 @@ export const buildSidebarHtml = (nonce: string): string => `<!DOCTYPE html>
         return
       }
 
-      if (score === 100) {
-        root.innerHTML = \`
-          <div class="state-center">
-            <div class="state-icon">🎉</div>
-            <div class="state-title">Perfect score!</div>
-            <div class="state-body">All \${fileCount} file\${fileCount !== 1 ? 's' : ''} are clean. Keep it up!</div>
-          </div>
-        \`
-        return
-      }
+
 
       const dashOffset = SCORE_CIRCUMFERENCE * (1 - score / 100)
       const color = scoreColor(score)
