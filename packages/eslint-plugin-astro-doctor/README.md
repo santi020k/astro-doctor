@@ -41,9 +41,12 @@ export default [
     rules: {
       'astro-doctor/no-client-load-overuse': 'warn',
       'astro-doctor/use-astro-image': 'warn',
+      'astro-doctor/no-blocking-script': 'warn',
       'astro-doctor/no-missing-alt': 'error',
+      'astro-doctor/no-missing-lang': 'error',
       'astro-doctor/no-set-html': 'warn',
       'astro-doctor/prefer-class-list': 'warn',
+      'astro-doctor/no-process-env': 'warn',
     },
   },
 ]
@@ -69,9 +72,12 @@ export default await defineConfig({
 | ---- | -------- | ------- |
 | `no-client-load-overuse` | performance | ⚠️ warn |
 | `use-astro-image` | performance | ⚠️ warn |
+| `no-blocking-script` | performance | ⚠️ warn |
 | `no-missing-alt` | accessibility | ❌ error |
+| `no-missing-lang` | accessibility | ❌ error |
 | `no-set-html` | security | ⚠️ warn |
 | `prefer-class-list` | best-practices | ⚠️ warn |
+| `no-process-env` | best-practices | ⚠️ warn |
 
 ## See Also
 
