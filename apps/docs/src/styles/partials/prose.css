@@ -1,0 +1,153 @@
+/* ─── Prose / Docs Content ────────────────────────────────────────────────────
+ * Styles for markdown-rendered documentation content.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+.prose {
+  color: hsl(var(--ink-soft));
+  line-height: 1.8;
+  font-size: 1rem;
+  max-width: 70ch;
+}
+
+.prose h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: hsl(var(--ink));
+  margin-top: 0;
+  margin-bottom: 1rem;
+  letter-spacing: -0.03em;
+}
+
+.prose h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: hsl(var(--ink));
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid hsl(var(--line));
+  letter-spacing: -0.02em;
+}
+
+.prose h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: hsl(var(--ink));
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: hsl(var(--ink));
+  margin-top: 1.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.prose p {
+  margin-bottom: 1.25rem;
+}
+
+.prose ul,
+.prose ol {
+  margin-bottom: 1.25rem;
+  padding-left: 1.5rem;
+}
+
+.prose li {
+  margin-bottom: 0.4rem;
+}
+
+.prose ul li {
+  list-style-type: disc;
+}
+
+.prose ol li {
+  list-style-type: decimal;
+}
+
+.prose strong {
+  color: hsl(var(--ink));
+  font-weight: 600;
+}
+
+.prose blockquote {
+  border-left: 3px solid hsl(var(--brand));
+  padding-left: 1rem;
+  color: hsl(var(--ink-soft));
+  font-style: italic;
+  margin: 1.5rem 0;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.prose th {
+  text-align: left;
+  padding: 0.6rem 1rem;
+  background: hsl(var(--surface-muted));
+  border: 1px solid hsl(var(--line));
+  font-weight: 600;
+  color: hsl(var(--ink));
+}
+
+.prose td {
+  padding: 0.6rem 1rem;
+  border: 1px solid hsl(var(--line));
+  color: hsl(var(--ink-soft));
+}
+
+.prose tr:nth-child(even) td {
+  background: hsl(var(--surface-muted) / 0.5);
+}
+
+.prose a {
+  color: hsl(var(--brand));
+  text-underline-offset: 3px;
+  text-decoration: underline;
+}
+
+.prose a:hover {
+  color: hsl(var(--accent));
+}
+
+.prose pre {
+  margin: 1.25rem 0;
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid hsl(var(--line));
+  margin: 2rem 0;
+}
+
+/* Callout admonitions */
+.callout {
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  border-left: 3px solid;
+}
+
+.callout-tip {
+  background: hsl(var(--brand-soft));
+  border-color: hsl(var(--brand));
+  color: hsl(var(--brand));
+}
+
+.callout-warning {
+  background: hsl(38 80% 10%);
+  border-color: hsl(var(--warning));
+  color: hsl(var(--warning));
+}
+
+.callout-danger {
+  background: hsl(0 70% 8%);
+  border-color: hsl(var(--danger));
+  color: hsl(var(--danger));
+}

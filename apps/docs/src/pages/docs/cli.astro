@@ -1,0 +1,156 @@
+---
+import Docs from '@/layouts/Docs.astro'
+---
+
+<Docs
+  title="CLI Reference"
+  description="All astro-doctor CLI commands, flags, and examples."
+  editPath="apps/docs/src/pages/docs/cli.astro"
+>
+  <h1>CLI Reference</h1>
+
+  <pre><code>astro-doctor [command] [options]</code></pre>
+
+  <h2>Commands</h2>
+
+  <h3>(no command) — scan</h3>
+
+  <p>Scans the target directory for Astro issues and prints a health report.</p>
+
+  <pre><code># Scan current directory
+    astro-doctor
+
+    # Scan a specific directory
+    astro-doctor --dir ./src
+
+    # Scan and write a JSON report
+    astro-doctor --json report.json
+
+    # Scan without showing the health score
+    astro-doctor --no-score
+       </code>
+  </pre>
+
+  <h3><code>install</code></h3>
+
+  <p>
+    Copies the agent skill files (<code>.agents/skills/</code>) into your project root.
+    Run once per project.
+  </p>
+
+  <pre><code>astro-doctor install</code></pre>
+
+  <h3><code>experimental-lsp</code></h3>
+
+  <p>
+    Starts the experimental language server in stdio mode (for editor integration without ESLint).
+    This feature is a work in progress.
+  </p>
+
+  <pre><code>astro-doctor experimental-lsp --stdio</code></pre>
+
+  <h2>Options</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Flag</th>
+        <th>Default</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>-d, --dir &lt;path&gt;</code></td>
+        <td><code>process.cwd()</code></td>
+        <td>Directory to scan</td>
+      </tr>
+      <tr>
+        <td><code>--json [path]</code></td>
+        <td><em>off</em></td>
+        <td>Output JSON to stdout (no path) or to a file</td>
+      </tr>
+      <tr>
+        <td><code>--no-score</code></td>
+        <td><em>show score</em></td>
+        <td>Omit the health score from output</td>
+      </tr>
+      <tr>
+        <td><code>--fail-on &lt;level&gt;</code></td>
+        <td><code>error</code></td>
+        <td>Exit 1 on: <code>error</code> | <code>warning</code> | <code>off</code></td>
+      </tr>
+      <tr>
+        <td><code>-h, --help</code></td>
+        <td>—</td>
+        <td>Show help message</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>JSON report schema</h2>
+
+  <p>When using <code>--json</code>, the output conforms to this schema:</p>
+
+  <pre><code>{`{
+  "$schema": "https://astro.doctor/schema/config.json",
+  "version": "0.1.0",
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "directory": "/my-project",
+  "fileCount": 14,
+  "errorCount": 1,
+  "warningCount": 2,
+  "score": 85,
+  "scoreLabel": "B",
+  "diagnostics": [
+    {
+      "ruleId": "astro-doctor/no-missing-alt",
+      "severity": "error",
+      "message": "img element is missing a non-empty alt attribute",
+      "filePath": "/my-project/src/pages/blog.astro",
+      "line": 12,
+      "column": 5,
+      "category": "accessibility"
+    }
+  ]
+}`}
+  </code>
+  </pre>
+
+  <h2>Exit codes</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Code</th>
+        <th>Meaning</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>0</code></td>
+        <td>Scan completed, no issues at or above the fail-on threshold</td>
+      </tr>
+      <tr>
+        <td><code>1</code></td>
+        <td>Issues found at or above the fail-on threshold</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Examples</h2>
+
+  <pre><code># CI: fail on any warning
+    astro-doctor --fail-on warning
+
+    # CI: never fail, just report
+    astro-doctor --fail-on off
+
+    # Output JSON for downstream tools
+    astro-doctor --json | jq '.score'
+
+    # Write JSON to a file and show console output
+    astro-doctor --json ./astro-report.json
+       </code>
+  </pre>
+</Docs>

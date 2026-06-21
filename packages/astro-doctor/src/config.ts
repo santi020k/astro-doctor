@@ -1,7 +1,8 @@
-import { readFileSync, existsSync } from 'node:fs'
+import { existsSync,readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { createRequire } from 'node:module'
+
 import type { AstroDoctorConfig } from './types.js'
 
 const CONFIG_FILE_NAMES = [
@@ -19,8 +20,8 @@ const CONFIG_FILE_NAMES = [
  */
 const stripJsonComments = (content: string): string =>
   content
-    .replace(/\/\/[^\n]*/g, '')
-    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replaceAll(/\/\/[^\n]*/g, '')
+    .replaceAll(/\/\*[\s\S]*?\*\//g, '')
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -35,7 +36,7 @@ const extractConfig = (imported: unknown): AstroDoctorConfig => {
   }
 
   // Handle ESM default export: `export default { ... }`
-  const config = 'default' in imported ? imported['default'] : imported
+  const config = 'default' in imported ? imported.default : imported
 
   if (!isPlainObject(config)) {
     throw new TypeError('Config default export must be a plain object')
@@ -43,12 +44,13 @@ const extractConfig = (imported: unknown): AstroDoctorConfig => {
 
   // At this point we have confirmed it is a plain object — cast is the standard
   // TypeScript pattern here since full runtime field-level validation is out of scope.
-  return config as AstroDoctorConfig
+  return config
 }
 
 const loadJsonConfig = (filePath: string): AstroDoctorConfig => {
   const content = readFileSync(filePath, 'utf8')
   const parsed: unknown = JSON.parse(stripJsonComments(content))
+
   return extractConfig(parsed)
 }
 
@@ -57,6 +59,7 @@ const loadEsmConfig = async (filePath: string): Promise<AstroDoctorConfig> => {
   // Dynamic import with a string expression yields `any`; assigning to `unknown`
   // forces us to narrow before use.
   const imported: unknown = await import(url)
+
   return extractConfig(imported)
 }
 
@@ -64,6 +67,7 @@ const loadCjsConfig = (filePath: string): AstroDoctorConfig => {
   const require_ = createRequire(import.meta.url)
   // createRequire's call signature returns `any`; assign to unknown to narrow.
   const imported: unknown = require_(filePath)
+
   return extractConfig(imported)
 }
 
@@ -91,6 +95,7 @@ export const loadConfig = async (directory: string): Promise<AstroDoctorConfig |
       return await loadEsmConfig(filePath)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
+
       throw new Error(`Failed to load ${fileName}: ${message}`)
     }
   }

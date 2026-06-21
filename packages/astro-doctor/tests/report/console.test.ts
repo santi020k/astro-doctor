@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { Diagnostic, ScanResult } from '../../src/types.js'
+import {describe, expect, it } from 'vitest'
+
 import { formatConsoleReport } from '../../src/report/console.js'
+import type { Diagnostic, ScanResult } from '../../src/types.js'
 
 const makeDiagnostic = (overrides: Partial<Diagnostic> = {}): Diagnostic => ({
   ruleId: 'astro-doctor/use-astro-image',

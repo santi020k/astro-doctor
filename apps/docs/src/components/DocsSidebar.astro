@@ -1,0 +1,44 @@
+---
+import { DOCS_NAV } from '@/data/nav'
+
+const currentPath = Astro.url.pathname.replace(/\/$/, '')
+---
+
+<aside class="w-56 shrink-0 hidden lg:block">
+  <nav class="sticky top-20 flex flex-col gap-6" aria-label="Documentation navigation">
+    {DOCS_NAV.map(section => (
+      <div>
+        <h2 class="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-[hsl(var(--ink-muted))]">
+          {section.title}
+        </h2>
+        <ul class="space-y-0.5">
+          {section.items.map(item => {
+            const isActive = currentPath === item.href || currentPath === item.href + '/index'
+
+            return (
+              <li>
+                <a
+                  href={item.href}
+                  class:list={[
+                    'flex items-center justify-between px-3 py-1.5 rounded-md text-sm transition-colors',
+                    isActive ?
+                      'bg-[hsl(var(--brand-soft))] text-[hsl(var(--brand))] font-medium' :
+                      'text-[hsl(var(--ink-soft))] hover:text-[hsl(var(--ink))] hover:bg-[hsl(var(--surface-muted))]'
+                  ]}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  <span class="truncate">{item.label}</span>
+                  {item.badge && (
+                    <span class="ml-2 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold bg-[hsl(var(--brand-soft))] text-[hsl(var(--brand))]">
+                      {item.badge}
+                    </span>
+                  )}
+                </a>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+    ))}
+  </nav>
+</aside>

@@ -25,7 +25,7 @@ export default createRule({
       // the key name equals the directive string (e.g. "client:load").
       'VAttribute[key.name="client:load"]'(node: unknown) {
         context.report({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           node: node as any,
           messageId: 'preferLazyDirective',
         })

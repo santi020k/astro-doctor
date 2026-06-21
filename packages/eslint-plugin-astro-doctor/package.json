@@ -2,30 +2,6 @@
   "name": "@santi020k/eslint-plugin-astro-doctor",
   "version": "0.1.0",
   "description": "ESLint plugin for Astro Doctor: diagnose Astro codebases for performance, accessibility, security, and best-practice issues",
-  "keywords": [
-    "astro",
-    "eslint",
-    "eslint-plugin",
-    "linter",
-    "accessibility",
-    "performance",
-    "security"
-  ],
-  "homepage": "https://github.com/santi020k/astro-doctor#readme",
-  "bugs": {
-    "url": "https://github.com/santi020k/astro-doctor/issues"
-  },
-  "license": "MIT",
-  "author": "santi020k",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/santi020k/astro-doctor.git",
-    "directory": "packages/eslint-plugin-astro-doctor"
-  },
-  "files": [
-    "dist/**/*.js",
-    "dist/**/*.d.ts"
-  ],
   "type": "module",
   "sideEffects": false,
   "exports": {
@@ -34,6 +10,10 @@
       "default": "./dist/index.js"
     }
   },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ],
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "dev": "tsc --project tsconfig.json --watch",
@@ -47,19 +27,39 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "astro-eslint-parser": "^1.2.2"
+    "astro-eslint-parser": "catalog:"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "eslint": ">=9.0.0"
   },
-  "devDependencies": {
-    "@arethetypeswrong/cli": "^0.18.3",
-    "@types/node": "^22.15.32",
-    "eslint": "^9.29.0",
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
-  },
   "engines": {
     "node": "^20.19.0 || >=22.13.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/santi020k/astro-doctor.git",
+    "directory": "packages/eslint-plugin-astro-doctor"
+  },
+  "homepage": "https://github.com/santi020k/astro-doctor#readme",
+  "bugs": {
+    "url": "https://github.com/santi020k/astro-doctor/issues"
+  },
+  "keywords": [
+    "astro",
+    "eslint",
+    "eslint-plugin",
+    "linter",
+    "accessibility",
+    "performance",
+    "security"
+  ],
+  "author": "santi020k",
+  "license": "MIT"
 }

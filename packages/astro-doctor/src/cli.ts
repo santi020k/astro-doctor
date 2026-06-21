@@ -1,8 +1,9 @@
-import { resolve } from 'node:path'
 import { writeFileSync } from 'node:fs'
-import { scan } from './scanner/index.js'
+import { resolve } from 'node:path'
+
 import { formatConsoleReport } from './report/console.js'
 import { formatJsonReport } from './report/json.js'
+import { scan } from './scanner/index.js'
 import { loadConfig } from './config.js'
 import { runInstall } from './install.js'
 import { runLsp } from './lsp.js'
@@ -18,20 +19,26 @@ interface CliOptions {
 const parseArguments = (argv: string[]): CliOptions => {
   const directory = (() => {
     const directoryIndex = argv.findIndex((argument) => argument === '--dir' || argument === '-d')
-    const directoryArg = directoryIndex !== -1 ? argv[directoryIndex + 1] : undefined
+    const directoryArg = directoryIndex === -1 ? undefined : argv[directoryIndex + 1]
+
     return directoryArg ? resolve(directoryArg) : process.cwd()
   })()
 
   const jsonIndex = argv.findIndex((argument) => argument === '--json')
+
   const json: CliOptions['json'] = (() => {
     if (jsonIndex === -1) return false
+
     const nextArg = argv[jsonIndex + 1]
+
     if (nextArg && !nextArg.startsWith('-')) return nextArg
+
     return true
   })()
 
   const failOnIndex = argv.findIndex((argument) => argument === '--fail-on')
-  const failOnValue = failOnIndex !== -1 ? argv[failOnIndex + 1] : undefined
+  const failOnValue = failOnIndex === -1 ? undefined : argv[failOnIndex + 1]
+
   const failOn: CliOptions['failOn'] =
     failOnValue === 'warning' || failOnValue === 'off' ? failOnValue : 'error'
 
@@ -82,11 +89,13 @@ export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<vo
 
   if (subcommand === 'install') {
     runInstall()
+
     return
   }
 
   if (subcommand === 'experimental-lsp') {
     runLsp()
+
     return
   }
 
@@ -94,6 +103,7 @@ export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<vo
 
   if (options.help) {
     printHelp()
+
     return
   }
 
@@ -106,7 +116,7 @@ export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<vo
     rules: config?.rules,
   }
 
-  const effectiveFailOn = options.failOn !== 'error' ? options.failOn : (config?.failOn ?? 'error')
+  const effectiveFailOn = options.failOn === 'error' ? (config?.failOn ?? 'error') : options.failOn
 
   console.log(`\nScanning ${options.directory}...\n`)
 
@@ -119,15 +129,18 @@ export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<vo
 
     if (typeof options.json === 'string') {
       writeFileSync(options.json, reportJson, 'utf8')
+
       console.log(`JSON report written to ${options.json}`)
     } else {
       console.log(reportJson)
+
       return
     }
   }
 
   // Console output
   const report = formatConsoleReport(scanResult, options.directory, !options.noScore)
+
   console.log(report)
 
   // Exit code

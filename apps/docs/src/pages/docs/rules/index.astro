@@ -1,0 +1,108 @@
+---
+import Docs from '@/layouts/Docs.astro'
+
+import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
+---
+
+<Docs
+  title="Rules Overview"
+  description="All five astro-doctor ESLint rules with categories and default severities."
+  editPath="apps/docs/src/pages/docs/rules/index.astro"
+>
+  <h1>Rules</h1>
+
+  <p>
+    astro-doctor provides five ESLint rules for <code>.astro</code> files, covering performance,
+    accessibility, security, and best practices. All rules are enabled in the
+    <code>recommended</code> config at their default severities.
+  </p>
+
+  <h2>All rules</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Rule</th>
+        <th>Category</th>
+        <th>Default</th>
+        <th>Fixable</th>
+      </tr>
+    </thead>
+    <tbody>
+      {RULES.map(rule => (
+        <tr>
+          <td>
+            <a href={`/docs/rules/${rule.slug}`}>
+              <code>{rule.id}</code>
+            </a>
+          </td>
+          <td>
+            <span class:list={['inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium', CATEGORY_COLORS[rule.category]]}>
+              {CATEGORY_LABELS[rule.category]}
+            </span>
+          </td>
+          <td>
+            <span class:list={[
+              'inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium',
+              rule.severity === 'error' ?
+                'bg-red-500/10 text-red-400 border border-red-500/20' :
+                'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
+            ]}
+            >
+              {rule.severity}
+            </span>
+          </td>
+          <td class="text-[hsl(var(--ink-muted))] text-sm">—</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+
+  <h2>Rule categories</h2>
+
+  <h3>Performance</h3>
+  <p>
+    Rules that help you ship faster pages. Covers hydration strategies
+    (<code>no-client-load-overuse</code>) and image optimisation (<code>use-astro-image</code>).
+  </p>
+
+  <h3>Accessibility</h3>
+  <p>
+    Rules that ensure your pages are usable by everyone, including screen-reader users.
+    Currently: <code>no-missing-alt</code>.
+  </p>
+
+  <h3>Security</h3>
+  <p>
+    Rules that prevent common vulnerabilities. Currently: <code>no-set-html</code> which flags
+    unescaped HTML injection.
+  </p>
+
+  <h3>Best Practices</h3>
+  <p>
+    Rules that encourage idiomatic Astro patterns. Currently: <code>prefer-class-list</code>
+    for conditional class composition.
+  </p>
+
+  <h2>Customising rules</h2>
+
+  <p>Override any rule severity in your <code>eslint.config.js</code>:</p>
+
+  <pre><code>{`import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
+
+export default [
+  ...astroDoctorPlugin.configs.recommended.config,
+  {
+    rules: {
+      // Upgrade to error
+      'astro-doctor/no-client-load-overuse': 'error',
+      // Disable a rule
+      'astro-doctor/prefer-class-list': 'off',
+    },
+  },
+]`}
+  </code>
+  </pre>
+
+  <p>Or use a <a href="/docs/configuration"><code>doctor.config.*</code></a> file for CLI-only overrides.</p>
+</Docs>

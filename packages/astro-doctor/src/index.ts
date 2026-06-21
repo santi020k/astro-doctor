@@ -1,13 +1,13 @@
-export { scan } from './scanner/index.js'
-export { formatConsoleReport, formatJsonReport } from './report/index.js'
 export { loadConfig } from './config.js'
+export { formatConsoleReport, formatJsonReport } from './report/index.js'
+export { scan } from './scanner/index.js'
 export { computeScore, computeScoreLabel } from './scorer.js'
 export type {
-  Diagnostic,
-  ScanResult,
-  ScanOptions,
-  Severity,
-  ScoreLabel,
-  JsonReport,
   AstroDoctorConfig,
+  Diagnostic,
+  JsonReport,
+  ScanOptions,
+  ScanResult,
+  ScoreLabel,
+  Severity,
 } from './types.js'

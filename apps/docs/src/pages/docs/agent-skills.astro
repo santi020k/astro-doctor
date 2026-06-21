@@ -1,0 +1,113 @@
+---
+import Docs from '@/layouts/Docs.astro'
+---
+
+<Docs
+  title="Agent Skills"
+  description="AI agent skill files for Claude, Cursor, and Copilot Workspace."
+  editPath="apps/docs/src/pages/docs/agent-skills.astro"
+>
+  <h1>Agent Skills</h1>
+
+  <p>
+    astro-doctor ships three <em>agent skill files</em> — structured Markdown documents that give
+    AI coding assistants (Claude, Cursor, GitHub Copilot Workspace) the context they need to write
+    correct Astro code and fix diagnostics automatically.
+  </p>
+
+  <h2>Install</h2>
+
+  <pre><code>astro-doctor install</code></pre>
+
+  <p>
+    This copies the skill files to <code>.agents/skills/</code> in your project root. Commit this
+    folder so every contributor (and their AI tool) benefits.
+  </p>
+
+  <h2>Skills included</h2>
+
+  <h3><code>.agents/skills/astro-rules/SKILL.md</code></h3>
+
+  <p>
+    Documents all five rules with before/after code examples. When your agent references this skill,
+    it knows exactly what patterns to avoid and what to write instead.
+  </p>
+
+  <p><strong>Use cases:</strong></p>
+  <ul>
+    <li>Ask your agent to fix all astro-doctor warnings in a file</li>
+    <li>Ask your agent to review a PR for Astro best-practice violations</li>
+    <li>Have your agent generate Astro components that pass all rules from the start</li>
+  </ul>
+
+  <h3><code>.agents/skills/astro-performance/SKILL.md</code></h3>
+
+  <p>
+    Deep context on Astro performance patterns: islands architecture, image optimisation with
+    <code>astro:assets</code>, View Transitions, Server Islands, and hydration strategies.
+  </p>
+
+  <p><strong>Use cases:</strong></p>
+  <ul>
+    <li>Ask your agent to audit a page for performance anti-patterns</li>
+    <li>Have your agent refactor a component to use the optimal hydration strategy</li>
+    <li>Generate high-performance Astro pages from scratch</li>
+  </ul>
+
+  <h3><code>.agents/skills/add-rule/SKILL.md</code></h3>
+
+  <p>
+    A step-by-step TDD workflow for contributing new rules to
+    <code>@santi020k/eslint-plugin-astro-doctor</code>. Includes the AST node types to target,
+    test patterns, and the PR checklist.
+  </p>
+
+  <p><strong>Use cases:</strong></p>
+  <ul>
+    <li>Ask your agent to scaffold a new ESLint rule for Astro</li>
+    <li>Have your agent write tests for a proposed rule</li>
+    <li>Accelerate open-source contributions with an agent that knows the architecture</li>
+  </ul>
+
+  <h2>Using with Claude</h2>
+
+  <p>
+    In Claude Code or Cowork mode, you can reference a skill directly:
+  </p>
+
+  <pre><code>{`# In your CLAUDE.md or agent context:
+Skills: .agents/skills/astro-rules/SKILL.md
+
+# Or tell Claude:
+"Use the astro-rules skill to fix all warnings in src/components/"`}
+       </code>
+  </pre>
+
+  <h2>Using with Cursor</h2>
+
+  <p>
+    Add the skills directory to your <code>.cursor/rules</code> or reference skill files in your
+    system prompt:
+  </p>
+
+  <pre><code>{`# .cursor/rules
+@.agents/skills/astro-rules/SKILL.md
+@.agents/skills/astro-performance/SKILL.md`}
+       </code>
+  </pre>
+
+  <h2>Manual installation</h2>
+
+  <p>
+    If you prefer to copy skill files manually, they are available in the
+    <a href="https://github.com/santi020k/astro-doctor/tree/main/.agents/skills" target="_blank" rel="noopener noreferrer">
+      repository
+    </a>.
+  </p>
+
+  <div class="callout callout-tip">
+    <strong>llms.txt:</strong> The repo root includes an <code>llms.txt</code> file (following the
+    <a href="https://llmstxt.org" target="_blank" rel="noopener noreferrer">llmstxt.org</a>
+    convention) that AI tools can fetch to understand the project at a high level.
+  </div>
+</Docs>

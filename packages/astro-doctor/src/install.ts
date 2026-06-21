@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
-import { resolve, join } from 'node:path'
+import { existsSync,mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { join,resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const SKILLS_SOURCE_DIR = resolve(fileURLToPath(import.meta.url), '../../../..')
@@ -29,7 +29,9 @@ const installSkill = (target: SkillTarget, projectRoot: string): void => {
   }
 
   const content = readFileSync(target.sourceFile, 'utf8')
+
   writeFileSync(destPath, content, 'utf8')
+
   console.log(`  ✓ Installed ${target.label}`)
 }
 
@@ -47,10 +49,12 @@ export const runInstall = (projectRoot = process.cwd()): void => {
       installSkill(target, projectRoot)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
+
       console.error(`  ✗ Failed to install ${target.label}: ${message}`)
     }
   }
 
   console.log('\nDone! Your coding agent will now apply Astro best practices.\n')
+
   console.log('Tip: re-run after upgrading astro-doctor to get the latest skill updates.\n')
 }

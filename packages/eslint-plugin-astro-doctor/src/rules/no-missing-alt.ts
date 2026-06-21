@@ -5,7 +5,7 @@ const IMAGE_ELEMENT_NAMES = new Set(['img', 'Image', 'Picture'])
 const hasAltAttribute = (attributes: unknown[]): boolean =>
   attributes.some(
     (attribute) =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       (attribute as any).type === 'VAttribute' && (attribute as any).key?.name === 'alt'
   )
 
@@ -29,7 +29,7 @@ export default createRule({
 
     return {
       VElement(node: unknown) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const elementNode = node as any
         const elementName: string = elementNode.rawName ?? elementNode.name ?? ''
 

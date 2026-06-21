@@ -1,0 +1,174 @@
+---
+import Docs from '@/layouts/Docs.astro'
+---
+
+<Docs
+  title="GitHub Action"
+  description="Use astro-doctor in GitHub Actions with PR diff mode and sticky PR comments."
+  editPath="apps/docs/src/pages/docs/github-action.astro"
+>
+  <h1>GitHub Action</h1>
+
+  <p>
+    The <code>santi020k/astro-doctor</code> composite action scans your Astro project in CI, posts a
+    sticky PR comment with the health score, and fails the check when issues are found.
+  </p>
+
+  <h2>Minimal setup</h2>
+
+  <p>Create <code>.github/workflows/astro-doctor.yml</code>:</p>
+
+  <pre><code>{`name: Astro Doctor
+on:
+  pull_request:
+    paths: ['**/*.astro']
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write   # needed to post PR comments
+    steps:
+      - uses: actions/checkout@v4
+      - uses: santi020k/astro-doctor@v1`}
+       </code>
+  </pre>
+
+  <h2>PR diff mode (recommended)</h2>
+
+  <p>
+    With <code>diff-only: true</code> the action detects changed <code>.astro</code> files via
+    <code>git diff</code> and scans only those — making it fast even on large monorepos.
+  </p>
+
+  <pre><code>{`- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0        # required for diff detection
+- uses: santi020k/astro-doctor@v1
+  with:
+    diff-only: true
+    comment: true
+    fail-on: error`}
+       </code>
+  </pre>
+
+  <h2>Inputs</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Input</th>
+        <th>Default</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>working-directory</code></td>
+        <td><code>.</code></td>
+        <td>Directory to scan</td>
+      </tr>
+      <tr>
+        <td><code>fail-on</code></td>
+        <td><code>error</code></td>
+        <td>When to fail: <code>error</code> | <code>warning</code> | <code>off</code></td>
+      </tr>
+      <tr>
+        <td><code>comment</code></td>
+        <td><code>true</code></td>
+        <td>Post/update a sticky PR comment with the report</td>
+      </tr>
+      <tr>
+        <td><code>diff-only</code></td>
+        <td><code>false</code></td>
+        <td>Scan only files changed in the PR</td>
+      </tr>
+      <tr>
+        <td><code>json-report</code></td>
+        <td><code>astro-doctor-report.json</code></td>
+        <td>Path for the intermediate JSON report</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Outputs</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Output</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>total</code></td>
+        <td>Total number of diagnostics</td>
+      </tr>
+      <tr>
+        <td><code>errors</code></td>
+        <td>Number of error-severity diagnostics</td>
+      </tr>
+      <tr>
+        <td><code>warnings</code></td>
+        <td>Number of warning-severity diagnostics</td>
+      </tr>
+      <tr>
+        <td><code>score</code></td>
+        <td>Health score (0–100)</td>
+      </tr>
+      <tr>
+        <td><code>score-label</code></td>
+        <td>Letter grade (A–F)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Using outputs in downstream steps</h2>
+
+  <pre><code>{`steps:
+  - uses: santi020k/astro-doctor@v1
+    id: doctor
+    with:
+      fail-on: off   # don't fail here — handle below
+  - name: Check score threshold
+    run: |
+      SCORE=\${{ steps.doctor.outputs.score }}
+      if [ "$SCORE" -lt 80 ]; then
+        echo "Score $SCORE is below threshold (80)"
+        exit 1
+      fi`}
+       </code>
+  </pre>
+
+  <h2>PR comment format</h2>
+
+  <p>When <code>comment: true</code>, the action posts a comment like:</p>
+
+  <pre><code>{`## 🏥 Astro Doctor Report
+
+| Metric  | Value |
+|---------|-------|
+| Score   | 85/100 (B) 🟡 |
+| Files   | 14 |
+| Errors  | 1 |
+| Warnings | 2 |
+
+### Findings
+| File | Line | Rule | Severity |
+|------|------|------|----------|
+| src/pages/blog.astro | 12 | no-missing-alt | ❌ error |
+...`}
+       </code>
+  </pre>
+
+  <p>
+    The comment is updated (not re-created) on every push. It uses a hidden HTML marker to identify
+    the existing comment.
+  </p>
+
+  <div class="callout callout-tip">
+    <strong>Permissions:</strong> The <code>pull-requests: write</code> permission is only required
+    when <code>comment: true</code>. If you disable comments, this permission is not needed.
+  </div>
+</Docs>

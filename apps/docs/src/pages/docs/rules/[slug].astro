@@ -1,0 +1,111 @@
+---
+import type { GetStaticPaths } from 'astro'
+
+import Docs from '@/layouts/Docs.astro'
+
+import { CATEGORY_COLORS, CATEGORY_LABELS, RULE_BY_SLUG, RULES } from '@/data/rules'
+
+export const getStaticPaths = (() => RULES.map(rule => ({
+  params: { slug: rule.slug }
+}))) satisfies GetStaticPaths
+
+const { slug } = Astro.params
+const rule = RULE_BY_SLUG[slug]
+
+if (!rule) {
+  return Astro.redirect('/docs/rules')
+}
+---
+
+<Docs
+  title={rule.name}
+  description={rule.description}
+  editPath={`apps/docs/src/pages/docs/rules/${slug}.astro`}
+>
+  <!-- Rule header -->
+  <div class="mb-8 flex flex-wrap items-center gap-3">
+    <span class:list={['inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold', CATEGORY_COLORS[rule.category]]}>
+      {CATEGORY_LABELS[rule.category]}
+    </span>
+    <span class:list={[
+      'inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold border',
+      rule.severity === 'error' ?
+        'bg-red-500/10 text-red-400 border-red-500/20' :
+        'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+    ]}
+    >
+      {rule.severity} by default
+    </span>
+    <code class="rounded-md border border-[hsl(var(--line)/0.5)] bg-[hsl(var(--surface-muted))] px-2 py-1 text-xs text-[hsl(var(--brand))]">
+      {rule.id}
+    </code>
+  </div>
+
+  <h1>{rule.name}</h1>
+
+  <p><strong>{rule.description}</strong></p>
+
+  <h2>Why</h2>
+  <p>{rule.why}</p>
+
+  <h2>Examples</h2>
+
+  <h3>
+    <span class="inline-flex items-center gap-1.5">
+      <span class="text-red-400">✗</span>
+      Incorrect
+    </span>
+  </h3>
+  <p class="text-sm text-[hsl(var(--ink-muted))]">{rule.bad.label}</p>
+  <pre><code>{rule.bad.code}</code></pre>
+
+  <h3>
+    <span class="inline-flex items-center gap-1.5">
+      <span class="text-green-400">✓</span>
+      Correct
+    </span>
+  </h3>
+  <p class="text-sm text-[hsl(var(--ink-muted))]">{rule.good.label}</p>
+  <pre><code>{rule.good.code}</code></pre>
+
+  <h2>Configuration</h2>
+
+  <p>Override the default severity in your ESLint config:</p>
+
+  <pre><code>{`// eslint.config.js
+import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
+
+export default [
+  ...astroDoctorPlugin.configs.recommended.config,
+  {
+    rules: {
+      '${rule.id}': 'error',   // or 'warn' or 'off'
+    },
+  },
+]`}
+       </code>
+  </pre>
+
+  <p>Or in your <a href="/docs/configuration"><code>doctor.config.ts</code></a>:</p>
+
+  <pre><code>{`export default {
+  rules: {
+    '${rule.id}': 'error',
+  },
+}`}
+       </code>
+  </pre>
+
+  <h2>All rules</h2>
+
+  <ul>
+    {RULES.map(r => (
+      <li>
+        <a href={`/docs/rules/${r.slug}`} class:list={[r.slug === slug ? 'font-semibold text-[hsl(var(--brand))]' : '']}>
+          <code>{r.id}</code>
+        </a>
+        {r.slug === slug && <span class="ml-2 text-xs text-[hsl(var(--ink-muted))]">(this page)</span>}
+      </li>
+    ))}
+  </ul>
+</Docs>

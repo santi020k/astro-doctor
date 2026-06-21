@@ -25,7 +25,7 @@ export default createRule({
     return {
       [`VAttribute[key.name="${SET_HTML_ATTRIBUTE_NAME}"]`](node: unknown) {
         context.report({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           node: node as any,
           messageId: 'dangerousHtml',
         })
