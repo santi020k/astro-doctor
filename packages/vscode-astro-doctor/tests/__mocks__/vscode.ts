@@ -12,10 +12,17 @@ export const StatusBarAlignment = {
 } as const
 
 export const Uri = {
+  file: vi.fn((filePath: string) => ({
+    fsPath: filePath,
+    toString: () => filePath,
+  })),
   parse: vi.fn((value: string) => ({ toString: () => value })),
 }
 
 export const workspace = {
+  fs: {
+    stat: vi.fn(),
+  },
   getConfiguration: vi.fn(() => ({
     get: vi.fn(),
   })),

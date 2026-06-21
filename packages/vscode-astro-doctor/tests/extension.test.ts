@@ -1,7 +1,6 @@
-import * as fs from 'node:fs'
 import * as path from 'node:path'
 
-import { afterEach, beforeEach, describe, expect, test,vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import * as vscode from 'vscode'
 
 import {
@@ -15,10 +14,31 @@ import {
   resolveWorkspaceServer,
 } from '../src/extension'
 
-vi.mock('node:fs')
-
 const ENV_LOCAL = 'local'
 const ENV_PRODUCTION = 'production'
+const EMPTY_FILE_SIZE_BYTES = 0
+const VSCODE_FILE_TYPE_FILE = 1
+
+const createMockFileStat = () => ({
+  ctime: Date.now(),
+  mtime: Date.now(),
+  size: EMPTY_FILE_SIZE_BYTES,
+  type: VSCODE_FILE_TYPE_FILE,
+})
+
+const workspaceFileSystem = vi.mocked(vscode.workspace.fs)
+
+const mockExistingWorkspaceFile = () => {
+  workspaceFileSystem.stat.mockResolvedValue(createMockFileStat())
+}
+
+const mockMissingWorkspaceFile = () => {
+  workspaceFileSystem.stat.mockRejectedValue(new Error('missing'))
+}
+
+const resetWorkspaceFileSystemMock = () => {
+  workspaceFileSystem.stat.mockReset()
+}
 
 const makeMockConfig = (overrides: Record<string, unknown> = {}) => ({
   get: vi.fn((key: string, defaultValue?: unknown) => overrides[key] ?? defaultValue),
@@ -115,11 +135,11 @@ describe('resolveConfiguredServer', () => {
 
 describe('resolveDevelopmentServer', () => {
   afterEach(() => {
-    vi.mocked(fs.existsSync).mockReset()
+    resetWorkspaceFileSystemMock()
   })
 
   test('returns a ResolvedServer when the development build exists', async () => {
-    vi.mocked(fs.existsSync).mockReturnValue(true)
+    mockExistingWorkspaceFile()
 
     const result = await resolveDevelopmentServer('/workspace/packages/vscode-astro-doctor')
 
@@ -142,7 +162,7 @@ describe('resolveDevelopmentServer', () => {
   })
 
   test('returns undefined when the development build does not exist', async () => {
-    vi.mocked(fs.existsSync).mockReturnValue(false)
+    mockMissingWorkspaceFile()
 
     const result = await resolveDevelopmentServer('/workspace/packages/vscode-astro-doctor')
 
@@ -152,7 +172,7 @@ describe('resolveDevelopmentServer', () => {
 
 describe('resolveWorkspaceServer', () => {
   afterEach(() => {
-    vi.mocked(fs.existsSync).mockReset()
+    resetWorkspaceFileSystemMock()
     vscode.workspace.workspaceFolders = []
   })
 
@@ -167,7 +187,7 @@ describe('resolveWorkspaceServer', () => {
   test('returns a ResolvedServer when a workspace bin is found', async () => {
     vscode.workspace.workspaceFolders = [{ uri: { fsPath: '/my-project' } }]
 
-    vi.mocked(fs.existsSync).mockReturnValue(true)
+    mockExistingWorkspaceFile()
 
     const result = await resolveWorkspaceServer()
 
@@ -181,7 +201,7 @@ describe('resolveWorkspaceServer', () => {
   test('returns undefined when no workspace bin matches', async () => {
     vscode.workspace.workspaceFolders = [{ uri: { fsPath: '/my-project' } }]
 
-    vi.mocked(fs.existsSync).mockReturnValue(false)
+    mockMissingWorkspaceFile()
 
     const result = await resolveWorkspaceServer()
 
@@ -191,11 +211,11 @@ describe('resolveWorkspaceServer', () => {
 
 describe('resolveBundledServer', () => {
   afterEach(() => {
-    vi.mocked(fs.existsSync).mockReset()
+    resetWorkspaceFileSystemMock()
   })
 
   test('returns the bundled server path when it exists', async () => {
-    vi.mocked(fs.existsSync).mockReturnValue(true)
+    mockExistingWorkspaceFile()
 
     const result = await resolveBundledServer('/ext')
 
@@ -203,7 +223,7 @@ describe('resolveBundledServer', () => {
   })
 
   test('returns undefined when the bundled server does not exist', async () => {
-    vi.mocked(fs.existsSync).mockReturnValue(false)
+    mockMissingWorkspaceFile()
 
     const result = await resolveBundledServer('/ext')
 
@@ -218,14 +238,14 @@ describe('createServerOptions', () => {
   })
 
   afterEach(() => {
-    vi.mocked(fs.existsSync).mockReset()
+    resetWorkspaceFileSystemMock()
   })
 
   test('uses the explicit serverPath when configured', async () => {
     const config = makeMockConfig({ serverPath: '/custom/astro-doctor' })
     const runtime = { environment: ENV_PRODUCTION, preferWorkspaceServer: false }
 
-    vi.mocked(fs.existsSync).mockReturnValue(false)
+    mockMissingWorkspaceFile()
 
     const outputChannel = makeMockOutputChannel()
 
@@ -244,9 +264,13 @@ describe('createServerOptions', () => {
     const config = makeMockConfig({ serverPath: '' })
     const runtime = { environment: ENV_PRODUCTION, preferWorkspaceServer: false }
 
-    vi.mocked(fs.existsSync).mockImplementation((filePath) =>
-      String(filePath).includes('server.mjs'),
-    )
+    workspaceFileSystem.stat.mockImplementation((uri) => {
+      if (uri.fsPath.includes('server.mjs')) {
+        return Promise.resolve(createMockFileStat())
+      }
+
+      return Promise.reject(new Error('missing'))
+    })
 
     const outputChannel = makeMockOutputChannel()
 
@@ -267,7 +291,7 @@ describe('createServerOptions', () => {
     const config = makeMockConfig({ serverPath: '' })
     const runtime = { environment: ENV_PRODUCTION, preferWorkspaceServer: false }
 
-    vi.mocked(fs.existsSync).mockReturnValue(false)
+    mockMissingWorkspaceFile()
 
     const channel = makeMockOutputChannel()
 
