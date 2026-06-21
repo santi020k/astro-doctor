@@ -33,9 +33,13 @@ export const DOCS_NAV: readonly NavSection[] = [
       { label: 'Overview', href: '/docs/rules' },
       { label: 'no-client-load-overuse', href: '/docs/rules/no-client-load-overuse' },
       { label: 'use-astro-image', href: '/docs/rules/use-astro-image' },
+      { label: 'no-blocking-script', href: '/docs/rules/no-blocking-script' },
       { label: 'no-missing-alt', href: '/docs/rules/no-missing-alt' },
+      { label: 'no-missing-lang', href: '/docs/rules/no-missing-lang' },
       { label: 'no-set-html', href: '/docs/rules/no-set-html' },
-      { label: 'prefer-class-list', href: '/docs/rules/prefer-class-list' }
+      { label: 'prefer-class-list', href: '/docs/rules/prefer-class-list' },
+      { label: 'no-process-env', href: '/docs/rules/no-process-env' },
+      { label: 'prefer-content-collections', href: '/docs/rules/prefer-content-collections' }
     ]
   }
 ]
