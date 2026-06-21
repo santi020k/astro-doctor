@@ -1,0 +1,59 @@
+name: PR Title
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - synchronize
+
+permissions:
+  pull-requests: read
+  statuses: write
+
+jobs:
+  lint-pr-title:
+    name: Lint PR title (Conventional Commits)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Allowed types (aligned with Conventional Commits + project conventions)
+          types: |
+            feat
+            fix
+            docs
+            chore
+            refactor
+            perf
+            test
+            ci
+            build
+            revert
+          # Allowed scopes — keep in sync with packages and rule categories
+          scopes: |
+            eslint-plugin
+            cli
+            vscode
+            docs
+            action
+            ci
+            deps
+            release
+            rule
+            performance
+            accessibility
+            security
+            best-practices
+          # Require a scope (e.g. feat(eslint-plugin): ...)
+          requireScope: false
+          # Allow ! for breaking changes (feat!: ...)
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: >
+            The subject must start with a lowercase letter.
+            Example: "feat(eslint-plugin): add no-blocking-script rule"
+          # Ignore Changesets release PRs
+          ignoreLabels: |
+            autorelease: pending
