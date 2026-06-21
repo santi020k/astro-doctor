@@ -5,7 +5,7 @@ import { defineConfig } from 'astro/config'
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://astro.doctor',
+  site: 'https://doctor.santi020k.com',
   output: 'static',
   integrations: [
     mdx(),

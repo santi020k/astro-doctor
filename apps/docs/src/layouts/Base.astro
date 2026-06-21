@@ -14,11 +14,11 @@ interface Props {
 const {
   title,
   description = 'astro-doctor — ESLint rules and CLI for finding common Astro mistakes. Score your codebase, scan in CI, and ship better Astro apps.',
-  ogImage = 'https://astro.doctor/og.png',
+  ogImage = 'https://doctor.santi020k.com/og.png',
   noIndex = false
 } = Astro.props
 
-const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://astro.doctor').href
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://doctor.santi020k.com').href
 const fullTitle = title === 'astro-doctor' ? title : `${title} · astro-doctor`
 ---
 
