@@ -1,0 +1,41 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Astro Doctor: Local",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "--disable-extensions",
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/vscode-astro-doctor",
+        "${workspaceFolder}"
+      ],
+      "env": {
+        "ASTRO_DOCTOR_EXTENSION_ENV": "local"
+      },
+      "outFiles": [
+        "${workspaceFolder}/packages/vscode-astro-doctor/dist/**/*.js"
+      ],
+      "preLaunchTask": "vscode-astro-doctor: build"
+    },
+    {
+      "name": "Astro Doctor: Production",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "--disable-extensions",
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/vscode-astro-doctor",
+        "${workspaceFolder}"
+      ],
+      "env": {
+        "ASTRO_DOCTOR_EXTENSION_ENV": "production"
+      },
+      "outFiles": [
+        "${workspaceFolder}/packages/vscode-astro-doctor/dist/**/*.js"
+      ],
+      "preLaunchTask": "vscode-astro-doctor: build"
+    }
+  ]
+}
