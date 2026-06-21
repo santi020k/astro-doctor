@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0d0d14"/>
+      <stop offset="100%" stop-color="#120d1e"/>
+    </linearGradient>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur">
+      <feGaussianBlur stdDeviation="40"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Glow -->
+  <ellipse cx="600" cy="250" rx="500" ry="300" fill="url(#glow)"/>
+
+  <!-- Top border accent -->
+  <rect x="0" y="0" width="1200" height="3" fill="url(#brand)"/>
+
+  <!-- Logo mark -->
+  <g transform="translate(80 80) scale(2.5)">
+    <rect width="32" height="32" rx="8" fill="#f97316"/>
+    <path d="M16 5.5 22.8 21c.28.64-.37 1.27-1 .97l-4.1-1.83a4.18 4.18 0 0 0-3.4 0l-4.1 1.83c-.63.3-1.28-.33-1-.97L16 5.5Z" fill="#fff"/>
+    <path d="M14.46 18.2 16 14.55l1.54 3.65a5.99 5.99 0 0 0-3.08 0Z" fill="#f97316"/>
+    <circle cx="22.4" cy="22.4" r="5.35" fill="#111827" stroke="#fff" stroke-width="1.5"/>
+    <path d="M22.4 19.5v5.8M19.5 22.4h5.8" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>
+  </g>
+
+  <!-- Package name -->
+  <text x="80" y="230" font-family="ui-monospace, 'Cascadia Code', 'Fira Code', monospace" font-size="22" fill="#a78bfa" letter-spacing="1">astro-doctor</text>
+
+  <!-- Headline -->
+  <text x="80" y="310" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="60" font-weight="900" fill="white" letter-spacing="-1">Your agent writes</text>
+  <text x="80" y="390" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="60" font-weight="900" fill="url(#brand)" letter-spacing="-1">bad Astro.</text>
+  <text x="80" y="460" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="60" font-weight="900" fill="white" letter-spacing="-1">This catches it.</text>
+
+  <!-- Sub-text -->
+  <text x="80" y="530" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="22" fill="#94a3b8">ESLint Plugin · CLI · GitHub Action · Agent Skills</text>
+
+  <!-- Right side badges -->
+  <rect x="900" y="120" width="220" height="36" rx="8" fill="#1e1e2e" stroke="#3f3f5a" stroke-width="1"/>
+  <text x="1010" y="143" font-family="ui-monospace, monospace" font-size="14" fill="#f97316" text-anchor="middle">performance</text>
+
+  <rect x="900" y="170" width="220" height="36" rx="8" fill="#1e1e2e" stroke="#3f3f5a" stroke-width="1"/>
+  <text x="1010" y="193" font-family="ui-monospace, monospace" font-size="14" fill="#3b82f6" text-anchor="middle">accessibility</text>
+
+  <rect x="900" y="220" width="220" height="36" rx="8" fill="#1e1e2e" stroke="#3f3f5a" stroke-width="1"/>
+  <text x="1010" y="243" font-family="ui-monospace, monospace" font-size="14" fill="#ef4444" text-anchor="middle">security</text>
+
+  <rect x="900" y="270" width="220" height="36" rx="8" fill="#1e1e2e" stroke="#3f3f5a" stroke-width="1"/>
+  <text x="1010" y="293" font-family="ui-monospace, monospace" font-size="14" fill="#22c55e" text-anchor="middle">best-practices</text>
+
+  <!-- Score badge -->
+  <rect x="900" y="370" width="220" height="80" rx="16" fill="#1e1e2e" stroke="#7c3aed" stroke-width="1.5" stroke-opacity="0.5"/>
+  <text x="1010" y="400" font-family="system-ui, sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">Health Score</text>
+  <text x="1010" y="432" font-family="system-ui, sans-serif" font-size="30" font-weight="900" fill="#4ade80" text-anchor="middle">A 95/100</text>
+
+  <!-- Bottom URL -->
+  <text x="80" y="590" font-family="ui-monospace, monospace" font-size="18" fill="#4b5563">doctor.santi020k.com</text>
+</svg>

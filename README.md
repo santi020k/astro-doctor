@@ -106,12 +106,14 @@ Pin to a commit SHA for hardened CI:
 | ---- | -------- | ----------- |
 | `no-client-load-overuse` | ⚠️ warning | Prefer `client:idle` or `client:visible` over `client:load` |
 | `use-astro-image` | ⚠️ warning | Use `<Image>` from `astro:assets` instead of raw `<img>` |
+| `no-blocking-script` | ⚠️ warning | Add `defer`, `async`, or `type="module"` to `<script src="...">` tags |
 
 ### Accessibility
 
 | Rule | Severity | Description |
 | ---- | -------- | ----------- |
 | `no-missing-alt` | ❌ error | All image elements must have an `alt` attribute |
+| `no-missing-lang` | ❌ error | The `<html>` element must have a `lang` attribute |
 
 ### Security
 
@@ -124,6 +126,7 @@ Pin to a commit SHA for hardened CI:
 | Rule | Severity | Description |
 | ---- | -------- | ----------- |
 | `prefer-class-list` | ⚠️ warning | Use `class:list` instead of template literals for dynamic class names |
+| `no-process-env` | ⚠️ warning | Use `import.meta.env` instead of `process.env` in Astro files |
 
 ---
 
@@ -255,7 +258,7 @@ Three skills are available for coding agents:
 
 | Skill | Location | Description |
 |-------|----------|-------------|
-| Astro Rules | `.agents/skills/astro-rules/` | All 5 rules with before/after examples |
+| Astro Rules | `.agents/skills/astro-rules/` | All 8 rules with before/after examples |
 | Astro Performance | `.agents/skills/astro-performance/` | Islands architecture patterns |
 | Add Rule | `.agents/skills/add-rule/` | How to add a new rule to astro-doctor |
 

@@ -11,15 +11,50 @@ interface Props {
   noIndex?: boolean
 }
 
+const SITE_URL = 'https://doctor.santi020k.com'
+
 const {
   title,
   description = 'astro-doctor — ESLint rules and CLI for finding common Astro mistakes. Score your codebase, scan in CI, and ship better Astro apps.',
-  ogImage = 'https://doctor.santi020k.com/og.png',
+  ogImage = `${SITE_URL}/og.svg`,
   noIndex = false
 } = Astro.props
 
-const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://doctor.santi020k.com').href
+const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE_URL).href
 const fullTitle = title === 'astro-doctor' ? title : `${title} · astro-doctor`
+
+const websiteJsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  '@id': `${SITE_URL}/#website`,
+  name: 'astro-doctor',
+  url: `${SITE_URL}/`,
+  description,
+  inLanguage: 'en',
+  author: {
+    '@type': 'Person',
+    name: 'Santiago Molina',
+    alternateName: 'santi020k',
+    url: 'https://santi020k.com'
+  }
+})
+
+const softwareJsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'astro-doctor',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Any',
+  description: 'ESLint plugin, CLI, and GitHub Action for diagnosing Astro codebases.',
+  url: `${SITE_URL}/`,
+  author: {
+    '@type': 'Person',
+    name: 'Santiago Molina',
+    url: 'https://santi020k.com'
+  },
+  license: 'https://opensource.org/licenses/MIT',
+  codeRepository: 'https://github.com/santi020k/astro-doctor'
+})
 ---
 
 <!doctype html>
@@ -31,25 +66,41 @@ const fullTitle = title === 'astro-doctor' ? title : `${title} · astro-doctor`
 
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <meta name="author" content="Santiago Molina" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#7c3aed" />
+    {noIndex ?
+(
+      <meta name="robots" content="noindex, nofollow" />
+    ) :
+(
+      <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    )}
+
     <link rel="canonical" href={canonical} />
-    {noIndex && <meta name="robots" content="noindex" />}
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${fullTitle} — astro-doctor`} />
     <meta property="og:url" content={canonical} />
     <meta property="og:site_name" content="astro-doctor" />
+    <meta property="og:locale" content="en_US" />
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@santi020k" />
+    <meta name="twitter:creator" content="@santi020k" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="twitter:image:alt" content={`${fullTitle} — astro-doctor`} />
 
     <!-- Theme init (inline to prevent flash) -->
     <script is:inline>
@@ -59,6 +110,10 @@ const fullTitle = title === 'astro-doctor' ? title : `${title} · astro-doctor`
         document.documentElement.setAttribute('data-theme', saved ?? preferred)
       })()
     </script>
+
+    <!-- Structured data -->
+    <script type="application/ld+json" is:inline set:html={websiteJsonLd} />
+    <script type="application/ld+json" is:inline set:html={softwareJsonLd} />
   </head>
   <body>
     <Nav />

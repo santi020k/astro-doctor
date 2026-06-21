@@ -1,4 +1,4 @@
-export type RuleCategory = 'performance' | 'accessibility' | 'security' | 'best-practices'
+export type RuleCategory = 'performance' | 'accessibility' | 'security' | 'best-practices' | 'architecture'
 export type Severity = 'error' | 'warn'
 
 export interface RuleExample {
@@ -55,7 +55,7 @@ import Counter from '../components/Counter'
     category: 'performance',
     severity: 'warn',
     description: 'Use <Image> from astro:assets instead of raw <img> tags.',
-    why: 'The built-in <Image> component automatically optimises images (WebP/AVIF conversion, responsive srcset, lazy loading, explicit width/height to prevent layout shift). Plain <img> tags skip all of this.',
+    why: 'The built-in <Image> component automatically optimizes images (WebP/AVIF conversion, responsive srcset, lazy loading, explicit width/height to prevent layout shift). Plain <img> tags skip all of this.',
     bad: {
       label: 'Raw <img> tag',
       code: `---
@@ -105,14 +105,14 @@ import logo from '../assets/logo.png'
     description: 'Avoid set:html to prevent cross-site scripting (XSS) vulnerabilities.',
     why: 'set:html injects raw HTML into the DOM without escaping. Any user-controlled or third-party content rendered this way is an XSS vector. Use Astro\'s JSX interpolation (which escapes by default) or sanitize the content first.',
     bad: {
-      label: 'Unsanitised HTML injection',
+      label: 'Unsanitized HTML injection',
       code: `---
 const userContent = await fetchUserBio()
 ---
 <div set:html={userContent} />`
     },
     good: {
-      label: 'Escaped interpolation (or sanitised HTML)',
+      label: 'Escaped interpolation (or sanitized HTML)',
       code: `---
 import DOMPurify from 'dompurify'
 const userContent = await fetchUserBio()
@@ -151,6 +151,92 @@ const isActive = true
   Click me
 </button>`
     }
+  },
+  {
+    id: 'astro-doctor/no-blocking-script',
+    name: 'no-blocking-script',
+    slug: 'no-blocking-script',
+    category: 'performance',
+    severity: 'warn',
+    description: 'Disallow render-blocking <script src="..."> tags — add defer, async, or type="module".',
+    why: 'A <script src="..."> without defer, async, or type="module" blocks HTML parsing until the script downloads and executes. This delays the First Contentful Paint and Time to Interactive. Adding defer preserves execution order; async fires as soon as the script downloads; type="module" is always deferred.',
+    bad: {
+      label: 'Render-blocking script tag',
+      code: `---
+---
+<html lang="en">
+  <head>
+    <script src="/analytics.js"></script>
+  </head>
+</html>`
+    },
+    good: {
+      label: 'Non-blocking script with defer',
+      code: `---
+---
+<html lang="en">
+  <head>
+    <!-- defer — preserves execution order, non-blocking -->
+    <script src="/analytics.js" defer></script>
+    <!-- async — fires as soon as downloaded, order not guaranteed -->
+    <script src="/widget.js" async></script>
+    <!-- type="module" is always deferred -->
+    <script src="/app.js" type="module"></script>
+  </head>
+</html>`
+    }
+  },
+  {
+    id: 'astro-doctor/no-missing-lang',
+    name: 'no-missing-lang',
+    slug: 'no-missing-lang',
+    category: 'accessibility',
+    severity: 'error',
+    description: 'Require a lang attribute on the <html> element.',
+    why: 'Screen readers and search engines use the lang attribute to determine page language and apply the correct pronunciation rules or translation hints. A missing lang attribute is a WCAG 2.1 Level A failure (Success Criterion 3.1.1).',
+    bad: {
+      label: 'Missing lang attribute',
+      code: `---
+---
+<html>
+  <head><title>My Astro Site</title></head>
+  <body>...</body>
+</html>`
+    },
+    good: {
+      label: 'lang attribute set',
+      code: `---
+---
+<html lang="en">
+  <head><title>My Astro Site</title></head>
+  <body>...</body>
+</html>`
+    }
+  },
+  {
+    id: 'astro-doctor/no-process-env',
+    name: 'no-process-env',
+    slug: 'no-process-env',
+    category: 'best-practices',
+    severity: 'warn',
+    description: 'Disallow process.env in Astro files — use import.meta.env instead.',
+    why: 'process.env is a Node.js-specific API that does not work in client-side contexts. import.meta.env is Astro\'s standard for environment variables: it works in both server and client code, respects the PUBLIC_ prefix for client-safe exposure, and is type-safe with the Astro env schema.',
+    bad: {
+      label: 'Using process.env',
+      code: `---
+const apiKey = process.env.API_KEY
+const publicUrl = process.env.PUBLIC_SITE_URL
+---
+<p>{publicUrl}</p>`
+    },
+    good: {
+      label: 'Using import.meta.env',
+      code: `---
+const apiKey = import.meta.env.API_KEY
+const publicUrl = import.meta.env.PUBLIC_SITE_URL
+---
+<p>{publicUrl}</p>`
+    }
   }
 ]
 
@@ -160,12 +246,14 @@ export const CATEGORY_LABELS: Record<RuleCategory, string> = {
   performance: 'Performance',
   accessibility: 'Accessibility',
   security: 'Security',
-  'best-practices': 'Best Practices'
+  'best-practices': 'Best Practices',
+  architecture: 'Architecture'
 }
 
 export const CATEGORY_COLORS: Record<RuleCategory, string> = {
   performance: 'badge-performance',
   accessibility: 'badge-accessibility',
   security: 'badge-security',
-  'best-practices': 'badge-best-practices'
+  'best-practices': 'badge-best-practices',
+  architecture: 'badge-architecture'
 }
