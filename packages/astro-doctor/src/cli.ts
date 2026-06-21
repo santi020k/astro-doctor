@@ -123,8 +123,9 @@ Rules checked:
   Security:
     no-set-html              Avoid set:html to prevent XSS
   Best practices:
-    no-process-env           Use import.meta.env instead of process.env
-    prefer-class-list        Use class:list for dynamic class names
+    no-process-env               Use import.meta.env instead of process.env
+    prefer-class-list            Use class:list for dynamic class names
+    prefer-content-collections   Use getCollection() instead of Astro.glob()
 
 Configuration:
   Add a doctor.config.ts (or .js, .mjs, .cjs, .json, .jsonc) to your project root.
