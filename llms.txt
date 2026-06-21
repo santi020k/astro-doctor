@@ -21,7 +21,8 @@ It ships as:
 2. An **ESLint plugin** (`@santi020k/eslint-plugin-astro-doctor`) — for inline editor diagnostics
 3. A **GitHub Action** — PR diff mode, sticky summary comment, health score output
 4. **Agent skills** (`.agents/skills/`) — installed into Claude Code, Cursor, Codex, etc.
-5. An **experimental LSP** — `astro-doctor experimental-lsp --stdio`
+5. An **experimental LSP** — `astro-doctor experimental-lsp --stdio` (diagnostics, hover, code actions)
+6. A **VS Code extension** (`vscode-astro-doctor`) — inline diagnostics, sidebar health panel, status bar
 
 ## Inspiration
 
@@ -47,7 +48,8 @@ packages/
       config.ts                 loadConfig() — doctor.config.ts/js/json/jsonc loader
       scorer.ts                 computeScore() / computeScoreLabel() — 0-100 health score
       install.ts                runInstall() — copies agent skills into the user's project
-      lsp.ts                    runLsp() — experimental LSP stub
+      lsp.ts                    runLsp() — experimental LSP server (diagnostics, hover, code actions,
+                                           health score notifications via experimental/ methods)
       scanner/                  File discovery (glob) + ESLint runner
       report/
         console.ts              formatConsoleReport() — terminal output with score
@@ -56,6 +58,13 @@ packages/
                                 JsonReport, AstroDoctorConfig
       index.ts                  Public API exports
     tests/                      Scanner and reporter tests
+  vscode-astro-doctor/          VS Code extension (LSP client + sidebar + status bar)
+    src/
+      extension.ts              Activates on Astro files; starts LSP child process;
+                                registers commands (scan, fix-all, restart, open-docs)
+      sidebar-provider.ts       Sidebar health panel webview: score ring, grade, category bars
+    scripts/
+      vsce-package.cjs          Temporarily resolves catalog: refs for vsce packaging
 .agents/skills/
   astro-rules/SKILL.md          All 9 rules with before/after examples
   astro-performance/SKILL.md    Astro islands architecture performance patterns

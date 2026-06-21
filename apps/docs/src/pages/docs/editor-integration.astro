@@ -1,0 +1,115 @@
+---
+import Docs from '@/layouts/Docs.astro'
+---
+
+<Docs
+  title="Editor Integration"
+  description="Get inline Astro Doctor diagnostics, hovers, and quick fixes in VS Code, Cursor, Neovim, and any LSP-capable editor."
+  editPath="apps/docs/src/pages/docs/editor-integration.astro"
+>
+  <h1>Editor Integration</h1>
+
+  <p>
+    Astro Doctor ships an experimental Language Server Protocol (LSP) server that streams diagnostics
+    live into your editor as you type — underlined inline, with rule descriptions on hover and
+    quick-fix actions available from the lightbulb menu.
+  </p>
+
+  <h2>VS Code &amp; Cursor</h2>
+
+  <p>
+    Install the <strong>Astro Doctor</strong> extension from the VS Code Marketplace. It automatically
+    starts the LSP server using the version installed in your project, or falls back to
+    <code>npx astro-doctor@latest</code> if none is found locally.
+  </p>
+
+  <h3>Features</h3>
+  <ul>
+    <li><strong>Inline diagnostics</strong> — all 9 rules highlighted as you type</li>
+    <li><strong>Hover cards</strong> — rule name, category, description, and docs link on hover</li>
+    <li><strong>Quick fixes</strong> — disable a rule for one line via the lightbulb menu</li>
+    <li><strong>Status bar</strong> — shows health score and issue counts at a glance</li>
+    <li><strong>Sidebar panel</strong> — score ring, letter grade, per-category breakdown</li>
+  </ul>
+
+  <h3>Extension settings</h3>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Setting</th>
+        <th>Default</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>astroDoctor.enable</code></td>
+        <td><code>true</code></td>
+        <td>Enable or disable the extension</td>
+      </tr>
+      <tr>
+        <td><code>astroDoctor.scanOnType</code></td>
+        <td><code>true</code></td>
+        <td>Re-scan from the unsaved buffer as you type. Disable to scan only on open/save.</td>
+      </tr>
+      <tr>
+        <td><code>astroDoctor.serverPath</code></td>
+        <td><code>""</code></td>
+        <td>Explicit path to the <code>astro-doctor</code> binary. Leave empty to auto-resolve.</td>
+      </tr>
+      <tr>
+        <td><code>astroDoctor.trace.server</code></td>
+        <td><code>"off"</code></td>
+        <td>Trace LSP messages. Set to <code>"verbose"</code> for debugging connection issues.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Other LSP-capable editors</h2>
+
+  <p>
+    Any editor that supports LSP can connect directly to the Astro Doctor language server:
+  </p>
+
+  <pre><code>astro-doctor experimental-lsp --stdio</code></pre>
+
+  <h3>Neovim (nvim-lspconfig)</h3>
+
+  <pre><code>{`require('lspconfig').astro_doctor.setup({
+  cmd = { 'astro-doctor', 'experimental-lsp', '--stdio' },
+  filetypes = { 'astro' },
+})`}
+  </code>
+  </pre>
+
+  <h3>Zed</h3>
+
+  <pre><code>{`// .zed/settings.json
+{
+  "lsp": {
+    "astro-doctor": {
+      "binary": {
+        "path": "astro-doctor",
+        "arguments": ["experimental-lsp", "--stdio"]
+      }
+    }
+  }
+}`}
+  </code>
+  </pre>
+
+  <div class="callout callout-tip">
+    <strong>Experimental:</strong> The LSP protocol, options, and caching behavior may change between
+    releases, hence the <code>experimental-</code> prefix. The VS Code extension handles version
+    management automatically.
+  </div>
+
+  <h2>Rule configuration</h2>
+
+  <p>
+    The LSP server reads your <code>doctor.config.*</code> file from the workspace root, so all
+    rule overrides, ignore patterns, and thresholds defined there apply to editor diagnostics too.
+    See the <a href="/docs/configuration">Configuration</a> page for the full schema.
+  </p>
+</Docs>
