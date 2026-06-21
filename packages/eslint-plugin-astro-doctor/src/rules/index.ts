@@ -1,4 +1,4 @@
-import type { Rule } from 'eslint'
+import type { Linter, Rule } from 'eslint'
 
 import noClientLoadOveruse from './no-client-load-overuse.js'
 import noMissingAlt from './no-missing-alt.js'
@@ -14,7 +14,8 @@ export const rules: Record<string, Rule.RuleModule> = {
   'use-astro-image': useAstroImage,
 }
 
-export const RECOMMENDED_RULES: Record<string, string> = {
+
+export const RECOMMENDED_RULES: Linter.RulesRecord = {
   'astro-doctor/no-client-load-overuse': 'warn',
   'astro-doctor/no-missing-alt': 'error',
   'astro-doctor/no-set-html': 'warn',

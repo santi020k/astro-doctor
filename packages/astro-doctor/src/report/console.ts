@@ -1,11 +1,24 @@
 import { relative } from 'node:path'
 
-import type { Diagnostic,ScanResult } from '../types.js'
+import type { Diagnostic, ScanResult } from '../types.js'
 
-const SEVERITY_LABEL: Record<string, string> = {
-  error: 'error',
-  warning: 'warning',
-}
+// ---------------------------------------------------------------------------
+// ANSI color helpers — only applied when stdout supports color
+// ---------------------------------------------------------------------------
+
+const useColor = (): boolean => process.stdout.isTTY && process.env.NO_COLOR === undefined
+const ansi = (code: string) => (text: string) => useColor() ? `\x1b[${code}m${text}\x1b[0m` : text
+const bold      = ansi('1')
+const dim       = ansi('2')
+const underline = ansi('4')
+const red       = ansi('31')
+const yellow    = ansi('33')
+const green     = ansi('32')
+const cyan      = ansi('36')
+
+// ---------------------------------------------------------------------------
+// Score display
+// ---------------------------------------------------------------------------
 
 const SCORE_EMOJI: Record<string, string> = {
   A: '✅',
@@ -15,31 +28,89 @@ const SCORE_EMOJI: Record<string, string> = {
   F: '🔴',
 }
 
-const formatDiagnosticLine = (diagnostic: Diagnostic, rootDirectory: string): string => {
-  const relativeFilePath = relative(rootDirectory, diagnostic.filePath)
-  const location = `${diagnostic.line}:${diagnostic.column}`
-  const severity = SEVERITY_LABEL[diagnostic.severity] ?? 'warning'
-  const ruleShortName = diagnostic.ruleId.replace('astro-doctor/', '')
+const colorScore = (score: number, label: string): string => {
+  if (score >= 90) return green(`${score}/100 (${label})`)
 
-  return `  ${relativeFilePath}  ${location}  ${severity}  ${diagnostic.message}  (${ruleShortName})`
+  if (score >= 75) return cyan(`${score}/100 (${label})`)
+
+  if (score >= 60) return yellow(`${score}/100 (${label})`)
+
+  return red(`${score}/100 (${label})`)
 }
+
+// ---------------------------------------------------------------------------
+// Per-diagnostic formatting (used inside a file group)
+// ---------------------------------------------------------------------------
+
+const PAD_LOCATION = 8  // "123:45  " — enough for most files
+
+const formatDiagnosticRow = (diagnostic: Diagnostic): string => {
+  const location = dim(`${diagnostic.line}:${diagnostic.column}`.padEnd(PAD_LOCATION))
+
+  const severityText =
+    diagnostic.severity === 'error'
+      ? red('error  ')
+      : yellow('warning')
+
+  const ruleShortName = dim(`  (${diagnostic.ruleId.replace('astro-doctor/', '')})`)
+
+  return `  ${location}  ${severityText}  ${diagnostic.message}${ruleShortName}`
+}
+
+// ---------------------------------------------------------------------------
+// Group diagnostics by file (ESLint-style)
+// ---------------------------------------------------------------------------
+
+const groupByFile = (diagnostics: readonly Diagnostic[]): Map<string, Diagnostic[]> => {
+  const map = new Map<string, Diagnostic[]>()
+
+  for (const d of diagnostics) {
+    const existing = map.get(d.filePath)
+
+    if (existing) {
+      existing.push(d)
+    } else {
+      map.set(d.filePath, [d])
+    }
+  }
+
+  return map
+}
+
+const formatFileGroup = (filePath: string, diagnostics: Diagnostic[], rootDirectory: string): string => {
+  const relPath = relative(rootDirectory, filePath)
+  const header = bold(underline(relPath))
+  const rows = diagnostics.map((d) => formatDiagnosticRow(d)).join('\n')
+
+  return `${header}\n${rows}`
+}
+
+// ---------------------------------------------------------------------------
+// Summary + score lines
+// ---------------------------------------------------------------------------
 
 const formatSummaryLine = (result: ScanResult): string => {
   const { errorCount, warningCount, fileCount } = result
   const totalIssues = errorCount + warningCount
   const errorLabel = errorCount === 1 ? '1 error' : `${errorCount} errors`
   const warningLabel = warningCount === 1 ? '1 warning' : `${warningCount} warnings`
+  const summary = `${totalIssues} problems (${errorLabel}, ${warningLabel}) across ${fileCount} file${fileCount === 1 ? '' : 's'}`
 
-  return `${totalIssues} problems (${errorLabel}, ${warningLabel}) across ${fileCount} file${fileCount === 1 ? '' : 's'}`
+  return totalIssues > 0 ? bold(red(`✖ ${summary}`)) : summary
 }
 
 const formatScoreLine = (result: ScanResult, showScore: boolean): string => {
   if (!showScore) return ''
 
   const emoji = SCORE_EMOJI[result.scoreLabel] ?? '🟡'
+  const score = colorScore(result.score, result.scoreLabel)
 
-  return `\nAstro Doctor Score: ${result.score}/100 (${result.scoreLabel}) ${emoji}`
+  return `\nAstro Doctor Score: ${score} ${emoji}`
 }
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
 
 export const formatConsoleReport = (
   result: ScanResult,
@@ -49,14 +120,18 @@ export const formatConsoleReport = (
   const scoreLine = formatScoreLine(result, showScore)
 
   if (result.diagnostics.length === 0) {
-    return `\nNo issues found across ${result.fileCount} file${result.fileCount === 1 ? '' : 's'}. Your Astro is healthy!${scoreLine}\n`
+    const fileLabel = result.fileCount === 1 ? '1 file' : `${result.fileCount} files`
+
+    return `\n${green('✔')} No issues found across ${fileLabel}. Your Astro is healthy!${scoreLine}\n`
   }
 
-  const diagnosticLines = result.diagnostics
-    .map((diagnostic) => formatDiagnosticLine(diagnostic, rootDirectory))
-    .join('\n')
+  const grouped = groupByFile(result.diagnostics)
+
+  const fileBlocks = [...grouped.entries()]
+    .map(([filePath, diagnostics]) => formatFileGroup(filePath, diagnostics, rootDirectory))
+    .join('\n\n')
 
   const summaryLine = formatSummaryLine(result)
 
-  return `\n${diagnosticLines}\n\n${summaryLine}${scoreLine}\n`
+  return `\n${fileBlocks}\n\n${summaryLine}${scoreLine}\n`
 }

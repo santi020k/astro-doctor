@@ -1,12 +1,12 @@
 import * as astroParser from 'astro-eslint-parser'
 import { RuleTester } from 'eslint'
-import { describe } from 'vitest'
+import { describe, test } from 'vitest'
 
 import rule from '../../src/rules/no-client-load-overuse.js'
 
 // Wire Vitest's globals into ESLint's RuleTester
 RuleTester.describe = describe
-RuleTester.it = it
+RuleTester.it = test
 
 const ruleTester = new RuleTester({
   languageOptions: {

@@ -1,3 +1,4 @@
+/* eslint-disable @cspell/spellchecker */
 /**
  * Experimental Language Server Protocol (LSP) integration for Astro Doctor.
  *
@@ -10,9 +11,11 @@
  *
  * VS Code / Cursor: install the companion extension (coming soon).
  * Zed: add to ~/.config/zed/settings.json (coming soon).
+ *
+ * cspell:disable-line
  * Neovim (nvim-lspconfig): use the `astro_doctor` server definition (coming soon).
  *
- * > The LSP is experimental — its protocol, options, and caching behaviour may
+ * > The LSP is experimental — its protocol, options, and caching behavior may
  * > change between releases, hence the `experimental-` prefix.
  */
 

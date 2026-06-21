@@ -1,3 +1,6 @@
+import type { Rule } from 'eslint'
+
+import type { AstroNode } from '../types.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
 
 const IMAGE_ELEMENT_NAMES = new Set(['img', 'Image', 'Picture'])
@@ -6,7 +9,7 @@ const hasAltAttribute = (attributes: unknown[]): boolean =>
   attributes.some(
     (attribute) =>
        
-      (attribute as any).type === 'VAttribute' && (attribute as any).key?.name === 'alt'
+      (attribute as AstroNode).type === 'VAttribute' && (attribute as AstroNode).key?.name === 'alt'
   )
 
 export default createRule({
@@ -22,7 +25,7 @@ export default createRule({
       missingAlt:
         'Image elements must have an alt attribute. Provide a descriptive text for meaningful images, or alt="" for decorative ones.',
     },
-    schema: [],
+    schema: [], // no options
   },
   create(context) {
     if (!isAstroFile(context.filename)) return {}
@@ -30,16 +33,17 @@ export default createRule({
     return {
       VElement(node: unknown) {
          
-        const elementNode = node as any
+        const elementNode = node as AstroNode
         const elementName: string = elementNode.rawName ?? elementNode.name ?? ''
 
         if (!IMAGE_ELEMENT_NAMES.has(elementName)) return
 
+         
         const attributes: unknown[] = elementNode.startTag?.attributes ?? []
 
         if (!hasAltAttribute(attributes)) {
           context.report({
-            node: elementNode,
+            node: elementNode as Rule.Node,
             messageId: 'missingAlt',
           })
         }

@@ -17,7 +17,7 @@ describe('computeScore', () => {
     expect(withError).toBeLessThan(withWarning)
   })
 
-  test('normalises by file count (density not raw count)', () => {
+  test('normalizes by file count (density not raw count)', () => {
     // 10 warnings across 10 files = same density as 1 warning across 1 file
     const small = computeScore(0, 1, 1)
     const large = computeScore(0, 10, 10)

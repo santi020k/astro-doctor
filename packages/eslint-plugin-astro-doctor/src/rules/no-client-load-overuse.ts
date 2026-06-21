@@ -26,7 +26,7 @@ export default createRule({
       'VAttribute[key.name="client:load"]'(node: unknown) {
         context.report({
            
-          node: node as any,
+          node: node as never,
           messageId: 'preferLazyDirective',
         })
       },
