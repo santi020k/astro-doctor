@@ -49,7 +49,7 @@
   "scripts": {
     "build": "node scripts/build.cjs",
     "typecheck": "tsc --noEmit",
-    "dev": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js --watch",
+    "dev": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js --watch=forever",
     "package": "pnpm run build && node scripts/vsce-package.cjs",
     "clean": "rm -rf dist"
   },

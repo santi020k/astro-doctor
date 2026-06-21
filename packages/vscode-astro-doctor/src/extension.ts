@@ -78,6 +78,27 @@ const resolveConfiguredServer = (
   return undefined
 }
 
+const resolveDevelopmentServer = (extensionPath: string): ResolvedServer | undefined => {
+  const developmentServer = path.join(
+    extensionPath,
+    '..',
+    'astro-doctor',
+    'dist',
+    'bin',
+    'astro-doctor.js',
+  )
+
+  if (fs.existsSync(developmentServer)) {
+    return {
+      args: [developmentServer, 'experimental-lsp'],
+      command: process.execPath,
+      shell: false,
+    }
+  }
+
+  return undefined
+}
+
 const resolveWorkspaceServer = (): ResolvedServer | undefined => {
   const binName = IS_WINDOWS ? 'astro-doctor.cmd' : 'astro-doctor'
 
@@ -163,6 +184,10 @@ const createServerOptions = (
   if (configuredServer) return createExecutableServerOptions(configuredServer)
 
   if (runtime.preferWorkspaceServer) {
+    const developmentServer = resolveDevelopmentServer(extensionPath)
+
+    if (developmentServer) return createExecutableServerOptions(developmentServer)
+
     const workspaceServer = resolveWorkspaceServer()
 
     if (workspaceServer) return createExecutableServerOptions(workspaceServer)

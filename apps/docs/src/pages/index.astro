@@ -3,6 +3,7 @@ import LogoMark from '@/components/logo-mark.astro'
 import Base from '@/layouts/Base.astro'
 
 import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
+import { REACT_DOCTOR_URL } from '@/site.config'
 ---
 
 <Base title="astro-doctor" description="Your agent writes bad Astro. This catches it. ESLint rules, CLI, GitHub Action and agent skills for better Astro code.">
@@ -435,6 +436,18 @@ jobs:
       <p class="text-center mt-8 text-sm text-[hsl(var(--ink-muted))]">
         <code class="text-[hsl(var(--brand))]">astro-doctor install</code> copies skill files to <code>.agents/skills/</code> in your project
       </p>
+    </div>
+  </section>
+
+  <!-- ─── Special Thanks ────────────────────────────────────────────────── -->
+  <section class="py-16">
+    <div class="container-docs">
+      <div class="mx-auto max-w-3xl text-center section-shell" data-reveal>
+        <h2 class="text-2xl font-bold tracking-tight mb-3 text-[hsl(var(--ink))]">Special Thanks</h2>
+        <p class="text-[hsl(var(--ink-soft))] leading-relaxed">
+          Astro Doctor was deeply inspired by <a href={REACT_DOCTOR_URL} target="_blank" rel="noopener noreferrer" class="font-semibold text-[hsl(var(--brand))] hover:underline">react-doctor</a> by Million Software, Inc. They pioneered this concept and philosophy for the React ecosystem, and we built Astro Doctor to bring the same excellent developer experience to Astro. Huge thanks to their team!
+        </p>
+      </div>
     </div>
   </section>
 

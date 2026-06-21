@@ -2,7 +2,31 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "vscode-astro-doctor: build",
+      "label": "eslint-plugin-astro-doctor: build",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "--filter",
+        "@santi020k/eslint-plugin-astro-doctor",
+        "run",
+        "build"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "astro-doctor: build",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "--filter",
+        "@santi020k/astro-doctor",
+        "run",
+        "build"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "vscode-astro-doctor: build-extension",
       "type": "shell",
       "command": "pnpm",
       "args": [
@@ -11,10 +35,50 @@
         "run",
         "build"
       ],
+      "problemMatcher": []
+    },
+    {
+      "label": "vscode-astro-doctor: build",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "eslint-plugin-astro-doctor: build",
+        "astro-doctor: build",
+        "vscode-astro-doctor: build-extension"
+      ],
       "group": "build",
       "presentation": {
         "reveal": "silent"
       },
+      "problemMatcher": []
+    },
+    {
+      "label": "vscode-astro-doctor: watch",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "--parallel",
+        "--filter",
+        "@santi020k/eslint-plugin-astro-doctor",
+        "--filter",
+        "@santi020k/astro-doctor",
+        "--filter",
+        "vscode-astro-doctor",
+        "run",
+        "dev"
+      ],
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "vscode-astro-doctor: dev",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "vscode-astro-doctor: build",
+        "vscode-astro-doctor: watch"
+      ],
       "problemMatcher": []
     }
   ]

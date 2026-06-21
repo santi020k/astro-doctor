@@ -1,0 +1,156 @@
+---
+import Docs from '@/layouts/Docs.astro'
+---
+
+<Docs
+  title="VS Code Extension"
+  description="Use the Astro Doctor VS Code extension for inline diagnostics, hovers, quick fixes, status updates, and a health sidebar."
+  editPath="apps/docs/src/pages/docs/vscode-extension.astro"
+>
+  <h1>VS Code Extension</h1>
+
+  <p>
+    The Astro Doctor VS Code extension brings the Astro Doctor language server into your editor. It
+    activates for <code>.astro</code> files, reports diagnostics as you type, shows rule context on
+    hover, and keeps the project health score visible while you work.
+  </p>
+
+  <h2>Install locally</h2>
+
+  <p>
+    The extension lives in <code>packages/vscode-astro-doctor</code>. To build a local installable
+    package from this monorepo:
+  </p>
+
+  <pre><code>pnpm --filter vscode-astro-doctor package</code></pre>
+
+  <p>
+    Then run <strong>Extensions: Install from VSIX...</strong> in VS Code and select
+    <code>packages/vscode-astro-doctor/astro-doctor.vsix</code>.
+  </p>
+
+  <div class="callout callout-tip">
+    <strong>Tip:</strong> The extension activates when you open an Astro file. If you only have
+    TypeScript, JavaScript, or Markdown files open, VS Code may not start it yet.
+  </div>
+
+  <h2>Features</h2>
+
+  <ul>
+    <li><strong>Inline diagnostics</strong> for Astro Doctor rules in <code>.astro</code> files</li>
+    <li><strong>Hover cards</strong> with rule names, categories, descriptions, and documentation links</li>
+    <li><strong>Quick fixes</strong> for supported actions from the editor lightbulb menu</li>
+    <li><strong>Status bar updates</strong> with the current health state and score</li>
+    <li><strong>Health Report sidebar</strong> with score, grade, file count, issue count, and category breakdown</li>
+  </ul>
+
+  <h2>Commands</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Command</th>
+        <th>Use it for</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>Astro Doctor: Scan Workspace</code></td>
+        <td>Run a full workspace scan through the language server</td>
+      </tr>
+      <tr>
+        <td><code>Astro Doctor: Scan Current File</code></td>
+        <td>Re-check the active Astro file</td>
+      </tr>
+      <tr>
+        <td><code>Astro Doctor: Suppress All Issues in File</code></td>
+        <td>Add suppressions for all current diagnostics in the active file</td>
+      </tr>
+      <tr>
+        <td><code>Astro Doctor: Restart Server</code></td>
+        <td>Restart the Astro Doctor language server</td>
+      </tr>
+      <tr>
+        <td><code>Astro Doctor: Show Output</code></td>
+        <td>Open the extension output channel for logs and startup errors</td>
+      </tr>
+      <tr>
+        <td><code>Astro Doctor: Open Documentation</code></td>
+        <td>Open the rule or project documentation from VS Code</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Settings</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Setting</th>
+        <th>Default</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>astroDoctor.enable</code></td>
+        <td><code>true</code></td>
+        <td>Enable or disable Astro Doctor extension features.</td>
+      </tr>
+      <tr>
+        <td><code>astroDoctor.scanOnType</code></td>
+        <td><code>true</code></td>
+        <td>Re-scan from the unsaved buffer as you type. Disable to scan only on open and save.</td>
+      </tr>
+      <tr>
+        <td><code>astroDoctor.serverPath</code></td>
+        <td><code>""</code></td>
+        <td>Optional path to a custom <code>astro-doctor</code> executable.</td>
+      </tr>
+      <tr>
+        <td><code>astroDoctor.trace.server</code></td>
+        <td><code>"off"</code></td>
+        <td>Trace language server communication. Use <code>"messages"</code> or <code>"verbose"</code> when debugging.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Language server resolution</h2>
+
+  <p>
+    The extension starts the Astro Doctor language server over stdio. An explicit
+    <code>astroDoctor.serverPath</code> always wins. In local extension development, it prefers the
+    built CLI server from the monorepo, then the workspace install at
+    <code>node_modules/.bin/astro-doctor</code>. In packaged builds, it prefers the bundled language
+    server and falls back to the workspace install if the bundled server is unavailable.
+  </p>
+
+  <p>
+    If VS Code reports that the language server cannot be found, install
+    <code>@santi020k/astro-doctor</code> in the workspace or set <code>astroDoctor.serverPath</code>
+    to a known executable.
+  </p>
+
+  <h2>Configuration</h2>
+
+  <p>
+    Editor diagnostics use the same rule configuration as the CLI. Put your overrides, ignore
+    patterns, and thresholds in <code>doctor.config.*</code> at the workspace root. See
+    <a href="/docs/configuration">Configuration</a> for the full schema.
+  </p>
+
+  <h2>Troubleshooting</h2>
+
+  <ul>
+    <li>Open a <code>.astro</code> file to trigger extension activation.</li>
+    <li>Run <code>Astro Doctor: Show Output</code> to inspect startup and language server logs.</li>
+    <li>Run <code>Astro Doctor: Restart Server</code> after changing extension settings.</li>
+    <li>Disable <code>astroDoctor.scanOnType</code> if you only want diagnostics on open and save.</li>
+  </ul>
+
+  <p>
+    For Neovim, Zed, Helix, and other LSP-capable editors, connect directly to the language server
+    with <code>astro-doctor experimental-lsp --stdio</code>. See
+    <a href="/docs/editor-integration">Editor Integration</a> for examples.
+  </p>
+</Docs>
