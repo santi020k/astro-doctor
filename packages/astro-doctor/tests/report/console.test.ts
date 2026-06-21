@@ -1,4 +1,4 @@
-import {describe, expect, it } from 'vitest'
+import {describe, expect, test } from 'vitest'
 
 import { formatConsoleReport } from '../../src/report/console.js'
 import type { Diagnostic, ScanResult } from '../../src/types.js'
@@ -25,37 +25,37 @@ const makeScanResult = (overrides: Partial<ScanResult> = {}): ScanResult => ({
 })
 
 describe('formatConsoleReport', () => {
-  it('returns a clean message when there are no diagnostics', () => {
+  test('returns a clean message when there are no diagnostics', () => {
     const output = formatConsoleReport(makeScanResult())
     expect(output).toMatch(/no issues/i)
   })
 
-  it('includes the file path in the output', () => {
+  test('includes the file path in the output', () => {
     const diagnostic = makeDiagnostic()
     const output = formatConsoleReport(makeScanResult({ diagnostics: [diagnostic], warningCount: 1 }))
     expect(output).toContain('index.astro')
   })
 
-  it('includes the rule ID in the output', () => {
+  test('includes the rule ID in the output', () => {
     const diagnostic = makeDiagnostic()
     const output = formatConsoleReport(makeScanResult({ diagnostics: [diagnostic], warningCount: 1 }))
     expect(output).toContain('use-astro-image')
   })
 
-  it('includes the diagnostic message in the output', () => {
+  test('includes the diagnostic message in the output', () => {
     const diagnostic = makeDiagnostic({ message: 'Use <Image> instead of <img>.' })
     const output = formatConsoleReport(makeScanResult({ diagnostics: [diagnostic], warningCount: 1 }))
     expect(output).toContain('Use <Image> instead of <img>.')
   })
 
-  it('includes line and column numbers in the output', () => {
+  test('includes line and column numbers in the output', () => {
     const diagnostic = makeDiagnostic({ line: 10, column: 3 })
     const output = formatConsoleReport(makeScanResult({ diagnostics: [diagnostic], warningCount: 1 }))
     expect(output).toContain('10')
     expect(output).toContain('3')
   })
 
-  it('shows a summary with total counts', () => {
+  test('shows a summary with total counts', () => {
     const diagnostics: Diagnostic[] = [
       makeDiagnostic({ severity: 'error' }),
       makeDiagnostic({ severity: 'warning' }),
@@ -67,18 +67,18 @@ describe('formatConsoleReport', () => {
     expect(output).toContain('1 warning')
   })
 
-  it('shows the number of files scanned', () => {
+  test('shows the number of files scanned', () => {
     const output = formatConsoleReport(makeScanResult({ fileCount: 42 }))
     expect(output).toContain('42')
   })
 
-  it('shows the health score by default', () => {
+  test('shows the health score by default', () => {
     const output = formatConsoleReport(makeScanResult({ score: 85, scoreLabel: 'B' }))
     expect(output).toContain('85/100')
     expect(output).toContain('B')
   })
 
-  it('hides the score when showScore is false', () => {
+  test('hides the score when showScore is false', () => {
     const output = formatConsoleReport(makeScanResult({ score: 85, scoreLabel: 'B' }), process.cwd(), false)
     expect(output).not.toContain('85/100')
   })

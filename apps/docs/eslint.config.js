@@ -14,9 +14,8 @@ export default await defineConfig(
     files: ['**/*.astro'],
     rules: {
       '@typescript-eslint/no-misused-promises': 'off',
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
       '@stylistic/indent': 'off',
       '@stylistic/jsx-closing-tag-location': 'off',
       '@stylistic/max-len': 'off'

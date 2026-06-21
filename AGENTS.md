@@ -93,3 +93,5 @@ pnpm typecheck
 
 ### Content Collections
 - Prefer `getCollection()` / `getEntry()` over direct `import.meta.glob()` for typed, validated content.
+
+## Imported Claude Cowork project instructions
