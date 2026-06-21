@@ -1,4 +1,5 @@
 ---
+import LogoMark from '@/components/logo-mark.astro'
 import Base from '@/layouts/Base.astro'
 
 import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
@@ -33,7 +34,7 @@ import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
 
         <!-- Sub-headline -->
         <p class="mb-10 text-lg text-[hsl(var(--ink-soft))] sm:text-xl leading-relaxed max-w-xl mx-auto" data-reveal style="animation-delay: 100ms">
-          Five opinionated ESLint rules for <code>.astro</code> files — performance, accessibility, security, best practices —
+          Eight opinionated ESLint rules for <code>.astro</code> files — performance, accessibility, security, best practices —
           with a health score, CLI, and native GitHub Action.
         </p>
 
@@ -209,7 +210,7 @@ import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
   <section class="py-16">
     <div class="container-docs">
       <div class="mx-auto max-w-3xl text-center mb-12" data-reveal>
-        <h2 class="text-3xl font-bold tracking-tight mb-3">5 rules. Zero excuses.</h2>
+        <h2 class="text-3xl font-bold tracking-tight mb-3">8 rules. Zero excuses.</h2>
         <p class="text-[hsl(var(--ink-soft))]">Each rule targets a specific class of mistake that agents and developers commonly make in Astro projects.</p>
       </div>
 
@@ -400,12 +401,12 @@ jobs:
         {[
           {
             name: 'astro-rules',
-            desc: 'All 5 rules with before/after examples your agent can reference.',
+            desc: 'All 8 rules with before/after examples your agent can reference.',
             compatible: ['Claude', 'Cursor', 'Copilot']
           },
           {
             name: 'astro-performance',
-            desc: 'Islands architecture, image optimisation, View Transitions, Server Islands.',
+            desc: 'Islands architecture, image optimization, View Transitions, Server Islands.',
             compatible: ['Claude', 'Cursor', 'Copilot']
           },
           {
@@ -442,15 +443,13 @@ jobs:
     <div class="container-docs">
       <div class="mx-auto max-w-2xl text-center section-shell" data-reveal>
         <div class="mb-6 flex justify-center">
-          <span class="flex h-16 w-16 items-center justify-center rounded-2xl bg-[hsl(var(--brand))] text-white font-black text-2xl shadow-lg brand-glow">
-            Rx
-          </span>
+          <LogoMark class="size-16 rounded-2xl shadow-lg brand-glow" />
         </div>
         <h2 class="text-3xl font-black tracking-tight mb-4 text-[hsl(var(--ink))]">
           Start fixing bad Astro today
         </h2>
         <p class="text-[hsl(var(--ink-soft))] mb-8 leading-relaxed">
-          One package. Five rules. A score your team can improve sprint over sprint.
+          One package. Eight rules. A score your team can improve sprint over sprint.
         </p>
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
           <a

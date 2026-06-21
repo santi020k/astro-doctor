@@ -6,13 +6,13 @@ import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
 
 <Docs
   title="Rules Overview"
-  description="All five astro-doctor ESLint rules with categories and default severities."
+  description="All eight astro-doctor ESLint rules with categories and default severities."
   editPath="apps/docs/src/pages/docs/rules/index.astro"
 >
   <h1>Rules</h1>
 
   <p>
-    astro-doctor provides five ESLint rules for <code>.astro</code> files, covering performance,
+    astro-doctor provides eight ESLint rules for <code>.astro</code> files, covering performance,
     accessibility, security, and best practices. All rules are enabled in the
     <code>recommended</code> config at their default severities.
   </p>
@@ -63,13 +63,15 @@ import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
   <h3>Performance</h3>
   <p>
     Rules that help you ship faster pages. Covers hydration strategies
-    (<code>no-client-load-overuse</code>) and image optimisation (<code>use-astro-image</code>).
+    (<code>no-client-load-overuse</code>), image optimization (<code>use-astro-image</code>),
+    and render-blocking scripts (<code>no-blocking-script</code>).
   </p>
 
   <h3>Accessibility</h3>
   <p>
     Rules that ensure your pages are usable by everyone, including screen-reader users.
-    Currently: <code>no-missing-alt</code>.
+    Covers missing alt text (<code>no-missing-alt</code>) and missing language declaration
+    (<code>no-missing-lang</code>).
   </p>
 
   <h3>Security</h3>
@@ -80,11 +82,12 @@ import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
 
   <h3>Best Practices</h3>
   <p>
-    Rules that encourage idiomatic Astro patterns. Currently: <code>prefer-class-list</code>
-    for conditional class composition.
+    Rules that encourage idiomatic Astro patterns. Covers conditional class composition
+    (<code>prefer-class-list</code>) and environment variable access
+    (<code>no-process-env</code>).
   </p>
 
-  <h2>Customising rules</h2>
+  <h2>Customizing rules</h2>
 
   <p>Override any rule severity in your <code>eslint.config.js</code>:</p>
 

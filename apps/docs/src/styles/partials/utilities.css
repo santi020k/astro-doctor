@@ -105,3 +105,9 @@
   color: hsl(142 60% 55%);
   border: 1px solid hsl(142 40% 20%);
 }
+
+@utility badge-architecture {
+  background: hsl(270 60% 10%);
+  color: hsl(270 60% 70%);
+  border: 1px solid hsl(270 40% 25%);
+}

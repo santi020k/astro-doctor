@@ -1,0 +1,9 @@
+---
+interface Props {
+  class?: string
+}
+
+const { class: className = 'size-8' } = Astro.props
+---
+
+<img src="/favicon.svg" alt="" class={className} />

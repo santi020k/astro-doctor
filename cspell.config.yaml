@@ -5,8 +5,10 @@ words:
   - astrojs
   - attw
   - arethetypeswrong
+  - catppuccin
   - changeset
   - changesets
+  - cowork
   - cspell
   - commitizen
   - commitlint
@@ -16,10 +18,13 @@ words:
   - knip
   - lint-staged
   - linter
+  - llms
+  - llmstxt
   - monorepo
   - packagemanager
   - santi
   - santi020k
+  - shiki
   - turbo
   - turborepo
   - tsconfig
