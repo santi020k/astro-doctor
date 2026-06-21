@@ -202,7 +202,7 @@ Or in JSON:
 
 ```json
 {
-  "$schema": "https://astro.doctor/schema/config.json",
+  "$schema": "https://doctor.santi020k.com/schema/config.json",
   "rules": {
     "astro-doctor/no-client-load-overuse": "error"
   }

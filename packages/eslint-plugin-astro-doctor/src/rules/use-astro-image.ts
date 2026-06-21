@@ -25,7 +25,6 @@ export default createRule({
       // The rawName property holds the original tag name from source.
       'VElement[rawName="img"]'(node: unknown) {
         context.report({
-           
           node: node as any,
           messageId: 'useAstroImage',
         })
