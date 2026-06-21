@@ -105,6 +105,7 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
     ...astroFiles,
     ...allDiagnostics.map((diagnostic) => diagnostic.filePath),
   ]).size
+
   const score = computeScore(allDiagnostics, fileCount)
   const scoreLabel = computeScoreLabel(score)
   const scoreBreakdown = computeCategoryBreakdown(allDiagnostics, fileCount)

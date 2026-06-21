@@ -1,6 +1,6 @@
-import { createInterface } from 'node:readline'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { createInterface } from 'node:readline'
 import { fileURLToPath } from 'node:url'
 
 const SKILLS_SOURCE_DIR = resolve(fileURLToPath(import.meta.url), '../../../..')
@@ -70,12 +70,14 @@ const prompt = (question: string): Promise<string> =>
 
     rl.question(question, (answer) => {
       rl.close()
+
       resolve(answer.trim().toLowerCase())
     })
   })
 
 const confirm = async (question: string, yes: boolean): Promise<boolean> => {
   if (yes) return true
+
   const answer = await prompt(`${question} [y/N] `)
 
   return answer === 'y' || answer === 'yes'
@@ -98,6 +100,7 @@ const installTarget = (target: SkillTarget, projectRoot: string, dryRun: boolean
   const content = readFileSync(target.sourceFile, 'utf8')
 
   writeFileSync(destPath, content, 'utf8')
+
   console.log(`  ✓ Installed ${target.label}`)
 }
 
@@ -122,6 +125,7 @@ const installGitHubAction = (projectRoot: string, dryRun: boolean): void => {
   }
 
   writeFileSync(workflowPath, GITHUB_ACTIONS_WORKFLOW, 'utf8')
+
   console.log(`  ✓ Created .github/workflows/astro-doctor.yml`)
 }
 
@@ -129,8 +133,11 @@ const detectAgents = (projectRoot: string): string[] => {
   const detected: string[] = []
 
   if (existsSync(join(projectRoot, '.claude'))) detected.push('Claude Code')
+
   if (existsSync(join(projectRoot, '.cursor'))) detected.push('Cursor')
+
   if (existsSync(join(projectRoot, '.codeium'))) detected.push('Windsurf')
+
   if (existsSync(join(projectRoot, '.github/copilot-instructions.md'))) detected.push('GitHub Copilot')
 
   return detected
@@ -143,7 +150,6 @@ export const runInstall = async (
   const yes = argv.includes('-y') || argv.includes('--yes')
   const dryRun = argv.includes('--dry-run')
   const agentHooks = argv.includes('--agent-hooks')
-
   const options: InstallOptions = { yes, dryRun, agentHooks, projectRoot }
 
   console.log('\nAstro Doctor — Interactive Setup\n')
@@ -183,6 +189,7 @@ export const runInstall = async (
 
   // 3. Agent-specific hooks (--agent-hooks or prompt)
   const detectedAgents = detectAgents(projectRoot)
+
   const shouldInstallHooks =
     options.agentHooks ||
     (detectedAgents.length > 0 &&
@@ -206,5 +213,6 @@ export const runInstall = async (
   }
 
   console.log('\nDone! Your coding agent will now apply Astro best practices.')
+
   console.log('Tip: re-run after upgrading astro-doctor to get the latest skill updates.\n')
 }

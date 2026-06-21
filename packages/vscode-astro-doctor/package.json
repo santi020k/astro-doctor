@@ -3,10 +3,6 @@
   "displayName": "Astro Doctor",
   "version": "0.0.0",
   "private": true,
-  "author": {
-    "name": "Santiago Molina",
-    "url": "https://santi020k.com"
-  },
   "sponsor": {
     "url": "https://github.com/sponsors/santi020k"
   },
@@ -24,26 +20,6 @@
     "Linters",
     "Programming Languages"
   ],
-  "keywords": [
-    "astro",
-    "diagnostics",
-    "lint",
-    "lsp",
-    "astro-doctor",
-    "performance",
-    "accessibility",
-    "security"
-  ],
-  "homepage": "https://doctor.santi020k.com",
-  "bugs": {
-    "url": "https://github.com/santi020k/astro-doctor/issues"
-  },
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/santi020k/astro-doctor.git",
-    "directory": "packages/vscode-astro-doctor"
-  },
   "publisher": "santi020k",
   "main": "./dist/extension.js",
   "scripts": {
@@ -150,5 +126,29 @@
   "engines": {
     "node": "^20.19.0 || >=22.13.0",
     "vscode": "^1.85.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/santi020k/astro-doctor.git",
+    "directory": "packages/vscode-astro-doctor"
+  },
+  "homepage": "https://doctor.santi020k.com",
+  "bugs": {
+    "url": "https://github.com/santi020k/astro-doctor/issues"
+  },
+  "keywords": [
+    "astro",
+    "diagnostics",
+    "lint",
+    "lsp",
+    "astro-doctor",
+    "performance",
+    "accessibility",
+    "security"
+  ],
+  "author": {
+    "name": "Santiago Molina",
+    "url": "https://santi020k.com"
+  },
+  "license": "MIT"
 }

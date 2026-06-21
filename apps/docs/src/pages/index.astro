@@ -35,7 +35,7 @@ import { REACT_DOCTOR_URL } from '@/site.config'
 
         <!-- Sub-headline -->
         <p class="mb-10 text-lg text-[hsl(var(--ink-soft))] sm:text-xl leading-relaxed max-w-xl mx-auto" data-reveal style="animation-delay: 100ms">
-          Nine opinionated ESLint rules for <code>.astro</code> files — performance, accessibility, security, best practices —
+          {RULES.length} opinionated ESLint rules for <code>.astro</code> files — performance, accessibility, security, best practices —
           with a health score, CLI, and native GitHub Action.
         </p>
 
@@ -168,6 +168,11 @@ import { REACT_DOCTOR_URL } from '@/site.config'
             desc: 'Drop-in flat-config plugin. Works with any ESLint 9 setup — standalone or alongside your existing config.'
           },
           {
+            icon: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+            title: 'VS Code Extension',
+            desc: 'Official extension for VS Code and Cursor. Real-time inline diagnostics, hover explanations, quick fixes, and a health sidebar.'
+          },
+          {
             icon: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M8 8h5M8 16h3"/>',
             title: 'CLI Scanner',
             desc: 'npx @santi020k/astro-doctor — scan any directory, output JSON reports, and integrate into any CI pipeline.'
@@ -211,7 +216,7 @@ import { REACT_DOCTOR_URL } from '@/site.config'
   <section class="py-16">
     <div class="container-docs">
       <div class="mx-auto max-w-3xl text-center mb-12" data-reveal>
-        <h2 class="text-3xl font-bold tracking-tight mb-3">9 rules. Zero excuses.</h2>
+        <h2 class="text-3xl font-bold tracking-tight mb-3">{RULES.length} rules. Zero excuses.</h2>
         <p class="text-[hsl(var(--ink-soft))]">Each rule targets a specific class of mistake that agents and developers commonly make in Astro projects.</p>
       </div>
 
@@ -402,7 +407,7 @@ jobs:
         {[
           {
             name: 'astro-rules',
-            desc: 'All 9 rules with before/after examples your agent can reference.',
+            desc: `All ${RULES.length} rules with before/after examples your agent can reference.`,
             compatible: ['Claude', 'Cursor', 'Copilot']
           },
           {
@@ -462,7 +467,7 @@ jobs:
           Start fixing bad Astro today
         </h2>
         <p class="text-[hsl(var(--ink-soft))] mb-8 leading-relaxed">
-          One package. Nine rules. A score your team can improve sprint over sprint.
+          One package. {RULES.length} rules. A score your team can improve sprint over sprint.
         </p>
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
           <a

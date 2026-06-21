@@ -6,13 +6,13 @@ import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
 
 <Docs
   title="Rules Overview"
-  description="All eight astro-doctor ESLint rules with categories and default severities."
+  description={`All ${RULES.length} astro-doctor ESLint rules with categories and default severities.`}
   editPath="apps/docs/src/pages/docs/rules/index.astro"
 >
   <h1>Rules</h1>
 
   <p>
-    astro-doctor provides nine ESLint rules for <code>.astro</code> files, covering performance,
+    astro-doctor provides {RULES.length} ESLint rules for <code>.astro</code> files, covering performance,
     accessibility, security, and best practices. All rules are enabled in the
     <code>recommended</code> config at their default severities.
   </p>
@@ -64,20 +64,24 @@ import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
   <p>
     Rules that help you ship faster pages. Covers hydration strategies
     (<code>no-client-load-overuse</code>), image optimization (<code>use-astro-image</code>),
-    and render-blocking scripts (<code>no-blocking-script</code>).
+    image dimensions (<code>require-image-dimensions</code>), render-blocking scripts
+    (<code>no-blocking-script</code>), and accidental script processing opt-outs
+    (<code>no-unprocessed-script-surprises</code>).
   </p>
 
   <h3>Accessibility</h3>
   <p>
     Rules that ensure your pages are usable by everyone, including screen-reader users.
     Covers missing alt text (<code>no-missing-alt</code>) and missing language declaration
-    (<code>no-missing-lang</code>).
+    (<code>no-missing-lang</code>), plus fallback content for islands
+    (<code>require-island-fallback</code>).
   </p>
 
   <h3>Security</h3>
   <p>
-    Rules that prevent common vulnerabilities. Currently: <code>no-set-html</code> which flags
-    unescaped HTML injection.
+    Rules that prevent common vulnerabilities. Covers unescaped HTML injection
+    (<code>no-set-html</code>) and public environment variables that look like secrets
+    (<code>no-public-secret-env</code>).
   </p>
 
   <h3>Best Practices</h3>

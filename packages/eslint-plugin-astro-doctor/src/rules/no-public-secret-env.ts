@@ -5,27 +5,21 @@ import { createRule, isAstroFile } from '../utils/rule.js'
 const PUBLIC_ENV_PREFIX = 'PUBLIC_'
 const SECRET_ENV_NAME_PARTS = ['TOKEN', 'SECRET', 'PASSWORD', 'PRIVATE', 'KEY']
 
-interface IdentifierNode extends Rule.Node {
-  readonly name?: string
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null
+
+const getIdentifierName = (node: unknown): string | undefined => {
+  if (!isRecord(node) || node.type !== 'Identifier') return undefined
+
+  return typeof node.name === 'string' ? node.name : undefined
 }
 
-interface MemberExpressionNode extends Rule.Node {
-  readonly computed?: boolean
-  readonly property?: Rule.Node
-}
+const getPublicEnvName = (node: unknown): string | undefined => {
+  if (!isRecord(node) || node.type !== 'MemberExpression') return undefined
 
-const isIdentifierNode = (node: Rule.Node | undefined): node is IdentifierNode =>
-  node?.type === 'Identifier'
+  if (node.computed === true) return undefined
 
-const isMemberExpressionNode = (node: Rule.Node): node is MemberExpressionNode =>
-  node.type === 'MemberExpression'
-
-const getPublicEnvName = (node: Rule.Node): string | undefined => {
-  if (!isMemberExpressionNode(node)) return undefined
-
-  if (node.computed || !isIdentifierNode(node.property)) return undefined
-
-  const variableName = node.property.name
+  const variableName = getIdentifierName(node.property)
 
   return variableName?.startsWith(PUBLIC_ENV_PREFIX) ? variableName : undefined
 }

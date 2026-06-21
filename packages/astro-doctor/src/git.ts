@@ -1,5 +1,10 @@
 import { execFileSync } from 'node:child_process'
 
+import { isProjectAuditRelevantPath } from './scanner/project-audit.js'
+
+const isScanRelevantPath = (filePath: string): boolean =>
+  filePath.endsWith('.astro') || isProjectAuditRelevantPath(filePath)
+
 /**
  * Run a git command and return stdout lines, or throw with a clean message on failure.
  */
@@ -25,7 +30,7 @@ export const getStagedAstroFiles = (cwd: string): string[] => {
   const lines = git(['diff', '--cached', '--name-only', '--diff-filter=ACMR'], cwd)
 
   return lines
-    .filter((line) => line.endsWith('.astro'))
+    .filter((line) => isScanRelevantPath(line))
     .map((line) => `${cwd}/${line}`)
 }
 
@@ -38,7 +43,7 @@ export const getDiffAstroFiles = (cwd: string, base?: string): string[] => {
   const lines = git(['diff', '--name-only', '--diff-filter=ACMR', resolvedBase, 'HEAD'], cwd)
 
   return lines
-    .filter((line) => line.endsWith('.astro'))
+    .filter((line) => isScanRelevantPath(line))
     .map((line) => `${cwd}/${line}`)
 }
 

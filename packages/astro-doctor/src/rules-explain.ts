@@ -91,6 +91,7 @@ const listAllRules = (): void => {
     const existing = byCategory.get(detail.category) ?? []
 
     existing.push(ruleId)
+
     byCategory.set(detail.category, existing)
   }
 
@@ -118,7 +119,9 @@ const explainRule = (ruleId: string): void => {
 
   if (!detail || !pluginRule) {
     console.error(`\nUnknown rule: "${ruleId}"\n`)
+
     listAllRules()
+
     process.exitCode = 1
 
     return
@@ -127,10 +130,15 @@ const explainRule = (ruleId: string): void => {
   const fullId = `astro-doctor/${short}`
 
   console.log(`\n${fullId}\n${'─'.repeat(fullId.length + 2)}`)
+
   console.log(`Category: ${detail.category}  |  Default severity: ${detail.severity}`)
+
   console.log(`\n${pluginRule.meta?.docs?.description ?? detail.why}\n`)
+
   console.log(`Why this matters:\n  ${detail.why}\n`)
+
   console.log(`Bad:\n${detail.bad.split('\n').map((l) => `  ${l}`).join('\n')}\n`)
+
   console.log(`Good:\n${detail.good.split('\n').map((l) => `  ${l}`).join('\n')}\n`)
 
   if (detail.docs) {
@@ -151,6 +159,7 @@ export const runRulesExplain = (args: string[]): void => {
 
     if (!ruleId) {
       console.error('\nUsage: astro-doctor rules explain <rule-id>\nExample: astro-doctor rules explain no-set-html\n')
+
       process.exitCode = 1
 
       return

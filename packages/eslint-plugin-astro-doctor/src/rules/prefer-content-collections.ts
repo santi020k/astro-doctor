@@ -2,33 +2,32 @@ import type { Rule } from 'eslint'
 
 import { createRule, isAstroFile } from '../utils/rule.js'
 
-interface CallExpressionNode extends Rule.Node {
-  readonly arguments?: readonly Rule.Node[]
-}
-
-interface LiteralNode extends Rule.Node {
-  readonly value?: unknown
-}
-
 const CONTENT_GLOB_INDICATORS = ['.md', '.mdx', '.mdoc', '{md', ',md', '{mdx', ',mdx']
 
-const isCallExpressionNode = (node: Rule.Node): node is CallExpressionNode =>
-  node.type === 'CallExpression'
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null
 
-const isLiteralNode = (node: Rule.Node | undefined): node is LiteralNode =>
-  node?.type === 'Literal'
+const getLiteralValue = (node: unknown): string | undefined => {
+  if (!isRecord(node) || node.type !== 'Literal') return undefined
+
+  return typeof node.value === 'string' ? node.value : undefined
+}
 
 const isContentGlobPattern = (globPattern: string): boolean =>
   CONTENT_GLOB_INDICATORS.some((indicator) => globPattern.includes(indicator))
 
+const getFirstArgumentValue = (node: unknown): string | undefined => {
+  if (!isRecord(node) || node.type !== 'CallExpression') return undefined
+
+  const callArguments = Array.isArray(node.arguments) ? node.arguments : []
+
+  return getLiteralValue(callArguments[0])
+}
+
 const isContentGlobCall = (node: Rule.Node): boolean => {
-  if (!isCallExpressionNode(node)) return false
+  const globPattern = getFirstArgumentValue(node)
 
-  const globPatternNode = node.arguments?.[0]
-
-  if (!isLiteralNode(globPatternNode)) return false
-
-  return typeof globPatternNode.value === 'string' && isContentGlobPattern(globPatternNode.value)
+  return globPattern !== undefined && isContentGlobPattern(globPattern)
 }
 
 export default createRule({

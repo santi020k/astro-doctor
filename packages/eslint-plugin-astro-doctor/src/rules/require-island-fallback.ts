@@ -1,6 +1,6 @@
 import type { AstroElementNode } from '../utils/astro-ast.js'
 import { forEachAstroElement, reportAstroNode } from '../utils/astro-ast.js'
-import { getAstroAttributeValue, hasAstroAttribute } from '../utils/attribute.js'
+import { hasAstroAttribute } from '../utils/attribute.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
 
 const CLIENT_ONLY_ATTRIBUTE_NAME = 'client:only'
@@ -10,6 +10,8 @@ const FALLBACK_SLOT_VALUE = 'fallback'
 
 interface AstroElementRecord {
   readonly type?: string
+  readonly name?: string
+  readonly value?: string | boolean | number | null
   readonly attributes?: readonly unknown[]
   readonly children?: readonly unknown[]
 }
@@ -17,10 +19,15 @@ interface AstroElementRecord {
 const isAstroElementRecord = (node: unknown): node is AstroElementRecord =>
   typeof node === 'object' && node !== null
 
+const isFallbackSlotAttribute = (node: unknown): boolean =>
+  isAstroElementRecord(node) &&
+  node.name === SLOT_ATTRIBUTE_NAME &&
+  node.value === FALLBACK_SLOT_VALUE
+
 const isFallbackElement = (node: unknown): boolean => {
   if (!isAstroElementRecord(node)) return false
 
-  return getAstroAttributeValue(node.attributes ?? [], SLOT_ATTRIBUTE_NAME) === FALLBACK_SLOT_VALUE
+  return (node.attributes ?? []).some((attributeNode) => isFallbackSlotAttribute(attributeNode))
 }
 
 const hasFallbackSlot = (elementNode: AstroElementNode): boolean =>
