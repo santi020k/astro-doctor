@@ -40,6 +40,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { scan } from './scanner/index.js'
 import { loadConfig } from './config.js'
+import { getPresetRules } from './presets.js'
 import { computeCategoryBreakdown, computeScore, computeScoreLabel } from './scorer.js'
 import type { AstroDoctorConfig, Diagnostic as AstroDiagnostic, ScoreBreakdown } from './types.js'
 
@@ -113,6 +114,13 @@ const buildEslintInstance = (
     ],
     ignore: false,
   })
+
+const getEffectiveRules = (
+  config: AstroDoctorConfig | null,
+): Record<string, 'error' | 'warn' | 'off'> => ({
+  ...getPresetRules(config?.preset ?? 'recommended'),
+  ...config?.rules,
+})
 
 interface LintResult {
   readonly lsp: LspDiagnostic[]
@@ -241,12 +249,14 @@ export const runLsp = (): void => {
     try {
       config = await loadConfig(workspaceRoot)
 
-      eslintInstance = buildEslintInstance(workspaceRoot, config?.rules)
+      const effectiveRules = getEffectiveRules(config)
+
+      eslintInstance = buildEslintInstance(workspaceRoot, effectiveRules)
 
       const result = await scan({
         directory: workspaceRoot,
         ignore: config?.ignore,
-        rules: config?.rules,
+        rules: effectiveRules,
       })
 
       workspaceFileCount = result.fileCount

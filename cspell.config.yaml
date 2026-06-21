@@ -57,6 +57,7 @@ words:
   - frontmatter
   - OVSX
   - ACMR
+  - lockfiles
 ignorePaths:
   - node_modules
   - dist

@@ -72,6 +72,31 @@ import hero from '../assets/hero.png'
     }
   },
   {
+    id: 'astro-doctor/require-image-dimensions',
+    name: 'require-image-dimensions',
+    slug: 'require-image-dimensions',
+    category: 'performance',
+    severity: 'warn',
+    description: 'Require dimensions for public and remote astro:assets images.',
+    why: 'Astro can infer dimensions for imported images from src/, but it cannot analyze files served from public/ and needs dimensions or inferSize for remote images. Missing dimensions can cause layout shift while the image loads.',
+    bad: {
+      label: 'Public image without dimensions',
+      code: `---
+import { Image } from 'astro:assets'
+---
+<Image src="/hero.png" alt="Hero image" />`
+    },
+    good: {
+      label: 'Public image with dimensions',
+      code: `---
+import { Image } from 'astro:assets'
+---
+<Image src="/hero.png" alt="Hero image" width="1200" height="630" />
+
+<Image src="https://cdn.example.com/hero.png" alt="Hero image" inferSize />`
+    }
+  },
+  {
     id: 'astro-doctor/no-missing-alt',
     name: 'no-missing-alt',
     slug: 'no-missing-alt',
@@ -123,6 +148,30 @@ const safe = DOMPurify.sanitize(userContent)
 
 {/* Only if HTML rendering is truly required */}
 <div set:html={safe} />`
+    }
+  },
+  {
+    id: 'astro-doctor/no-public-secret-env',
+    name: 'no-public-secret-env',
+    slug: 'no-public-secret-env',
+    category: 'security',
+    severity: 'warn',
+    description: 'Warn when PUBLIC_ environment variables appear to contain secrets.',
+    why: 'Astro exposes PUBLIC_ environment variables to client-side code. Names like PUBLIC_TOKEN, PUBLIC_SECRET, PUBLIC_PASSWORD, and PUBLIC_API_KEY usually indicate accidental secret exposure.',
+    bad: {
+      label: 'Secret-looking public env variable',
+      code: `---
+const apiKey = import.meta.env.PUBLIC_API_KEY
+---
+<p>{apiKey}</p>`
+    },
+    good: {
+      label: 'Server-only secret',
+      code: `---
+const apiKey = import.meta.env.API_KEY
+const publicUrl = import.meta.env.PUBLIC_API_URL
+---
+<p>{publicUrl}</p>`
     }
   },
   {
@@ -187,6 +236,31 @@ const isActive = true
     }
   },
   {
+    id: 'astro-doctor/no-unprocessed-script-surprises',
+    name: 'no-unprocessed-script-surprises',
+    slug: 'no-unprocessed-script-surprises',
+    category: 'performance',
+    severity: 'warn',
+    description: 'Warn when script attributes opt out of Astro script processing.',
+    why: 'Astro bundles, deduplicates, TypeScript-processes, and may inline scripts with no attributes other than src. Adding attributes such as type, defer, async, data-*, or is:inline intentionally opts out of that pipeline and can surprise maintainers.',
+    bad: {
+      label: 'Accidentally unprocessed script',
+      code: `---
+---
+<script type="module">
+  console.log('This is not processed by Astro')
+</script>`
+    },
+    good: {
+      label: 'Processed Astro script',
+      code: `---
+---
+<script>
+  console.log('Bundled, deduped, and processed by Astro')
+</script>`
+    }
+  },
+  {
     id: 'astro-doctor/no-missing-lang',
     name: 'no-missing-lang',
     slug: 'no-missing-lang',
@@ -211,6 +285,31 @@ const isActive = true
   <head><title>My Astro Site</title></head>
   <body>...</body>
 </html>`
+    }
+  },
+  {
+    id: 'astro-doctor/require-island-fallback',
+    name: 'require-island-fallback',
+    slug: 'require-island-fallback',
+    category: 'accessibility',
+    severity: 'warn',
+    description: 'Require fallback content for client-only and deferred server islands.',
+    why: 'client:only skips server rendering, and server:defer renders later on demand. Fallback content gives users immediate context instead of leaving an empty region while the island loads.',
+    bad: {
+      label: 'Island with no fallback',
+      code: `---
+import Chart from '../components/Chart.tsx'
+---
+<Chart client:only="react" />`
+    },
+    good: {
+      label: 'Island with fallback content',
+      code: `---
+import Chart from '../components/Chart.tsx'
+---
+<Chart client:only="react">
+  <div slot="fallback">Loading chart...</div>
+</Chart>`
     }
   },
   {
@@ -244,8 +343,8 @@ const publicUrl = import.meta.env.PUBLIC_SITE_URL
     slug: 'prefer-content-collections',
     category: 'best-practices',
     severity: 'warn',
-    description: 'Prefer Content Collections over Astro.glob() for Markdown and MDX files.',
-    why: 'Astro.glob() returns untyped frontmatter objects and runs at request time. Content Collections provide TypeScript types via the schema you define, build-time validation that catches typos and missing fields before deploy, and caching for better performance. They are the recommended approach for any structured content.',
+    description: 'Prefer Content Collections over Astro.glob() or import.meta.glob() for Markdown and MDX files.',
+    why: 'Astro.glob() and import.meta.glob() return untyped content objects. Content Collections provide TypeScript types via the schema you define, build-time validation that catches typos and missing fields before deploy, and caching for better performance. They are the recommended approach for structured content.',
     bad: {
       label: 'Using Astro.glob()',
       code: `---

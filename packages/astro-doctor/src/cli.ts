@@ -1,20 +1,35 @@
 import { readFileSync, writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 import { createRequire } from 'node:module'
+import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import type { RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
 
 import { formatConsoleReport, formatScoreOnly } from './report/console.js'
 import { formatGithubReport } from './report/github.js'
 import { formatJsonReport, serializeJsonReport } from './report/json.js'
 import { scan } from './scanner/index.js'
+import { isProjectAuditRelevantPath } from './scanner/project-audit.js'
 import { loadConfig } from './config.js'
+import {
+  DISABLED_THRESHOLD_SCORE,
+  MAXIMUM_THRESHOLD_SCORE,
+  MINIMUM_THRESHOLD_SCORE,
+} from './constants.js'
+import { getDiffAstroFiles,getStagedAstroFiles } from './git.js'
+import { runInit } from './init.js'
 import { runInstall } from './install.js'
 import { runLsp } from './lsp.js'
-import { runWhy } from './why.js'
+import type { PresetName } from './presets.js'
+import {
+  getPresetFailOn,
+  getPresetRules,
+  getPresetThreshold,
+  isPresetName,
+} from './presets.js'
 import { runRulesExplain } from './rules-explain.js'
-import { getStagedAstroFiles, getDiffAstroFiles } from './git.js'
 import type { AstroDoctorConfig, ScanResult } from './types.js'
-import type { RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
+import { runWhy } from './why.js'
 
 type OutputFormat = 'console' | 'github'
 
@@ -28,9 +43,12 @@ interface CliOptions {
   readonly scoreOnly: boolean
   readonly quiet: boolean
   readonly verbose: boolean
+  readonly preset?: PresetName
   readonly failOn: 'error' | 'warning' | 'off'
+  readonly failOnProvided: boolean
   readonly format: OutputFormat
   readonly threshold: number
+  readonly thresholdProvided: boolean
   readonly changedFilesFrom?: string
   readonly staged: boolean
   readonly diff: string | boolean
@@ -115,7 +133,6 @@ const readChangedFiles = (filePath: string): string[] =>
 const getVersion = (): string => {
   try {
     const require = createRequire(fileURLToPath(import.meta.url))
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const packageJson = require('../../package.json') as { version: string }
 
     return packageJson.version
@@ -133,6 +150,7 @@ const parseCategories = (argv: readonly string[]): RuleCategory[] => {
       valid.push(value as RuleCategory)
     } else {
       console.error(`\nUnknown category "${value}". Valid values: ${VALID_CATEGORIES.join(', ')}\n`)
+
       process.exitCode = 1
     }
   }
@@ -140,17 +158,38 @@ const parseCategories = (argv: readonly string[]): RuleCategory[] => {
   return valid
 }
 
+const parsePreset = (argv: readonly string[]): PresetName | undefined => {
+  const presetValue = getOptionValue(argv, '--preset')
+
+  if (presetValue === undefined) return undefined
+
+  if (isPresetName(presetValue)) return presetValue
+
+  console.error('\nUnknown preset "' + presetValue + '". Valid values: recommended, strict, ci\n')
+
+  process.exitCode = 1
+
+  return undefined
+}
+
 const parseArguments = (argv: string[]): CliOptions => {
   const directoryArg = getOptionValue(argv, '--dir', '-d')
   const directory = directoryArg ? resolve(directoryArg) : process.cwd()
   const failOnValue = getOptionValue(argv, '--fail-on') ?? getOptionValue(argv, '--blocking')
+  const failOnProvided = failOnValue !== undefined
+
   const failOn: CliOptions['failOn'] =
     failOnValue === 'warning' || failOnValue === 'off' ? failOnValue : 'error'
+
   const formatValue = getOptionValue(argv, '--format')
   const format: OutputFormat = formatValue === 'github' ? 'github' : 'console'
   const thresholdValue = getOptionValue(argv, '--threshold')
   const thresholdParsed = thresholdValue === undefined ? Number.NaN : Number.parseInt(thresholdValue, 10)
-  const threshold = Number.isNaN(thresholdParsed) ? -1 : Math.min(100, Math.max(0, thresholdParsed))
+
+  const threshold = Number.isNaN(thresholdParsed)
+    ? DISABLED_THRESHOLD_SCORE
+    : Math.min(MAXIMUM_THRESHOLD_SCORE, Math.max(MINIMUM_THRESHOLD_SCORE, thresholdParsed))
+
   const changedFilesFrom = getOptionValue(argv, '--changed-files-from')
 
   return {
@@ -163,9 +202,12 @@ const parseArguments = (argv: string[]): CliOptions => {
     scoreOnly: argv.includes('--score'),
     quiet: argv.includes('--quiet'),
     verbose: argv.includes('--verbose'),
+    preset: parsePreset(argv),
     failOn,
+    failOnProvided,
     format,
     threshold,
+    thresholdProvided: thresholdValue !== undefined,
     changedFilesFrom,
     staged: argv.includes('--staged'),
     diff: getDiffOption(argv),
@@ -184,6 +226,7 @@ Usage:
 
 Commands:
   (no command)             Scan the current directory
+  init                     Create starter config, ESLint config, and GitHub Action
   install                  Set up GitHub Actions, agent skills, and hooks
   why <file>:<line>        Explain the issue at a specific file location
   rules                    List all rules
@@ -197,6 +240,7 @@ Scan options:
       --changed-files-from <path>   Scan newline-separated changed files from a file
       --category <cat>              Filter to one category (repeat for multiple)
                                     Categories: performance | accessibility | security | best-practices
+      --preset <name>               recommended (default) | strict | ci
       --no-lint                     Skip lint; report a clean result
       --no-respect-inline-disables  Audit mode: ignore eslint-disable comments
 
@@ -219,6 +263,8 @@ Other:
   -h, --help                        Show this help message
 
 Install options:
+  init [--preset recommended|strict|ci]
+
   install [-y] [--dry-run] [--agent-hooks]
     -y, --yes      Skip all prompts
     --dry-run      Preview what would be installed without writing files
@@ -226,12 +272,13 @@ Install options:
 
 Configuration:
   Add a doctor.config.ts (or .js, .mjs, .cjs, .json, .jsonc) to your project root.
-  Supports: rules, ignore, failOn, threshold
+  Supports: preset, rules, ignore, failOn, threshold
 
 Rules checked:
-  Performance:    no-blocking-script, no-client-load-overuse, use-astro-image
-  Accessibility:  no-missing-alt, no-missing-lang
-  Security:       no-set-html
+  Performance:    no-blocking-script, no-client-load-overuse, no-unprocessed-script-surprises,
+                  require-image-dimensions, use-astro-image
+  Accessibility:  no-missing-alt, no-missing-lang, require-island-fallback
+  Security:       no-public-secret-env, no-set-html
   Best Practices: no-process-env, prefer-class-list, prefer-content-collections
   `)
 }
@@ -242,6 +289,7 @@ const handleJsonOutput = (scanResult: ScanResult, options: CliOptions): boolean 
 
   if (typeof options.json === 'string') {
     writeFileSync(options.json, reportJson, 'utf8')
+
     console.log(`JSON report written to ${options.json}`)
 
     return false
@@ -299,18 +347,46 @@ const checkThresholds = (
   }
 }
 
-const getEffectiveFailOn = (options: CliOptions, config: AstroDoctorConfig | null): CliOptions['failOn'] =>
-  options.failOn === 'error' ? (config?.failOn ?? 'error') : options.failOn
+const getEffectivePreset = (options: CliOptions, config: AstroDoctorConfig | null): PresetName =>
+  options.preset ?? config?.preset ?? 'recommended'
 
-const getEffectiveThreshold = (options: CliOptions, config: AstroDoctorConfig | null): number =>
-  options.threshold === -1 ? (config?.threshold ?? -1) : options.threshold
+const getEffectiveFailOn = (
+  options: CliOptions,
+  config: AstroDoctorConfig | null,
+  preset: PresetName,
+): CliOptions['failOn'] => {
+  if (options.failOnProvided) return options.failOn
+
+  return config?.failOn ?? getPresetFailOn(preset)
+}
+
+const getEffectiveThreshold = (
+  options: CliOptions,
+  config: AstroDoctorConfig | null,
+  preset: PresetName,
+): number => {
+  if (options.thresholdProvided) return options.threshold
+
+  return config?.threshold ?? getPresetThreshold(preset)
+}
+
+const getEffectiveRules = (
+  config: AstroDoctorConfig | null,
+  preset: PresetName,
+): Record<string, 'error' | 'warn' | 'off'> => ({
+  ...getPresetRules(preset),
+  ...config?.rules,
+})
+
+const isScanRelevantPath = (filePath: string): boolean =>
+  filePath.endsWith('.astro') || isProjectAuditRelevantPath(filePath)
 
 const resolveFilesToScan = (options: CliOptions): string[] | undefined => {
   if (options.staged) {
     const files = getStagedAstroFiles(options.directory)
 
     if (files.length === 0) {
-      console.log('No staged .astro files found — nothing to scan.\n')
+      console.log('No staged Astro Doctor files found — nothing to scan.\n')
     }
 
     return files
@@ -321,7 +397,7 @@ const resolveFilesToScan = (options: CliOptions): string[] | undefined => {
     const files = getDiffAstroFiles(options.directory, base)
 
     if (files.length === 0) {
-      console.log('No changed .astro files found in diff — nothing to scan.\n')
+      console.log('No changed Astro Doctor files found in diff — nothing to scan.\n')
     }
 
     return files
@@ -336,7 +412,6 @@ const resolveFilesToScan = (options: CliOptions): string[] | undefined => {
 
 const executeScan = async (options: CliOptions): Promise<void> => {
   const config = await loadConfig(options.directory)
-
   let filesToScan: string[] | undefined
 
   try {
@@ -345,6 +420,7 @@ const executeScan = async (options: CliOptions): Promise<void> => {
     const message = error instanceof Error ? error.message : String(error)
 
     console.error(`\nFailed to resolve files: ${message}`)
+
     process.exitCode = 1
 
     return
@@ -353,27 +429,29 @@ const executeScan = async (options: CliOptions): Promise<void> => {
   if (
     filesToScan !== undefined &&
     filesToScan.length > 0 &&
-    !filesToScan.some((f) => f.endsWith('.astro'))
+    !filesToScan.some((filePath) => isScanRelevantPath(filePath))
   ) {
     if (options.json !== true) {
-      console.log('No .astro files found in the changed files list — nothing to scan.\n')
+      console.log('No Astro Doctor files found in the changed files list — nothing to scan.\n')
     }
 
     return
   }
 
+  const effectivePreset = getEffectivePreset(options, config)
+
   const scanOptions = {
     directory: options.directory,
     files: filesToScan,
     ignore: config?.ignore,
-    rules: config?.rules,
+    rules: getEffectiveRules(config, effectivePreset),
     categories: options.categories.length > 0 ? options.categories : undefined,
     noLint: options.noLint,
     noRespectInlineDisables: options.noRespectInlineDisables,
   }
 
-  const effectiveFailOn = getEffectiveFailOn(options, config)
-  const effectiveThreshold = getEffectiveThreshold(options, config)
+  const effectiveFailOn = getEffectiveFailOn(options, config, effectivePreset)
+  const effectiveThreshold = getEffectiveThreshold(options, config, effectivePreset)
 
   if (options.json !== true && !options.scoreOnly) {
     console.log(`\nScanning ${options.directory}...\n`)
@@ -387,6 +465,7 @@ const executeScan = async (options: CliOptions): Promise<void> => {
     const message = error instanceof Error ? error.message : String(error)
 
     console.error(`\nFailed to scan: ${message}`)
+
     process.exitCode = 1
 
     return
@@ -399,6 +478,12 @@ const executeScan = async (options: CliOptions): Promise<void> => {
 
 export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
   const subcommand = argv[0]
+
+  if (subcommand === 'init') {
+    runInit(argv.slice(1))
+
+    return
+  }
 
   if (subcommand === 'install') {
     await runInstall(argv.slice(1))
@@ -413,6 +498,7 @@ export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<vo
       console.error(
         '\nUsage: astro-doctor why <file>:<line>\nExample: astro-doctor why src/pages/index.astro:42\n',
       )
+
       process.exitCode = 1
 
       return

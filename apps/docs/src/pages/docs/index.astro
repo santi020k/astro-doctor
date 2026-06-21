@@ -1,5 +1,6 @@
 ---
 import Docs from '@/layouts/Docs.astro'
+import { CATEGORY_LABELS, RULES } from '@/data/rules'
 ---
 
 <Docs
@@ -11,8 +12,9 @@ import Docs from '@/layouts/Docs.astro'
 
   <p>
     <strong>astro-doctor</strong> is an ESLint-based quality tool for Astro projects.
-    It ships five opinionated rules that catch the most common mistakes developers (and AI agents) make
-    when writing <code>.astro</code> files — from missing image alt text to accidental XSS vectors.
+    It ships {RULES.length} opinionated ESLint rules plus project-level audits that catch the most
+    common mistakes developers (and AI agents) make in Astro codebases — from missing image alt
+    text to accidental XSS vectors.
   </p>
 
   <p>
@@ -31,31 +33,13 @@ import Docs from '@/layouts/Docs.astro'
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <td><a href="/docs/rules/no-client-load-overuse">no-client-load-overuse</a></td>
-        <td>Performance</td>
-        <td>warn</td>
-      </tr>
-      <tr>
-        <td><a href="/docs/rules/use-astro-image">use-astro-image</a></td>
-        <td>Performance</td>
-        <td>warn</td>
-      </tr>
-      <tr>
-        <td><a href="/docs/rules/no-missing-alt">no-missing-alt</a></td>
-        <td>Accessibility</td>
-        <td>error</td>
-      </tr>
-      <tr>
-        <td><a href="/docs/rules/no-set-html">no-set-html</a></td>
-        <td>Security</td>
-        <td>error</td>
-      </tr>
-      <tr>
-        <td><a href="/docs/rules/prefer-class-list">prefer-class-list</a></td>
-        <td>Best Practices</td>
-        <td>warn</td>
-      </tr>
+      {RULES.map(rule => (
+        <tr>
+          <td><a href={`/docs/rules/${rule.slug}`}>{rule.name}</a></td>
+          <td>{CATEGORY_LABELS[rule.category]}</td>
+          <td>{rule.severity}</td>
+        </tr>
+      ))}
     </tbody>
   </table>
 

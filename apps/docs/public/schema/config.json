@@ -6,6 +6,12 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "preset": {
+      "description": "Rule preset to apply before explicit rule overrides.",
+      "type": "string",
+      "enum": ["recommended", "strict", "ci"],
+      "default": "recommended"
+    },
     "rules": {
       "description": "Override default rule severities. Omit to use recommended defaults.",
       "type": "object",
@@ -16,13 +22,22 @@
       "properties": {
         "astro-doctor/no-client-load-overuse": { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/use-astro-image":        { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/require-image-dimensions": { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/no-blocking-script":     { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/no-unprocessed-script-surprises": { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/no-missing-alt":         { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/no-missing-lang":        { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/require-island-fallback": { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/no-public-secret-env":   { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/no-set-html":            { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/prefer-class-list":      { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/no-process-env":         { "type": "string", "enum": ["error", "warn", "off"] },
-        "astro-doctor/prefer-content-collections": { "type": "string", "enum": ["error", "warn", "off"] }
+        "astro-doctor/prefer-content-collections": { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/no-disabled-origin-check": { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/no-open-allowed-domains": { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/prefer-env-schema":      { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/prefer-pnpm":            { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/require-content-config": { "type": "string", "enum": ["error", "warn", "off"] }
       }
     },
     "ignore": {

@@ -59,14 +59,16 @@ describe('computeScore', () => {
   })
 
   test('issues concentrated in one file hurt less than the same count spread across all files', () => {
-    // 10 errors in a single file out of 10 → only that file is dragged down
+    // 20 errors in a single file out of 10 → only that file is dragged down
     const concentrated = computeScore(
-      Array.from({ length: 10 }, () => makeError('bad.astro')),
+      Array.from({ length: 20 }, () => makeError('bad.astro')),
       10,
     )
-    // 1 error in each of 10 files → every file is dragged down
+    // 2 errors in each of 10 files → every file is dragged down
     const distributed = computeScore(
-      Array.from({ length: 10 }, (_, i) => makeError(`file-${i}.astro`)),
+      Array.from({ length: 20 }, (_, issueIndex) =>
+        makeError(`file-${Math.floor(issueIndex / 2)}.astro`),
+      ),
       10,
     )
 

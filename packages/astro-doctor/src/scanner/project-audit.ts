@@ -16,6 +16,7 @@ const ASTRO_CONFIG_FILE_NAMES = [
   'astro.config.mts',
   'astro.config.cts',
 ]
+
 const CONTENT_CONFIG_FILE_NAMES = [
   'src/content.config.ts',
   'src/content.config.mjs',
@@ -24,6 +25,7 @@ const CONTENT_CONFIG_FILE_NAMES = [
   'src/content/config.mjs',
   'src/content/config.js',
 ]
+
 const PACKAGE_FILE_NAME = 'package.json'
 const PACKAGE_LOCK_FILE_NAME = 'package-lock.json'
 const YARN_LOCK_FILE_NAME = 'yarn.lock'
@@ -31,6 +33,7 @@ const ENV_EXAMPLE_FILE_NAME = '.env.example'
 const CONTENT_DIRECTORY_NAME = 'src/content'
 const PUBLIC_ENV_PREFIX = 'PUBLIC_'
 const SECRET_ENV_NAME_PARTS = ['TOKEN', 'SECRET', 'PASSWORD', 'PRIVATE', 'KEY']
+
 const PROJECT_AUDIT_FILE_NAMES = [
   ...ASTRO_CONFIG_FILE_NAMES,
   ...CONTENT_CONFIG_FILE_NAMES,
@@ -189,6 +192,7 @@ const auditPackageManager = (
 
   const packageLockExists = existsSync(toAbsolutePath(options.directory, PACKAGE_LOCK_FILE_NAME))
   const yarnLockExists = existsSync(toAbsolutePath(options.directory, YARN_LOCK_FILE_NAME))
+
   const usesPnpm = packageJsonContent.includes('"packageManager"') &&
     packageJsonContent.includes('"pnpm@')
 
@@ -381,9 +385,13 @@ export const auditProject = (options: ProjectAuditOptions): Diagnostic[] => {
   const diagnostics: Diagnostic[] = []
 
   auditPackageManager(options, selectedProjectPaths, diagnostics)
+
   auditAstroSecurityConfig(options, selectedProjectPaths, diagnostics)
+
   auditEnvExample(options, selectedProjectPaths, diagnostics)
+
   auditEnvSchema(options, selectedProjectPaths, diagnostics)
+
   auditContentConfig(options, selectedProjectPaths, diagnostics)
 
   return diagnostics

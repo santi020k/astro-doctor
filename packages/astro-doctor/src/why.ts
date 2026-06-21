@@ -58,6 +58,7 @@ export const runWhy = async (location: string, cwd = process.cwd()): Promise<voi
 
   if (!parsed) {
     console.error(`\nUsage: astro-doctor why <file>:<line>\nExample: astro-doctor why src/pages/index.astro:42\n`)
+
     process.exitCode = 1
 
     return
@@ -73,6 +74,7 @@ export const runWhy = async (location: string, cwd = process.cwd()): Promise<voi
   })
 
   const atLine = result.diagnostics.filter((d) => d.line === parsed.line)
+
   const nearLine = result.diagnostics.filter(
     (d) => d.line !== parsed.line && Math.abs(d.line - parsed.line) <= 3,
   )
@@ -108,6 +110,7 @@ export const runWhy = async (location: string, cwd = process.cwd()): Promise<voi
 
     if (explanation) {
       console.log(`  Why this matters:\n  ${explanation.why}\n`)
+
       console.log(`  How to fix:\n  ${explanation.fix}\n`)
     }
   }
