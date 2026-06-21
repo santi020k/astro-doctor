@@ -60,3 +60,10 @@ jobs:
           git push origin "v${VERSION}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish VS Code Extension
+        if: steps.changesets.outputs.published == 'true'
+        run: pnpm run publish:ext
+        working-directory: packages/vscode-astro-doctor
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
