@@ -27,7 +27,7 @@ import type {
   Diagnostic as LspDiagnostic,
   InitializeParams,
   InitializeResult,
-} from 'vscode-languageserver/node'
+} from 'vscode-languageserver/node.js'
 import {
   CodeActionKind,
   createConnection,
@@ -35,7 +35,7 @@ import {
   ProposedFeatures,
   TextDocuments,
   TextDocumentSyncKind,
-} from 'vscode-languageserver/node'
+} from 'vscode-languageserver/node.js'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { scan } from './scanner/index.js'
