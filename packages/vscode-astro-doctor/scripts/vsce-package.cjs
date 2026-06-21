@@ -38,7 +38,7 @@ for (const section of ['dependencies', 'devDependencies']) {
 
 try {
   writeFileSync(PKG_PATH, JSON.stringify(pkg, null, 2) + '\n')
-  execSync('npx --yes @vscode/vsce package --no-dependencies -o astro-doctor.vsix', {
+  execSync('pnpm dlx @vscode/vsce package --no-dependencies -o astro-doctor.vsix', {
     cwd: resolve(__dirname, '..'),
     stdio: 'inherit',
   })
