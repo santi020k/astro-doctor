@@ -6,9 +6,6 @@ settings:
 
 catalogs:
   default:
-    '@arethetypeswrong/cli':
-      specifier: ^0.18.3
-      version: 0.18.3
     '@changesets/changelog-github':
       specifier: ^0.5.1
       version: 0.5.2
@@ -27,39 +24,18 @@ catalogs:
     '@types/node':
       specifier: ^22.15.32
       version: 22.20.0
-    '@types/vscode':
-      specifier: ^1.85.0
-      version: 1.125.0
-    astro-eslint-parser:
-      specifier: ^1.2.2
-      version: 1.4.0
     commitizen:
       specifier: ^4.3.1
       version: 4.3.2
-    confbox:
-      specifier: ^0.2.4
-      version: 0.2.4
     cspell:
       specifier: ^9.1.2
       version: 9.8.0
     cz-conventional-changelog:
       specifier: ^3.3.0
       version: 3.3.0
-    esbuild:
-      specifier: ^0.25.0
-      version: 0.25.12
-    eslint:
-      specifier: ^9.29.0
-      version: 9.39.4
-    glob:
-      specifier: ^11.0.3
-      version: 11.1.0
     husky:
       specifier: ^9.1.7
       version: 9.1.7
-    jiti:
-      specifier: ^2.7.0
-      version: 2.7.0
     knip:
       specifier: ^5.53.0
       version: 5.88.1
@@ -75,18 +51,6 @@ catalogs:
     typescript-eslint:
       specifier: ^8.61.1
       version: 8.61.1
-    vitest:
-      specifier: ^3.2.4
-      version: 3.2.6
-    vscode-languageclient:
-      specifier: ^9.0.1
-      version: 9.0.1
-    vscode-languageserver:
-      specifier: ^9.0.1
-      version: 9.0.1
-    vscode-languageserver-textdocument:
-      specifier: ^1.0.12
-      version: 1.0.12
 
 importers:
 
