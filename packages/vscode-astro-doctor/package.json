@@ -3,6 +3,22 @@
   "displayName": "Astro Doctor",
   "version": "0.1.0",
   "private": true,
+  "author": {
+    "name": "Santiago Molina",
+    "url": "https://santi020k.com"
+  },
+  "sponsor": {
+    "url": "https://github.com/sponsors/santi020k"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/santi020k"
+  },
+  "icon": "resources/icon.png",
+  "galleryBanner": {
+    "color": "#f97316",
+    "theme": "light"
+  },
   "description": "Astro Doctor diagnostics, hovers, and quick fixes in your editor.",
   "categories": [
     "Linters",
