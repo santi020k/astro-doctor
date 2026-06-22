@@ -43,7 +43,6 @@ import { loadConfig } from './config.js'
 import {
   aggregateResults,
   autoDiscoverAstroProjects,
-  isAstroProject,
   mergeConfigs,
   scanProjects,
 } from './multi-project.js'
@@ -51,6 +50,13 @@ import { getPresetRules } from './presets.js'
 import { getProjectRuleMeta } from './project-rules.js'
 import { computeCategoryBreakdown, computeScore, computeScoreLabel } from './scorer.js'
 import type { AstroDoctorConfig, Diagnostic as AstroDiagnostic, ScoreBreakdown } from './types.js'
+
+const noop = (): void => {
+  // intentionally swallows errors from fire-and-forget calls
+}
+
+const toErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error)
 
 const SERVER_STATUS_METHOD = 'experimental/serverStatus'
 const HEALTH_SCORE_METHOD = 'experimental/healthScore'
@@ -263,7 +269,7 @@ export const runLsp = (): void => {
   const fileLspDiagnostics = new Map<string, LspDiagnostic[]>()
 
   const sendStatus = (params: ServerStatusParams): void => {
-    connection.sendNotification(SERVER_STATUS_METHOD, params).catch(() => {})
+    connection.sendNotification(SERVER_STATUS_METHOD, params).catch(noop)
   }
 
   const computeHealthScore = (): HealthScoreParams => {
@@ -283,7 +289,7 @@ export const runLsp = (): void => {
   }
 
   const publishHealthScore = (): void => {
-    connection.sendNotification(HEALTH_SCORE_METHOD, computeHealthScore()).catch(() => {})
+    connection.sendNotification(HEALTH_SCORE_METHOD, computeHealthScore()).catch(noop)
   }
 
   const publishTopIssues = (): void => {
@@ -305,7 +311,7 @@ export const runLsp = (): void => {
       category: diagnostic.category,
     }))
 
-    connection.sendNotification(TOP_ISSUES_METHOD, topIssues).catch(() => {})
+    connection.sendNotification(TOP_ISSUES_METHOD, topIssues).catch(noop)
   }
 
   const doInitialScan = async (): Promise<void> => {
@@ -353,22 +359,12 @@ export const runLsp = (): void => {
         })
 
         result = aggregateResults(projectResults)
-      } else if (isAstroProject(workspaceRoot)) {
+      } else {
         result = await scan({
           directory: workspaceRoot,
           ignore: config?.ignore,
           rules: effectiveRules,
         })
-      } else {
-        workspaceFileCount = 0
-
-        publishHealthScore()
-
-        publishTopIssues()
-
-        sendStatus({ health: 'ok', quiescent: true })
-
-        return
       }
 
       workspaceFileCount = result.fileCount
@@ -391,7 +387,7 @@ export const runLsp = (): void => {
 
         fileLspDiagnostics.set(uri, lspDiags)
 
-        connection.sendDiagnostics({ uri, diagnostics: lspDiags }).catch(() => {})
+        connection.sendDiagnostics({ uri, diagnostics: lspDiags }).catch(noop)
       }
 
       publishHealthScore()
@@ -400,7 +396,7 @@ export const runLsp = (): void => {
 
       sendStatus({ health: 'ok', quiescent: true })
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
+      const message = toErrorMessage(error)
 
       sendStatus({ health: 'error', quiescent: true, message: `Scan failed: ${message}` })
     }
@@ -454,7 +450,7 @@ export const runLsp = (): void => {
 
       fileLspDiagnostics.set(document.uri, lsp)
 
-      connection.sendDiagnostics({ uri: document.uri, diagnostics: lsp }).catch(() => {})
+      connection.sendDiagnostics({ uri: document.uri, diagnostics: lsp }).catch(noop)
 
       publishHealthScore()
 
@@ -498,30 +494,30 @@ export const runLsp = (): void => {
   })
 
   connection.onInitialized((): void => {
-    doInitialScan().catch(() => {})
+    doInitialScan().catch(noop)
   })
 
   connection.onExecuteCommand(({ command }): void => {
-    if (command === 'astro-doctor.scanWorkspace') doInitialScan().catch(() => {})
+    if (command === 'astro-doctor.scanWorkspace') doInitialScan().catch(noop)
   })
 
   documents.onDidOpen(({ document }) => {
-    lintDocument(document).catch(() => {})
+    lintDocument(document).catch(noop)
   })
 
   documents.onDidChangeContent(({ document }) => {
-    if (scanOnType) lintDocument(document).catch(() => {})
+    if (scanOnType) lintDocument(document).catch(noop)
   })
 
   documents.onDidSave(({ document }) => {
-    if (!scanOnType) lintDocument(document).catch(() => {})
+    if (!scanOnType) lintDocument(document).catch(noop)
   })
 
   documents.onDidClose(({ document }) => {
     // Clear LSP diagnostics but keep AstroDiagnostics for the health score
     fileLspDiagnostics.delete(document.uri)
 
-    connection.sendDiagnostics({ uri: document.uri, diagnostics: [] }).catch(() => {})
+    connection.sendDiagnostics({ uri: document.uri, diagnostics: [] }).catch(noop)
   })
 
   connection.onHover(({ textDocument, position }) => {

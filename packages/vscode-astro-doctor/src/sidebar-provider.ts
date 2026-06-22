@@ -1,5 +1,9 @@
 import type * as vscode from 'vscode'
 
+const noop = (): void => {
+  // intentionally swallows errors from fire-and-forget calls
+}
+
 export interface HealthScoreData {
   readonly errorCount: number
   readonly fileCount: number
@@ -621,11 +625,11 @@ export class AstroDoctorSidebarProvider implements vscode.WebviewViewProvider {
     this.openFileCallback = callback
   }
 
-  public async resolveWebviewView(
+  public resolveWebviewView(
     webviewView: vscode.WebviewView,
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken,
-  ): Promise<void> {
+  ): void {
     this.view = webviewView
 
     webviewView.webview.options = {
@@ -637,16 +641,17 @@ export class AstroDoctorSidebarProvider implements vscode.WebviewViewProvider {
     webviewView.webview.html = buildSidebarHtml(nonce)
 
     webviewView.webview.onDidReceiveMessage((message: { filePath?: string; line?: number; type: string; }) => {
-      if (message.type === 'ready') {
-        // Re-send latest data when the view becomes ready
-        if (this.latestHealthData) {
-          const msg: WebviewMessage = {
-            data: this.latestHealthData,
-            topIssues: this.latestTopIssues,
-            type: 'update',
-          }
+      if (message.type === 'ready' && this.latestHealthData) {
+        const msg: WebviewMessage = {
+          data: this.latestHealthData,
+          topIssues: this.latestTopIssues,
+          type: 'update',
+        }
 
-          void this.view?.webview.postMessage(msg)
+        const postPromise = this.view?.webview.postMessage(msg)
+
+        if (postPromise) {
+          Promise.resolve(postPromise).catch(noop)
         }
       } else if (message.type === 'openFile' && message.filePath && message.line !== undefined) {
         this.openFileCallback?.({ filePath: message.filePath, line: message.line })

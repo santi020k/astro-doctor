@@ -193,25 +193,35 @@ const getProjectsOption = (argv: readonly string[]): string[] => {
   return [...new Set([...fromComma, ...fromRepeat])]
 }
 
+const parseFailOn = (argv: readonly string[]): CliOptions['failOn'] => {
+  const value = getOptionValue(argv, '--fail-on') ?? getOptionValue(argv, '--blocking')
+
+  return value === 'warning' || value === 'off' ? value : 'error'
+}
+
+const parseFormat = (argv: readonly string[]): OutputFormat => {
+  const value = getOptionValue(argv, '--format')
+
+  return value === 'github' ? 'github' : 'console'
+}
+
+const parseThreshold = (argv: readonly string[]): number => {
+  const value = getOptionValue(argv, '--threshold')
+
+  if (value === undefined) return DISABLED_THRESHOLD_SCORE
+
+  const parsed = Number.parseInt(value, 10)
+
+  return Number.isNaN(parsed)
+    ? DISABLED_THRESHOLD_SCORE
+    : Math.min(MAXIMUM_THRESHOLD_SCORE, Math.max(MINIMUM_THRESHOLD_SCORE, parsed))
+}
+
 const parseArguments = (argv: string[]): CliOptions => {
   const directoryArg = getOptionValue(argv, '--dir', '-d')
   const directory = directoryArg ? resolve(directoryArg) : process.cwd()
   const failOnValue = getOptionValue(argv, '--fail-on') ?? getOptionValue(argv, '--blocking')
-  const failOnProvided = failOnValue !== undefined
-
-  const failOn: CliOptions['failOn'] =
-    failOnValue === 'warning' || failOnValue === 'off' ? failOnValue : 'error'
-
-  const formatValue = getOptionValue(argv, '--format')
-  const format: OutputFormat = formatValue === 'github' ? 'github' : 'console'
   const thresholdValue = getOptionValue(argv, '--threshold')
-  const thresholdParsed = thresholdValue === undefined ? Number.NaN : Number.parseInt(thresholdValue, 10)
-
-  const threshold = Number.isNaN(thresholdParsed)
-    ? DISABLED_THRESHOLD_SCORE
-    : Math.min(MAXIMUM_THRESHOLD_SCORE, Math.max(MINIMUM_THRESHOLD_SCORE, thresholdParsed))
-
-  const changedFilesFrom = getOptionValue(argv, '--changed-files-from')
 
   return {
     directory,
@@ -224,12 +234,12 @@ const parseArguments = (argv: string[]): CliOptions => {
     quiet: argv.includes('--quiet'),
     verbose: argv.includes('--verbose'),
     preset: parsePreset(argv),
-    failOn,
-    failOnProvided,
-    format,
-    threshold,
+    failOn: parseFailOn(argv),
+    failOnProvided: failOnValue !== undefined,
+    format: parseFormat(argv),
+    threshold: parseThreshold(argv),
     thresholdProvided: thresholdValue !== undefined,
-    changedFilesFrom,
+    changedFilesFrom: getOptionValue(argv, '--changed-files-from'),
     staged: argv.includes('--staged'),
     diff: getDiffOption(argv),
     categories: parseCategories(argv),
@@ -407,9 +417,9 @@ const getEffectiveThreshold = (
 
 const getEffectiveRules = (
   config: AstroDoctorConfig | null,
-  preset: PresetName,
+  preset: PresetName | undefined,
 ): Record<string, 'error' | 'warn' | 'off'> => ({
-  ...getPresetRules(preset),
+  ...getPresetRules(preset ?? 'recommended'),
   ...config?.rules,
 })
 
@@ -490,7 +500,7 @@ const executeMultiProjectScan = async (
   effectiveProjects: string[],
   effectiveFailOn: string,
   effectiveThreshold: number,
-  baseScanOptions: { categories: readonly RuleCategory[] | undefined; noLint: boolean; noRespectInlineDisables: boolean },
+  baseScanOptions: BaseScanOptions,
 ): Promise<void> => {
   if (options.json !== true && !options.scoreOnly) {
     console.log(`\nScanning ${effectiveProjects.length} project(s) in ${options.directory}...\n`)
@@ -522,36 +532,26 @@ const executeMultiProjectScan = async (
   checkThresholds(aggregate, effectiveFailOn, effectiveThreshold)
 }
 
-const executeScan = async (options: CliOptions): Promise<void> => {
-  const config = await loadConfig(options.directory)
-  const effectivePreset = getEffectivePreset(options, config)
-  const effectiveFailOn = getEffectiveFailOn(options, config, effectivePreset)
-  const effectiveThreshold = getEffectiveThreshold(options, config, effectivePreset)
+interface BaseScanOptions { categories: readonly RuleCategory[] | undefined; noLint: boolean; noRespectInlineDisables: boolean }
 
-  const baseScanOptions = {
-    categories: options.categories.length > 0 ? options.categories : undefined,
-    noLint: options.noLint,
-    noRespectInlineDisables: options.noRespectInlineDisables,
-  }
+const resolveProjectsWithDiscovery = async (options: CliOptions, config: AstroDoctorConfig | null): Promise<string[]> => {
+  const explicit = resolveEffectiveProjects(options, config)
 
-  // ── Multi-project mode ──────────────────────────────────────────────────────
-  let effectiveProjects = resolveEffectiveProjects(options, config)
+  if (explicit.length > 0) return explicit
 
-  if (effectiveProjects.length === 0) {
-    const discovered = await autoDiscoverAstroProjects(options.directory)
+  const discovered = await autoDiscoverAstroProjects(options.directory)
 
-    if (discovered.length > 0) {
-      effectiveProjects = discovered.map((pkg) => pkg.directory)
-    }
-  }
+  return discovered.length > 0 ? discovered.map((pkg) => pkg.directory) : []
+}
 
-  if (effectiveProjects.length > 0) {
-    await executeMultiProjectScan(options, config, effectiveProjects, effectiveFailOn, effectiveThreshold, baseScanOptions)
-
-    return
-  }
-
-  // ── Single-directory mode ───────────────────────────────────────────────────
+const executeSingleDirectoryScan = async (
+  options: CliOptions,
+  config: AstroDoctorConfig | null,
+  effectivePreset: PresetName | undefined,
+  effectiveFailOn: string,
+  effectiveThreshold: number,
+  baseScanOptions: BaseScanOptions,
+): Promise<void> => {
   const { files: filesToScan, failed } = tryResolveFilesToScan(options)
 
   if (failed) return
@@ -585,6 +585,32 @@ const executeScan = async (options: CliOptions): Promise<void> => {
   checkThresholds(scanResult, effectiveFailOn, effectiveThreshold)
 }
 
+const executeScan = async (options: CliOptions): Promise<void> => {
+  const config = await loadConfig(options.directory)
+  const effectivePreset = getEffectivePreset(options, config)
+  const effectiveFailOn = getEffectiveFailOn(options, config, effectivePreset)
+  const effectiveThreshold = getEffectiveThreshold(options, config, effectivePreset)
+
+  const baseScanOptions: BaseScanOptions = {
+    categories: options.categories.length > 0 ? options.categories : undefined,
+    noLint: options.noLint,
+    noRespectInlineDisables: options.noRespectInlineDisables,
+  }
+
+  // ── Multi-project mode ──────────────────────────────────────────────────────
+  const effectiveProjects = await resolveProjectsWithDiscovery(options, config)
+
+  if (effectiveProjects.length > 0) {
+    await executeMultiProjectScan(options, config, effectiveProjects, effectiveFailOn, effectiveThreshold, baseScanOptions)
+
+    return
+  }
+
+  // ── Single-directory mode ───────────────────────────────────────────────────
+  await executeSingleDirectoryScan(options, config, effectivePreset, effectiveFailOn, effectiveThreshold, baseScanOptions)
+}
+
+// eslint-disable-next-line complexity
 export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
   const subcommand = argv[0]
   const noTelemetry = argv.includes('--no-telemetry') || process.env.ASTRO_DOCTOR_NO_TELEMETRY === '1'

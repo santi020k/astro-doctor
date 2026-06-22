@@ -31,13 +31,19 @@ const readPnpmWorkspaceGlobs = (rootDirectory: string): string[] => {
   if (!existsSync(pnpmWorkspacePath)) return []
 
   const content = readFileSync(pnpmWorkspacePath, 'utf8')
-  const matches = content.matchAll(/^\s+-\s+"?([^"#\n]+)"?/gmu)
+  const matches = content.matchAll(/^\s+-\s+([^#\n]+)/gmu)
   const globs: string[] = []
 
   for (const match of matches) {
-    const pattern = match[1]?.trim()
+    let pattern = match[1]?.trim()
 
-    if (pattern) globs.push(pattern)
+    if (!pattern) continue
+
+    if ((pattern.startsWith("'") && pattern.endsWith("'")) || (pattern.startsWith('"') && pattern.endsWith('"'))) {
+      pattern = pattern.slice(1, -1)
+    }
+
+    globs.push(pattern)
   }
 
   return globs
@@ -106,15 +112,14 @@ export const discoverWorkspacePackages = async (rootDirectory: string): Promise<
   return packages
 }
 
+const hasAstroConfigFile = (directory: string): boolean =>
+  existsSync(join(directory, 'astro.config.mjs')) ||
+  existsSync(join(directory, 'astro.config.ts')) ||
+  existsSync(join(directory, 'astro.config.js')) ||
+  existsSync(join(directory, 'astro.config.cjs'))
+
 export const isAstroProject = (directory: string): boolean => {
-  if (
-    existsSync(join(directory, 'astro.config.mjs')) ||
-    existsSync(join(directory, 'astro.config.ts')) ||
-    existsSync(join(directory, 'astro.config.js')) ||
-    existsSync(join(directory, 'astro.config.cjs'))
-  ) {
-    return true
-  }
+  if (hasAstroConfigFile(directory)) return true
 
   const packageJsonPath = join(directory, 'package.json')
 

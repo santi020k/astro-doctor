@@ -35,6 +35,10 @@ interface TelemetryPayload {
   readonly ci: boolean
 }
 
+const noop = (): void => {
+  // intentionally swallows errors from fire-and-forget calls
+}
+
 const getVersion = (): string => {
   try {
     const require = createRequire(fileURLToPath(import.meta.url))
@@ -121,5 +125,5 @@ export const trackRun = (options: TelemetryOptions, disabled: boolean): void => 
 
   if (!endpoint) return
 
-  sendTelemetry(endpoint, buildPayload(options)).catch(() => {})
+  sendTelemetry(endpoint, buildPayload(options)).catch(noop)
 }

@@ -114,13 +114,17 @@ describe('AstroDoctorSidebarProvider', () => {
     let postMessage: ReturnType<typeof vi.fn>
     let onDidReceiveMessage: ReturnType<typeof vi.fn>
 
-    beforeEach(async () => {
+    beforeEach(() => {
       provider = new AstroDoctorSidebarProvider()
       webviewView = makeWebviewView()
-      postMessage = webviewView.webview.postMessage as ReturnType<typeof vi.fn>
-      onDidReceiveMessage = webviewView.webview.onDidReceiveMessage as ReturnType<typeof vi.fn>
+      const webviewAsMock = webviewView.webview as unknown as {
+        onDidReceiveMessage: ReturnType<typeof vi.fn>
+        postMessage: ReturnType<typeof vi.fn>
+      }
+      postMessage = webviewAsMock.postMessage
+      onDidReceiveMessage = webviewAsMock.onDidReceiveMessage
 
-      await provider.resolveWebviewView(
+      provider.resolveWebviewView(
         webviewView,
         {} as vscode.WebviewViewResolveContext,
         {} as vscode.CancellationToken,
@@ -196,10 +200,14 @@ describe('AstroDoctorSidebarProvider', () => {
       await provider.update(data)
 
       const secondView = makeWebviewView()
-      const secondPostMessage = secondView.webview.postMessage as ReturnType<typeof vi.fn>
-      const secondOnDidReceiveMessage = secondView.webview.onDidReceiveMessage as ReturnType<typeof vi.fn>
+      const secondWebviewAsMock = secondView.webview as unknown as {
+        onDidReceiveMessage: ReturnType<typeof vi.fn>
+        postMessage: ReturnType<typeof vi.fn>
+      }
+      const secondPostMessage = secondWebviewAsMock.postMessage
+      const secondOnDidReceiveMessage = secondWebviewAsMock.onDidReceiveMessage
 
-      await provider.resolveWebviewView(
+      provider.resolveWebviewView(
         secondView,
         {} as vscode.WebviewViewResolveContext,
         {} as vscode.CancellationToken,
@@ -216,14 +224,14 @@ describe('AstroDoctorSidebarProvider', () => {
   })
 
   describe('onOpenFile callback', () => {
-    test('registers the callback and invokes it via the message handler', async () => {
+    test('registers the callback and invokes it via the message handler', () => {
       const provider = new AstroDoctorSidebarProvider()
       const webviewView = makeWebviewView()
       const onOpenFile = vi.fn()
 
       provider.onOpenFile(onOpenFile)
 
-      await provider.resolveWebviewView(
+      provider.resolveWebviewView(
         webviewView,
         {} as vscode.WebviewViewResolveContext,
         {} as vscode.CancellationToken,
@@ -238,14 +246,14 @@ describe('AstroDoctorSidebarProvider', () => {
       expect(onOpenFile).toHaveBeenCalledWith({ filePath: '/src/page.astro', line: 5 })
     })
 
-    test('ignores messages that are not openFile type', async () => {
+    test('ignores messages that are not openFile type', () => {
       const provider = new AstroDoctorSidebarProvider()
       const webviewView = makeWebviewView()
       const onOpenFile = vi.fn()
 
       provider.onOpenFile(onOpenFile)
 
-      await provider.resolveWebviewView(
+      provider.resolveWebviewView(
         webviewView,
         {} as vscode.WebviewViewResolveContext,
         {} as vscode.CancellationToken,
@@ -263,11 +271,11 @@ describe('AstroDoctorSidebarProvider', () => {
 })
 
 describe('AstroDoctorSidebarProvider nonce generation', () => {
-  test('generates a 32-character alphanumeric nonce', async () => {
+  test('generates a 32-character alphanumeric nonce', () => {
     const provider = new AstroDoctorSidebarProvider()
     const webviewView = makeWebviewView()
 
-    await provider.resolveWebviewView(
+    provider.resolveWebviewView(
       webviewView,
       {} as vscode.WebviewViewResolveContext,
       {} as vscode.CancellationToken,
@@ -281,18 +289,18 @@ describe('AstroDoctorSidebarProvider nonce generation', () => {
     expect(nonceMatch?.[1]).toMatch(/^[A-Za-z0-9]+$/)
   })
 
-  test('generates a unique nonce for each view', async () => {
+  test('generates a unique nonce for each view', () => {
     const providerA = new AstroDoctorSidebarProvider()
     const providerB = new AstroDoctorSidebarProvider()
     const viewA = makeWebviewView()
     const viewB = makeWebviewView()
 
-    await providerA.resolveWebviewView(
+    providerA.resolveWebviewView(
       viewA,
       {} as vscode.WebviewViewResolveContext,
       {} as vscode.CancellationToken,
     )
-    await providerB.resolveWebviewView(
+    providerB.resolveWebviewView(
       viewB,
       {} as vscode.WebviewViewResolveContext,
       {} as vscode.CancellationToken,

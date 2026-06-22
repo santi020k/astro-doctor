@@ -1,11 +1,11 @@
 import * as astroParser from 'astro-eslint-parser'
 import { RuleTester } from 'eslint'
-import { describe } from 'vitest'
+import { describe, test } from 'vitest'
 
 import rule from '../../src/rules/prefer-content-collections.js'
 
 RuleTester.describe = describe
-RuleTester.it = it
+RuleTester.it = test
 
 const tester = new RuleTester({
   languageOptions: {
