@@ -26,7 +26,7 @@ describe('scan', () => {
     expect(scanResult.errorCount).toBe(0)
     expect(scanResult.warningCount).toBe(0)
     expect(scanResult.score).toBe(100)
-    expect(scanResult.scoreLabel).toBe('A')
+    expect(scanResult.scoreLabel).toBe('S')
   })
 
   test('returns a ScanResult with zero diagnostics for a clean Astro file', async () => {
