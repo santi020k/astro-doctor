@@ -87,7 +87,12 @@ runs:
         fi
 
         set +e
-        npx --yes @santi020k/astro-doctor@latest "${DIR_FLAG[@]}" "${JSON_FLAG[@]}" "${FAIL_FLAG[@]}" "${CHANGED_FLAG[@]}"
+        if [ -f "$GITHUB_ACTION_PATH/packages/astro-doctor/dist/bin/astro-doctor.js" ]; then
+          echo "Using local built Astro Doctor from $GITHUB_ACTION_PATH"
+          node "$GITHUB_ACTION_PATH/packages/astro-doctor/dist/bin/astro-doctor.js" "${DIR_FLAG[@]}" "${JSON_FLAG[@]}" "${FAIL_FLAG[@]}" "${CHANGED_FLAG[@]}"
+        else
+          npx --yes @santi020k/astro-doctor@latest "${DIR_FLAG[@]}" "${JSON_FLAG[@]}" "${FAIL_FLAG[@]}" "${CHANGED_FLAG[@]}"
+        fi
         SCAN_STATUS=$?
         set -e
 
