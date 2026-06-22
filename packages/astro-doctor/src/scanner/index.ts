@@ -29,7 +29,7 @@ const EMPTY_RESULT = (fileCount = 0): ScanResult => ({
   errorCount: 0,
   warningCount: 0,
   score: 100,
-  scoreLabel: 'A',
+  scoreLabel: 'S',
   scoreBreakdown: { performance: 100, accessibility: 100, security: 100, 'best-practices': 100 },
 })
 

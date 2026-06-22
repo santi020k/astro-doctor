@@ -149,13 +149,13 @@ The CLI also checks project files such as `astro.config.*`, `package.json`, `.en
 
 ## Health Score
 
-Every scan produces a score from **0 to 100** with a letter grade (A–F).
+Every scan produces a score from **0 to 100** with a letter grade (S–F).
 
-The score penalizes errors (×10) and warnings (×3) per file, so the penalty scales with issue density rather than raw count — large projects aren't punished just for having more files.
+Each file is scored independently: errors cost 25 points and warnings cost 10 points (clamped to 0–100 per file). The per-file scores are then averaged, so a single heavily-broken file doesn't drag down the score of an otherwise-clean project.
 
 | Grade | Score | Meaning |
 |-------|-------|---------|
-| S 🌟 | 100 | Perfect |
+| S 🌟 | 100 | Zero diagnostics — no issues found anywhere in the codebase |
 | A ✅ | 90–99 | Excellent |
 | B 🟢 | 75–89 | Good |
 | C 🟡 | 60–74 | Fair |
@@ -260,7 +260,7 @@ Or in JSON:
 | `errors` | Error-severity count |
 | `warnings` | Warning-severity count |
 | `score` | Health score 0–100 |
-| `score-label` | Letter grade (A–F) |
+| `score-label` | Letter grade (S, A–F) |
 
 ---
 

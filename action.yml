@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
 name: Astro Doctor
 description: Your agent writes bad Astro. This catches it.
 author: santi020k
@@ -38,7 +39,7 @@ outputs:
     description: Health score 0–100
     value: ${{ steps.report.outputs.score }}
   score-label:
-    description: Health score letter grade (A–F)
+    description: Health score letter grade (S, A–F)
     value: ${{ steps.report.outputs.score_label }}
 
 runs:
@@ -152,7 +153,7 @@ runs:
           const fs = require('fs')
           const report = JSON.parse(fs.readFileSync('/tmp/astro-doctor-report.json', 'utf8'))
 
-          const scoreEmoji = { A: '✅', B: '🟢', C: '🟡', D: '🟠', F: '🔴' }[report.scoreLabel] ?? '🟡'
+          const scoreEmoji = { S: '🌟', A: '✅', B: '🟢', C: '🟡', D: '🟠', F: '🔴' }[report.scoreLabel] ?? '🟡'
           const diffMode = '${{ steps.diff.outputs.is_pr }}' === 'true' && '${{ inputs.diff-only }}' === 'true'
           const scopeNote = diffMode ? ' _(changed files only)_' : ''
 
