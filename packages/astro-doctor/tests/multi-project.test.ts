@@ -23,7 +23,8 @@ describe('multi-project', () => {
             severity: 'error',
             line: 1,
             column: 1,
-            file: '/p1/a.astro'
+            filePath: '/p1/a.astro',
+            category: 'security'
           }],
           fileCount: 1,
           errorCount: 1,
