@@ -274,6 +274,8 @@ Astro Doctor has an official extension for VS Code and Cursor. It provides:
 - **Health Sidebar:** A visual health report with a score ring and category breakdown inside the VS Code Sidebar.
 - **Hover Info:** Detailed explanations when hovering over issues.
 
+![Astro Doctor VS Code Extension](./packages/vscode-astro-doctor/resources/vscode-extension-screenshot.png)
+
 Commands available in the Command Palette:
 - `Astro Doctor: Scan Workspace`
 - `Astro Doctor: Scan Current File`
