@@ -47,9 +47,12 @@ export default await defineConfig(
   {
     files: [
       'packages/astro-doctor/src/cli.ts',
+      'packages/astro-doctor/src/init.ts',
       'packages/astro-doctor/src/install.ts',
       'packages/astro-doctor/src/lsp.ts',
       'packages/astro-doctor/src/report/console.ts',
+      'packages/astro-doctor/src/rules-explain.ts',
+      'packages/astro-doctor/src/why.ts',
       'packages/astro-doctor/bin/**/*.ts',
     ],
     name: 'local-cli-console',

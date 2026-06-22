@@ -29,6 +29,7 @@ import {
   isPresetName,
 } from './presets.js'
 import { runRulesExplain } from './rules-explain.js'
+import { trackRun } from './telemetry.js'
 import type { AstroDoctorConfig, ProjectScanResult, ScanResult } from './types.js'
 import { runWhy } from './why.js'
 
@@ -91,14 +92,17 @@ const getOptionValue = (
 const getAllOptionValues = (argv: readonly string[], optionName: string): string[] => {
   const values: string[] = []
 
-  for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i]!
+  for (const [i, arg] of argv.entries()) {
     const inlinePrefix = `${optionName}=`
 
     if (arg.startsWith(inlinePrefix)) {
       values.push(arg.slice(inlinePrefix.length))
-    } else if (arg === optionName && i + 1 < argv.length && !argv[i + 1]!.startsWith('-')) {
-      values.push(argv[i + 1]!)
+    } else {
+      const nextArg = argv[i + 1]
+
+      if (arg === optionName && nextArg !== undefined && !nextArg.startsWith('-')) {
+        values.push(nextArg)
+      }
     }
   }
 
@@ -557,14 +561,19 @@ const executeScan = async (options: CliOptions): Promise<void> => {
 
 export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
   const subcommand = argv[0]
+  const noTelemetry = argv.includes('--no-telemetry') || process.env.ASTRO_DOCTOR_NO_TELEMETRY === '1'
 
   if (subcommand === 'init') {
+    trackRun({ command: 'init', flags: {} }, noTelemetry)
+
     runInit(argv.slice(1))
 
     return
   }
 
   if (subcommand === 'install') {
+    trackRun({ command: 'install', flags: { dryRun: argv.includes('--dry-run') } }, noTelemetry)
+
     await runInstall(argv.slice(1))
 
     return
@@ -583,18 +592,24 @@ export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<vo
       return
     }
 
+    trackRun({ command: 'why', flags: {} }, noTelemetry)
+
     await runWhy(location)
 
     return
   }
 
   if (subcommand === 'rules') {
+    trackRun({ command: 'rules', flags: {} }, noTelemetry)
+
     runRulesExplain(argv.slice(1))
 
     return
   }
 
   if (subcommand === 'experimental-lsp') {
+    trackRun({ command: 'lsp', flags: {} }, noTelemetry)
+
     runLsp()
 
     return
@@ -615,4 +630,22 @@ export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<vo
   }
 
   await executeScan(options)
+
+  trackRun(
+    {
+      command: 'scan',
+      flags: {
+        staged: options.staged,
+        diff: options.diff !== false,
+        project: options.projects.length > 0,
+        preset: options.preset !== undefined,
+        noLint: options.noLint,
+        verbose: options.verbose,
+        quiet: options.quiet,
+        json: options.json !== false,
+        categories: options.categories.length > 0,
+      },
+    },
+    options.noTelemetry,
+  )
 }

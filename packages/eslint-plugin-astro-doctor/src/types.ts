@@ -15,7 +15,7 @@ export interface RuleMeta {
 }
 
 export interface AstroDoctorRule extends Rule.RuleModule {
-  readonly meta: Rule.RuleMetaData & {
+  readonly meta: Omit<Rule.RuleMetaData, 'docs'> & {
     readonly docs: {
       readonly description: string
       readonly category: RuleCategory

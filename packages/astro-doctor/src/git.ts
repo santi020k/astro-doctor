@@ -18,9 +18,25 @@ const git = (args: string[], cwd: string): string[] => {
       .filter(Boolean)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
+    const subcommand = args[0] ?? 'command'
 
-    throw new Error(`git ${args[0]} failed: ${message}`)
+    throw new Error(`git ${subcommand} failed: ${message}`, { cause: error })
   }
+}
+
+const detectDefaultBase = (cwd: string): string => {
+  for (const candidate of ['main', 'master', 'origin/main', 'origin/master']) {
+    try {
+      git(['rev-parse', '--verify', candidate], cwd)
+
+      return candidate
+    } catch {
+      // not found, try next
+    }
+  }
+
+  // Fallback to parent commit
+  return 'HEAD~1'
 }
 
 /**
@@ -45,19 +61,4 @@ export const getDiffAstroFiles = (cwd: string, base?: string): string[] => {
   return lines
     .filter((line) => isScanRelevantPath(line))
     .map((line) => `${cwd}/${line}`)
-}
-
-const detectDefaultBase = (cwd: string): string => {
-  for (const candidate of ['main', 'master', 'origin/main', 'origin/master']) {
-    try {
-      git(['rev-parse', '--verify', candidate], cwd)
-
-      return candidate
-    } catch {
-      // not found, try next
-    }
-  }
-
-  // Fallback to parent commit
-  return 'HEAD~1'
 }

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/crates/oxc_linter/src/config/schema.json",
+  "rules": {
+    "jsx-a11y/alt-text": "error",
+    "jsx-a11y/html-has-lang": "error",
+    "no-process-env": "warn",
+    "unicorn/prefer-global-this": "off"
+  },
+  "categories": {
+    "correctness": "warn",
+    "suspicious": "warn"
+  },
+  "settings": {
+    "$comment": [
+      "This config enables the oxlint built-in rules that overlap with @santi020k/eslint-plugin-astro-doctor.",
+      "",
+      "Overlapping rules:",
+      "  jsx-a11y/alt-text           → no-missing-alt       (Accessibility · error)",
+      "  jsx-a11y/html-has-lang      → no-missing-lang      (Accessibility · error)",
+      "  no-process-env              → no-process-env       (Best Practices · warning)",
+      "",
+      "Rules with NO oxlint equivalent (still require astro-doctor):",
+      "  no-blocking-script, no-client-load-overuse, use-astro-image,",
+      "  require-image-dimensions, no-unprocessed-script-surprises,",
+      "  no-set-html, no-public-secret-env, prefer-class-list,",
+      "  prefer-content-collections, require-island-fallback",
+      "",
+      "Usage: add oxlint to your project and reference this config:",
+      "  npx oxlint --config node_modules/@santi020k/oxlint-config-astro-doctor/index.json src/"
+    ]
+  }
+}
