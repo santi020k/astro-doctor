@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 import { scan } from './scanner/index.js'
 import { loadConfig } from './config.js'
 import { getPresetRules } from './presets.js'
+import type { Diagnostic } from './types.js'
 
 const RULE_EXPLANATIONS: Record<string, { why: string; fix: string }> = {
   'no-blocking-script': {
@@ -67,7 +68,54 @@ const parseLocation = (location: string): { filePath: string; line: number } | n
 
   if (!match) return null
 
-  return { filePath: match[1]!, line: Number.parseInt(match[2]!, 10) }
+  const filePath = match[1]
+  const lineStr = match[2]
+
+  if (!filePath || !lineStr) return null
+
+  return { filePath, line: Number.parseInt(lineStr, 10) }
+}
+
+const reportNoIssues = (
+  filePath: string,
+  line: number,
+  allDiagnostics: readonly Diagnostic[],
+): void => {
+  console.log(`\nNo Astro Doctor issues found at ${filePath}:${line}.\n`)
+
+  if (allDiagnostics.length === 0) return
+
+  console.log(`There are ${allDiagnostics.length} issue(s) in this file at other locations:\n`)
+
+  for (const d of allDiagnostics) {
+    const short = d.ruleId.replace('astro-doctor/', '')
+
+    console.log(`  ${d.line}:${d.column}  ${d.severity}  ${d.message}  (${short})`)
+  }
+
+  console.log('')
+}
+
+const reportFindings = (
+  relevant: readonly Diagnostic[],
+  filePath: string,
+  line: number,
+  qualifier: string,
+): void => {
+  console.log(`\nAstro Doctor findings at ${filePath}:${line}${qualifier}:\n`)
+
+  for (const d of relevant) {
+    const short = d.ruleId.replace('astro-doctor/', '')
+    const explanation = RULE_EXPLANATIONS[short]
+
+    console.log(`  ${d.line}:${d.column}  [${d.severity}]  ${d.message}  (${short})\n`)
+
+    if (explanation) {
+      console.log(`  Why this matters:\n  ${explanation.why}\n`)
+
+      console.log(`  How to fix:\n  ${explanation.fix}\n`)
+    }
+  }
 }
 
 export const runWhy = async (location: string, cwd = process.cwd()): Promise<void> => {
@@ -83,6 +131,7 @@ export const runWhy = async (location: string, cwd = process.cwd()): Promise<voi
 
   const absolutePath = resolve(cwd, parsed.filePath)
   const config = await loadConfig(cwd)
+
   const rules = {
     ...getPresetRules(config?.preset ?? 'recommended'),
     ...config?.rules,
@@ -101,19 +150,7 @@ export const runWhy = async (location: string, cwd = process.cwd()): Promise<voi
   )
 
   if (atLine.length === 0 && nearLine.length === 0) {
-    console.log(`\nNo Astro Doctor issues found at ${parsed.filePath}:${parsed.line}.\n`)
-
-    if (result.diagnostics.length > 0) {
-      console.log(`There are ${result.diagnostics.length} issue(s) in this file at other locations:\n`)
-
-      for (const d of result.diagnostics) {
-        const short = d.ruleId.replace('astro-doctor/', '')
-
-        console.log(`  ${d.line}:${d.column}  ${d.severity}  ${d.message}  (${short})`)
-      }
-
-      console.log('')
-    }
+    reportNoIssues(parsed.filePath, parsed.line, result.diagnostics)
 
     return
   }
@@ -121,18 +158,5 @@ export const runWhy = async (location: string, cwd = process.cwd()): Promise<voi
   const relevant = atLine.length > 0 ? atLine : nearLine
   const qualifier = atLine.length === 0 ? ` (nearest — within 3 lines of :${parsed.line})` : ''
 
-  console.log(`\nAstro Doctor findings at ${parsed.filePath}:${parsed.line}${qualifier}:\n`)
-
-  for (const d of relevant) {
-    const short = d.ruleId.replace('astro-doctor/', '')
-    const explanation = RULE_EXPLANATIONS[short]
-
-    console.log(`  ${d.line}:${d.column}  [${d.severity}]  ${d.message}  (${short})\n`)
-
-    if (explanation) {
-      console.log(`  Why this matters:\n  ${explanation.why}\n`)
-
-      console.log(`  How to fix:\n  ${explanation.fix}\n`)
-    }
-  }
+  reportFindings(relevant, parsed.filePath, parsed.line, qualifier)
 }

@@ -601,6 +601,8 @@ export const buildSidebarHtml = (nonce: string): string => `<!DOCTYPE html>
         render(data.data, data.topIssues)
       }
     })
+
+    vscode.postMessage({ type: 'ready' })
   </script>
 </body>
 </html>`
@@ -633,21 +635,21 @@ export class AstroDoctorSidebarProvider implements vscode.WebviewViewProvider {
     webviewView.webview.html = buildSidebarHtml(nonce)
 
     webviewView.webview.onDidReceiveMessage((message: { filePath?: string; line?: number; type: string; }) => {
-      if (message.type === 'openFile' && message.filePath && message.line !== undefined) {
+      if (message.type === 'ready') {
+        // Re-send latest data when the view becomes ready
+        if (this.latestHealthData) {
+          const msg: WebviewMessage = {
+            data: this.latestHealthData,
+            topIssues: this.latestTopIssues,
+            type: 'update',
+          }
+
+          void this.view?.webview.postMessage(msg)
+        }
+      } else if (message.type === 'openFile' && message.filePath && message.line !== undefined) {
         this.openFileCallback?.({ filePath: message.filePath, line: message.line })
       }
     })
-
-    // Re-send latest data when the view becomes visible again
-    if (this.latestHealthData) {
-      const msg: WebviewMessage = {
-        data: this.latestHealthData,
-        topIssues: this.latestTopIssues,
-        type: 'update',
-      }
-
-      await this.view.webview.postMessage(msg)
-    }
   }
 
   public async setError(message: string): Promise<void> {

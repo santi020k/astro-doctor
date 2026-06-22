@@ -33,6 +33,31 @@ const EMPTY_RESULT = (fileCount = 0): ScanResult => ({
   scoreBreakdown: { performance: 100, accessibility: 100, security: 100, 'best-practices': 100 },
 })
 
+const collectEslintDiagnostics = (results: ESLint.LintResult[]): Diagnostic[] => {
+  const diagnostics: Diagnostic[] = []
+
+  for (const fileResult of results) {
+    for (const message of fileResult.messages) {
+      if (!message.ruleId) continue
+
+      const severity = SEVERITY_MAP[message.severity] ?? 'warning'
+      const category = getRuleCategory(message.ruleId)
+
+      diagnostics.push({
+        ruleId: message.ruleId,
+        severity,
+        message: message.message,
+        filePath: fileResult.filePath,
+        line: message.line,
+        column: message.column,
+        category,
+      })
+    }
+  }
+
+  return diagnostics
+}
+
 const buildEslintConfig = (options: ScanOptions): ESLint.Options => {
   const pluginRules = options.rules
     ? Object.fromEntries(
@@ -88,24 +113,7 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
     const eslint = new ESLint(buildEslintConfig(options))
     const eslintResults = await eslint.lintFiles(astroFiles)
 
-    for (const fileResult of eslintResults) {
-      for (const message of fileResult.messages) {
-        if (!message.ruleId) continue
-
-        const severity = SEVERITY_MAP[message.severity] ?? 'warning'
-        const category = getRuleCategory(message.ruleId)
-
-        allDiagnostics.push({
-          ruleId: message.ruleId,
-          severity,
-          message: message.message,
-          filePath: fileResult.filePath,
-          line: message.line,
-          column: message.column,
-          category,
-        })
-      }
-    }
+    allDiagnostics.push(...collectEslintDiagnostics(eslintResults))
   }
 
   allDiagnostics.push(...projectDiagnostics)
@@ -118,10 +126,11 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
   const score = computeScore(allDiagnostics, fileCount)
   const scoreLabel = computeScoreLabel(score)
   const scoreBreakdown = computeCategoryBreakdown(allDiagnostics, fileCount)
+  const { categories } = options
 
   const diagnostics =
-    options.categories && options.categories.length > 0
-      ? allDiagnostics.filter((d) => options.categories!.includes(d.category))
+    categories && categories.length > 0
+      ? allDiagnostics.filter((d) => categories.includes(d.category))
       : allDiagnostics
 
   const errorCount = diagnostics.filter((diagnostic) => diagnostic.severity === 'error').length

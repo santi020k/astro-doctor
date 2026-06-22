@@ -42,6 +42,24 @@ export default createRule({
     const max = options?.max ?? DEFAULT_MAX
     const collected: AstroAttributeNode[] = []
 
+    const reportExcessUsages = (): void => {
+      if (max === 0) {
+        for (const attributeNode of collected) {
+          reportAstroNode(context, attributeNode, 'preferLazyDirective')
+        }
+      } else {
+        const firstExcess = collected[max]
+
+        if (firstExcess) {
+          context.report({
+            loc: { line: firstExcess.position?.start?.line ?? 1, column: Math.max(0, (firstExcess.position?.start?.column ?? 1) - 1) },
+            messageId: 'tooManyClientLoad',
+            data: { count: String(collected.length), max: String(max) },
+          })
+        }
+      }
+    }
+
     return {
       Program() {
         forEachAstroAttribute(context, (attributeNode) => {
@@ -53,23 +71,7 @@ export default createRule({
       'Program:exit'() {
         if (collected.length <= max) return
 
-        if (max === 0) {
-          // Report each occurrence individually
-          for (const attributeNode of collected) {
-            reportAstroNode(context, attributeNode, 'preferLazyDirective')
-          }
-        } else {
-          // Report once at the file level on the first excess usage
-          const firstExcess = collected[max]
-
-          if (firstExcess) {
-            context.report({
-              loc: { line: firstExcess.position?.start?.line ?? 1, column: Math.max(0, (firstExcess.position?.start?.column ?? 1) - 1) },
-              messageId: 'tooManyClientLoad',
-              data: { count: String(collected.length), max: String(max) },
-            })
-          }
-        }
+        reportExcessUsages()
       },
     }
   },

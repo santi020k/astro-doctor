@@ -15,6 +15,8 @@
  * > change between releases, hence the `experimental-` prefix.
  */
 
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import type { AstroDoctorRule, RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
@@ -130,9 +132,60 @@ const getEffectiveRules = (
   ...config?.rules,
 })
 
+type EslintLintMessage = ESLint.LintResult['messages'][number]
+
+interface MessageDiagnostics {
+  readonly lsp: LspDiagnostic
+  readonly astro: AstroDiagnostic
+}
+
 interface LintResult {
   readonly lsp: LspDiagnostic[]
   readonly astro: AstroDiagnostic[]
+}
+
+const getRuleDocUrl = (shortName: string): string | undefined => {
+  const ruleDocs = (
+    astroDoctorPlugin.rules[shortName]?.meta as
+      | { docs?: { url?: string } }
+      | undefined
+  )?.docs
+
+  return ruleDocs?.url
+}
+
+const buildMessageDiagnostics = (msg: EslintLintMessage, filePath: string): MessageDiagnostics | null => {
+  if (!msg.ruleId) return null
+
+  const startLine = Math.max(0, msg.line - 1)
+  const startChar = Math.max(0, msg.column - 1)
+  const endLine = msg.endLine === undefined ? startLine : Math.max(0, msg.endLine - 1)
+  const endChar = msg.endColumn === undefined ? startChar + 1 : Math.max(0, msg.endColumn - 1)
+  const shortName = msg.ruleId.replace('astro-doctor/', '')
+  const docUrl = getRuleDocUrl(shortName)
+
+  return {
+    lsp: {
+      range: {
+        start: { line: startLine, character: startChar },
+        end: { line: endLine, character: endChar },
+      },
+      severity: eslintSeverityToLsp[msg.severity] ?? DiagnosticSeverity.Warning,
+      code: msg.ruleId,
+      codeDescription: docUrl ? { href: docUrl } : undefined,
+      source: 'astro-doctor',
+      message: msg.message,
+    },
+    astro: {
+      ruleId: msg.ruleId,
+      severity: eslintSeverityToAstro[msg.severity] ?? 'warning',
+      message: msg.message,
+      filePath,
+      line: msg.line,
+      column: msg.column,
+      category: getRuleCategory(msg.ruleId),
+    },
+  }
 }
 
 const lintFileContent = async (
@@ -149,53 +202,51 @@ const lintFileContent = async (
   const astro: AstroDiagnostic[] = []
 
   for (const msg of result.messages) {
-    if (!msg.ruleId) continue
+    const diags = buildMessageDiagnostics(msg, filePath)
 
-    const startLine = Math.max(0, msg.line - 1)
-    const startChar = Math.max(0, msg.column - 1)
-    const endLine = msg.endLine === undefined ? startLine : Math.max(0, msg.endLine - 1)
+    if (!diags) continue
 
-    const endChar =
-      msg.endColumn === undefined ? startChar + 1 : Math.max(0, msg.endColumn - 1)
+    lsp.push(diags.lsp)
 
-    const shortName = msg.ruleId.replace('astro-doctor/', '')
-
-    const ruleDocs = (
-      astroDoctorPlugin.rules[shortName]?.meta as
-        | { docs?: { url?: string } }
-        | undefined
-    )?.docs
-
-    lsp.push({
-      range: {
-        start: { line: startLine, character: startChar },
-        end: { line: endLine, character: endChar },
-      },
-      severity: eslintSeverityToLsp[msg.severity] ?? DiagnosticSeverity.Warning,
-      code: msg.ruleId,
-      codeDescription: ruleDocs?.url ? { href: ruleDocs.url } : undefined,
-      source: 'astro-doctor',
-      message: msg.message,
-    })
-
-    astro.push({
-      ruleId: msg.ruleId,
-      severity: eslintSeverityToAstro[msg.severity] ?? 'warning',
-      message: msg.message,
-      filePath,
-      line: msg.line,
-      column: msg.column,
-      category: getRuleCategory(msg.ruleId),
-    })
+    astro.push(diags.astro)
   }
 
   return { lsp, astro }
+}
+
+interface DiagnosticPosition {
+  readonly line: number
+  readonly character: number
+}
+
+const isInDiagnosticRange = (diag: LspDiagnostic, position: DiagnosticPosition): boolean =>
+  position.line >= diag.range.start.line &&
+  position.line <= diag.range.end.line &&
+  position.character >= diag.range.start.character &&
+  position.character <= diag.range.end.character
+
+const buildAstroDiagLspDiagnostic = (d: AstroDiagnostic): LspDiagnostic => {
+  const shortName = d.ruleId.replace('astro-doctor/', '')
+  const docUrl = getRuleDocUrl(shortName)
+
+  return {
+    range: {
+      start: { line: Math.max(0, d.line - 1), character: Math.max(0, d.column - 1) },
+      end: { line: Math.max(0, d.line - 1), character: Math.max(0, d.column - 1) + 1 },
+    },
+    severity: d.severity === 'error' ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning,
+    code: d.ruleId,
+    codeDescription: docUrl ? { href: docUrl } : undefined,
+    source: 'astro-doctor',
+    message: d.message,
+  }
 }
 
 export const runLsp = (): void => {
   const connection = createConnection(ProposedFeatures.all)
   const documents = new TextDocuments(TextDocument)
   let workspaceRoot = process.cwd()
+  let hasWorkspaceFolder = false
   let eslintInstance: ESLint | null = null
   let scanOnType = true
   let workspaceFileCount = 0
@@ -206,7 +257,7 @@ export const runLsp = (): void => {
   const fileLspDiagnostics = new Map<string, LspDiagnostic[]>()
 
   const sendStatus = (params: ServerStatusParams): void => {
-    void connection.sendNotification(SERVER_STATUS_METHOD, params)
+    connection.sendNotification(SERVER_STATUS_METHOD, params).catch(() => {})
   }
 
   const computeHealthScore = (): HealthScoreParams => {
@@ -226,7 +277,7 @@ export const runLsp = (): void => {
   }
 
   const publishHealthScore = (): void => {
-    void connection.sendNotification(HEALTH_SCORE_METHOD, computeHealthScore())
+    connection.sendNotification(HEALTH_SCORE_METHOD, computeHealthScore()).catch(() => {})
   }
 
   const publishTopIssues = (): void => {
@@ -248,7 +299,35 @@ export const runLsp = (): void => {
       category: diagnostic.category,
     }))
 
-    void connection.sendNotification(TOP_ISSUES_METHOD, topIssues)
+    connection.sendNotification(TOP_ISSUES_METHOD, topIssues).catch(() => {})
+  }
+
+  const isAstroProject = (directory: string): boolean => {
+    if (
+      existsSync(join(directory, 'astro.config.mjs')) ||
+      existsSync(join(directory, 'astro.config.ts')) ||
+      existsSync(join(directory, 'astro.config.js')) ||
+      existsSync(join(directory, 'astro.config.cjs'))
+    ) {
+      return true
+    }
+
+    const packageJsonPath = join(directory, 'package.json')
+
+    if (existsSync(packageJsonPath)) {
+      try {
+        const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as {
+          dependencies?: Record<string, string>
+          devDependencies?: Record<string, string>
+        }
+
+        if (pkg.dependencies?.astro || pkg.devDependencies?.astro) return true
+      } catch {
+        // ignore JSON parse errors
+      }
+    }
+
+    return false
   }
 
   const doInitialScan = async (): Promise<void> => {
@@ -260,6 +339,18 @@ export const runLsp = (): void => {
       const effectiveRules = getEffectiveRules(config)
 
       eslintInstance = buildEslintInstance(workspaceRoot, effectiveRules)
+
+      if (!hasWorkspaceFolder || !isAstroProject(workspaceRoot)) {
+        workspaceFileCount = 0
+
+        publishHealthScore()
+
+        publishTopIssues()
+
+        sendStatus({ health: 'ok', quiescent: true })
+
+        return
+      }
 
       const result = await scan({
         directory: workspaceRoot,
@@ -283,33 +374,11 @@ export const runLsp = (): void => {
       // Convert to LSP diagnostics and publish per file
       for (const [filePath, diags] of fileAstroDiagnostics.entries()) {
         const uri = pathToFileURL(filePath).toString()
-
-        const lspDiags: LspDiagnostic[] = diags.map((d) => {
-          const shortName = d.ruleId.replace('astro-doctor/', '')
-
-          const ruleDocs = (
-            astroDoctorPlugin.rules[shortName]?.meta as
-              | { docs?: { url?: string } }
-              | undefined
-          )?.docs
-
-          return {
-            range: {
-              start: { line: Math.max(0, d.line - 1), character: Math.max(0, d.column - 1) },
-              end: { line: Math.max(0, d.line - 1), character: Math.max(0, d.column - 1) + 1 },
-            },
-            severity:
-              d.severity === 'error' ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning,
-            code: d.ruleId,
-            codeDescription: ruleDocs?.url ? { href: ruleDocs.url } : undefined,
-            source: 'astro-doctor',
-            message: d.message,
-          }
-        })
+        const lspDiags: LspDiagnostic[] = diags.map(buildAstroDiagLspDiagnostic)
 
         fileLspDiagnostics.set(uri, lspDiags)
 
-        void connection.sendDiagnostics({ uri, diagnostics: lspDiags })
+        connection.sendDiagnostics({ uri, diagnostics: lspDiags }).catch(() => {})
       }
 
       publishHealthScore()
@@ -355,7 +424,7 @@ export const runLsp = (): void => {
 
       fileLspDiagnostics.set(document.uri, lsp)
 
-      void connection.sendDiagnostics({ uri: document.uri, diagnostics: lsp })
+      connection.sendDiagnostics({ uri: document.uri, diagnostics: lsp }).catch(() => {})
 
       publishHealthScore()
 
@@ -374,6 +443,10 @@ export const runLsp = (): void => {
 
     if (folderUri) {
       workspaceRoot = folderUri.startsWith('file://') ? fileURLToPath(folderUri) : folderUri
+
+      hasWorkspaceFolder = true
+    } else {
+      hasWorkspaceFolder = false
     }
 
     const options = params.initializationOptions as { scanOnType?: boolean } | undefined
@@ -395,42 +468,35 @@ export const runLsp = (): void => {
   })
 
   connection.onInitialized((): void => {
-    void doInitialScan()
+    doInitialScan().catch(() => {})
   })
 
   connection.onExecuteCommand(({ command }): void => {
-    if (command === 'astro-doctor.scanWorkspace') void doInitialScan()
+    if (command === 'astro-doctor.scanWorkspace') doInitialScan().catch(() => {})
   })
 
   documents.onDidOpen(({ document }) => {
-    void lintDocument(document)
+    lintDocument(document).catch(() => {})
   })
 
   documents.onDidChangeContent(({ document }) => {
-    if (scanOnType) void lintDocument(document)
+    if (scanOnType) lintDocument(document).catch(() => {})
   })
 
   documents.onDidSave(({ document }) => {
-    if (!scanOnType) void lintDocument(document)
+    if (!scanOnType) lintDocument(document).catch(() => {})
   })
 
   documents.onDidClose(({ document }) => {
     // Clear LSP diagnostics but keep AstroDiagnostics for the health score
     fileLspDiagnostics.delete(document.uri)
 
-    void connection.sendDiagnostics({ uri: document.uri, diagnostics: [] })
+    connection.sendDiagnostics({ uri: document.uri, diagnostics: [] }).catch(() => {})
   })
 
   connection.onHover(({ textDocument, position }) => {
     const diags = fileLspDiagnostics.get(textDocument.uri) ?? []
-
-    const diag = diags.find(
-      (d) =>
-        position.line >= d.range.start.line &&
-        position.line <= d.range.end.line &&
-        position.character >= d.range.start.character &&
-        position.character <= d.range.end.character,
-    )
+    const diag = diags.find((d) => isInDiagnosticRange(d, position))
 
     if (!diag || typeof diag.code !== 'string') return null
 
@@ -442,7 +508,7 @@ export const runLsp = (): void => {
 
     const category = getRuleCategory(diag.code)
     const description = ruleMeta?.docs?.description ?? diag.message
-    const docsUrl = ruleMeta?.docs?.url
+    const docsUrl = getRuleDocUrl(shortName)
 
     const lines = [
       `**\`${diag.code}\`** _(${category})_`,
@@ -465,13 +531,7 @@ export const runLsp = (): void => {
       if (diag.source !== 'astro-doctor' || typeof diag.code !== 'string') continue
 
       const shortName = diag.code.replace('astro-doctor/', '')
-
-      const ruleDocs = (
-        astroDoctorPlugin.rules[shortName]?.meta as
-          | { docs?: { url?: string } }
-          | undefined
-      )?.docs
-
+      const docUrl = getRuleDocUrl(shortName)
       // Disable rule for this line
       const line = diag.range.start.line
 
@@ -492,14 +552,14 @@ export const runLsp = (): void => {
       })
 
       // Open documentation
-      if (ruleDocs?.url) {
+      if (docUrl) {
         actions.push({
           title: `Open documentation for ${diag.code}`,
           kind: CodeActionKind.Empty,
           command: {
             title: `Open documentation for ${diag.code}`,
             command: 'astro-doctor.openDocs',
-            arguments: [ruleDocs.url],
+            arguments: [docUrl],
           },
         })
       }

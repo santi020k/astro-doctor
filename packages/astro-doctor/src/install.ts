@@ -129,6 +129,26 @@ const installGitHubAction = (projectRoot: string, dryRun: boolean): void => {
   console.log(`  ✓ Created .github/workflows/astro-doctor.yml`)
 }
 
+const tryInstallTarget = (target: SkillTarget, projectRoot: string, dryRun: boolean): void => {
+  try {
+    installTarget(target, projectRoot, dryRun)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+
+    console.error(`  ✗ Failed to install ${target.label}: ${message}`)
+  }
+}
+
+const installAllTargets = (
+  targets: readonly SkillTarget[],
+  projectRoot: string,
+  dryRun: boolean,
+): void => {
+  for (const target of targets) {
+    tryInstallTarget(target, projectRoot, dryRun)
+  }
+}
+
 const detectAgents = (projectRoot: string): string[] => {
   const detected: string[] = []
 
@@ -177,15 +197,7 @@ export const runInstall = async (
   // 2. Skill for generic agents
   console.log('\nInstalling Astro Doctor skill for coding agents...\n')
 
-  for (const target of SKILL_TARGETS) {
-    try {
-      installTarget(target, projectRoot, dryRun)
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-
-      console.error(`  ✗ Failed to install ${target.label}: ${message}`)
-    }
-  }
+  installAllTargets(SKILL_TARGETS, projectRoot, dryRun)
 
   // 3. Agent-specific hooks (--agent-hooks or prompt)
   const detectedAgents = detectAgents(projectRoot)
@@ -201,15 +213,7 @@ export const runInstall = async (
   if (shouldInstallHooks) {
     console.log('\nInstalling native agent hooks...\n')
 
-    for (const target of AGENT_HOOK_TARGETS) {
-      try {
-        installTarget(target, projectRoot, dryRun)
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error)
-
-        console.error(`  ✗ Failed to install ${target.label}: ${message}`)
-      }
-    }
+    installAllTargets(AGENT_HOOK_TARGETS, projectRoot, dryRun)
   }
 
   console.log('\nDone! Your coding agent will now apply Astro best practices.')
