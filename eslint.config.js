@@ -50,6 +50,7 @@ export default await defineConfig(
       'packages/astro-doctor/src/init.ts',
       'packages/astro-doctor/src/install.ts',
       'packages/astro-doctor/src/lsp.ts',
+      'packages/astro-doctor/src/multi-project.ts',
       'packages/astro-doctor/src/report/console.ts',
       'packages/astro-doctor/src/rules-explain.ts',
       'packages/astro-doctor/src/why.ts',

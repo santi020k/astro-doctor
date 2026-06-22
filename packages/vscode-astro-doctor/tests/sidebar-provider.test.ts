@@ -36,7 +36,7 @@ const makeTopIssues = (): TopIssueData[] => [
 ]
 
 const makeWebviewView = () => {
-  const postMessage = vi.fn().mockResolvedValue()
+  const postMessage = vi.fn<[unknown], Promise<boolean>>().mockResolvedValue(true)
   const onDidReceiveMessage = vi.fn()
   return {
     webview: {

@@ -40,9 +40,12 @@ const resetWorkspaceFileSystemMock = () => {
   workspaceFileSystem.stat.mockReset()
 }
 
-const makeMockConfig = (overrides: Record<string, unknown> = {}) => ({
-  get: vi.fn((key: string, defaultValue?: unknown) => overrides[key] ?? defaultValue),
-})
+const makeMockConfig = (overrides: Record<string, unknown> = {}) => {
+  const overridesMap = new Map(Object.entries(overrides))
+  return {
+    get: vi.fn((key: string, defaultValue?: unknown) => overridesMap.get(key) ?? defaultValue),
+  }
+}
 
 const makeMockStatusBarItem = () => ({
   command: '',
@@ -58,10 +61,10 @@ const makeMockOutputChannel = () => ({
   show: vi.fn(),
 })
 
-describe('resolveRuntime', () => {
-  const makeMockContext = (mode: number) =>
-    ({ extensionMode: mode, extensionPath: '/ext' }) as unknown as vscode.ExtensionContext
+const makeMockContext = (mode: number) =>
+  ({ extensionMode: mode, extensionPath: '/ext' }) as unknown as vscode.ExtensionContext
 
+describe('resolveRuntime', () => {
   afterEach(() => {
     delete process.env.ASTRO_DOCTOR_EXTENSION_ENV
   })

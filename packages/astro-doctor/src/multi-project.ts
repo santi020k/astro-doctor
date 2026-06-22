@@ -25,75 +25,81 @@ interface MultiProjectOptions {
   readonly scanOptions: Omit<ScanOptions, 'directory' | 'ignore' | 'rules'>
 }
 
+const readPnpmWorkspaceGlobs = (rootDirectory: string): string[] => {
+  const pnpmWorkspacePath = join(rootDirectory, 'pnpm-workspace.yaml')
+
+  if (!existsSync(pnpmWorkspacePath)) return []
+
+  const content = readFileSync(pnpmWorkspacePath, 'utf8')
+  const matches = content.matchAll(/^\s+-\s+"?([^"#\n]+)"?/gmu)
+  const globs: string[] = []
+
+  for (const match of matches) {
+    const pattern = match[1]?.trim()
+
+    if (pattern) globs.push(pattern)
+  }
+
+  return globs
+}
+
+const readPackageJsonWorkspaceGlobs = (rootDirectory: string): string[] => {
+  const packageJsonPath = join(rootDirectory, 'package.json')
+
+  if (!existsSync(packageJsonPath)) return []
+
+  try {
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as {
+      workspaces?: string[] | { packages?: string[] }
+    }
+
+    const workspaces = packageJson.workspaces
+
+    if (Array.isArray(workspaces)) return workspaces
+
+    if (workspaces?.packages) return workspaces.packages
+  } catch {
+    // ignore parse errors
+  }
+
+  return []
+}
+
+const resolveDirectoryPackage = (directoryPath: string, rootDirectory: string): WorkspacePackage | null => {
+  if (!existsSync(directoryPath) || !statSync(directoryPath).isDirectory()) return null
+
+  const packageJsonPath = join(directoryPath, 'package.json')
+
+  if (!existsSync(packageJsonPath)) return null
+
+  try {
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as { name?: string }
+    const name = packageJson.name ?? directoryPath.replace(`${rootDirectory}/`, '')
+
+    return { name, directory: directoryPath }
+  } catch {
+    const name = directoryPath.replace(`${rootDirectory}/`, '')
+
+    return { name, directory: directoryPath }
+  }
+}
+
 /**
  * Read workspace package names from pnpm-workspace.yaml, package.json workspaces,
  * or yarn workspaces — return every workspace directory with its package name.
  */
 const discoverWorkspacePackages = async (rootDirectory: string): Promise<WorkspacePackage[]> => {
+  const pnpmGlobs = readPnpmWorkspaceGlobs(rootDirectory)
+  const globs = pnpmGlobs.length > 0 ? pnpmGlobs : readPackageJsonWorkspaceGlobs(rootDirectory)
   const packages: WorkspacePackage[] = []
-  // Try pnpm-workspace.yaml first
-  const pnpmWorkspacePath = join(rootDirectory, 'pnpm-workspace.yaml')
-  let globs: string[] = []
 
-  if (existsSync(pnpmWorkspacePath)) {
-    const content = readFileSync(pnpmWorkspacePath, 'utf8')
-    // Simple YAML array parsing — covers the common `packages:\n  - "packages/*"` shape
-    const matches = content.matchAll(/^\s+-\s+"?([^"#\n]+)"?/gmu)
-
-    for (const match of matches) {
-      const pattern = match[1]?.trim()
-
-      if (pattern) globs.push(pattern)
-    }
-  }
-
-  // Fall back to package.json workspaces
-  if (globs.length === 0) {
-    const packageJsonPath = join(rootDirectory, 'package.json')
-
-    if (existsSync(packageJsonPath)) {
-      try {
-        const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as {
-          workspaces?: string[] | { packages?: string[] }
-        }
-
-        const workspaces = packageJson.workspaces
-
-        if (Array.isArray(workspaces)) {
-          globs = workspaces
-        } else if (workspaces?.packages) {
-          globs = workspaces.packages
-        }
-      } catch {
-        // ignore parse errors
-      }
-    }
-  }
-
-  // Expand globs into directories
   for (const pattern of globs) {
-    const directoryPaths = await glob(pattern, {
-      cwd: rootDirectory,
-      absolute: true,
-    })
+    const directoryPaths = await glob(pattern, { cwd: rootDirectory, absolute: true })
 
     for (const directoryPath of directoryPaths) {
-      if (!existsSync(directoryPath) || !statSync(directoryPath).isDirectory()) continue
+      const pkg = resolveDirectoryPackage(directoryPath, rootDirectory)
 
-      const packageJsonPath = join(directoryPath, 'package.json')
-
-      if (!existsSync(packageJsonPath)) continue
-
-      try {
-        const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as { name?: string }
-        const name = packageJson.name ?? directoryPath.replace(`${rootDirectory}/`, '')
-
-        packages.push({ name, directory: directoryPath })
-      } catch {
-        const name = directoryPath.replace(`${rootDirectory}/`, '')
-
-        packages.push({ name, directory: directoryPath })
-      }
+      if (pkg) packages.push(pkg)
     }
   }
 
@@ -102,7 +108,7 @@ const discoverWorkspacePackages = async (rootDirectory: string): Promise<Workspa
 
 /**
  * Resolve --project values (package names or relative paths) to absolute directories.
- * Unknown entries cause a hard exit to match react-doctor behaviour.
+ * Unknown entries cause a hard exit to match react-doctor behavior.
  */
 export const resolveProjectDirectories = async (
   projectArgs: readonly string[],
@@ -147,6 +153,22 @@ export const resolveProjectDirectories = async (
   return resolved
 }
 
+const mergeRules = (
+  root: AstroDoctorConfig | null,
+  project: AstroDoctorConfig | null,
+): AstroDoctorConfig['rules'] => ({
+  ...(root?.rules ?? {}),
+  ...(project?.rules ?? {}),
+})
+
+const mergeIgnore = (
+  root: AstroDoctorConfig | null,
+  project: AstroDoctorConfig | null,
+): AstroDoctorConfig['ignore'] => [
+  ...(root?.ignore ?? []),
+  ...(project?.ignore ?? []),
+]
+
 /**
  * Merge root config with a project-level config.
  * Project-level rules and ignore lists layer on top; failOn and threshold are overridden only
@@ -156,8 +178,8 @@ const mergeConfigs = (
   root: AstroDoctorConfig | null,
   project: AstroDoctorConfig | null,
 ): AstroDoctorConfig => ({
-  rules: { ...(root?.rules ?? {}), ...(project?.rules ?? {}) },
-  ignore: [...(root?.ignore ?? []), ...(project?.ignore ?? [])],
+  rules: mergeRules(root, project),
+  ignore: mergeIgnore(root, project),
   failOn: project?.failOn ?? root?.failOn,
   threshold: project?.threshold ?? root?.threshold,
 })

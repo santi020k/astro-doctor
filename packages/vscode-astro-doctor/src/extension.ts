@@ -296,9 +296,9 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
         }
 
         if (!ACTIVE_FILE_COMMANDS.has(command) || commandArguments.length > 0) {
-          const result = await Promise.resolve(forwardToServer(command, commandArguments))
+          const result: unknown = await Promise.resolve(forwardToServer(command, commandArguments))
 
-          return result as unknown
+          return result
         }
 
         const activeDocumentUri = vscode.window.activeTextEditor?.document.uri.toString()
@@ -311,9 +311,9 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
           return
         }
 
-        const result = await Promise.resolve(forwardToServer(command, [{ uri: activeDocumentUri }]))
+        const result: unknown = await Promise.resolve(forwardToServer(command, [{ uri: activeDocumentUri }]))
 
-        return result as unknown
+        return result
       },
     },
     outputChannel,
@@ -367,14 +367,14 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
       renderStatus(statusBarItem, status)
 
       if (!status.quiescent) {
-        void sidebarProvider.setLoading()
+        sidebarProvider.setLoading().catch(() => {})
       } else if (status.health === 'error') {
-        void sidebarProvider.setError(status.message ?? 'Server error')
+        sidebarProvider.setError(status.message ?? 'Server error').catch(() => {})
       }
     })
 
     languageClient.onNotification(HEALTH_SCORE_METHOD, (data: HealthScoreData) => {
-      void sidebarProvider.update(data)
+      sidebarProvider.update(data).catch(() => {})
 
       // Update status bar score text
       const label = data.scoreLabel
@@ -392,22 +392,26 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
     })
 
     languageClient.onNotification(TOP_ISSUES_METHOD, (issues: TopIssueData[]) => {
-      void sidebarProvider.updateTopIssues(issues)
+      sidebarProvider.updateTopIssues(issues).catch(() => {})
     })
 
     sidebarProvider.onOpenFile(({ filePath, line }) => {
       const uri = vscode.Uri.file(filePath)
 
-      void vscode.window.showTextDocument(uri).then((editor) => {
-        const targetPosition = new vscode.Position(Math.max(0, line - 1), 0)
+      vscode.window.showTextDocument(uri)
+        .then((editor) => {
+          const targetPosition = new vscode.Position(Math.max(0, line - 1), 0)
 
-        editor.revealRange(
-          new vscode.Range(targetPosition, targetPosition),
-          vscode.TextEditorRevealType.InCenter,
-        )
+          editor.revealRange(
+            new vscode.Range(targetPosition, targetPosition),
+            vscode.TextEditorRevealType.InCenter,
+          )
 
-        editor.selection = new vscode.Selection(targetPosition, targetPosition)
-      })
+          editor.selection = new vscode.Selection(targetPosition, targetPosition)
+
+          return editor
+        })
+        .catch(() => {})
     })
 
     renderStatus(statusBarItem, { health: 'ok', quiescent: true })
