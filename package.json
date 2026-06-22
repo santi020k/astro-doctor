@@ -35,6 +35,7 @@
     "commitizen": "catalog:",
     "cspell": "catalog:",
     "cz-conventional-changelog": "catalog:",
+    "eslint": "catalog:",
     "husky": "catalog:",
     "knip": "catalog:",
     "lint-staged": "catalog:",

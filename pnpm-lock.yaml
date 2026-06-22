@@ -119,6 +119,9 @@ importers:
       cz-conventional-changelog:
         specifier: 'catalog:'
         version: 3.3.0(@types/node@26.0.0)(typescript@6.0.3)
+      eslint:
+        specifier: 'catalog:'
+        version: 10.5.0(jiti@2.7.0)
       husky:
         specifier: 'catalog:'
         version: 9.1.7
