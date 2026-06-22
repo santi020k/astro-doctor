@@ -10,8 +10,8 @@ export interface ScoreBreakdown {
   readonly 'best-practices': number
 }
 
-/** Letter grade for the health score (A = 90–100, B = 75–89, C = 60–74, D = 40–59, F = 0–39) */
-export type ScoreLabel = 'A' | 'B' | 'C' | 'D' | 'F'
+/** Letter grade for the health score (S = 100, A = 90–99, B = 75–89, C = 60–74, D = 40–59, F = 0–39) */
+export type ScoreLabel = 'S' | 'A' | 'B' | 'C' | 'D' | 'F'
 
 export interface Diagnostic {
   readonly ruleId: string

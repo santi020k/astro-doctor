@@ -11,6 +11,7 @@ const red = ansi('31')
 const yellow = ansi('33')
 const green = ansi('32')
 const cyan = ansi('36')
+const magentaBright = ansi('95')
 
 const SCORE_EMOJI: Record<string, string> = {
   A: '✅',
@@ -21,6 +22,8 @@ const SCORE_EMOJI: Record<string, string> = {
 }
 
 const colorScore = (score: number, label: string): string => {
+  if (score === 100) return magentaBright(`${score}/100 (${label})`)
+
   if (score >= 90) return green(`${score}/100 (${label})`)
 
   if (score >= 75) return cyan(`${score}/100 (${label})`)

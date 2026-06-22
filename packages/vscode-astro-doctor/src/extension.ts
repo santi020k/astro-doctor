@@ -410,8 +410,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
           editor.selection = new vscode.Selection(targetPosition, targetPosition)
 
           return editor
-        })
-        .catch(() => {})
+        }, () => {})
     })
 
     renderStatus(statusBarItem, { health: 'ok', quiescent: true })

@@ -58,6 +58,7 @@ words:
   - OVSX
   - ACMR
   - lockfiles
+  - bunx
 ignorePaths:
   - node_modules
   - dist

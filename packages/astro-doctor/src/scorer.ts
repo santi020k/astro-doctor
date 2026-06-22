@@ -57,6 +57,8 @@ export const computeCategoryBreakdown = (
 })
 
 export const computeScoreLabel = (score: number): ScoreLabel => {
+  if (score === 100) return 'S'
+
   if (score >= 90) return 'A'
 
   if (score >= 75) return 'B'

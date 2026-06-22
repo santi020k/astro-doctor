@@ -91,8 +91,12 @@ describe('computeScore', () => {
 // ---------------------------------------------------------------------------
 
 describe('computeScoreLabel', () => {
-  test('returns A for 90–100', () => {
-    expect(computeScoreLabel(100)).toBe('A')
+  test('returns S for 100', () => {
+    expect(computeScoreLabel(100)).toBe('S')
+  })
+
+  test('returns A for 90–99', () => {
+    expect(computeScoreLabel(99)).toBe('A')
     expect(computeScoreLabel(90)).toBe('A')
   })
 

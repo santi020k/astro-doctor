@@ -20,7 +20,7 @@ import { getDiffAstroFiles,getStagedAstroFiles } from './git.js'
 import { runInit } from './init.js'
 import { runInstall } from './install.js'
 import { runLsp } from './lsp.js'
-import { aggregateResults, scanProjects } from './multi-project.js'
+import { aggregateResults, autoDiscoverAstroProjects, scanProjects } from './multi-project.js'
 import type { PresetName } from './presets.js'
 import {
   getPresetFailOn,
@@ -535,7 +535,15 @@ const executeScan = async (options: CliOptions): Promise<void> => {
   }
 
   // ── Multi-project mode ──────────────────────────────────────────────────────
-  const effectiveProjects = resolveEffectiveProjects(options, config)
+  let effectiveProjects = resolveEffectiveProjects(options, config)
+
+  if (effectiveProjects.length === 0) {
+    const discovered = await autoDiscoverAstroProjects(options.directory)
+
+    if (discovered.length > 0) {
+      effectiveProjects = discovered.map((pkg) => pkg.directory)
+    }
+  }
 
   if (effectiveProjects.length > 0) {
     await executeMultiProjectScan(options, config, effectiveProjects, effectiveFailOn, effectiveThreshold, baseScanOptions)
