@@ -1,3 +1,10 @@
+/** Maps a URL pathname to its pre-generated OG image path. */
+export const getOgImagePath = (pathname: string): string => {
+  const clean = pathname.replaceAll(/^\/|\/$/g, '') || 'index'
+
+  return `/og/${clean}.webp`
+}
+
 export const SITE_NAME = 'astro-doctor'
 export const SITE_URL = 'https://doctor.santi020k.com'
 export const SITE_DESCRIPTION = 'astro-doctor — ESLint rules and CLI for finding common Astro mistakes. Score your codebase, scan in CI, and ship better Astro apps.'

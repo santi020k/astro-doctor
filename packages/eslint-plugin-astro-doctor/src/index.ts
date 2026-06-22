@@ -1,7 +1,17 @@
+import { createRequire } from 'node:module'
+
 import * as astroParser from 'astro-eslint-parser'
 import type { Linter } from 'eslint'
 
 import { RECOMMENDED_RULES, rules } from './rules/index.js'
+
+const require = createRequire(import.meta.url)
+
+interface PackageJson {
+  readonly version: string
+}
+
+const { version } = require('../package.json') as PackageJson
 
 interface AstroDoctorPlugin {
   readonly meta: {
@@ -15,7 +25,7 @@ interface AstroDoctorPlugin {
 const plugin: AstroDoctorPlugin = {
   meta: {
     name: '@santi020k/eslint-plugin-astro-doctor',
-    version: '0.1.0',
+    version,
   },
   rules,
   configs: {},

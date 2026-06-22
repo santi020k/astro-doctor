@@ -14,6 +14,7 @@ const cyan = ansi('36')
 const magentaBright = ansi('95')
 
 const SCORE_EMOJI: Record<string, string> = {
+  S: '🌟',
   A: '✅',
   B: '🟢',
   C: '🟡',
