@@ -15,9 +15,7 @@ import sharp from 'sharp'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
-
 // ─── Assets ──────────────────────────────────────────────────────────────────
-
 const faviconSvg = readFileSync(path.join(ROOT, 'public', 'favicon.svg'))
 
 const iconBuf = await sharp(faviconSvg)

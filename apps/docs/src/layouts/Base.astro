@@ -43,7 +43,7 @@ const websiteJsonLd = JSON.stringify({
   '@id': `${SITE_URL}/#website`,
   name: SITE_NAME,
   url: `${SITE_URL}/`,
-  description,
+  description: SITE_DESCRIPTION,
   inLanguage: 'en',
   author: {
     '@type': 'Person',
@@ -128,7 +128,7 @@ null
     <meta property="og:image:type" content="image/webp" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={`${fullTitle} — ${SITE_NAME}`} />
+    <meta property="og:image:alt" content={fullTitle} />
     <meta property="og:url" content={canonical} />
     <meta property="og:site_name" content={SITE_NAME} />
     <meta property="og:locale" content="en_US" />
@@ -140,13 +140,14 @@ null
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={resolvedOgImage} />
-    <meta name="twitter:image:alt" content={`${fullTitle} — ${SITE_NAME}`} />
+    <meta name="twitter:image:alt" content={fullTitle} />
 
     <!-- Theme init (inline to prevent flash) -->
     <script is:inline>
-      ;(function () {
+      (function () {
         const saved = localStorage.getItem('theme')
         const preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+
         document.documentElement.setAttribute('data-theme', saved ?? preferred)
       })()
     </script>
