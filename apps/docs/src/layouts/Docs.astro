@@ -21,7 +21,11 @@ const nextPage = currentIndex < allPages.length - 1 ? allPages[currentIndex + 1]
 ---
 
 <Base title={title} description={description}>
-  <div class="container-docs py-8 lg:py-12">
+  <div class="
+    container-docs py-8
+    lg:py-12
+  "
+  >
     <div class="flex gap-12">
       <DocsSidebar />
 
@@ -40,10 +44,20 @@ const nextPage = currentIndex < allPages.length - 1 ? allPages[currentIndex + 1]
             {prevPage && (
               <a
                 href={prevPage.href}
-                class="flex flex-col gap-1 rounded-xl border border-[hsl(var(--line)/0.4)] px-5 py-4 hover:border-[hsl(var(--brand)/0.4)] hover:bg-[hsl(var(--surface-muted))] transition-colors group no-underline flex-1"
+                class="
+                  group flex flex-1 flex-col gap-1 rounded-xl border
+                  border-[hsl(var(--line)/0.4)] px-5 py-4 no-underline
+                  transition-colors
+                  hover:border-[hsl(var(--brand)/0.4)]
+                  hover:bg-[hsl(var(--surface-muted))]
+                "
               >
                 <span class="text-xs text-[hsl(var(--ink-muted))]">← Previous</span>
-                <span class="text-sm font-medium text-[hsl(var(--ink))] group-hover:text-[hsl(var(--brand))] transition-colors">
+                <span class="
+                  text-sm font-medium text-[hsl(var(--ink))] transition-colors
+                  group-hover:text-[hsl(var(--brand))]
+                "
+                >
                   {prevPage.label}
                 </span>
               </a>
@@ -51,10 +65,20 @@ const nextPage = currentIndex < allPages.length - 1 ? allPages[currentIndex + 1]
             {nextPage && (
               <a
                 href={nextPage.href}
-                class="flex flex-col gap-1 rounded-xl border border-[hsl(var(--line)/0.4)] px-5 py-4 hover:border-[hsl(var(--brand)/0.4)] hover:bg-[hsl(var(--surface-muted))] transition-colors group no-underline ml-auto text-right flex-1"
+                class="
+                  group ml-auto flex flex-1 flex-col gap-1 rounded-xl border
+                  border-[hsl(var(--line)/0.4)] px-5 py-4 text-right
+                  no-underline transition-colors
+                  hover:border-[hsl(var(--brand)/0.4)]
+                  hover:bg-[hsl(var(--surface-muted))]
+                "
               >
                 <span class="text-xs text-[hsl(var(--ink-muted))]">Next →</span>
-                <span class="text-sm font-medium text-[hsl(var(--ink))] group-hover:text-[hsl(var(--brand))] transition-colors">
+                <span class="
+                  text-sm font-medium text-[hsl(var(--ink))] transition-colors
+                  group-hover:text-[hsl(var(--brand))]
+                "
+                >
                   {nextPage.label}
                 </span>
               </a>
@@ -69,7 +93,10 @@ const nextPage = currentIndex < allPages.length - 1 ? allPages[currentIndex + 1]
               href={`https://github.com/santi020k/astro-doctor/edit/main/${editPath}`}
               target="_blank"
               rel="noopener noreferrer"
-              class="text-xs text-[hsl(var(--ink-muted))] hover:text-[hsl(var(--brand))] transition-colors"
+              class="
+                text-xs text-[hsl(var(--ink-muted))] transition-colors
+                hover:text-[hsl(var(--brand))]
+              "
             >
               Edit this page on GitHub ↗
             </a>

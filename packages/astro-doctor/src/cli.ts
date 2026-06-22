@@ -292,6 +292,8 @@ Exit / threshold options:
       --threshold <score>           Exit 1 when health score is below this (0–100)
 
 Other:
+      --project <dir>               Path to the project to scan (can be used multiple times)
+      --no-telemetry                Disable telemetry
   -v, --version                     Print the installed version
   -h, --help                        Show this help message
 

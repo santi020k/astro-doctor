@@ -37,22 +37,29 @@ import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
             </a>
           </td>
           <td>
-            <span class:list={['inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium', CATEGORY_COLORS[rule.category]]}>
+            <span class:list={[`
+              inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs
+              font-medium
+            `, CATEGORY_COLORS[rule.category]]}
+            >
               {CATEGORY_LABELS[rule.category]}
             </span>
           </td>
           <td>
             <span class:list={[
-              'inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium',
+              `
+                inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs
+                font-medium
+              `,
               rule.severity === 'error' ?
-                'bg-red-500/10 text-red-400 border border-red-500/20' :
-                'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
+                'border border-red-500/20 bg-red-500/10 text-red-400' :
+                'border border-yellow-500/20 bg-yellow-500/10 text-yellow-400'
             ]}
             >
               {rule.severity}
             </span>
           </td>
-          <td class="text-[hsl(var(--ink-muted))] text-sm">—</td>
+          <td class="text-sm text-[hsl(var(--ink-muted))]">—</td>
         </tr>
       ))}
     </tbody>
