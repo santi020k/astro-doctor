@@ -83,7 +83,7 @@ action.yml                      GitHub Action (composite, PR diff mode, sticky c
 - **Build**: `tsc` directly (no bundler) — simple, no magic, matches your eslint-config-basic pattern
 - **ESLint config**: `@santi020k/eslint-config-basic` with `Preset.Monorepo`, `Extension.Boundaries`, `Extension.Unicorn`, `Tool.Cspell`, `Runtime.Node` on the CLI package
 - **Versioning**: Changesets with linked packages (both packages version together)
-- **Score formula**: `max(0, 100 - (errors×10 + warnings×3) / fileCount)` — penalizes density, not raw count
+- **Score formula**: Each file scored independently — errors cost 25 pts, warnings cost 10 pts, clamped to [0, 100]. Per-file scores are averaged across all scanned files. A perfect score of 100 requires zero diagnostics (any diagnostics cap the score at 99 even if math rounds up). Grades: S (100), A (90–99), B (75–89), C (60–74), D (40–59), F (0–39)
 - **GitHub Action**: Composite action (no pre-bundled JS). Uses `npx` + `jq` + `actions/github-script`
 - **Config files**: `doctor.config.*` (following react-doctor's naming). Supports TS/JS/JSON/JSONC via native import() + readFileSync. JSON/JSONC configs support `"$schema": "https://doctor.santi020k.com/schema/config.json"` for IDE autocompletion.
 - **Agent skills**: Three skills in `.agents/skills/` (rules, performance, add-rule). `install` subcommand copies to user's project.

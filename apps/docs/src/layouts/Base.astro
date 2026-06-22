@@ -7,26 +7,32 @@ import '@/styles/global.css'
 import {
   AUTHOR,
   AUTHOR_URL,
+  getOgImagePath,
   GITHUB_URL,
   SITE_DESCRIPTION,
   SITE_NAME,
   SITE_URL,
-  TWITTER_HANDLE
-} from '@/site.config'
+  TWITTER_HANDLE } from '@/site.config'
 
 interface Props {
   title: string
   description?: string
   ogImage?: string
+  ogType?: 'website' | 'article'
   noIndex?: boolean
 }
 
 const {
   title,
   description = SITE_DESCRIPTION,
-  ogImage = `${SITE_URL}/og.svg`,
+  ogImage,
+  ogType = 'website',
   noIndex = false
 } = Astro.props
+
+const resolvedOgImage = ogImage ?
+  new URL(ogImage, Astro.site ?? SITE_URL).href :
+  new URL(getOgImagePath(Astro.url.pathname), Astro.site ?? SITE_URL).href
 
 const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE_URL).href
 const fullTitle = title === SITE_NAME ? title : `${title} · ${SITE_NAME}`
@@ -37,7 +43,7 @@ const websiteJsonLd = JSON.stringify({
   '@id': `${SITE_URL}/#website`,
   name: SITE_NAME,
   url: `${SITE_URL}/`,
-  description,
+  description: SITE_DESCRIPTION,
   inLanguage: 'en',
   author: {
     '@type': 'Person',
@@ -62,6 +68,32 @@ const softwareJsonLd = JSON.stringify({
   license: 'https://opensource.org/licenses/MIT',
   codeRepository: GITHUB_URL
 })
+
+const articleJsonLd = ogType === 'article' ?
+JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: fullTitle,
+  description,
+  url: canonical,
+  image: resolvedOgImage,
+  inLanguage: 'en',
+  author: {
+    '@type': 'Person',
+    name: AUTHOR,
+    url: AUTHOR_URL
+  },
+  publisher: {
+    '@type': 'Person',
+    name: AUTHOR,
+    url: AUTHOR_URL
+  },
+  isPartOf: {
+    '@type': 'WebSite',
+    '@id': `${SITE_URL}/#website`
+  }
+}) :
+null
 ---
 
 <!doctype html>
@@ -89,13 +121,14 @@ const softwareJsonLd = JSON.stringify({
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <!-- Open Graph -->
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={ogImage} />
+    <meta property="og:image" content={resolvedOgImage} />
+    <meta property="og:image:type" content="image/webp" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={`${fullTitle} — ${SITE_NAME}`} />
+    <meta property="og:image:alt" content={fullTitle} />
     <meta property="og:url" content={canonical} />
     <meta property="og:site_name" content={SITE_NAME} />
     <meta property="og:locale" content="en_US" />
@@ -106,14 +139,15 @@ const softwareJsonLd = JSON.stringify({
     <meta name="twitter:creator" content={TWITTER_HANDLE} />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={ogImage} />
-    <meta name="twitter:image:alt" content={`${fullTitle} — ${SITE_NAME}`} />
+    <meta name="twitter:image" content={resolvedOgImage} />
+    <meta name="twitter:image:alt" content={fullTitle} />
 
     <!-- Theme init (inline to prevent flash) -->
     <script is:inline>
-      ;(function () {
+      (function () {
         const saved = localStorage.getItem('theme')
         const preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+
         document.documentElement.setAttribute('data-theme', saved ?? preferred)
       })()
     </script>
@@ -121,6 +155,7 @@ const softwareJsonLd = JSON.stringify({
     <!-- Structured data -->
     <script type="application/ld+json" is:inline set:html={websiteJsonLd} />
     <script type="application/ld+json" is:inline set:html={softwareJsonLd} />
+    {articleJsonLd && <script type="application/ld+json" is:inline set:html={articleJsonLd} />}
   </head>
   <body>
     <Nav />

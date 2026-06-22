@@ -56,6 +56,7 @@ words:
   - WCAG
   - frontmatter
   - OVSX
+  - resvg
   - ACMR
   - lockfiles
   - bunx
@@ -64,8 +65,10 @@ words:
   - Segoe
   - oxlint
   - unrs
+  - unstub
   - workerd
   - behaviour
+  - wght
 ignorePaths:
   - node_modules
   - dist
