@@ -59,6 +59,12 @@ words:
   - ACMR
   - lockfiles
   - bunx
+  - Cascadia
+  - Fira
+  - Segoe
+  - oxlint
+  - unrs
+  - workerd
 ignorePaths:
   - node_modules
   - dist
