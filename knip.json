@@ -5,7 +5,6 @@
     "duplicates": "off"
   },
   "ignore": ["apps/docs/**"],
-  "ignoreDependencies": ["wrangler"],
   "workspaces": {
 
     "packages/eslint-plugin-astro-doctor": {
