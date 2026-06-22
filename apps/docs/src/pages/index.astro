@@ -217,13 +217,13 @@ class="
 data-stagger="80"
       >
         {[
-          { grade: 'S', range: '100', color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/30' },
-          { grade: 'A', range: '90–99', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/30' },
-          { grade: 'B', range: '75–89', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/30' },
-          { grade: 'C', range: '60–74', color: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/30' },
-          { grade: 'D', range: '40–59', color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/30' },
-          { grade: 'F', range: '0–39', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/30' }
-        ].map(({ grade, range, color, bg }) => (
+          { grade: 'S', range: '100', desc: 'Zero diagnostics', color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/30' },
+          { grade: 'A', range: '90–99', desc: 'Excellent', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/30' },
+          { grade: 'B', range: '75–89', desc: 'Good', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/30' },
+          { grade: 'C', range: '60–74', desc: 'Fair', color: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/30' },
+          { grade: 'D', range: '40–59', desc: 'Needs attention', color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/30' },
+          { grade: 'F', range: '0–39', desc: 'Critical', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/30' }
+        ].map(({ grade, range, desc, color, bg }) => (
           <div class:list={[
             'flex flex-col items-center gap-2 rounded-xl border p-4',
             bg
@@ -235,6 +235,7 @@ data-stagger="80"
             ]}
             >{grade}</span>
             <span class="text-xs text-[hsl(var(--ink-muted))]">{range}</span>
+            <span class="text-xs text-[hsl(var(--ink-muted))]">{desc}</span>
           </div>
         ))}
       </div>
@@ -280,7 +281,7 @@ data-stagger="70"
           {
             icon: <><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 5v5l3 3"/><circle cx="12" cy="12" r="1"/></>,
             title: 'Health Score',
-            desc: '0–100 score with A–F grade. Set --fail-on thresholds. Track codebase health across PRs and releases.'
+            desc: '0–100 score with S–F grade. Set --fail-on thresholds. Track codebase health across PRs and releases.'
           },
           {
             icon: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></>,
