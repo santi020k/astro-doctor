@@ -1,5 +1,11 @@
 # @santi020k/eslint-plugin-astro-doctor
 
+## 1.0.1
+
+### Patch Changes
+
+- [`ac335ba`](https://github.com/santi020k/astro-doctor/commit/ac335ba21c803e5a287d0b4265cf4ef4515b254c) Thanks [@santi020k](https://github.com/santi020k)! - Fix VS Code extension publish and align package versions
+
 ## 1.0.0
 
 ### Major Changes
