@@ -1,1 +1,1 @@
-pnpm run build && pnpm run test
+pnpm install --frozen-lockfile && pnpm run build && pnpm run test
