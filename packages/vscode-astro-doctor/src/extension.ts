@@ -14,6 +14,10 @@ import {
 
 import { AstroDoctorSidebarProvider, type HealthScoreData, type TopIssueData } from './sidebar-provider'
 
+const noop = (): void => {
+  // intentionally swallows errors from fire-and-forget calls
+}
+
 const CLIENT_ID = 'astroDoctor'
 const CLIENT_NAME = 'Astro Doctor'
 const COMMAND_SCAN_FILE = 'astro-doctor.scanFile'
@@ -249,7 +253,7 @@ export const renderStatus = (item: vscode.StatusBarItem, status: ServerStatusPar
 
 export const createServerStatusFeature = (): StaticFeature => ({
   clear() {
-    
+    // no-op: required by StaticFeature interface
   },
   fillClientCapabilities(capabilities: ClientCapabilities) {
     const experimental = (
@@ -262,7 +266,7 @@ export const createServerStatusFeature = (): StaticFeature => ({
     return { kind: 'static' }
   },
   initialize() {
-    
+    // no-op: required by StaticFeature interface
   },
 })
 
@@ -367,14 +371,14 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
       renderStatus(statusBarItem, status)
 
       if (!status.quiescent) {
-        sidebarProvider.setLoading().catch(() => {})
+        sidebarProvider.setLoading().catch(noop)
       } else if (status.health === 'error') {
-        sidebarProvider.setError(status.message ?? 'Server error').catch(() => {})
+        sidebarProvider.setError(status.message ?? 'Server error').catch(noop)
       }
     })
 
     languageClient.onNotification(HEALTH_SCORE_METHOD, (data: HealthScoreData) => {
-      sidebarProvider.update(data).catch(() => {})
+      sidebarProvider.update(data).catch(noop)
 
       // Update status bar score text
       const label = data.scoreLabel
@@ -392,13 +396,13 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
     })
 
     languageClient.onNotification(TOP_ISSUES_METHOD, (issues: TopIssueData[]) => {
-      sidebarProvider.updateTopIssues(issues).catch(() => {})
+      sidebarProvider.updateTopIssues(issues).catch(noop)
     })
 
     sidebarProvider.onOpenFile(({ filePath, line }) => {
       const uri = vscode.Uri.file(filePath)
 
-      vscode.window.showTextDocument(uri)
+      Promise.resolve(vscode.window.showTextDocument(uri))
         .then((editor) => {
           const targetPosition = new vscode.Position(Math.max(0, line - 1), 0)
 
@@ -410,7 +414,8 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
           editor.selection = new vscode.Selection(targetPosition, targetPosition)
 
           return editor
-        }, () => {})
+        })
+        .catch(noop)
     })
 
     renderStatus(statusBarItem, { health: 'ok', quiescent: true })

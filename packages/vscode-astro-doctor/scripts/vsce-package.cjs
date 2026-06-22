@@ -36,9 +36,8 @@ const resolveCatalogVersion = (packageName) => {
 
 const getSectionDeps = (pkgJson, sectionName) => {
   if (sectionName === 'dependencies') return pkgJson.dependencies
-  if (sectionName === 'devDependencies') return pkgJson.devDependencies
 
-  return undefined
+  if (sectionName === 'devDependencies') return pkgJson.devDependencies
 }
 
 for (const section of ['dependencies', 'devDependencies']) {

@@ -12,7 +12,7 @@ describe('runInit', () => {
   beforeEach(() => {
     testDirectory = join(tmpdir(), `astro-doctor-init-test-${Date.now()}`)
     mkdirSync(testDirectory, { recursive: true })
-    vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.spyOn(console, 'log').mockImplementation(vi.fn())
   })
 
   afterEach(() => {
