@@ -28,7 +28,7 @@ catalogs:
       specifier: ^26.0.0
       version: 26.0.0
     '@types/vscode':
-      specifier: ^1.125.0
+      specifier: ^1.85.0
       version: 1.125.0
     '@vitest/coverage-v8':
       specifier: ^4.1.9
