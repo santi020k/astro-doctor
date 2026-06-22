@@ -65,6 +65,7 @@ words:
   - oxlint
   - unrs
   - workerd
+  - behaviour
 ignorePaths:
   - node_modules
   - dist
