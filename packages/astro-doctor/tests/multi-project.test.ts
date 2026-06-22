@@ -8,7 +8,7 @@ describe('multi-project', () => {
     test('returns perfect score for empty results', () => {
       const result = aggregateResults([])
       expect(result.score).toBe(100)
-      expect(result.scoreLabel).toBe('A')
+      expect(result.scoreLabel).toBe('S')
       expect(result.fileCount).toBe(0)
     })
 
@@ -40,7 +40,7 @@ describe('multi-project', () => {
           errorCount: 0,
           warningCount: 0,
           score: 100,
-          scoreLabel: 'A',
+          scoreLabel: 'S',
           scoreBreakdown: { performance: 100, accessibility: 100, security: 100, 'best-practices': 100 }
         }
       ]
