@@ -7,7 +7,8 @@
   "packageManager": "pnpm@10.34.3",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node scripts/generate-og-images.mjs && astro build",
+    "generate:og": "node scripts/generate-og-images.mjs",
     "preview": "astro preview",
     "check": "astro check",
     "typecheck": "astro check",
@@ -24,8 +25,12 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "@resvg/resvg-js": "^2.6.2",
     "@santi020k/eslint-config-basic": "latest",
     "eslint": "^10.5.0",
+    "satori": "^0.12.0",
+    "satori-html": "^0.3.2",
+    "sharp": "^0.34.1",
     "typescript": "^6.0.3",
     "wrangler": "^4.103.0"
   },
