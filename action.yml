@@ -141,7 +141,7 @@ runs:
         inputs.comment == 'true' &&
         steps.diff.outputs.no_astro_changes != 'true' &&
         steps.report.outputs.scan_failed != 'true'
-      uses: actions/github-script@v7
+      uses: actions/github-script@v9
       with:
         script: |
           const fs = require('fs')
