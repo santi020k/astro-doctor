@@ -16,15 +16,33 @@ const workspace = readFileSync(WORKSPACE_PATH, 'utf8')
 const pkg = JSON.parse(originalContent)
 
 const resolveCatalogVersion = (packageName) => {
-  const escaped = packageName.replaceAll(/[$()*+.?[\\\]^{|}]/g, '\\$&')
-  // YAML keys may be quoted ("@types/vscode") or unquoted (glob)
-  const match = workspace.match(new RegExp(`["']?${escaped}["']?:\\s*([^\\n]+)`))
+  const lines = workspace.split('\n')
+  const quotedPatterns = [`"${packageName}":`, `'${packageName}':`, `${packageName}:`]
 
-  return match?.[1]?.trim() ?? null
+  for (const line of lines) {
+    const trimmed = line.trimStart()
+
+    for (const pattern of quotedPatterns) {
+      if (trimmed.startsWith(pattern)) {
+        const value = trimmed.slice(pattern.length).trim()
+
+        return value.length > 0 ? value : null
+      }
+    }
+  }
+
+  return null
+}
+
+const getSectionDeps = (pkgJson, sectionName) => {
+  if (sectionName === 'dependencies') return pkgJson.dependencies
+  if (sectionName === 'devDependencies') return pkgJson.devDependencies
+
+  return undefined
 }
 
 for (const section of ['dependencies', 'devDependencies']) {
-  const deps = pkg[section]
+  const deps = getSectionDeps(pkg, section)
 
   if (!deps) continue
 
@@ -32,7 +50,7 @@ for (const section of ['dependencies', 'devDependencies']) {
     if (value === 'catalog:') {
       const resolved = resolveCatalogVersion(name)
 
-      if (resolved) deps[name] = resolved
+      if (resolved) Object.assign(deps, { [name]: resolved })
     }
   }
 }
