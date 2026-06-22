@@ -2,6 +2,7 @@
 import DocsSidebar from '@/components/DocsSidebar.astro'
 
 import { DOCS_NAV } from '@/data/nav'
+import { getOgImagePath } from '@/site.config'
 
 import Base from './Base.astro'
 
@@ -12,6 +13,7 @@ interface Props {
 }
 
 const { title, description, editPath } = Astro.props
+const ogImage = getOgImagePath(Astro.url.pathname)
 // Find prev/next pages for navigation
 const allPages = DOCS_NAV.flatMap(section => section.items)
 const currentPath = Astro.url.pathname.replace(/\/$/, '')
@@ -20,7 +22,7 @@ const prevPage = currentIndex > 0 ? allPages[currentIndex - 1] : undefined
 const nextPage = currentIndex < allPages.length - 1 ? allPages[currentIndex + 1] : undefined
 ---
 
-<Base title={title} description={description}>
+<Base title={title} description={description} ogImage={ogImage} ogType="article">
   <div class="
     container-docs py-8
     lg:py-12
