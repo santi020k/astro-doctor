@@ -25,7 +25,8 @@
     "@astrojs/check": "^0.9.9",
     "@santi020k/eslint-config-basic": "latest",
     "eslint": "^10.5.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "wrangler": "^4.103.0"
   },
   "engines": {
     "node": ">=20.0.0"

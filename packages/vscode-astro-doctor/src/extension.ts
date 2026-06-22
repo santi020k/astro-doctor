@@ -276,7 +276,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
   if (!configuration.get<boolean>('enable', true)) return
 
   const runtime = resolveRuntime(context)
-  const outputChannel = vscode.window.createOutputChannel(CLIENT_NAME)
+  const outputChannel = vscode.window.createOutputChannel(CLIENT_NAME, { log: true })
   const serverOptions = await createServerOptions(configuration, context.extensionPath, outputChannel, runtime)
 
   if (!serverOptions) return

@@ -41,7 +41,8 @@
     "lint-staged": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:",
-    "typescript-eslint": "catalog:"
+    "typescript-eslint": "catalog:",
+    "wrangler": "^4.103.0"
   },
   "lint-staged": {
     "*.{js,ts,mjs,mts,astro}": [
