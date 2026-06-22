@@ -18,9 +18,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 const OUT_DIR = path.join(ROOT, 'public', 'og')
 const FORCE = process.env.FORCE_OG === '1'
-
 // ─── Page specs ───────────────────────────────────────────────────────────────
-
 /** @type {Array<{ outFile: string, props: object }>} */
 const SPECS = []
 const spec = (outRelPath, props) => SPECS.push({ outFile: path.join(OUT_DIR, outRelPath), props })
@@ -97,7 +95,7 @@ spec('docs/agent-skills.webp', {
 // Docs — Rules
 spec('docs/rules/index.webp', {
   title: 'Rules Overview',
-  description: 'All astro-doctor ESLint rules organised by category — performance, accessibility, security, and best-practices.',
+  description: 'All astro-doctor ESLint rules organized by category — performance, accessibility, security, and best-practices.',
   type: 'Rules'
 })
 
