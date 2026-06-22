@@ -152,7 +152,7 @@ runs:
           const fs = require('fs')
           const report = JSON.parse(fs.readFileSync('/tmp/astro-doctor-report.json', 'utf8'))
 
-          const scoreEmoji = { A: '✅', B: '🟢', C: '🟡', D: '🟠', F: '🔴' }[report.scoreLabel] ?? '🟡'
+          const scoreEmoji = { S: '🌟', A: '✅', B: '🟢', C: '🟡', D: '🟠', F: '🔴' }[report.scoreLabel] ?? '🟡'
           const diffMode = '${{ steps.diff.outputs.is_pr }}' === 'true' && '${{ inputs.diff-only }}' === 'true'
           const scopeNote = diffMode ? ' _(changed files only)_' : ''
 
