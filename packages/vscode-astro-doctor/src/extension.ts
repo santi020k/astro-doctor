@@ -155,12 +155,22 @@ const showStartFailure = async (
   )
 }
 
-const createExecutable = (resolved: ResolvedServer): Executable => ({
-  args: resolved.args,
-  command: resolved.command,
-  options: { shell: resolved.shell },
-  transport: TransportKind.stdio,
-})
+const createExecutable = (resolved: ResolvedServer): Executable => {
+  const nodeOptions = process.env.NODE_OPTIONS ?? ''
+
+  return {
+    args: resolved.args,
+    command: resolved.command,
+    options: {
+      env: {
+        ...process.env,
+        NODE_OPTIONS: `${nodeOptions} --no-deprecation`.trim(),
+      },
+      shell: resolved.shell,
+    },
+    transport: TransportKind.stdio,
+  }
+}
 
 const createExecutableServerOptions = (resolved: ResolvedServer): ServerOptions => {
   const executable = createExecutable(resolved)

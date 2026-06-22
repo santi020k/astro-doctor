@@ -1,4 +1,5 @@
 ---
+import PackageManagerTabs from '@/components/PackageManagerTabs.astro'
 import Docs from '@/layouts/Docs.astro'
 ---
 
@@ -13,7 +14,12 @@ import Docs from '@/layouts/Docs.astro'
 
   <p>Run astro-doctor without installing it at all:</p>
 
-  <pre><code>pnpm dlx @santi020k/astro-doctor@latest</code></pre>
+  <PackageManagerTabs
+    pnpm="pnpm dlx @santi020k/astro-doctor@latest"
+    npm="npx @santi020k/astro-doctor@latest"
+    yarn="yarn dlx @santi020k/astro-doctor@latest"
+    bun="bunx @santi020k/astro-doctor@latest"
+  />
 
   <p>This scans the current directory and prints a health report with score.</p>
 
@@ -21,9 +27,12 @@ import Docs from '@/layouts/Docs.astro'
 
   <p>Add to your project so it's always available and pinned to a version:</p>
 
-  <pre><code>pnpm add -D @santi020k/astro-doctor
-       </code>
-  </pre>
+  <PackageManagerTabs
+    pnpm="pnpm add -D @santi020k/astro-doctor"
+    npm="npm install --save-dev @santi020k/astro-doctor"
+    yarn="yarn add -D @santi020k/astro-doctor"
+    bun="bun add -D @santi020k/astro-doctor"
+  />
 
   <h2>VS Code Extension (Editor Integration)</h2>
 
@@ -46,7 +55,12 @@ import Docs from '@/layouts/Docs.astro'
     and add it to your flat config:
   </p>
 
-  <pre><code>pnpm add -D @santi020k/eslint-plugin-astro-doctor astro-eslint-parser</code></pre>
+  <PackageManagerTabs
+    pnpm="pnpm add -D @santi020k/eslint-plugin-astro-doctor astro-eslint-parser"
+    npm="npm install --save-dev @santi020k/eslint-plugin-astro-doctor astro-eslint-parser"
+    yarn="yarn add -D @santi020k/eslint-plugin-astro-doctor astro-eslint-parser"
+    bun="bun add -D @santi020k/eslint-plugin-astro-doctor astro-eslint-parser"
+  />
 
   <pre><code>{`// eslint.config.js
 import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'

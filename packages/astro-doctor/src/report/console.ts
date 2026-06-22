@@ -1,6 +1,6 @@
 import { relative } from 'node:path'
 
-import type { Diagnostic, ScanResult } from '../types.js'
+import type { Diagnostic, ProjectScanResult, ScanResult } from '../types.js'
 
 const useColor = (): boolean => process.stdout.isTTY && process.env.NO_COLOR === undefined
 const ansi = (code: string) => (text: string) => useColor() ? `\x1b[${code}m${text}\x1b[0m` : text
@@ -136,6 +136,34 @@ const formatVerboseRuleSummary = (diagnostics: readonly Diagnostic[]): string =>
 }
 
 export const formatScoreOnly = (result: ScanResult): string => String(result.score)
+
+/**
+ * Format a multi-project score table.
+ * Shows one score line per project, then an aggregate worst-of line.
+ */
+export const formatProjectScoreTable = (
+  projects: readonly ProjectScanResult[],
+  aggregate: ScanResult,
+  showScore: boolean,
+): string => {
+  if (!showScore || projects.length === 0) return ''
+
+  const PAD_NAME = Math.max(...projects.map((p) => p.name.length), 12)
+
+  const lines = projects.map((p) => {
+    const emoji = SCORE_EMOJI[p.scoreLabel] ?? '🟡'
+    const nameCol = p.name.padEnd(PAD_NAME)
+    const issueCount = p.errorCount + p.warningCount
+    const issueLabel = issueCount === 0 ? green('no issues') : red(`${issueCount} issue${issueCount === 1 ? '' : 's'}`)
+
+    return `  ${nameCol}  ${colorScore(p.score, p.scoreLabel)} ${emoji}  ${issueLabel}`
+  })
+
+  const aggregateEmoji = SCORE_EMOJI[aggregate.scoreLabel] ?? '🟡'
+  const aggregateLine = `  ${'aggregate'.padEnd(PAD_NAME)}  ${colorScore(aggregate.score, aggregate.scoreLabel)} ${aggregateEmoji}  ${dim('(worst-of)')}`
+
+  return `\nProject scores:\n${lines.join('\n')}\n${dim('─'.repeat(PAD_NAME + 30))}\n${aggregateLine}\n`
+}
 
 export const formatConsoleReport = (
   result: ScanResult,

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 
 import type { RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
 
-import { formatConsoleReport, formatScoreOnly } from './report/console.js'
+import { formatConsoleReport, formatProjectScoreTable, formatScoreOnly } from './report/console.js'
 import { formatGithubReport } from './report/github.js'
 import { formatJsonReport, serializeJsonReport } from './report/json.js'
 import { scan } from './scanner/index.js'
@@ -20,6 +20,7 @@ import { getDiffAstroFiles,getStagedAstroFiles } from './git.js'
 import { runInit } from './init.js'
 import { runInstall } from './install.js'
 import { runLsp } from './lsp.js'
+import { aggregateResults, scanProjects } from './multi-project.js'
 import type { PresetName } from './presets.js'
 import {
   getPresetFailOn,
@@ -28,7 +29,7 @@ import {
   isPresetName,
 } from './presets.js'
 import { runRulesExplain } from './rules-explain.js'
-import type { AstroDoctorConfig, ScanResult } from './types.js'
+import type { AstroDoctorConfig, ProjectScanResult, ScanResult } from './types.js'
 import { runWhy } from './why.js'
 
 type OutputFormat = 'console' | 'github'
@@ -55,6 +56,8 @@ interface CliOptions {
   readonly categories: readonly RuleCategory[]
   readonly noLint: boolean
   readonly noRespectInlineDisables: boolean
+  readonly projects: readonly string[]
+  readonly noTelemetry: boolean
 }
 
 const VALID_CATEGORIES: RuleCategory[] = [
@@ -172,6 +175,20 @@ const parsePreset = (argv: readonly string[]): PresetName | undefined => {
   return undefined
 }
 
+const getProjectsOption = (argv: readonly string[]): string[] => {
+  const raw = getOptionValue(argv, '--project')
+
+  if (!raw) return []
+
+  // Support both comma-separated and repeated flags
+  const fromComma = raw.split(',').map((s) => s.trim()).filter(Boolean)
+
+  const fromRepeat = getAllOptionValues(argv, '--project')
+    .flatMap((v) => v.split(',').map((s) => s.trim()).filter(Boolean))
+
+  return [...new Set([...fromComma, ...fromRepeat])]
+}
+
 const parseArguments = (argv: string[]): CliOptions => {
   const directoryArg = getOptionValue(argv, '--dir', '-d')
   const directory = directoryArg ? resolve(directoryArg) : process.cwd()
@@ -214,6 +231,8 @@ const parseArguments = (argv: string[]): CliOptions => {
     categories: parseCategories(argv),
     noLint: argv.includes('--no-lint'),
     noRespectInlineDisables: argv.includes('--no-respect-inline-disables'),
+    projects: getProjectsOption(argv),
+    noTelemetry: argv.includes('--no-telemetry') || process.env.ASTRO_DOCTOR_NO_TELEMETRY === '1',
   }
 }
 
@@ -283,8 +302,12 @@ Rules checked:
   `)
 }
 
-const handleJsonOutput = (scanResult: ScanResult, options: CliOptions): boolean => {
-  const report = formatJsonReport(scanResult, options.directory)
+const handleJsonOutput = (
+  scanResult: ScanResult,
+  options: CliOptions,
+  projects?: readonly ProjectScanResult[],
+): boolean => {
+  const report = formatJsonReport(scanResult, options.directory, projects)
   const reportJson = serializeJsonReport(report, options.jsonCompact)
 
   if (typeof options.json === 'string') {
@@ -300,7 +323,11 @@ const handleJsonOutput = (scanResult: ScanResult, options: CliOptions): boolean 
   return true
 }
 
-const printReport = (scanResult: ScanResult, options: CliOptions): boolean => {
+const printReport = (
+  scanResult: ScanResult,
+  options: CliOptions,
+  projects?: readonly ProjectScanResult[],
+): boolean => {
   if (options.scoreOnly) {
     console.log(formatScoreOnly(scanResult))
 
@@ -308,7 +335,7 @@ const printReport = (scanResult: ScanResult, options: CliOptions): boolean => {
   }
 
   if (options.json !== false) {
-    if (handleJsonOutput(scanResult, options)) return true
+    if (handleJsonOutput(scanResult, options, projects)) return true
   } else if (options.format === 'github') {
     const githubOutput = formatGithubReport(scanResult)
 
@@ -322,6 +349,10 @@ const printReport = (scanResult: ScanResult, options: CliOptions): boolean => {
     const report = formatConsoleReport(displayResult, options.directory, !options.noScore, options.verbose)
 
     console.log(report)
+
+    if (projects && projects.length > 0) {
+      console.log(formatProjectScoreTable(projects, scanResult, !options.noScore))
+    }
   }
 
   return false
@@ -410,8 +441,63 @@ const resolveFilesToScan = (options: CliOptions): string[] | undefined => {
   return undefined
 }
 
+const resolveEffectiveProjects = (options: CliOptions, config: AstroDoctorConfig | null): string[] => {
+  if (options.projects.length > 0) return [...options.projects]
+
+  if (config?.projects && config.projects.length > 0) return [...config.projects]
+
+  return []
+}
+
 const executeScan = async (options: CliOptions): Promise<void> => {
   const config = await loadConfig(options.directory)
+  const effectivePreset = getEffectivePreset(options, config)
+  const effectiveFailOn = getEffectiveFailOn(options, config, effectivePreset)
+  const effectiveThreshold = getEffectiveThreshold(options, config, effectivePreset)
+
+  const baseScanOptions = {
+    categories: options.categories.length > 0 ? options.categories : undefined,
+    noLint: options.noLint,
+    noRespectInlineDisables: options.noRespectInlineDisables,
+  }
+
+  // ── Multi-project mode ──────────────────────────────────────────────────────
+  const effectiveProjects = resolveEffectiveProjects(options, config)
+
+  if (effectiveProjects.length > 0) {
+    if (options.json !== true && !options.scoreOnly) {
+      console.log(`\nScanning ${effectiveProjects.length} project(s) in ${options.directory}...\n`)
+    }
+
+    let projectResults: ProjectScanResult[]
+
+    try {
+      projectResults = await scanProjects({
+        rootDirectory: options.directory,
+        projectArgs: effectiveProjects,
+        rootConfig: config,
+        scanOptions: { ...baseScanOptions },
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+
+      console.error(`\nFailed to scan projects: ${message}`)
+
+      process.exitCode = 1
+
+      return
+    }
+
+    const aggregate = aggregateResults(projectResults)
+
+    if (printReport(aggregate, options, projectResults)) return
+
+    checkThresholds(aggregate, effectiveFailOn, effectiveThreshold)
+
+    return
+  }
+
+  // ── Single-directory mode ───────────────────────────────────────────────────
   let filesToScan: string[] | undefined
 
   try {
@@ -438,20 +524,13 @@ const executeScan = async (options: CliOptions): Promise<void> => {
     return
   }
 
-  const effectivePreset = getEffectivePreset(options, config)
-
   const scanOptions = {
+    ...baseScanOptions,
     directory: options.directory,
     files: filesToScan,
     ignore: config?.ignore,
     rules: getEffectiveRules(config, effectivePreset),
-    categories: options.categories.length > 0 ? options.categories : undefined,
-    noLint: options.noLint,
-    noRespectInlineDisables: options.noRespectInlineDisables,
   }
-
-  const effectiveFailOn = getEffectiveFailOn(options, config, effectivePreset)
-  const effectiveThreshold = getEffectiveThreshold(options, config, effectivePreset)
 
   if (options.json !== true && !options.scoreOnly) {
     console.log(`\nScanning ${options.directory}...\n`)
