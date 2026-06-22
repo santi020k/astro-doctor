@@ -7,12 +7,6 @@ export type RuleCategory =
   | 'best-practices'
   | 'architecture'
 
-export interface RuleMeta {
-  readonly name: string
-  readonly category: RuleCategory
-  readonly description: string
-  readonly recommended: boolean
-}
 
 export interface AstroDoctorRule extends Rule.RuleModule {
   readonly meta: Omit<Rule.RuleMetaData, 'docs'> & {

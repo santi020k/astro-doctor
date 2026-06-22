@@ -35,3 +35,4 @@ catalog:
   vscode-languageclient: ^10.0.0
   vscode-languageserver: ^10.0.0
   vscode-languageserver-textdocument: ^1.0.12
+  wrangler: ^4.103.0
