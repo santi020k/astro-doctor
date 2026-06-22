@@ -1,4 +1,5 @@
 ---
+import PackageManagerTabs from '@/components/PackageManagerTabs.astro'
 import Docs from '@/layouts/Docs.astro'
 ---
 
@@ -18,7 +19,12 @@ import Docs from '@/layouts/Docs.astro'
 
   <p>Install the plugin and the Astro parser as development dependencies:</p>
 
-  <pre><code>pnpm add -D @santi020k/eslint-plugin-astro-doctor astro-eslint-parser</code></pre>
+  <PackageManagerTabs
+    pnpm="pnpm add -D @santi020k/eslint-plugin-astro-doctor astro-eslint-parser"
+    npm="npm install --save-dev @santi020k/eslint-plugin-astro-doctor astro-eslint-parser"
+    yarn="yarn add -D @santi020k/eslint-plugin-astro-doctor astro-eslint-parser"
+    bun="bun add -D @santi020k/eslint-plugin-astro-doctor astro-eslint-parser"
+  />
 
   <h2>Usage</h2>
 

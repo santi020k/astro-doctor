@@ -1,4 +1,5 @@
 ---
+import PackageManagerTabs from '@/components/PackageManagerTabs.astro'
 import Docs from '@/layouts/Docs.astro'
 ---
 
@@ -13,7 +14,12 @@ import Docs from '@/layouts/Docs.astro'
 
   <h2>Step 1 — Install</h2>
 
-  <pre><code>pnpm add -D @santi020k/astro-doctor @santi020k/eslint-plugin-astro-doctor</code></pre>
+  <PackageManagerTabs
+    pnpm="pnpm add -D @santi020k/astro-doctor @santi020k/eslint-plugin-astro-doctor"
+    npm="npm install --save-dev @santi020k/astro-doctor @santi020k/eslint-plugin-astro-doctor"
+    yarn="yarn add -D @santi020k/astro-doctor @santi020k/eslint-plugin-astro-doctor"
+    bun="bun add -D @santi020k/astro-doctor @santi020k/eslint-plugin-astro-doctor"
+  />
 
   <h2>Step 2 — Configure ESLint</h2>
 
@@ -31,7 +37,12 @@ export default [
 
   <h2>Step 3 — Run a scan</h2>
 
-  <pre><code>pnpm dlx @santi020k/astro-doctor@latest</code></pre>
+  <PackageManagerTabs
+    pnpm="pnpm dlx @santi020k/astro-doctor@latest"
+    npm="npx @santi020k/astro-doctor@latest"
+    yarn="yarn dlx @santi020k/astro-doctor@latest"
+    bun="bunx @santi020k/astro-doctor@latest"
+  />
 
   <p>You'll see output like:</p>
 

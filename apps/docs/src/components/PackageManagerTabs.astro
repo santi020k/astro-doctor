@@ -1,0 +1,128 @@
+---
+interface Props {
+  pnpm?: string
+  npm?: string
+  yarn?: string
+  bun?: string
+}
+
+const { pnpm, npm, yarn, bun } = Astro.props
+
+const tabs = [
+  { id: 'pnpm', label: 'pnpm', command: pnpm },
+  { id: 'npm',  label: 'npm',  command: npm  },
+  { id: 'yarn', label: 'yarn', command: yarn },
+  { id: 'bun',  label: 'bun',  command: bun  }
+].filter((t): t is { id: string, label: string, command: string } => Boolean(t.command))
+---
+
+<div class="pm-tabs" data-pm-tabs>
+  <div class="pm-tabs-bar" role="tablist" aria-label="Package manager">
+    {tabs.map((tab, i) => (
+      <button
+        role="tab"
+        class={`pm-tab-btn${i === 0 ? ' pm-active' : ''}`}
+        data-pm-tab={tab.id}
+        aria-selected={i === 0 ? 'true' : 'false'}
+        type="button"
+      >
+        {tab.label}
+      </button>
+    ))}
+  </div>
+  {tabs.map((tab, i) => (
+    <div
+      role="tabpanel"
+      class={`pm-panel${i === 0 ? ' pm-active' : ''}`}
+      data-pm-panel={tab.id}
+    >
+      <pre><code>{tab.command}</code></pre>
+    </div>
+  ))}
+</div>
+
+<style>
+  .pm-tabs {
+    margin: 1.25rem 0;
+    border-radius: 0.75rem;
+    border: 1px solid hsl(var(--line));
+    overflow: hidden;
+  }
+
+  .pm-tabs-bar {
+    display: flex;
+    border-bottom: 1px solid hsl(var(--line));
+    background: hsl(var(--surface-muted));
+  }
+
+  .pm-tab-btn {
+    padding: 0.45rem 1rem;
+    font-size: 0.8125rem;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: hsl(var(--ink-muted));
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .pm-tab-btn:hover {
+    color: hsl(var(--ink));
+    background: hsl(var(--surface-strong) / 0.4);
+  }
+
+  .pm-tab-btn.pm-active {
+    color: hsl(var(--brand));
+    border-bottom-color: hsl(var(--brand));
+    background: hsl(var(--surface));
+  }
+
+  .pm-panel {
+    display: none;
+  }
+
+  .pm-panel.pm-active {
+    display: block;
+  }
+
+  .pm-panel pre {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: hsl(var(--surface));
+  }
+</style>
+
+<script>
+  const PM_KEY = 'astro-doctor-preferred-pm'
+
+  function syncTabs(pm: string) {
+    document.querySelectorAll<HTMLElement>('[data-pm-tabs]').forEach(container => {
+      const hasTab = container.querySelector(`[data-pm-tab="${pm}"]`)
+      if (!hasTab) return
+
+      container.querySelectorAll<HTMLElement>('[data-pm-tab]').forEach(btn => {
+        const active = btn.dataset.pmTab === pm
+        btn.classList.toggle('pm-active', active)
+        btn.setAttribute('aria-selected', String(active))
+      })
+      container.querySelectorAll<HTMLElement>('[data-pm-panel]').forEach(panel => {
+        panel.classList.toggle('pm-active', panel.dataset.pmPanel === pm)
+      })
+    })
+  }
+
+  const saved = localStorage.getItem(PM_KEY)
+  if (saved) syncTabs(saved)
+
+  document.querySelectorAll<HTMLElement>('[data-pm-tabs] [data-pm-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pm = btn.dataset.pmTab!
+      localStorage.setItem(PM_KEY, pm)
+      syncTabs(pm)
+    })
+  })
+</script>

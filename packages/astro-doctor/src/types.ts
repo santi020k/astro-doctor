@@ -48,11 +48,34 @@ export interface ScanOptions {
   readonly noRespectInlineDisables?: boolean
 }
 
+/** A single project's scan result within a multi-project run. */
+export interface ProjectScanResult extends ScanResult {
+  /** Display name of the project (package name or path). */
+  readonly name: string
+  /** Absolute path to the project root. */
+  readonly directory: string
+}
+
 /** Shape of the machine-readable JSON report written by --json */
 export interface JsonReport {
   readonly $schema: string
   readonly version: string
   readonly timestamp: string
+  readonly directory: string
+  readonly fileCount: number
+  readonly errorCount: number
+  readonly warningCount: number
+  readonly score: number
+  readonly scoreLabel: ScoreLabel
+  readonly scoreBreakdown: ScoreBreakdown
+  readonly diagnostics: readonly Diagnostic[]
+  /** Present when --project was used: per-project breakdown. */
+  readonly projects?: readonly ProjectJsonEntry[]
+}
+
+/** Per-project entry in the JSON report's projects array. */
+export interface ProjectJsonEntry {
+  readonly name: string
   readonly directory: string
   readonly fileCount: number
   readonly errorCount: number
@@ -71,4 +94,10 @@ export interface AstroDoctorConfig {
   readonly failOn?: 'error' | 'warning' | 'off'
   /** Exit 1 when the health score falls below this value (0–100). */
   readonly threshold?: number
+  /**
+   * Workspace projects to scan with --project.
+   * Each entry is a package name or a relative path from the project root.
+   * Overridden by the --project CLI flag.
+   */
+  readonly projects?: readonly string[]
 }
