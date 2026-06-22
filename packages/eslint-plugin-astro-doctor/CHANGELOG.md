@@ -1,5 +1,17 @@
 # @santi020k/eslint-plugin-astro-doctor
 
+## 1.0.2
+
+### Patch Changes
+
+- [#5](https://github.com/santi020k/astro-doctor/pull/5) [`faeaf66`](https://github.com/santi020k/astro-doctor/commit/faeaf66ffc9b0f1470fb9bde5bbcbf0d361a70c4) Thanks [@santi020k](https://github.com/santi020k)! - Fix post-launch documentation and plugin meta accuracy
+
+  - **eslint-plugin**: plugin `meta.version` now reads dynamically from `package.json` instead of being hardcoded to `0.1.0`
+  - **docs/README/llms.txt**: corrected score formula description — each file is scored independently (errors cost 25 pts, warnings cost 10 pts, clamped per-file then averaged); previous docs described the old global density formula
+  - **docs/README/action.yml**: updated score grade references from `A–F` to `S, A–F` to reflect that a perfect score of 100 returns the `S` grade; clarified that `S` means zero diagnostics — no issues found anywhere in the codebase (not just "high score" but truly clean); docs homepage grade cards now show a description label for each grade
+  - **console reporter**: added missing `S: '🌟'` entry to `SCORE_EMOJI` — previously a perfect score would fall through to the `🟡` fallback
+  - **GitHub Action PR comment**: same fix — `scoreEmoji` map now includes `S: '🌟'` so PR comments show the correct emoji for a clean codebase
+
 ## 1.0.1
 
 ### Patch Changes
