@@ -1,6 +1,11 @@
 packages:
   - "packages/*"
   - "apps/*"
+allowBuilds:
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+  workerd: true
 catalog:
   "@arethetypeswrong/cli": ^0.18.3
   "@changesets/changelog-github": ^0.7.0
@@ -10,6 +15,7 @@ catalog:
   "@santi020k/eslint-config-basic": latest
   "@types/node": ^26.0.0
   "@types/vscode": ^1.125.0
+  "@vitest/coverage-v8": ^4.1.9
   astro-eslint-parser: ^1.4.0
   commitizen: ^4.3.2
   confbox: ^0.2.4
@@ -26,7 +32,6 @@ catalog:
   typescript: ^6.0.3
   typescript-eslint: ^8.61.1
   vitest: ^4.1.9
-  "@vitest/coverage-v8": ^4.1.9
   vscode-languageclient: ^10.0.0
   vscode-languageserver: ^10.0.0
   vscode-languageserver-textdocument: ^1.0.12
