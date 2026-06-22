@@ -30,7 +30,7 @@ import {
 } from './presets.js'
 import { runRulesExplain } from './rules-explain.js'
 import { trackRun } from './telemetry.js'
-import type { AstroDoctorConfig, ProjectScanResult, ScanResult } from './types.js'
+import type { AstroDoctorConfig, ProjectScanResult, ScanOptions, ScanResult } from './types.js'
 import { runWhy } from './why.js'
 
 type OutputFormat = 'console' | 'github'
@@ -453,6 +453,75 @@ const resolveEffectiveProjects = (options: CliOptions, config: AstroDoctorConfig
   return []
 }
 
+const tryResolveFilesToScan = (options: CliOptions): { files: string[] | undefined; failed: boolean } => {
+  try {
+    return { files: resolveFilesToScan(options), failed: false }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+
+    console.error(`\nFailed to resolve files: ${message}`)
+
+    process.exitCode = 1
+
+    return { files: undefined, failed: true }
+  }
+}
+
+const hasOnlyIrrelevantChangedFiles = (files: string[] | undefined): boolean =>
+  files !== undefined && files.length > 0 && !files.some(isScanRelevantPath)
+
+const tryScan = async (scanOptions: ScanOptions): Promise<ScanResult | null> => {
+  try {
+    return await scan(scanOptions)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+
+    console.error(`\nFailed to scan: ${message}`)
+
+    process.exitCode = 1
+
+    return null
+  }
+}
+
+const executeMultiProjectScan = async (
+  options: CliOptions,
+  config: AstroDoctorConfig | null,
+  effectiveProjects: string[],
+  effectiveFailOn: string,
+  effectiveThreshold: number,
+  baseScanOptions: { categories: readonly RuleCategory[] | undefined; noLint: boolean; noRespectInlineDisables: boolean },
+): Promise<void> => {
+  if (options.json !== true && !options.scoreOnly) {
+    console.log(`\nScanning ${effectiveProjects.length} project(s) in ${options.directory}...\n`)
+  }
+
+  let projectResults: ProjectScanResult[]
+
+  try {
+    projectResults = await scanProjects({
+      rootDirectory: options.directory,
+      projectArgs: effectiveProjects,
+      rootConfig: config,
+      scanOptions: { ...baseScanOptions },
+    })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+
+    console.error(`\nFailed to scan projects: ${message}`)
+
+    process.exitCode = 1
+
+    return
+  }
+
+  const aggregate = aggregateResults(projectResults)
+
+  if (printReport(aggregate, options, projectResults)) return
+
+  checkThresholds(aggregate, effectiveFailOn, effectiveThreshold)
+}
+
 const executeScan = async (options: CliOptions): Promise<void> => {
   const config = await loadConfig(options.directory)
   const effectivePreset = getEffectivePreset(options, config)
@@ -469,58 +538,17 @@ const executeScan = async (options: CliOptions): Promise<void> => {
   const effectiveProjects = resolveEffectiveProjects(options, config)
 
   if (effectiveProjects.length > 0) {
-    if (options.json !== true && !options.scoreOnly) {
-      console.log(`\nScanning ${effectiveProjects.length} project(s) in ${options.directory}...\n`)
-    }
-
-    let projectResults: ProjectScanResult[]
-
-    try {
-      projectResults = await scanProjects({
-        rootDirectory: options.directory,
-        projectArgs: effectiveProjects,
-        rootConfig: config,
-        scanOptions: { ...baseScanOptions },
-      })
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-
-      console.error(`\nFailed to scan projects: ${message}`)
-
-      process.exitCode = 1
-
-      return
-    }
-
-    const aggregate = aggregateResults(projectResults)
-
-    if (printReport(aggregate, options, projectResults)) return
-
-    checkThresholds(aggregate, effectiveFailOn, effectiveThreshold)
+    await executeMultiProjectScan(options, config, effectiveProjects, effectiveFailOn, effectiveThreshold, baseScanOptions)
 
     return
   }
 
   // ── Single-directory mode ───────────────────────────────────────────────────
-  let filesToScan: string[] | undefined
+  const { files: filesToScan, failed } = tryResolveFilesToScan(options)
 
-  try {
-    filesToScan = resolveFilesToScan(options)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
+  if (failed) return
 
-    console.error(`\nFailed to resolve files: ${message}`)
-
-    process.exitCode = 1
-
-    return
-  }
-
-  if (
-    filesToScan !== undefined &&
-    filesToScan.length > 0 &&
-    !filesToScan.some((filePath) => isScanRelevantPath(filePath))
-  ) {
+  if (hasOnlyIrrelevantChangedFiles(filesToScan)) {
     if (options.json !== true) {
       console.log('No Astro Doctor files found in the changed files list — nothing to scan.\n')
     }
@@ -540,19 +568,9 @@ const executeScan = async (options: CliOptions): Promise<void> => {
     console.log(`\nScanning ${options.directory}...\n`)
   }
 
-  let scanResult: ScanResult
+  const scanResult = await tryScan(scanOptions)
 
-  try {
-    scanResult = await scan(scanOptions)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-
-    console.error(`\nFailed to scan: ${message}`)
-
-    process.exitCode = 1
-
-    return
-  }
+  if (!scanResult) return
 
   if (printReport(scanResult, options)) return
 

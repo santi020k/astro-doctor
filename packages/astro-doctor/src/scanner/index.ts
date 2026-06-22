@@ -4,6 +4,7 @@ import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 import * as astroParser from 'astro-eslint-parser'
 import { ESLint } from 'eslint'
 
+import { getProjectRuleMeta } from '../project-rules.js'
 import { computeCategoryBreakdown, computeScore, computeScoreLabel } from '../scorer.js'
 import type { Diagnostic, ScanOptions, ScanResult, Severity } from '../types.js'
 
@@ -32,31 +33,39 @@ const EMPTY_RESULT = (fileCount = 0): ScanResult => ({
   scoreBreakdown: { performance: 100, accessibility: 100, security: 100, 'best-practices': 100 },
 })
 
-const buildEslintConfig = (options: ScanOptions): ESLint.Options => ({
-  cwd: options.directory,
-  overrideConfigFile: true,
-  overrideConfig: [
-    {
-      files: ['**/*.astro'],
-      plugins: {
-        'astro-doctor': astroDoctorPlugin,
-      },
-      languageOptions: {
-        parser: astroParser,
-        parserOptions: {
-          sourceType: 'module',
+const buildEslintConfig = (options: ScanOptions): ESLint.Options => {
+  const pluginRules = options.rules
+    ? Object.fromEntries(
+        Object.entries(options.rules).filter(([ruleId]) => getProjectRuleMeta(ruleId) === undefined)
+      )
+    : {}
+
+  return {
+    cwd: options.directory,
+    overrideConfigFile: true,
+    overrideConfig: [
+      {
+        files: ['**/*.astro'],
+        plugins: {
+          'astro-doctor': astroDoctorPlugin,
+        },
+        languageOptions: {
+          parser: astroParser,
+          parserOptions: {
+            sourceType: 'module',
+          },
+        },
+        rules: {
+          ...astroDoctorPlugin.configs.recommended?.rules,
+          ...pluginRules,
         },
       },
-      rules: {
-        ...astroDoctorPlugin.configs.recommended?.rules,
-        ...options.rules,
-      },
-    },
-  ],
-  ignore: false,
-  // Audit mode: report all issues even when eslint-disable comments are present
-  ...(options.noRespectInlineDisables ? { reportUnusedDisableDirectives: 'error' } : {}),
-})
+    ],
+    ignore: false,
+    // Audit mode: report all issues even when eslint-disable comments are present
+    ...(options.noRespectInlineDisables ? { reportUnusedDisableDirectives: 'error' } : {}),
+  }
+}
 
 export const scan = async (options: ScanOptions): Promise<ScanResult> => {
   const astroFiles = options.files
