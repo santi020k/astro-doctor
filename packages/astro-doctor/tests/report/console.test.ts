@@ -26,7 +26,6 @@ const makeScanResult = (overrides: Partial<ScanResult> = {}): ScanResult => ({
     accessibility: 100,
     security: 100,
     'best-practices': 100,
-    architecture: 100,
   },
   ...overrides,
 })
@@ -169,46 +168,44 @@ describe('formatConsoleReport with verbose mode', () => {
 })
 
 describe('formatProjectScoreTable', () => {
-  const makeAggregate = (overrides: Partial<ScanResult> = {}): ScanResult => makeScanResult(overrides)
-
   test('returns empty string when showScore is false', () => {
-    const result = formatProjectScoreTable([makeProject()], makeAggregate(), false)
+    const result = formatProjectScoreTable([makeProject()], makeScanResult(), false)
     expect(result).toBe('')
   })
 
   test('returns empty string when projects array is empty even with showScore true', () => {
-    const result = formatProjectScoreTable([], makeAggregate(), true)
+    const result = formatProjectScoreTable([], makeScanResult(), true)
     expect(result).toBe('')
   })
 
   test('includes project names and score when showScore=true with projects', () => {
     const project = makeProject({ name: 'my-app', score: 90, scoreLabel: 'A' })
-    const result = formatProjectScoreTable([project], makeAggregate({ score: 90, scoreLabel: 'A' }), true)
+    const result = formatProjectScoreTable([project], makeScanResult({ score: 90, scoreLabel: 'A' }), true)
     expect(result).toContain('my-app')
     expect(result).toContain('90/100')
   })
 
   test("includes 'aggregate' line", () => {
     const project = makeProject({ name: 'my-app' })
-    const result = formatProjectScoreTable([project], makeAggregate(), true)
+    const result = formatProjectScoreTable([project], makeScanResult(), true)
     expect(result).toContain('aggregate')
   })
 
   test("shows 'no issues' for project with 0 errors and warnings", () => {
     const project = makeProject({ errorCount: 0, warningCount: 0 })
-    const result = formatProjectScoreTable([project], makeAggregate(), true)
+    const result = formatProjectScoreTable([project], makeScanResult(), true)
     expect(result).toContain('no issues')
   })
 
   test("shows issue count for project with issues ('5 issues' when errorCount=3+warningCount=2)", () => {
     const project = makeProject({ errorCount: 3, warningCount: 2, score: 70, scoreLabel: 'C' })
-    const result = formatProjectScoreTable([project], makeAggregate({ score: 70, scoreLabel: 'C' }), true)
+    const result = formatProjectScoreTable([project], makeScanResult({ score: 70, scoreLabel: 'C' }), true)
     expect(result).toContain('5 issues')
   })
 
   test("handles single issue ('1 issue') for singular form", () => {
     const project = makeProject({ errorCount: 1, warningCount: 0, score: 80, scoreLabel: 'B' })
-    const result = formatProjectScoreTable([project], makeAggregate({ score: 80, scoreLabel: 'B' }), true)
+    const result = formatProjectScoreTable([project], makeScanResult({ score: 80, scoreLabel: 'B' }), true)
     expect(result).toContain('1 issue')
     expect(result).not.toContain('1 issues')
   })
