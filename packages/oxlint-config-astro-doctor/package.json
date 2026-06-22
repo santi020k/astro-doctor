@@ -1,6 +1,9 @@
 {
   "name": "@santi020k/oxlint-config-astro-doctor",
   "version": "0.1.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "oxlint config for Astro Doctor — enables the built-in oxlint rules that overlap with astro-doctor checks",
   "type": "module",
   "main": "./index.json",
@@ -11,18 +14,15 @@
     "index.json",
     "README.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/santi020k/astro-doctor"
+  },
   "keywords": [
     "astro",
     "oxlint",
     "linting",
     "astro-doctor"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/santi020k/astro-doctor"
-  },
-  "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  }
+  "license": "MIT"
 }

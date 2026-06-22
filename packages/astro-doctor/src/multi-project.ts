@@ -13,7 +13,7 @@ import type {
   ScanResult,
 } from './types.js'
 
-interface WorkspacePackage {
+export interface WorkspacePackage {
   readonly name: string
   readonly directory: string
 }
@@ -88,7 +88,7 @@ const resolveDirectoryPackage = (directoryPath: string, rootDirectory: string): 
  * Read workspace package names from pnpm-workspace.yaml, package.json workspaces,
  * or yarn workspaces — return every workspace directory with its package name.
  */
-const discoverWorkspacePackages = async (rootDirectory: string): Promise<WorkspacePackage[]> => {
+export const discoverWorkspacePackages = async (rootDirectory: string): Promise<WorkspacePackage[]> => {
   const pnpmGlobs = readPnpmWorkspaceGlobs(rootDirectory)
   const globs = pnpmGlobs.length > 0 ? pnpmGlobs : readPackageJsonWorkspaceGlobs(rootDirectory)
   const packages: WorkspacePackage[] = []
@@ -104,6 +104,40 @@ const discoverWorkspacePackages = async (rootDirectory: string): Promise<Workspa
   }
 
   return packages
+}
+
+export const isAstroProject = (directory: string): boolean => {
+  if (
+    existsSync(join(directory, 'astro.config.mjs')) ||
+    existsSync(join(directory, 'astro.config.ts')) ||
+    existsSync(join(directory, 'astro.config.js')) ||
+    existsSync(join(directory, 'astro.config.cjs'))
+  ) {
+    return true
+  }
+
+  const packageJsonPath = join(directory, 'package.json')
+
+  if (existsSync(packageJsonPath)) {
+    try {
+      const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as {
+        dependencies?: Record<string, string>
+        devDependencies?: Record<string, string>
+      }
+
+      if (pkg.dependencies?.astro || pkg.devDependencies?.astro) return true
+    } catch {
+      // ignore JSON parse errors
+    }
+  }
+
+  return false
+}
+
+export const autoDiscoverAstroProjects = async (rootDirectory: string): Promise<WorkspacePackage[]> => {
+  const packages = await discoverWorkspacePackages(rootDirectory)
+
+  return packages.filter((pkg) => isAstroProject(pkg.directory))
 }
 
 /**
@@ -174,7 +208,7 @@ const mergeIgnore = (
  * Project-level rules and ignore lists layer on top; failOn and threshold are overridden only
  * when the project config explicitly sets them.
  */
-const mergeConfigs = (
+export const mergeConfigs = (
   root: AstroDoctorConfig | null,
   project: AstroDoctorConfig | null,
 ): AstroDoctorConfig => ({

@@ -155,7 +155,8 @@ The score penalizes errors (×10) and warnings (×3) per file, so the penalty sc
 
 | Grade | Score | Meaning |
 |-------|-------|---------|
-| A ✅ | 90–100 | Excellent |
+| S 🌟 | 100 | Perfect |
+| A ✅ | 90–99 | Excellent |
 | B 🟢 | 75–89 | Good |
 | C 🟡 | 60–74 | Fair |
 | D 🟠 | 40–59 | Needs attention |

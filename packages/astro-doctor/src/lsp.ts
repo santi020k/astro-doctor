@@ -15,8 +15,6 @@
  * > change between releases, hence the `experimental-` prefix.
  */
 
-import { existsSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import type { AstroDoctorRule, RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
@@ -42,6 +40,13 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { scan } from './scanner/index.js'
 import { loadConfig } from './config.js'
+import {
+  aggregateResults,
+  autoDiscoverAstroProjects,
+  isAstroProject,
+  mergeConfigs,
+  scanProjects,
+} from './multi-project.js'
 import { getPresetRules } from './presets.js'
 import { getProjectRuleMeta } from './project-rules.js'
 import { computeCategoryBreakdown, computeScore, computeScoreLabel } from './scorer.js'
@@ -251,6 +256,7 @@ export const runLsp = (): void => {
   let scanOnType = true
   let workspaceFileCount = 0
   let config: AstroDoctorConfig | null = null
+  const projectEslintInstances = new Map<string, ESLint>()
   // Keyed by absolute file path
   const fileAstroDiagnostics = new Map<string, AstroDiagnostic[]>()
   // Keyed by document URI (file://...)
@@ -302,34 +308,6 @@ export const runLsp = (): void => {
     connection.sendNotification(TOP_ISSUES_METHOD, topIssues).catch(() => {})
   }
 
-  const isAstroProject = (directory: string): boolean => {
-    if (
-      existsSync(join(directory, 'astro.config.mjs')) ||
-      existsSync(join(directory, 'astro.config.ts')) ||
-      existsSync(join(directory, 'astro.config.js')) ||
-      existsSync(join(directory, 'astro.config.cjs'))
-    ) {
-      return true
-    }
-
-    const packageJsonPath = join(directory, 'package.json')
-
-    if (existsSync(packageJsonPath)) {
-      try {
-        const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as {
-          dependencies?: Record<string, string>
-          devDependencies?: Record<string, string>
-        }
-
-        if (pkg.dependencies?.astro || pkg.devDependencies?.astro) return true
-      } catch {
-        // ignore JSON parse errors
-      }
-    }
-
-    return false
-  }
-
   const doInitialScan = async (): Promise<void> => {
     sendStatus({ health: 'ok', quiescent: false, message: 'Scanning workspace…' })
 
@@ -340,7 +318,7 @@ export const runLsp = (): void => {
 
       eslintInstance = buildEslintInstance(workspaceRoot, effectiveRules)
 
-      if (!hasWorkspaceFolder || !isAstroProject(workspaceRoot)) {
+      if (!hasWorkspaceFolder) {
         workspaceFileCount = 0
 
         publishHealthScore()
@@ -352,11 +330,46 @@ export const runLsp = (): void => {
         return
       }
 
-      const result = await scan({
-        directory: workspaceRoot,
-        ignore: config?.ignore,
-        rules: effectiveRules,
-      })
+      const discoveredProjects = await autoDiscoverAstroProjects(workspaceRoot)
+
+      projectEslintInstances.clear()
+
+      let result
+
+      if (discoveredProjects.length > 0) {
+        for (const pkg of discoveredProjects) {
+          const projectConfig = await loadConfig(pkg.directory)
+          const mergedConfig = mergeConfigs(config, projectConfig)
+          const projectRules = getEffectiveRules(mergedConfig)
+          
+          projectEslintInstances.set(pkg.directory, buildEslintInstance(pkg.directory, projectRules))
+        }
+
+        const projectResults = await scanProjects({
+          rootDirectory: workspaceRoot,
+          projectArgs: discoveredProjects.map((p) => p.directory),
+          rootConfig: config,
+          scanOptions: { noLint: false, noRespectInlineDisables: false },
+        })
+
+        result = aggregateResults(projectResults)
+      } else if (isAstroProject(workspaceRoot)) {
+        result = await scan({
+          directory: workspaceRoot,
+          ignore: config?.ignore,
+          rules: effectiveRules,
+        })
+      } else {
+        workspaceFileCount = 0
+
+        publishHealthScore()
+
+        publishTopIssues()
+
+        sendStatus({ health: 'ok', quiescent: true })
+
+        return
+      }
 
       workspaceFileCount = result.fileCount
 
@@ -393,9 +406,22 @@ export const runLsp = (): void => {
     }
   }
 
-  const lintDocument = async (document: TextDocument): Promise<void> => {
-    if (!eslintInstance) return
+  const getEslintInstanceForFile = (filePath: string): ESLint | null => {
+    let closestDir = ''
+    let closestEslint: ESLint | null = null
 
+    for (const [dir, eslint] of projectEslintInstances.entries()) {
+      if (filePath.startsWith(dir) && dir.length > closestDir.length) {
+        closestDir = dir
+
+        closestEslint = eslint
+      }
+    }
+
+    return closestEslint ?? eslintInstance
+  }
+
+  const lintDocument = async (document: TextDocument): Promise<void> => {
     let filePath: string
 
     try {
@@ -406,11 +432,15 @@ export const runLsp = (): void => {
 
     if (!filePath.endsWith('.astro')) return
 
+    const activeEslint = getEslintInstanceForFile(filePath)
+
+    if (!activeEslint) return
+
     sendStatus({ health: 'ok', quiescent: false })
 
     try {
       const { lsp, astro } = await lintFileContent(
-        eslintInstance,
+        activeEslint,
         document.getText(),
         filePath,
       )

@@ -111,10 +111,14 @@ describe('AstroDoctorSidebarProvider', () => {
   describe('after resolveWebviewView is called', () => {
     let provider: AstroDoctorSidebarProvider
     let webviewView: ReturnType<typeof makeWebviewView>
+    let postMessage: ReturnType<typeof vi.fn>
+    let onDidReceiveMessage: ReturnType<typeof vi.fn>
 
     beforeEach(async () => {
       provider = new AstroDoctorSidebarProvider()
       webviewView = makeWebviewView()
+      postMessage = webviewView.webview.postMessage as ReturnType<typeof vi.fn>
+      onDidReceiveMessage = webviewView.webview.onDidReceiveMessage as ReturnType<typeof vi.fn>
 
       await provider.resolveWebviewView(
         webviewView,
@@ -132,13 +136,13 @@ describe('AstroDoctorSidebarProvider', () => {
     })
 
     test('registers onDidReceiveMessage handler', () => {
-      expect(webviewView.webview.onDidReceiveMessage).toHaveBeenCalledOnce()
+      expect(onDidReceiveMessage).toHaveBeenCalledOnce()
     })
 
     test('setError posts an error message', async () => {
       await provider.setError('Server crashed')
 
-      expect(webviewView.webview.postMessage).toHaveBeenCalledWith({
+      expect(postMessage).toHaveBeenCalledWith({
         message: 'Server crashed',
         type: 'error',
       })
@@ -147,7 +151,7 @@ describe('AstroDoctorSidebarProvider', () => {
     test('setLoading posts a loading message', async () => {
       await provider.setLoading()
 
-      expect(webviewView.webview.postMessage).toHaveBeenCalledWith({ type: 'loading' })
+      expect(postMessage).toHaveBeenCalledWith({ type: 'loading' })
     })
 
     test('update posts an update message with health data and top issues', async () => {
@@ -155,7 +159,7 @@ describe('AstroDoctorSidebarProvider', () => {
 
       await provider.update(data)
 
-      expect(webviewView.webview.postMessage).toHaveBeenCalledWith({
+      expect(postMessage).toHaveBeenCalledWith({
         data,
         topIssues: [],
         type: 'update',
@@ -167,11 +171,11 @@ describe('AstroDoctorSidebarProvider', () => {
       const issues = makeTopIssues()
 
       await provider.update(data)
-      webviewView.webview.postMessage.mockClear()
+      postMessage.mockClear()
 
       await provider.updateTopIssues(issues)
 
-      expect(webviewView.webview.postMessage).toHaveBeenCalledWith({
+      expect(postMessage).toHaveBeenCalledWith({
         data,
         topIssues: issues,
         type: 'update',
@@ -183,7 +187,7 @@ describe('AstroDoctorSidebarProvider', () => {
 
       await provider.updateTopIssues(issues)
 
-      expect(webviewView.webview.postMessage).not.toHaveBeenCalled()
+      expect(postMessage).not.toHaveBeenCalled()
     })
 
     test('re-sends cached data when view becomes ready', async () => {
@@ -192,6 +196,8 @@ describe('AstroDoctorSidebarProvider', () => {
       await provider.update(data)
 
       const secondView = makeWebviewView()
+      const secondPostMessage = secondView.webview.postMessage as ReturnType<typeof vi.fn>
+      const secondOnDidReceiveMessage = secondView.webview.onDidReceiveMessage as ReturnType<typeof vi.fn>
 
       await provider.resolveWebviewView(
         secondView,
@@ -200,10 +206,10 @@ describe('AstroDoctorSidebarProvider', () => {
       )
 
       // Trigger the ready message from the webview
-      const handler = secondView.webview.onDidReceiveMessage.mock.calls[0]?.[0] as (message: { type: string }) => void
+      const handler = secondOnDidReceiveMessage.mock.calls[0]?.[0] as (message: { type: string }) => void
       handler({ type: 'ready' })
 
-      expect(secondView.webview.postMessage).toHaveBeenCalledWith(
+      expect(secondPostMessage).toHaveBeenCalledWith(
         expect.objectContaining({ data, type: 'update' }),
       )
     })

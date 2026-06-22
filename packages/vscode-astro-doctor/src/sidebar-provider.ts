@@ -405,6 +405,7 @@ export const buildSidebarHtml = (nonce: string): string => `<!DOCTYPE html>
     const SCORE_CIRCUMFERENCE = 2 * Math.PI * 42  // r=42
 
     function scoreColor(s) {
+      if (s === 100) return '#a371f7'
       if (s >= 90) return '#3fb950'
       if (s >= 75) return '#d29922'
       if (s >= 60) return '#e3833c'
@@ -412,6 +413,7 @@ export const buildSidebarHtml = (nonce: string): string => `<!DOCTYPE html>
     }
 
     function gradeColor(g) {
+      if (g === 'S') return '#a371f7'
       if (g === 'A') return '#3fb950'
       if (g === 'B') return '#d29922'
       if (g === 'C') return '#e3833c'
