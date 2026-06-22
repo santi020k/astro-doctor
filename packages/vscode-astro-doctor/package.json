@@ -39,6 +39,8 @@
     "vscode-languageclient": "catalog:"
   },
   "devDependencies": {
+    "@santi020k/astro-doctor": "workspace:*",
+    "@santi020k/eslint-plugin-astro-doctor": "workspace:*",
     "@types/node": "catalog:",
     "@types/vscode": "catalog:",
     "esbuild": "catalog:",
@@ -93,7 +95,11 @@
         },
         "astroDoctor.trace.server": {
           "type": "string",
-          "enum": ["off", "messages", "verbose"],
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
           "default": "off",
           "scope": "window",
           "description": "Trace the communication between the editor and the Astro Doctor language server."

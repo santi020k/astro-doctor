@@ -27,7 +27,7 @@ import type {
   Diagnostic as LspDiagnostic,
   InitializeParams,
   InitializeResult,
-} from 'vscode-languageserver/node.js'
+} from 'vscode-languageserver/node'
 import {
   CodeActionKind,
   createConnection,
@@ -35,7 +35,7 @@ import {
   ProposedFeatures,
   TextDocuments,
   TextDocumentSyncKind,
-} from 'vscode-languageserver/node.js'
+} from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { scan } from './scanner/index.js'
@@ -545,7 +545,7 @@ export const runLsp = (): void => {
     if (docsUrl) lines.push('', `[View documentation →](${docsUrl})`)
 
     return {
-      contents: { kind: 'markdown', value: lines.join('\n') },
+      contents: { kind: 'markdown', value: lines.map(String).join('\n') },
       range: diag.range,
     }
   })
