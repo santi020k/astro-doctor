@@ -9,6 +9,8 @@ Astro Doctor diagnostics, hovers, and quick fixes right in your editor.
 - **Health Sidebar:** Provides a visual health report with a score ring and category breakdown of issues (Performance, Accessibility, Security, etc.) inside the VS Code Sidebar.
 - **Hover Info:** Get detailed explanations and rule documentation when hovering over reported issues.
 
+![Astro Doctor VS Code Extension](./resources/vscode-extension-screenshot.png)
+
 ## Extension Settings
 
 This extension contributes the following settings:
