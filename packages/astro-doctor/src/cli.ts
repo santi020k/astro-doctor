@@ -268,6 +268,8 @@ Commands:
 
 Scan options:
   -d, --dir <path>                  Directory to scan (default: cwd)
+      --project <name|path>         Scan a specific workspace project by package name or relative
+                                    path (repeat or comma-separate for multiple projects)
       --diff [base]                 Scan files changed vs. a base branch (default: main/master)
       --staged                      Scan only git-staged Astro Doctor files (pre-commit)
       --changed-files-from <path>   Scan newline-separated changed files from a file
@@ -292,8 +294,8 @@ Exit / threshold options:
       --threshold <score>           Exit 1 when health score is below this (0–100)
 
 Other:
-      --project <dir>               Path to the project to scan (can be used multiple times)
-      --no-telemetry                Disable telemetry
+      --no-telemetry                Opt out of anonymous usage telemetry
+                                    (also: ASTRO_DOCTOR_NO_TELEMETRY=1)
   -v, --version                     Print the installed version
   -h, --help                        Show this help message
 

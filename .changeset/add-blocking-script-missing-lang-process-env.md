@@ -2,6 +2,7 @@
 "@santi020k/eslint-plugin-astro-doctor": minor
 "@santi020k/astro-doctor": minor
 "vscode-astro-doctor": minor
+"@santi020k/oxlint-config-astro-doctor": minor
 ---
 
 Add four new ESLint rules covering performance, accessibility, and best practices.
