@@ -4,20 +4,21 @@
   "rules": {
     "duplicates": "off"
   },
+  "ignore": ["apps/docs/**"],
+  "ignoreDependencies": ["wrangler"],
   "workspaces": {
-    ".": {
-      "entry": ["eslint.config.js"]
-    },
+
     "packages/eslint-plugin-astro-doctor": {
       "project": ["src/**/*.ts"]
     },
     "packages/astro-doctor": {
-      "entry": ["bin/**/*.ts", "src/cli.ts", "src/index.ts"],
+      "entry": ["bin/**/*.ts", "src/cli.ts"],
       "project": ["src/**/*.ts", "bin/**/*.ts"]
     },
     "packages/vscode-astro-doctor": {
-      "entry": ["src/extension.ts"],
-      "project": ["src/**/*.ts"]
+
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["@santi020k/astro-doctor", "@santi020k/eslint-plugin-astro-doctor", "@types/vscode"]
     }
   }
 }
