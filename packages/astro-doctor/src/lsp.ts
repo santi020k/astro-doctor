@@ -41,6 +41,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 import { scan } from './scanner/index.js'
 import { loadConfig } from './config.js'
 import { getPresetRules } from './presets.js'
+import { getProjectRuleMeta } from './project-rules.js'
 import { computeCategoryBreakdown, computeScore, computeScoreLabel } from './scorer.js'
 import type { AstroDoctorConfig, Diagnostic as AstroDiagnostic, ScoreBreakdown } from './types.js'
 
@@ -94,8 +95,14 @@ const getRuleCategory = (ruleId: string): RuleCategory => {
 const buildEslintInstance = (
   root: string,
   customRules?: Record<string, 'error' | 'warn' | 'off'>,
-): ESLint =>
-  new ESLint({
+): ESLint => {
+  const pluginRules = customRules
+    ? Object.fromEntries(
+        Object.entries(customRules).filter(([ruleId]) => getProjectRuleMeta(ruleId) === undefined)
+      )
+    : {}
+
+  return new ESLint({
     cwd: root,
     overrideConfigFile: true,
     overrideConfig: [
@@ -108,12 +115,13 @@ const buildEslintInstance = (
         },
         rules: {
           ...astroDoctorPlugin.configs.recommended?.rules,
-          ...customRules,
+          ...pluginRules,
         },
       },
     ],
     ignore: false,
   })
+}
 
 const getEffectiveRules = (
   config: AstroDoctorConfig | null,
