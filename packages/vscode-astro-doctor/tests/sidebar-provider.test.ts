@@ -186,7 +186,7 @@ describe('AstroDoctorSidebarProvider', () => {
       expect(webviewView.webview.postMessage).not.toHaveBeenCalled()
     })
 
-    test('re-sends cached data when resolveWebviewView is called again', async () => {
+    test('re-sends cached data when view becomes ready', async () => {
       const data = makeHealthData({ score: 88 })
 
       await provider.update(data)
@@ -198,6 +198,10 @@ describe('AstroDoctorSidebarProvider', () => {
         {} as vscode.WebviewViewResolveContext,
         {} as vscode.CancellationToken,
       )
+
+      // Trigger the ready message from the webview
+      const handler = secondView.webview.onDidReceiveMessage.mock.calls[0]?.[0] as (message: { type: string }) => void
+      handler({ type: 'ready' })
 
       expect(secondView.webview.postMessage).toHaveBeenCalledWith(
         expect.objectContaining({ data, type: 'update' }),

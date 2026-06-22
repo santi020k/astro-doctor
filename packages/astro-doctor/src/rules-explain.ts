@@ -131,7 +131,10 @@ const listAllRules = (): void => {
     console.log(`  ${category}`)
 
     for (const ruleId of ruleIds) {
-      const detail = RULE_DETAILS[ruleId]!
+      const detail = RULE_DETAILS[ruleId]
+
+      if (!detail) continue
+
       const severity = detail.severity === 'error' ? 'error  ' : 'warning'
 
       console.log(`    ${severity}  astro-doctor/${ruleId}`)
@@ -179,17 +182,17 @@ const explainRule = (ruleId: string): void => {
 }
 
 export const runRulesExplain = (args: string[]): void => {
+  const [firstArg, secondArg] = args
+
   // `astro-doctor rules` or `astro-doctor rules list` → list all
-  if (args.length === 0 || args[0] === 'list') {
+  if (firstArg === undefined || firstArg === 'list') {
     listAllRules()
 
     return
   }
 
-  if (args[0] === 'explain') {
-    const ruleId = args[1]
-
-    if (!ruleId) {
+  if (firstArg === 'explain') {
+    if (!secondArg) {
       console.error('\nUsage: astro-doctor rules explain <rule-id>\nExample: astro-doctor rules explain no-set-html\n')
 
       process.exitCode = 1
@@ -197,11 +200,11 @@ export const runRulesExplain = (args: string[]): void => {
       return
     }
 
-    explainRule(ruleId)
+    explainRule(secondArg)
 
     return
   }
 
   // Unknown subcommand — treat as rule ID for convenience
-  explainRule(args[0]!)
+  explainRule(firstArg)
 }

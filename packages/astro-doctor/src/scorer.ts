@@ -2,7 +2,7 @@ import type { Diagnostic, ScoreBreakdown, ScoreLabel } from './types.js'
 
 /**
  * Compute a health score (0–100) using per-file averaging.
- * Each file is scored independently (errors cost 10 pts, warnings cost 3 pts, clamped to [0,100]),
+ * Each file is scored independently (errors cost 25 pts, warnings cost 10 pts, clamped to [0,100]),
  * then the per-file scores are averaged. This prevents a single heavily-broken file from
  * dragging down the score of large, otherwise-clean projects beyond its actual impact.
  */
@@ -15,7 +15,7 @@ export const computeScore = (diagnostics: readonly Diagnostic[], fileCount: numb
   for (const diagnostic of diagnostics) {
     const existing = penaltyByFile.get(diagnostic.filePath) ?? 0
 
-    penaltyByFile.set(diagnostic.filePath, existing + (diagnostic.severity === 'error' ? 10 : 3))
+    penaltyByFile.set(diagnostic.filePath, existing + (diagnostic.severity === 'error' ? 25 : 10))
   }
 
   // Clean files (not in the map) score 100; dirty files are clamped to [0, 100]
@@ -26,7 +26,14 @@ export const computeScore = (diagnostics: readonly Diagnostic[], fileCount: numb
     dirtyFileTotal += Math.max(0, 100 - penalty)
   }
 
-  return Math.round((cleanFileTotal + dirtyFileTotal) / fileCount)
+  const rawScore = Math.floor((cleanFileTotal + dirtyFileTotal) / fileCount)
+
+  // Never return a perfect score if there are diagnostics
+  if (diagnostics.length > 0 && rawScore === 100) {
+    return 99
+  }
+
+  return rawScore
 }
 
 const computeScoreForCategory = (

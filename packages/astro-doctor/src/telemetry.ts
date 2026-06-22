@@ -73,37 +73,19 @@ export interface TelemetryOptions {
   readonly result?: ScanResult
 }
 
-/**
- * Fire-and-forget telemetry ping. Never throws, never blocks the CLI.
- *
- * Returns immediately — the actual HTTP request runs in the background.
- * If the endpoint is unreachable or the request times out, it is silently ignored.
- */
-export const trackRun = (options: TelemetryOptions, disabled: boolean): void => {
-  if (disabled) return
-
-  const endpoint = process.env.ASTRO_DOCTOR_TELEMETRY_URL
-
-  // No endpoint configured → nothing to send
-  if (!endpoint) return
-
-  const payload: TelemetryPayload = {
-    version: getVersion(),
-    node: process.version,
-    platform: process.platform,
-    command: options.command,
-    flags: options.flags,
-    fileCount: options.result?.fileCount ?? 0,
-    errorCount: options.result?.errorCount ?? 0,
-    warningCount: options.result?.warningCount ?? 0,
-    score: options.result?.score ?? 100,
-    ruleHits: options.result ? buildRuleHits(options.result) : {},
-    ci: isCI(),
-  }
-
-  // Non-blocking: use void + fire-and-forget pattern
-  void sendTelemetry(endpoint, payload)
-}
+const buildPayload = (options: TelemetryOptions): TelemetryPayload => ({
+  version: getVersion(),
+  node: process.version,
+  platform: process.platform,
+  command: options.command,
+  flags: options.flags,
+  fileCount: options.result?.fileCount ?? 0,
+  errorCount: options.result?.errorCount ?? 0,
+  warningCount: options.result?.warningCount ?? 0,
+  score: options.result?.score ?? 100,
+  ruleHits: options.result ? buildRuleHits(options.result) : {},
+  ci: isCI(),
+})
 
 const sendTelemetry = async (endpoint: string, payload: TelemetryPayload): Promise<void> => {
   try {
@@ -124,4 +106,20 @@ const sendTelemetry = async (endpoint: string, payload: TelemetryPayload): Promi
   } catch {
     // Silently ignore — telemetry must never cause CLI failures
   }
+}
+
+/**
+ * Fire-and-forget telemetry ping. Never throws, never blocks the CLI.
+ *
+ * Returns immediately — the actual HTTP request runs in the background.
+ * If the endpoint is unreachable or the request times out, it is silently ignored.
+ */
+export const trackRun = (options: TelemetryOptions, disabled: boolean): void => {
+  if (disabled) return
+
+  const endpoint = process.env.ASTRO_DOCTOR_TELEMETRY_URL
+
+  if (!endpoint) return
+
+  sendTelemetry(endpoint, buildPayload(options)).catch(() => {})
 }
