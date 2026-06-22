@@ -1,7 +1,7 @@
 {
   "name": "vscode-astro-doctor",
   "displayName": "Astro Doctor",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "sponsor": {
     "url": "https://github.com/sponsors/santi020k"
