@@ -4,6 +4,7 @@
   "private": true,
   "description": "Documentation website for astro-doctor",
   "type": "module",
+  "packageManager": "pnpm@10.34.3",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
