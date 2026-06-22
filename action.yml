@@ -38,7 +38,7 @@ outputs:
     description: Health score 0–100
     value: ${{ steps.report.outputs.score }}
   score-label:
-    description: Health score letter grade (A–F)
+    description: Health score letter grade (S, A–F)
     value: ${{ steps.report.outputs.score_label }}
 
 runs:
