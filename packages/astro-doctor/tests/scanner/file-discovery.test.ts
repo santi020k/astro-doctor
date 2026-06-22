@@ -1,6 +1,6 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { isAbsolute, join, sep } from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 
@@ -79,7 +79,7 @@ describe('discoverAstroFiles', () => {
     const discoveredFiles = await discoverAstroFiles(testDirectory)
 
     expect(discoveredFiles).toHaveLength(1)
-    expect(discoveredFiles.some((filePath) => filePath.includes('/dist/'))).toBe(false)
+    expect(discoveredFiles.some((filePath) => filePath.includes(`${sep}dist${sep}`))).toBe(false)
   })
 
   test('returns absolute paths', async () => {
@@ -87,7 +87,7 @@ describe('discoverAstroFiles', () => {
 
     const discoveredFiles = await discoverAstroFiles(testDirectory)
 
-    expect(discoveredFiles.every((filePath) => filePath.startsWith('/'))).toBe(true)
+    expect(discoveredFiles.every((filePath) => isAbsolute(filePath))).toBe(true)
   })
 
   test('resolves existing changed Astro files', () => {

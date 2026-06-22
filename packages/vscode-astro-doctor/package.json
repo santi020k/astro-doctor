@@ -43,6 +43,7 @@
     "@santi020k/eslint-plugin-astro-doctor": "workspace:*",
     "@types/node": "catalog:",
     "@types/vscode": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "esbuild": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
