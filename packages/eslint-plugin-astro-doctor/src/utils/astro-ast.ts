@@ -37,7 +37,7 @@ export interface AstroElementNode extends AstroNodeBase {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null
 
-const isAstroElementNode = (node: unknown): node is AstroElementNode =>
+export const isAstroElementNode = (node: unknown): node is AstroElementNode =>
   isRecord(node) && (node.type === 'element' || node.type === 'component')
 
 interface ReportLocation {

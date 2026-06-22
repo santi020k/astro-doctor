@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
 import { glob } from 'glob'
@@ -72,26 +72,27 @@ const discoverWorkspacePackages = async (rootDirectory: string): Promise<Workspa
 
   // Expand globs into directories
   for (const pattern of globs) {
-    const dirs = await glob(pattern, {
+    const directoryPaths = await glob(pattern, {
       cwd: rootDirectory,
       absolute: true,
-      onlyDirectories: true,
     })
 
-    for (const dir of dirs) {
-      const pkgJsonPath = join(dir, 'package.json')
+    for (const directoryPath of directoryPaths) {
+      if (!existsSync(directoryPath) || !statSync(directoryPath).isDirectory()) continue
 
-      if (!existsSync(pkgJsonPath)) continue
+      const packageJsonPath = join(directoryPath, 'package.json')
+
+      if (!existsSync(packageJsonPath)) continue
 
       try {
-        const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf8')) as { name?: string }
-        const name = pkgJson.name ?? dir.replace(`${rootDirectory}/`, '')
+        const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as { name?: string }
+        const name = packageJson.name ?? directoryPath.replace(`${rootDirectory}/`, '')
 
-        packages.push({ name, directory: dir })
+        packages.push({ name, directory: directoryPath })
       } catch {
-        const name = dir.replace(`${rootDirectory}/`, '')
+        const name = directoryPath.replace(`${rootDirectory}/`, '')
 
-        packages.push({ name, directory: dir })
+        packages.push({ name, directory: directoryPath })
       }
     }
   }

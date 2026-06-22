@@ -5,6 +5,11 @@ on:
     # Runs every day at 08:00 UTC
     - cron: "0 8 * * *"
   workflow_dispatch:
+    inputs:
+      reason:
+        description: Manual stale run reason
+        required: false
+        type: string
 
 permissions:
   issues: write

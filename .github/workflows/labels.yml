@@ -8,6 +8,11 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
+    inputs:
+      reason:
+        description: Manual sync reason
+        required: false
+        type: string
 
 jobs:
   sync-labels:
