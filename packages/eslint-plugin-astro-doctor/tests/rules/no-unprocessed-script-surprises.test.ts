@@ -31,18 +31,24 @@ ruleTester.run('no-unprocessed-script-surprises', rule, {
       filename: 'test.astro',
     },
     {
+      code: `---
+---
+<script is:inline>document.documentElement.dataset.theme = 'dark'</script>`,
+      filename: 'test.astro',
+    },
+    {
+      code: `---
+const structuredData = JSON.stringify({ '@context': 'https://schema.org' })
+---
+<script type="application/ld+json" set:html={structuredData}></script>`,
+      filename: 'test.astro',
+    },
+    {
       code: `<script is:inline>console.log('ignored')</script>`,
       filename: 'test.html',
     },
   ],
   invalid: [
-    {
-      code: `---
----
-<script is:inline>console.log('raw')</script>`,
-      filename: 'test.astro',
-      errors: [{ messageId: 'inlineScriptOptOut' }],
-    },
     {
       code: `---
 ---
