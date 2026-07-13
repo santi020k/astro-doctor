@@ -127,11 +127,18 @@ import Docs from '@/layouts/Docs.astro'
   <h2>Language server resolution</h2>
 
   <p>
+    The extension requires VS Code 1.125 or newer and a supported Node.js release available as
+    <code>node</code>: <code>^22.22.3 || ^24.16.0 || &gt;=26.3.0</code>.
+  </p>
+
+  <p>
     The extension starts the Astro Doctor language server over stdio. An explicit
     <code>astroDoctor.serverPath</code> always wins. In local extension development, it prefers the
     built CLI server from the monorepo, then the workspace install at
     <code>node_modules/.bin/astro-doctor</code>. In packaged builds, it prefers the bundled language
-    server and falls back to the workspace install if the bundled server is unavailable.
+    server and falls back to the workspace install if the bundled server is unavailable. The
+    bundled server runs with the supported <code>node</code> executable available in the user's
+    environment rather than VS Code's embedded Node.js runtime.
   </p>
 
   <p>

@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22.x, 24.x]
+        node-version: [22.22.3, 24.16.0, 26.3.0]
 
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
@@ -53,16 +53,16 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Run CI checks (Node 22.x)
-        if: matrix.node-version == '22.x'
+      - name: Run CI checks (minimum Node.js runtime)
+        if: matrix.node-version == '22.22.3'
         run: pnpm exec turbo run typecheck lint test:coverage //#lint:spell //#lint:knip //#lint:repo
 
-      - name: Run CI checks (Node 24.x)
-        if: matrix.node-version == '24.x'
+      - name: Run CI checks
+        if: matrix.node-version != '22.22.3'
         run: pnpm exec turbo run typecheck lint test:coverage
 
-      - name: Check exports (Node 22.x)
-        if: matrix.node-version == '22.x'
+      - name: Check exports
+        if: matrix.node-version == '22.22.3'
         run: pnpm run check:exports
 
   windows-smoke:
@@ -79,7 +79,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: 22.22.3
           cache: pnpm
 
       - name: Install dependencies

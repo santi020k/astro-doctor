@@ -185,16 +185,12 @@ const createExecutableServerOptions = (resolved: ResolvedServer): ServerOptions 
   }
 }
 
-const createBundledServerOptions = (serverModule: string): ServerOptions => ({
-  debug: {
-    module: serverModule,
-    transport: TransportKind.ipc,
-  },
-  run: {
-    module: serverModule,
-    transport: TransportKind.ipc,
-  },
-})
+const createBundledServerOptions = (serverModule: string): ServerOptions =>
+  createExecutableServerOptions({
+    args: [serverModule],
+    command: 'node',
+    shell: false,
+  })
 
 export const createServerOptions = async (
   configuration: vscode.WorkspaceConfiguration,
