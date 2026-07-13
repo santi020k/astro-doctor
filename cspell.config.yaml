@@ -30,6 +30,7 @@ words:
   - turbo
   - turborepo
   - tsconfig
+  - vite
   - vitest
   - vsce
   - vscodeignore
