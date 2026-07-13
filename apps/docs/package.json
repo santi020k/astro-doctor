@@ -17,22 +17,22 @@
     "clean": "rm -rf dist .astro node_modules"
   },
   "dependencies": {
-    "@astrojs/mdx": "^6.0.3",
-    "@astrojs/sitemap": "^3.7.3",
-    "@tailwindcss/vite": "^4.3.1",
-    "astro": "^6.4.8",
-    "tailwindcss": "^4.3.1"
+    "@astrojs/mdx": "catalog:",
+    "@astrojs/sitemap": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "astro": "catalog:",
+    "tailwindcss": "catalog:"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.9",
-    "@resvg/resvg-js": "^2.6.2",
-    "@santi020k/eslint-config-basic": "latest",
-    "eslint": "^10.5.0",
-    "satori": "^0.12.0",
-    "satori-html": "^0.3.2",
-    "sharp": "^0.34.1",
-    "typescript": "^6.0.3",
-    "wrangler": "^4.103.0"
+    "@astrojs/check": "catalog:",
+    "@resvg/resvg-js": "catalog:",
+    "@santi020k/eslint-config-basic": "catalog:",
+    "eslint": "catalog:",
+    "satori": "catalog:",
+    "satori-html": "catalog:",
+    "sharp": "catalog:",
+    "typescript": "catalog:",
+    "wrangler": "catalog:"
   },
   "engines": {
     "node": ">=20.0.0"
