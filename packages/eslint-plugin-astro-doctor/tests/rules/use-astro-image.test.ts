@@ -46,6 +46,10 @@ ruleTester.run('use-astro-image', rule, {
       code: `---\nconst title = 'Hello'\n---\n<h1>{title}</h1>`,
       filename: 'test.astro',
     },
+    {
+      code: `---\n---\n<dialog><img alt="" /></dialog>`,
+      filename: 'test.astro',
+    },
     // Non-astro files are ignored
     {
       code: `<img src="/logo.png" alt="logo" />`,
@@ -62,6 +66,11 @@ ruleTester.run('use-astro-image', rule, {
     // <img> without alt also triggers (use-astro-image takes priority here)
     {
       code: `---\n---\n<img src="/logo.png" />`,
+      filename: 'test.astro',
+      errors: [{ messageId: 'useAstroImage' }],
+    },
+    {
+      code: `---\n---\n<img src="" alt="" />`,
       filename: 'test.astro',
       errors: [{ messageId: 'useAstroImage' }],
     },
