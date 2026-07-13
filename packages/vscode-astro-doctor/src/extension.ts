@@ -187,7 +187,7 @@ const createExecutableServerOptions = (resolved: ResolvedServer): ServerOptions 
 
 const createBundledServerOptions = (serverModule: string): ServerOptions =>
   createExecutableServerOptions({
-    args: [serverModule],
+    args: [serverModule, '--stdio'],
     command: 'node',
     shell: false,
   })
