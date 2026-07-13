@@ -142,6 +142,31 @@ describe('scan', () => {
     expect(scanResult.diagnostics).toEqual([])
   })
 
+  test('ignores inline disable directives in audit mode', async () => {
+    writeFileSync(
+      join(testDirectory, 'index.astro'),
+      [
+        '---',
+        '/* eslint-disable astro-doctor/use-astro-image */',
+        '---',
+        '<img src="/hero.png" alt="Hero" />',
+      ].join('\n')
+    )
+
+    const regularResult = await scan({ directory: testDirectory })
+    const auditResult = await scan({
+      directory: testDirectory,
+      noRespectInlineDisables: true,
+    })
+
+    expect(regularResult.diagnostics).toEqual([])
+    expect(auditResult.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ ruleId: 'astro-doctor/use-astro-image' }),
+      ])
+    )
+  })
+
   test('exposes the file path on each diagnostic', async () => {
     writeFileSync(
       join(testDirectory, 'index.astro'),

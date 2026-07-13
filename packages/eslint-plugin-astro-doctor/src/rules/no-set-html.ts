@@ -1,7 +1,11 @@
 import { forEachAstroAttribute, reportAstroNode } from '../utils/astro-ast.js'
+import { getAstroAttributeValue } from '../utils/attribute.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
 
 const SET_HTML_ATTRIBUTE_NAME = 'set:html'
+const SCRIPT_ELEMENT_NAME = 'script'
+const TYPE_ATTRIBUTE_NAME = 'type'
+const JSON_LD_TYPE = 'application/ld+json'
 
 export default createRule({
   meta: {
@@ -25,8 +29,14 @@ export default createRule({
 
     return {
       Program() {
-        forEachAstroAttribute(context, (attributeNode) => {
+        forEachAstroAttribute(context, (attributeNode, elementNode) => {
           if (attributeNode.name !== SET_HTML_ATTRIBUTE_NAME) return
+
+          const isJsonLdScript =
+            elementNode.name === SCRIPT_ELEMENT_NAME &&
+            getAstroAttributeValue(elementNode.attributes ?? [], TYPE_ATTRIBUTE_NAME) === JSON_LD_TYPE
+
+          if (isJsonLdScript) return
 
           reportAstroNode(context, attributeNode, 'dangerousHtml')
         })

@@ -55,7 +55,7 @@ import Counter from '../components/Counter'
     category: 'performance',
     severity: 'warn',
     description: 'Use <Image> from astro:assets instead of raw <img> tags.',
-    why: 'The built-in <Image> component automatically optimizes images (WebP/AVIF conversion, responsive srcset, lazy loading, explicit width/height to prevent layout shift). Plain <img> tags skip all of this.',
+    why: 'The built-in <Image> component automatically optimizes images (WebP/AVIF conversion, responsive srcset, lazy loading, explicit width/height to prevent layout shift). Plain <img> tags with static sources skip all of this. Source-less placeholders populated at runtime are ignored because they cannot be optimized at build time.',
     bad: {
       label: 'Raw <img> tag',
       code: `---
@@ -128,7 +128,7 @@ import logo from '../assets/logo.png'
     category: 'security',
     severity: 'warn',
     description: 'Avoid set:html to prevent cross-site scripting (XSS) vulnerabilities.',
-    why: 'set:html injects raw HTML into the DOM without escaping. Any user-controlled or third-party content rendered this way is an XSS vector. Use Astro\'s JSX interpolation (which escapes by default) or sanitize the content first.',
+    why: 'set:html injects raw HTML into the DOM without escaping. Any user-controlled or third-party content rendered this way is an XSS vector. Use Astro\'s JSX interpolation, which escapes by default. JSON-LD data scripts are accepted when they use type="application/ld+json".',
     bad: {
       label: 'Unsanitized HTML injection',
       code: `---
@@ -137,17 +137,19 @@ const userContent = await fetchUserBio()
 <div set:html={userContent} />`
     },
     good: {
-      label: 'Escaped interpolation (or sanitized HTML)',
+      label: 'Escaped interpolation or JSON-LD data',
       code: `---
-import DOMPurify from 'dompurify'
-const userContent = await fetchUserBio()
-const safe = DOMPurify.sanitize(userContent)
+const structuredData = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Example',
+}).replace(/</g, '\\u003c')
 ---
 {/* Escaped by default */}
 <p>{plainTextContent}</p>
 
-{/* Only if HTML rendering is truly required */}
-<div set:html={safe} />`
+{/* Non-executable structured data */}
+<script type="application/ld+json" set:html={structuredData}></script>`
     }
   },
   {
@@ -242,7 +244,7 @@ const isActive = true
     category: 'performance',
     severity: 'warn',
     description: 'Warn when script attributes opt out of Astro script processing.',
-    why: 'Astro bundles, deduplicates, TypeScript-processes, and may inline scripts with no attributes other than src. Adding attributes such as type, defer, async, data-*, or is:inline intentionally opts out of that pipeline and can surprise maintainers.',
+    why: 'Astro bundles, deduplicates, TypeScript-processes, and may inline scripts with no attributes other than src. Unexpected attributes such as type, defer, async, or data-* opt out of that pipeline. Explicit is:inline scripts and JSON-LD data scripts are accepted because their processing opt-out is intentional.',
     bad: {
       label: 'Accidentally unprocessed script',
       code: `---
@@ -252,11 +254,15 @@ const isActive = true
 </script>`
     },
     good: {
-      label: 'Processed Astro script',
+      label: 'Processed or explicitly inline script',
       code: `---
 ---
 <script>
   console.log('Bundled, deduped, and processed by Astro')
+</script>
+
+<script is:inline>
+  document.documentElement.dataset.theme = 'dark'
 </script>`
     }
   },
