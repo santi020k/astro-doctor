@@ -43,7 +43,7 @@
     "eslint": "catalog:"
   },
   "engines": {
-    "node": "^20.19.0 || >=22.13.0"
+    "node": "^22.22.3 || ^24.16.0 || >=26.3.0"
   },
   "repository": {
     "type": "git",
