@@ -1,20 +1,28 @@
 'use strict'
 
-const { rmSync } = require('node:fs')
-const { createRequire } = require('node:module')
+const { copyFileSync, rmSync } = require('node:fs')
 const { dirname, resolve } = require('node:path')
 const { build } = require('esbuild')
 const PACKAGE_ROOT = resolve(__dirname, '..')
 const DIST_PATH = resolve(PACKAGE_ROOT, 'dist')
-const ASTRO_DOCTOR_ROOT = resolve(PACKAGE_ROOT, '../astro-doctor')
-const requireFromAstroDoctor = createRequire(resolve(ASTRO_DOCTOR_ROOT, 'package.json'))
-const ASTRO_ESLINT_PARSER_PACKAGE_PATH = requireFromAstroDoctor.resolve('astro-eslint-parser/package.json')
-const requireFromAstroEslintParser = createRequire(ASTRO_ESLINT_PARSER_PACKAGE_PATH)
-const ASTRO_COMPILER_SYNC_PACKAGE_PATH = requireFromAstroEslintParser.resolve('astrojs-compiler-sync/package.json')
 
-const ASTRO_COMPILER_WORKER_PATH = resolve(
-  dirname(ASTRO_COMPILER_SYNC_PACKAGE_PATH),
-  'lib/astrojs-compiler-worker.js',
+const ASTRO_COMPILER_WASI_PACKAGE_PATH = require.resolve(
+  '@astrojs/compiler-binding-wasm32-wasi/package.json',
+)
+
+const ASTRO_COMPILER_WASI_PATH = resolve(
+  dirname(ASTRO_COMPILER_WASI_PACKAGE_PATH),
+  'astro.wasm32-wasi.wasm',
+)
+
+const ASTRO_COMPILER_WASI_ENTRY_PATH = resolve(
+  dirname(ASTRO_COMPILER_WASI_PACKAGE_PATH),
+  'astro.wasi.cjs',
+)
+
+const ASTRO_COMPILER_WASI_WORKER_PATH = resolve(
+  dirname(ASTRO_COMPILER_WASI_PACKAGE_PATH),
+  'wasi-worker.mjs',
 )
 
 const SERVER_ENTRY = 'import { runLsp } from "../astro-doctor/src/lsp.js"\n\nrunLsp()\n'
@@ -41,6 +49,9 @@ const run = async () => {
       platform: 'node',
     }),
     build({
+      alias: {
+        '@astrojs/compiler-binding': ASTRO_COMPILER_WASI_ENTRY_PATH,
+      },
       banner: { js: SERVER_BANNER },
       bundle: true,
       format: 'esm',
@@ -53,14 +64,11 @@ const run = async () => {
         sourcefile: 'server-entry.ts',
       },
     }),
-    build({
-      bundle: true,
-      entryPoints: [ASTRO_COMPILER_WORKER_PATH],
-      format: 'esm',
-      outfile: resolve(DIST_PATH, 'astrojs-compiler-worker.js'),
-      platform: 'node',
-    }),
   ])
+
+  copyFileSync(ASTRO_COMPILER_WASI_PATH, resolve(DIST_PATH, 'astro.wasm32-wasi.wasm'))
+
+  copyFileSync(ASTRO_COMPILER_WASI_WORKER_PATH, resolve(DIST_PATH, 'wasi-worker.mjs'))
 }
 
 run().catch((error) => {
