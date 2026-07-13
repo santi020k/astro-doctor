@@ -87,8 +87,7 @@ const buildEslintConfig = (options: ScanOptions): ESLint.Options => {
       },
     ],
     ignore: false,
-    // Audit mode: report all issues even when eslint-disable comments are present
-    ...(options.noRespectInlineDisables ? { reportUnusedDisableDirectives: 'error' } : {}),
+    ...(options.noRespectInlineDisables ? { allowInlineConfig: false } : {}),
   }
 }
 
