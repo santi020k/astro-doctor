@@ -51,6 +51,17 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
 
+      - name: Verify published CLI package
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          VERSION=$(node -p "require('./packages/astro-doctor/package.json').version")
+          PUBLISHED_VERSION=$(npx --yes "@santi020k/astro-doctor@${VERSION}" --version)
+
+          if [ "$PUBLISHED_VERSION" != "$VERSION" ]; then
+            echo "Expected published CLI version ${VERSION}, received ${PUBLISHED_VERSION}."
+            exit 1
+          fi
+
       - name: Create umbrella version tag
         if: steps.changesets.outputs.published == 'true'
         run: |
