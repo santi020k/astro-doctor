@@ -40,7 +40,7 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "eslint": ">=9.0.0"
+    "eslint": "catalog:"
   },
   "engines": {
     "node": "^20.19.0 || >=22.13.0"
