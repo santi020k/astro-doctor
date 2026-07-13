@@ -67,6 +67,41 @@ const getNodePosition = (
   }
 }
 
+const getJsxExpressionValue = (
+  context: Rule.RuleContext,
+  valueNode: Record<string, unknown>,
+): string | undefined => {
+  if (valueNode.type !== 'JSXExpressionContainer' || !isRecord(valueNode.expression)) {
+    return undefined
+  }
+
+  const expressionStart = getNodeStart(valueNode.expression)
+  const expressionEnd = valueNode.expression.end
+
+  if (expressionStart === undefined || typeof expressionEnd !== 'number') return undefined
+
+  return context.sourceCode.text.slice(expressionStart, expressionEnd)
+}
+
+const getJsxLiteralValue = (
+  valueNode: Record<string, unknown>,
+): string | boolean | number | null | undefined => {
+  if (!('value' in valueNode)) return undefined
+
+  const literalValue = valueNode.value
+
+  if (
+    typeof literalValue === 'string' ||
+    typeof literalValue === 'boolean' ||
+    typeof literalValue === 'number' ||
+    literalValue === null
+  ) {
+    return literalValue
+  }
+
+  return undefined
+}
+
 const normalizeJsxAttribute = (
   context: Rule.RuleContext,
   node: unknown,
@@ -81,26 +116,17 @@ const normalizeJsxAttribute = (
   let kind: string | undefined
   let value: string | boolean | number | null = true
 
-  if (isRecord(valueNode) && valueNode.type === 'JSXExpressionContainer') {
-    kind = 'expression'
+  if (isRecord(valueNode)) {
+    const expressionValue = getJsxExpressionValue(context, valueNode)
+    const literalValue = getJsxLiteralValue(valueNode)
 
-    if (isRecord(valueNode.expression)) {
-      const expressionStart = getNodeStart(valueNode.expression)
-      const expressionEnd = valueNode.expression.end
-
-      if (expressionStart !== undefined && typeof expressionEnd === 'number') {
-        value = context.sourceCode.text.slice(expressionStart, expressionEnd)
-      }
+    if (valueNode.type === 'JSXExpressionContainer') {
+      kind = 'expression'
     }
-  } else if (isRecord(valueNode) && 'value' in valueNode) {
-    const literalValue = valueNode.value
 
-    if (
-      typeof literalValue === 'string' ||
-      typeof literalValue === 'boolean' ||
-      typeof literalValue === 'number' ||
-      literalValue === null
-    ) {
+    if (expressionValue !== undefined) {
+      value = expressionValue
+    } else if (literalValue !== undefined) {
       value = literalValue
     }
   }
