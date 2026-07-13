@@ -1,5 +1,7 @@
 # @santi020k/oxlint-config-astro-doctor
 
+## 1.0.4
+
 ## 1.0.3
 
 ## 1.0.2

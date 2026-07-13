@@ -1,5 +1,14 @@
 # @santi020k/astro-doctor
 
+## 1.0.4
+
+### Patch Changes
+
+- [#9](https://github.com/santi020k/astro-doctor/pull/9) [`9501d73`](https://github.com/santi020k/astro-doctor/commit/9501d736c4d9933303e9436bc1d909491584c736) Thanks [@santi020k](https://github.com/santi020k)! - Make GitHub Action releases reproducible by running the matching CLI package version with a supported Node.js runtime, automate the floating `v1` action tag, and correct package metadata for the Node.js requirement already introduced by the Astro parser dependency in 1.0.3. The VS Code extension now requires VS Code 1.125 or newer, launches its bundled language server with the supported Node.js executable from the user's environment instead of VS Code's embedded runtime, and includes the cross-platform WASI compiler required by Astro Parser 3. Reduce false positives for explicit inline scripts, JSON-LD structured data, and runtime-populated images, and restore audit mode on ESLint 10.7.
+
+- Updated dependencies []:
+  - @santi020k/eslint-plugin-astro-doctor@1.0.4
+
 ## 1.0.3
 
 ### Patch Changes
