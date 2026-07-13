@@ -1,5 +1,14 @@
 # @santi020k/astro-doctor
 
+## 1.0.3
+
+### Patch Changes
+
+- [#7](https://github.com/santi020k/astro-doctor/pull/7) [`2584508`](https://github.com/santi020k/astro-doctor/commit/2584508254b79826c8f212a5546cd2259e1a12f7) Thanks [@santi020k](https://github.com/santi020k)! - Update dependencies and support the JSX-shaped Astro AST introduced by `astro-eslint-parser` 3.
+
+- Updated dependencies [[`2584508`](https://github.com/santi020k/astro-doctor/commit/2584508254b79826c8f212a5546cd2259e1a12f7)]:
+  - @santi020k/eslint-plugin-astro-doctor@1.0.3
+
 ## 1.0.2
 
 ### Patch Changes
