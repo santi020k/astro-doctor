@@ -39,6 +39,7 @@
     "vscode-languageclient": "catalog:"
   },
   "devDependencies": {
+    "@astrojs/compiler-binding-wasm32-wasi": "catalog:",
     "@santi020k/astro-doctor": "workspace:*",
     "@santi020k/eslint-plugin-astro-doctor": "workspace:*",
     "@types/node": "catalog:",
@@ -132,7 +133,7 @@
   ],
   "engines": {
     "node": "^22.22.3 || ^24.16.0 || >=26.3.0",
-    "vscode": "^1.85.0"
+    "vscode": "^1.125.0"
   },
   "repository": {
     "type": "git",
