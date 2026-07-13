@@ -40,6 +40,115 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 export const isAstroElementNode = (node: unknown): node is AstroElementNode =>
   isRecord(node) && (node.type === 'element' || node.type === 'component')
 
+const getNodeName = (node: unknown): string | undefined => {
+  if (!isRecord(node)) return undefined
+
+  return typeof node.name === 'string' ? node.name : undefined
+}
+
+const getNodeStart = (node: Record<string, unknown>): number | undefined =>
+  typeof node.start === 'number' ? node.start : undefined
+
+const getNodePosition = (
+  context: Rule.RuleContext,
+  node: Record<string, unknown>,
+): AstroPosition | undefined => {
+  const start = getNodeStart(node)
+
+  if (start === undefined) return undefined
+
+  const location = context.sourceCode.getLocFromIndex(start)
+
+  return {
+    start: {
+      line: location.line,
+      column: location.column + 1,
+    },
+  }
+}
+
+const normalizeJsxAttribute = (
+  context: Rule.RuleContext,
+  node: unknown,
+): AstroAttributeNode | undefined => {
+  if (!isRecord(node) || node.type !== 'JSXAttribute') return undefined
+
+  const name = getNodeName(node.name)
+
+  if (!name) return undefined
+
+  const valueNode = node.value
+  let kind: string | undefined
+  let value: string | boolean | number | null = true
+
+  if (isRecord(valueNode) && valueNode.type === 'JSXExpressionContainer') {
+    kind = 'expression'
+
+    if (isRecord(valueNode.expression)) {
+      const expressionStart = getNodeStart(valueNode.expression)
+      const expressionEnd = valueNode.expression.end
+
+      if (expressionStart !== undefined && typeof expressionEnd === 'number') {
+        value = context.sourceCode.text.slice(expressionStart, expressionEnd)
+      }
+    }
+  } else if (isRecord(valueNode) && 'value' in valueNode) {
+    const literalValue = valueNode.value
+
+    if (
+      typeof literalValue === 'string' ||
+      typeof literalValue === 'boolean' ||
+      typeof literalValue === 'number' ||
+      literalValue === null
+    ) {
+      value = literalValue
+    }
+  }
+
+  return {
+    type: 'attribute',
+    name,
+    kind,
+    value,
+    position: getNodePosition(context, node),
+  }
+}
+
+const normalizeJsxElement = (
+  context: Rule.RuleContext,
+  node: Record<string, unknown>,
+): AstroElementNode | undefined => {
+  if (node.type !== 'JSXElement' || !isRecord(node.openingElement)) return undefined
+
+  const name = getNodeName(node.openingElement.name)
+
+  if (!name) return undefined
+
+  const rawAttributes = Array.isArray(node.openingElement.attributes)
+    ? node.openingElement.attributes
+    : []
+
+  const attributes = rawAttributes
+    .map((attributeNode) => normalizeJsxAttribute(context, attributeNode))
+    .filter((attributeNode) => attributeNode !== undefined)
+
+  const rawChildren = Array.isArray(node.children) ? node.children : []
+
+  const children = rawChildren
+    .map((childNode) =>
+      isRecord(childNode) ? normalizeJsxElement(context, childNode) : undefined,
+    )
+    .filter((childNode) => childNode !== undefined)
+
+  return {
+    type: 'element',
+    name,
+    attributes,
+    children,
+    position: getNodePosition(context, node),
+  }
+}
+
 interface ReportLocation {
   readonly line: number
   readonly column: number
@@ -67,6 +176,7 @@ const getReportLocation = (node: AstroNodeBase): ReportLocation => {
 }
 
 const visitElements = (
+  context: Rule.RuleContext,
   node: unknown,
   visitor: (elementNode: AstroElementNode) => void,
 ): void => {
@@ -74,12 +184,30 @@ const visitElements = (
 
   if (isAstroElementNode(node)) {
     visitor(node)
+  } else {
+    const normalizedElement = normalizeJsxElement(context, node)
+
+    if (normalizedElement) {
+      visitor(normalizedElement)
+
+      for (const childNode of normalizedElement.children ?? []) {
+        visitElements(context, childNode, visitor)
+      }
+
+      return
+    }
   }
 
-  const children = Array.isArray(node.children) ? node.children : []
+  let children: unknown[] = []
+
+  if (Array.isArray(node.children)) {
+    children = node.children
+  } else if (Array.isArray(node.body)) {
+    children = node.body
+  }
 
   for (const childNode of children) {
-    visitElements(childNode, visitor)
+    visitElements(context, childNode, visitor)
   }
 }
 
@@ -87,7 +215,7 @@ export const forEachAstroElement = (
   context: Rule.RuleContext,
   visitor: (elementNode: AstroElementNode) => void,
 ): void => {
-  visitElements(getAstroAst(context), visitor)
+  visitElements(context, getAstroAst(context), visitor)
 }
 
 export const forEachAstroAttribute = (
