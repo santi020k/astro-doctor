@@ -22,7 +22,8 @@
     "release": "turbo run build && changeset publish",
     "check:exports": "turbo run check:exports",
     "prepare": "husky",
-    "pre-commit": "lint-staged",
+    "pre-commit": "lint-staged && pnpm run typecheck && pnpm run lint:spell",
+    "pre-push": "pnpm install --frozen-lockfile && pnpm run build && pnpm run test:coverage && pnpm run lint:knip && pnpm run check:exports",
     "commit": "cz"
   },
   "devDependencies": {
