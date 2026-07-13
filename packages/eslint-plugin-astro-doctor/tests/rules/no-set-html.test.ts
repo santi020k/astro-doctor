@@ -33,6 +33,10 @@ ruleTester.run('no-set-html', rule, {
       code: `---\n---\n<p>Static content</p>`,
       filename: 'test.astro',
     },
+    {
+      code: `---\nconst structuredData = JSON.stringify({ '@context': 'https://schema.org' })\n---\n<script type="application/ld+json" set:html={structuredData}></script>`,
+      filename: 'test.astro',
+    },
     // Non-astro files are ignored
     {
       code: `element.innerHTML = userInput`,
@@ -55,6 +59,11 @@ ruleTester.run('no-set-html', rule, {
     // set:html on any element
     {
       code: `---\nconst body = '<p>content</p>'\n---\n<article set:html={body} />`,
+      filename: 'test.astro',
+      errors: [{ messageId: 'dangerousHtml' }],
+    },
+    {
+      code: `---\nconst body = '<p>content</p>'\n---\n<script type="text/html" set:html={body}></script>`,
       filename: 'test.astro',
       errors: [{ messageId: 'dangerousHtml' }],
     },

@@ -1,7 +1,9 @@
 import { forEachAstroElement, reportAstroNode } from '../utils/astro-ast.js'
+import { hasAstroAttribute } from '../utils/attribute.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
 
 const IMAGE_ELEMENT_NAME = 'img'
+const SOURCE_ATTRIBUTE_NAME = 'src'
 
 export default createRule({
   meta: {
@@ -27,6 +29,8 @@ export default createRule({
       Program() {
         forEachAstroElement(context, (elementNode) => {
           if (elementNode.name !== IMAGE_ELEMENT_NAME) return
+
+          if (!hasAstroAttribute(elementNode.attributes ?? [], SOURCE_ATTRIBUTE_NAME)) return
 
           reportAstroNode(context, elementNode, 'useAstroImage')
         })
