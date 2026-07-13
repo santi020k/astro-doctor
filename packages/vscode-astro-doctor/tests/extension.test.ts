@@ -286,7 +286,7 @@ describe('createServerOptions', () => {
 
     expect(result).toBeDefined()
     expect((result as { run: { args?: string[], command?: string } }).run).toMatchObject({
-      args: [path.join('/ext', 'dist', 'server.mjs')],
+      args: [path.join('/ext', 'dist', 'server.mjs'), '--stdio'],
       command: 'node',
     })
   })
