@@ -23,9 +23,7 @@ const tabs = [
     {tabs.map((tab, i) => (
       <button
         role="tab"
-        class={`
-          pm-tab-btn${i === 0 ? 'pm-active' : ''}
-        `}
+        class:list={['pm-tab-btn', i === 0 && 'pm-active']}
         data-pm-tab={tab.id}
         aria-selected={i === 0 ? 'true' : 'false'}
         type="button"
@@ -37,9 +35,7 @@ const tabs = [
   {tabs.map((tab, i) => (
     <div
       role="tabpanel"
-      class={`
-        pm-panel${i === 0 ? 'pm-active' : ''}
-      `}
+      class:list={['pm-panel', i === 0 && 'pm-active']}
       data-pm-panel={tab.id}
     >
       <pre><code>{tab.command}</code></pre>
@@ -117,6 +113,7 @@ const tabs = [
 
 <script>
 const PACKAGE_MANAGER_STORAGE_KEY = 'astro-doctor-preferred-pm'
+const TAB_NAVIGATION_KEYS = ['ArrowLeft', 'ArrowRight', 'Home', 'End']
 
 const syncTabs = (preferredPackageManager: string) => {
   for (const container of document.querySelectorAll<HTMLElement>('[data-pm-tabs]')) {
@@ -142,15 +139,31 @@ const savedPackageManager = localStorage.getItem(PACKAGE_MANAGER_STORAGE_KEY)
 
 if (savedPackageManager) syncTabs(savedPackageManager)
 
+const persistAndSyncTabs = (preferredPackageManager: string) => {
+  localStorage.setItem(PACKAGE_MANAGER_STORAGE_KEY, preferredPackageManager)
+
+  syncTabs(preferredPackageManager)
+}
+
 for (const buttonNode of document.querySelectorAll<HTMLElement>('[data-pm-tabs] [data-pm-tab]')) {
   buttonNode.addEventListener('click', () => {
     const preferredPackageManager = buttonNode.dataset.pmTab
 
     if (!preferredPackageManager) return
 
-    localStorage.setItem(PACKAGE_MANAGER_STORAGE_KEY, preferredPackageManager)
+    persistAndSyncTabs(preferredPackageManager)
+  })
 
-    syncTabs(preferredPackageManager)
+  buttonNode.addEventListener('keydown', event => {
+    if (!TAB_NAVIGATION_KEYS.includes(event.key)) return
+
+    requestAnimationFrame(() => {
+      const container = buttonNode.closest<HTMLElement>('[data-pm-tabs]')
+      const selectedButton = container?.querySelector<HTMLElement>('[data-pm-tab][aria-selected="true"]')
+      const preferredPackageManager = selectedButton?.dataset.pmTab
+
+      if (preferredPackageManager) persistAndSyncTabs(preferredPackageManager)
+    })
   })
 }
 </script>

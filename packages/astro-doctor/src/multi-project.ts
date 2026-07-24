@@ -1,11 +1,11 @@
 import { existsSync, readFileSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { isAbsolute, join, relative, resolve, sep } from 'node:path'
 
 import { glob } from 'glob'
 
 import { scan } from './scanner/index.js'
 import { loadConfig } from './config.js'
-import { computeCategoryBreakdown,computeScore, computeScoreLabel } from './scorer.js'
+import { computeScoreLabel } from './scorer.js'
 import type {
   AstroDoctorConfig,
   ProjectScanResult,
@@ -241,9 +241,17 @@ export const aggregateResults = (results: readonly ProjectScanResult[]): ScanRes
   const fileCount = results.reduce((sum, r) => sum + r.fileCount, 0)
   const errorCount = results.reduce((sum, r) => sum + r.errorCount, 0)
   const warningCount = results.reduce((sum, r) => sum + r.warningCount, 0)
-  const score = computeScore(diagnostics, fileCount)
+  const score = Math.min(...results.map((result) => result.score))
   const scoreLabel = computeScoreLabel(score)
-  const scoreBreakdown = computeCategoryBreakdown(diagnostics, fileCount)
+
+  const scoreBreakdown = {
+    performance: Math.min(...results.map((result) => result.scoreBreakdown.performance)),
+    accessibility: Math.min(...results.map((result) => result.scoreBreakdown.accessibility)),
+    security: Math.min(...results.map((result) => result.scoreBreakdown.security)),
+    'best-practices': Math.min(
+      ...results.map((result) => result.scoreBreakdown['best-practices']),
+    ),
+  }
 
   return { diagnostics, fileCount, errorCount, warningCount, score, scoreLabel, scoreBreakdown }
 }
@@ -261,9 +269,18 @@ export const scanProjects = async (options: MultiProjectOptions): Promise<Projec
     const projectConfig = await loadConfig(project.directory)
     const mergedConfig = mergeConfigs(rootConfig, projectConfig)
 
+    const projectFiles = scanOptions.files?.filter((filePath) => {
+      const relativePath = relative(project.directory, filePath)
+
+      return relativePath !== '..' &&
+        !relativePath.startsWith(`..${sep}`) &&
+        !isAbsolute(relativePath)
+    })
+
     const result = await scan({
       ...scanOptions,
       directory: project.directory,
+      files: projectFiles,
       ignore: mergedConfig.ignore,
       rules: mergedConfig.rules,
     })

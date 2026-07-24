@@ -136,7 +136,9 @@ const getEffectiveSeverity = (
 
   if (ruleOverride === 'warn') return 'warning'
 
-  return getProjectRuleMeta(ruleId)?.severity
+  const projectRuleMetadata = getProjectRuleMeta(ruleId)
+
+  return projectRuleMetadata?.recommended ? projectRuleMetadata.severity : undefined
 }
 
 const createDiagnostic = (

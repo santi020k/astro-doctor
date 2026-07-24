@@ -1,3 +1,7 @@
+import {
+  MAXIMUM_SCORE_WITH_ERRORS,
+  MAXIMUM_SCORE_WITH_SECURITY_ERRORS,
+} from './constants.js'
 import type { Diagnostic, ScoreBreakdown, ScoreLabel } from './types.js'
 
 /**
@@ -27,11 +31,16 @@ export const computeScore = (diagnostics: readonly Diagnostic[], fileCount: numb
   }
 
   const rawScore = Math.floor((cleanFileTotal + dirtyFileTotal) / fileCount)
-
   // Never return a perfect score if there are diagnostics
-  if (diagnostics.length > 0 && rawScore === 100) {
-    return 99
-  }
+  const hasErrors = diagnostics.some((diagnostic) => diagnostic.severity === 'error')
+
+  const hasSecurityErrors = diagnostics.some(
+    (diagnostic) => diagnostic.severity === 'error' && diagnostic.category === 'security',
+  )
+
+  if (hasSecurityErrors) return Math.min(rawScore, MAXIMUM_SCORE_WITH_SECURITY_ERRORS)
+
+  if (hasErrors) return Math.min(rawScore, MAXIMUM_SCORE_WITH_ERRORS)
 
   return rawScore
 }

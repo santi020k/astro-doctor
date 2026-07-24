@@ -84,6 +84,20 @@ describe('computeScore', () => {
   test('clamps to 100 at maximum (no issues)', () => {
     expect(computeScore([], 50)).toBe(100)
   })
+
+  test('does not award an A grade while errors remain', () => {
+    expect(computeScore([makeError()], 1000)).toBe(89)
+  })
+
+  test('caps projects with security errors below a B grade', () => {
+    const securityError: Diagnostic = {
+      ...makeError(),
+      ruleId: 'astro-doctor/no-set-html',
+      category: 'security',
+    }
+
+    expect(computeScore([securityError], 1000)).toBe(74)
+  })
 })
 
 // ---------------------------------------------------------------------------

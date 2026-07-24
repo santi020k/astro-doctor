@@ -1,7 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs'
-import { createRequire } from 'node:module'
-import { resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { isAbsolute, relative, resolve, sep } from 'node:path'
 
 import type { RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
 
@@ -10,17 +8,24 @@ import { formatGithubReport } from './report/github.js'
 import { formatJsonReport, serializeJsonReport } from './report/json.js'
 import { scan } from './scanner/index.js'
 import { isProjectAuditRelevantPath } from './scanner/project-audit.js'
+import { getPackageVersion } from './utils/get-package-version.js'
+import { filterIntroducedDiagnostics, scanBaseline } from './baseline.js'
 import { loadConfig } from './config.js'
 import {
   DISABLED_THRESHOLD_SCORE,
   MAXIMUM_THRESHOLD_SCORE,
   MINIMUM_THRESHOLD_SCORE,
 } from './constants.js'
-import { getDiffAstroFiles,getStagedAstroFiles } from './git.js'
+import { getDiffAstroFiles,getStagedAstroFiles, resolveBaseRevision } from './git.js'
 import { runInit } from './init.js'
 import { runInstall } from './install.js'
 import { runLsp } from './lsp.js'
-import { aggregateResults, autoDiscoverAstroProjects, scanProjects } from './multi-project.js'
+import {
+  aggregateResults,
+  autoDiscoverAstroProjects,
+  mergeConfigs,
+  scanProjects,
+} from './multi-project.js'
 import type { PresetName } from './presets.js'
 import {
   getPresetFailOn,
@@ -34,6 +39,8 @@ import type { AstroDoctorConfig, ProjectScanResult, ScanOptions, ScanResult } fr
 import { runWhy } from './why.js'
 
 type OutputFormat = 'console' | 'github'
+
+type ScanScope = 'full' | 'files' | 'changed'
 
 interface CliOptions {
   readonly directory: string
@@ -54,7 +61,10 @@ interface CliOptions {
   readonly changedFilesFrom?: string
   readonly staged: boolean
   readonly diff: string | boolean
+  readonly scope: ScanScope
+  readonly base?: string
   readonly categories: readonly RuleCategory[]
+  readonly fix: boolean
   readonly noLint: boolean
   readonly noRespectInlineDisables: boolean
   readonly projects: readonly string[]
@@ -131,22 +141,31 @@ const getDiffOption = (argv: readonly string[]): CliOptions['diff'] => {
   return false
 }
 
+const parseScope = (argv: readonly string[]): ScanScope => {
+  const scope = getOptionValue(argv, '--scope')
+
+  if (scope === undefined) {
+    const hasPartialFileSelection = getDiffOption(argv) !== false ||
+      argv.includes('--staged') ||
+      getOptionValue(argv, '--changed-files-from') !== undefined
+
+    return hasPartialFileSelection ? 'files' : 'full'
+  }
+
+  if (scope === 'full' || scope === 'files' || scope === 'changed') return scope
+
+  console.error('\nUnknown scope "' + scope + '". Valid values: full, files, changed\n')
+
+  process.exitCode = 1
+
+  return 'full'
+}
+
 const readChangedFiles = (filePath: string): string[] =>
   readFileSync(filePath, 'utf8')
     .split(/\r?\n/u)
     .map((changedFilePath) => changedFilePath.trim())
     .filter(Boolean)
-
-const getVersion = (): string => {
-  try {
-    const require = createRequire(fileURLToPath(import.meta.url))
-    const packageJson = require('../../package.json') as { version: string }
-
-    return packageJson.version
-  } catch {
-    return '0.0.0'
-  }
-}
 
 const parseCategories = (argv: readonly string[]): RuleCategory[] => {
   const values = getAllOptionValues(argv, '--category')
@@ -242,7 +261,10 @@ const parseArguments = (argv: string[]): CliOptions => {
     changedFilesFrom: getOptionValue(argv, '--changed-files-from'),
     staged: argv.includes('--staged'),
     diff: getDiffOption(argv),
+    scope: parseScope(argv),
+    base: getOptionValue(argv, '--base'),
     categories: parseCategories(argv),
+    fix: argv.includes('--fix'),
     noLint: argv.includes('--no-lint'),
     noRespectInlineDisables: argv.includes('--no-respect-inline-disables'),
     projects: getProjectsOption(argv),
@@ -271,11 +293,14 @@ Scan options:
       --project <name|path>         Scan a specific workspace project by package name or relative
                                     path (repeat or comma-separate for multiple projects)
       --diff [base]                 Scan files changed vs. a base branch (default: main/master)
+      --scope <scope>               full | files | changed (introduced diagnostics only)
+      --base <ref>                  Base revision for files or changed scope
       --staged                      Scan only git-staged Astro Doctor files (pre-commit)
       --changed-files-from <path>   Scan newline-separated changed files from a file
       --category <cat>              Filter to one category (repeat for multiple)
                                     Categories: performance | accessibility | security | best-practices
       --preset <name>               recommended (default) | strict | ci
+      --fix                         Apply safe automatic fixes
       --no-lint                     Skip lint; report a clean result
       --no-respect-inline-disables  Audit mode: ignore eslint-disable comments
 
@@ -325,7 +350,7 @@ const handleJsonOutput = (
   options: CliOptions,
   projects?: readonly ProjectScanResult[],
 ): boolean => {
-  const report = formatJsonReport(scanResult, options.directory, projects)
+  const report = formatJsonReport(scanResult, options.directory, projects, options.scope)
   const reportJson = serializeJsonReport(report, options.jsonCompact)
 
   if (typeof options.json === 'string') {
@@ -430,6 +455,9 @@ const getEffectiveRules = (
 const isScanRelevantPath = (filePath: string): boolean =>
   filePath.endsWith('.astro') || isProjectAuditRelevantPath(filePath)
 
+const getBaseOption = (options: CliOptions): string | undefined =>
+  options.base ?? (typeof options.diff === 'string' ? options.diff : undefined)
+
 const resolveFilesToScan = (options: CliOptions): string[] | undefined => {
   if (options.staged) {
     const files = getStagedAstroFiles(options.directory)
@@ -441,9 +469,8 @@ const resolveFilesToScan = (options: CliOptions): string[] | undefined => {
     return files
   }
 
-  if (options.diff !== false) {
-    const base = typeof options.diff === 'string' ? options.diff : undefined
-    const files = getDiffAstroFiles(options.directory, base)
+  if (options.scope !== 'full' || options.diff !== false) {
+    const files = getDiffAstroFiles(options.directory, getBaseOption(options))
 
     if (files.length === 0) {
       console.log('No changed Astro Doctor files found in diff — nothing to scan.\n')
@@ -457,6 +484,14 @@ const resolveFilesToScan = (options: CliOptions): string[] | undefined => {
   }
 
   return undefined
+}
+
+const isFileInDirectory = (filePath: string, directory: string): boolean => {
+  const relativePath = relative(directory, filePath)
+
+  return relativePath !== '..' &&
+    !relativePath.startsWith(`..${sep}`) &&
+    !isAbsolute(relativePath)
 }
 
 const resolveEffectiveProjects = (options: CliOptions, config: AstroDoctorConfig | null): string[] => {
@@ -484,6 +519,22 @@ const tryResolveFilesToScan = (options: CliOptions): { files: string[] | undefin
 const hasOnlyIrrelevantChangedFiles = (files: string[] | undefined): boolean =>
   files !== undefined && files.length > 0 && !files.some(isScanRelevantPath)
 
+const shouldPrintProgress = (options: CliOptions): boolean =>
+  options.json !== true && !options.scoreOnly
+
+const shouldSkipIrrelevantFiles = (
+  options: CliOptions,
+  files: string[] | undefined,
+): boolean => {
+  if (!hasOnlyIrrelevantChangedFiles(files)) return false
+
+  if (options.json !== true) {
+    console.log('No Astro Doctor files found in the changed files list — nothing to scan.\n')
+  }
+
+  return true
+}
+
 const tryScan = async (scanOptions: ScanOptions): Promise<ScanResult | null> => {
   try {
     return await scan(scanOptions)
@@ -498,35 +549,140 @@ const tryScan = async (scanOptions: ScanOptions): Promise<ScanResult | null> => 
   }
 }
 
+const reportOperationFailure = (operation: string, error: unknown): void => {
+  const message = error instanceof Error ? error.message : String(error)
+
+  console.error(`\nFailed to ${operation}: ${message}`)
+
+  process.exitCode = 1
+}
+
+const filterIntroducedProjectResults = async (
+  options: CliOptions,
+  config: AstroDoctorConfig | null,
+  projectResults: readonly ProjectScanResult[],
+  filesToScan: readonly string[],
+  baseScanOptions: BaseScanOptions,
+): Promise<ProjectScanResult[]> => {
+  const baseRevision = resolveBaseRevision(options.directory, getBaseOption(options))
+  const introducedResults: ProjectScanResult[] = []
+
+  for (const projectResult of projectResults) {
+    const projectFiles = filesToScan.filter((filePath) =>
+      isFileInDirectory(filePath, projectResult.directory)
+    )
+
+    const projectConfig = await loadConfig(projectResult.directory)
+    const mergedConfig = mergeConfigs(config, projectConfig)
+
+    const baseline = await scanBaseline({
+      repositoryDirectory: options.directory,
+      projectDirectory: projectResult.directory,
+      files: projectFiles,
+      baseRevision,
+      scanOptions: {
+        ...baseScanOptions,
+        ignore: mergedConfig.ignore,
+        rules: mergedConfig.rules,
+      },
+    })
+
+    const introducedResult = filterIntroducedDiagnostics(
+      projectResult,
+      baseline.result,
+      projectResult.directory,
+      baseline.rootDirectory,
+    )
+
+    introducedResults.push({
+      ...introducedResult,
+      name: projectResult.name,
+      directory: projectResult.directory,
+    })
+  }
+
+  return introducedResults
+}
+
+const tryScanProjects = async (
+  options: Parameters<typeof scanProjects>[0],
+): Promise<ProjectScanResult[] | null> => {
+  try {
+    return await scanProjects(options)
+  } catch (error) {
+    reportOperationFailure('scan projects', error)
+
+    return null
+  }
+}
+
+const tryFilterIntroducedProjectResults = async (
+  options: CliOptions,
+  config: AstroDoctorConfig,
+  projectResults: readonly ProjectScanResult[],
+  filesToScan: readonly string[],
+  baseScanOptions: BaseScanOptions,
+): Promise<ProjectScanResult[] | null> => {
+  try {
+    return await filterIntroducedProjectResults(
+      options,
+      config,
+      projectResults,
+      filesToScan,
+      baseScanOptions,
+    )
+  } catch (error) {
+    reportOperationFailure('compare baseline', error)
+
+    return null
+  }
+}
+
 const executeMultiProjectScan = async (
   options: CliOptions,
   config: AstroDoctorConfig | null,
   effectiveProjects: string[],
+  effectivePreset: PresetName,
   effectiveFailOn: string,
   effectiveThreshold: number,
   baseScanOptions: BaseScanOptions,
 ): Promise<void> => {
-  if (options.json !== true && !options.scoreOnly) {
+  const { files: filesToScan, failed } = tryResolveFilesToScan(options)
+
+  const effectiveConfig: AstroDoctorConfig = {
+    ...config,
+    preset: effectivePreset,
+    rules: getEffectiveRules(config, effectivePreset),
+  }
+
+  if (failed) return
+
+  if (shouldPrintProgress(options)) {
     console.log(`\nScanning ${effectiveProjects.length} project(s) in ${options.directory}...\n`)
   }
 
-  let projectResults: ProjectScanResult[]
+  let projectResults = await tryScanProjects({
+    rootDirectory: options.directory,
+    projectArgs: effectiveProjects,
+    rootConfig: effectiveConfig,
+    scanOptions: {
+      ...baseScanOptions,
+      files: filesToScan,
+    },
+  })
 
-  try {
-    projectResults = await scanProjects({
-      rootDirectory: options.directory,
-      projectArgs: effectiveProjects,
-      rootConfig: config,
-      scanOptions: { ...baseScanOptions },
-    })
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
+  if (!projectResults) return
 
-    console.error(`\nFailed to scan projects: ${message}`)
+  if (options.scope === 'changed' && filesToScan) {
+    projectResults = await tryFilterIntroducedProjectResults(
+      options,
+      effectiveConfig,
+      projectResults,
+      filesToScan,
+      baseScanOptions,
+    )
 
-    process.exitCode = 1
-
-    return
+    if (!projectResults) return
   }
 
   const aggregate = aggregateResults(projectResults)
@@ -536,7 +692,12 @@ const executeMultiProjectScan = async (
   checkThresholds(aggregate, effectiveFailOn, effectiveThreshold)
 }
 
-interface BaseScanOptions { categories: readonly RuleCategory[] | undefined; noLint: boolean; noRespectInlineDisables: boolean }
+interface BaseScanOptions {
+  categories: readonly RuleCategory[] | undefined
+  fix: boolean
+  noLint: boolean
+  noRespectInlineDisables: boolean
+}
 
 const resolveProjectsWithDiscovery = async (options: CliOptions, config: AstroDoctorConfig | null): Promise<string[]> => {
   const explicit = resolveEffectiveProjects(options, config)
@@ -546,6 +707,42 @@ const resolveProjectsWithDiscovery = async (options: CliOptions, config: AstroDo
   const discovered = await autoDiscoverAstroProjects(options.directory)
 
   return discovered.length > 0 ? discovered.map((pkg) => pkg.directory) : []
+}
+
+const tryFilterIntroducedScanResult = async (
+  options: CliOptions,
+  config: AstroDoctorConfig | null,
+  effectivePreset: PresetName | undefined,
+  baseScanOptions: BaseScanOptions,
+  filesToScan: readonly string[],
+  scanResult: ScanResult,
+): Promise<ScanResult | null> => {
+  try {
+    const baseRevision = resolveBaseRevision(options.directory, getBaseOption(options))
+
+    const baseline = await scanBaseline({
+      repositoryDirectory: options.directory,
+      projectDirectory: options.directory,
+      files: filesToScan,
+      baseRevision,
+      scanOptions: {
+        ...baseScanOptions,
+        ignore: config?.ignore,
+        rules: getEffectiveRules(config, effectivePreset),
+      },
+    })
+
+    return filterIntroducedDiagnostics(
+      scanResult,
+      baseline.result,
+      options.directory,
+      baseline.rootDirectory,
+    )
+  } catch (error) {
+    reportOperationFailure('compare baseline', error)
+
+    return null
+  }
 }
 
 const executeSingleDirectoryScan = async (
@@ -560,13 +757,7 @@ const executeSingleDirectoryScan = async (
 
   if (failed) return
 
-  if (hasOnlyIrrelevantChangedFiles(filesToScan)) {
-    if (options.json !== true) {
-      console.log('No Astro Doctor files found in the changed files list — nothing to scan.\n')
-    }
-
-    return
-  }
+  if (shouldSkipIrrelevantFiles(options, filesToScan)) return
 
   const scanOptions = {
     ...baseScanOptions,
@@ -576,7 +767,7 @@ const executeSingleDirectoryScan = async (
     rules: getEffectiveRules(config, effectivePreset),
   }
 
-  if (options.json !== true && !options.scoreOnly) {
+  if (shouldPrintProgress(options)) {
     console.log(`\nScanning ${options.directory}...\n`)
   }
 
@@ -584,9 +775,24 @@ const executeSingleDirectoryScan = async (
 
   if (!scanResult) return
 
-  if (printReport(scanResult, options)) return
+  let effectiveScanResult: ScanResult | null = scanResult
 
-  checkThresholds(scanResult, effectiveFailOn, effectiveThreshold)
+  if (options.scope === 'changed' && filesToScan) {
+    effectiveScanResult = await tryFilterIntroducedScanResult(
+      options,
+      config,
+      effectivePreset,
+      baseScanOptions,
+      filesToScan,
+      scanResult,
+    )
+  }
+
+  if (!effectiveScanResult) return
+
+  if (printReport(effectiveScanResult, options)) return
+
+  checkThresholds(effectiveScanResult, effectiveFailOn, effectiveThreshold)
 }
 
 const executeScan = async (options: CliOptions): Promise<void> => {
@@ -597,6 +803,7 @@ const executeScan = async (options: CliOptions): Promise<void> => {
 
   const baseScanOptions: BaseScanOptions = {
     categories: options.categories.length > 0 ? options.categories : undefined,
+    fix: options.fix,
     noLint: options.noLint,
     noRespectInlineDisables: options.noRespectInlineDisables,
   }
@@ -605,7 +812,15 @@ const executeScan = async (options: CliOptions): Promise<void> => {
   const effectiveProjects = await resolveProjectsWithDiscovery(options, config)
 
   if (effectiveProjects.length > 0) {
-    await executeMultiProjectScan(options, config, effectiveProjects, effectiveFailOn, effectiveThreshold, baseScanOptions)
+    await executeMultiProjectScan(
+      options,
+      config,
+      effectiveProjects,
+      effectivePreset,
+      effectiveFailOn,
+      effectiveThreshold,
+      baseScanOptions,
+    )
 
     return
   }
@@ -674,7 +889,7 @@ export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<vo
   const options = parseArguments(argv)
 
   if (options.version) {
-    console.log(getVersion())
+    console.log(getPackageVersion())
 
     return
   }

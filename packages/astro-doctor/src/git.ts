@@ -24,6 +24,13 @@ const git = (args: string[], cwd: string): string[] => {
   }
 }
 
+const gitText = (args: string[], cwd: string): string =>
+  execFileSync('git', args, {
+    cwd,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
+
 const detectDefaultBase = (cwd: string): string => {
   for (const candidate of ['main', 'master', 'origin/main', 'origin/master']) {
     try {
@@ -37,6 +44,27 @@ const detectDefaultBase = (cwd: string): string => {
 
   // Fallback to parent commit
   return 'HEAD~1'
+}
+
+export const resolveBaseRevision = (cwd: string, base?: string): string => {
+  const requestedBase = base ?? detectDefaultBase(cwd)
+  const revision = git(['rev-parse', '--verify', `${requestedBase}^{commit}`], cwd)[0]
+
+  if (!revision) throw new Error(`Unable to resolve base revision "${requestedBase}".`)
+
+  return revision
+}
+
+export const getFileAtRevision = (
+  cwd: string,
+  revision: string,
+  filePath: string,
+): string | undefined => {
+  try {
+    return gitText(['show', `${revision}:${filePath}`], cwd)
+  } catch {
+    return undefined
+  }
 }
 
 /**

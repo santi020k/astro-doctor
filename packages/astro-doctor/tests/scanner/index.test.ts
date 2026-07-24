@@ -1,4 +1,4 @@
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -119,6 +119,45 @@ describe('scan', () => {
     expect(setHtmlDiagnostic).toBeDefined()
   })
 
+  test('calculates counts and score from selected categories only', async () => {
+    writeFileSync(
+      join(testDirectory, 'index.astro'),
+      '---\n---\n<img src="/hero.png" alt="Hero" />'
+    )
+
+    const scanResult = await scan({
+      directory: testDirectory,
+      categories: ['security'],
+    })
+
+    expect(scanResult.diagnostics).toEqual([])
+    expect(scanResult.errorCount).toBe(0)
+    expect(scanResult.warningCount).toBe(0)
+    expect(scanResult.score).toBe(100)
+    expect(scanResult.scoreLabel).toBe('S')
+  })
+
+  test('applies safe fixes and reports the remaining diagnostics', async () => {
+    const astroFilePath = join(testDirectory, 'index.astro')
+
+    writeFileSync(
+      astroFilePath,
+      '---\nconst title = process.env.SITE_TITLE\n---\n<h1>{title}</h1>'
+    )
+
+    const scanResult = await scan({
+      directory: testDirectory,
+      fix: true,
+    })
+
+    expect(readFileSync(astroFilePath, 'utf8')).toContain('import.meta.env.SITE_TITLE')
+    expect(
+      scanResult.diagnostics.some(
+        (diagnostic) => diagnostic.ruleId === 'astro-doctor/no-process-env'
+      )
+    ).toBe(false)
+  })
+
   test('accumulates diagnostics across multiple files', async () => {
     writeFileSync(join(testDirectory, 'page-a.astro'), '---\n---\n<img src="/a.png" />')
     writeFileSync(join(testDirectory, 'page-b.astro'), '---\n---\n<img src="/b.png" />')
@@ -185,7 +224,13 @@ describe('scan', () => {
       JSON.stringify({ name: 'test-project', packageManager: 'npm@10.0.0' })
     )
 
-    const scanResult = await scan({ directory: testDirectory, files: ['package.json'] })
+    const scanResult = await scan({
+      directory: testDirectory,
+      files: ['package.json'],
+      rules: {
+        'astro-doctor/prefer-pnpm': 'warn',
+      },
+    })
 
     const packageManagerDiagnostic = scanResult.diagnostics.find(
       (diagnostic) => diagnostic.ruleId === 'astro-doctor/prefer-pnpm'

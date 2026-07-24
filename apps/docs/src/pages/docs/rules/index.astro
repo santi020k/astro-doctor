@@ -3,7 +3,7 @@ import Docs from '@/layouts/Docs.astro'
 
 import { Badge, Link } from '@santi020k/lumen-astro'
 
-import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
+import { CATEGORY_COLORS, CATEGORY_LABELS, RULES, SEVERITY_COLORS } from '@/data/rules'
 ---
 
 <Docs
@@ -53,9 +53,7 @@ import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
                 inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs
                 font-medium
               `,
-              rule.severity === 'error' ?
-                'border border-red-500/20 bg-red-500/10 text-red-400' :
-                'border border-yellow-500/20 bg-yellow-500/10 text-yellow-400'
+              SEVERITY_COLORS[rule.severity]
             ]}
             >
               {rule.severity}

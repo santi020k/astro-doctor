@@ -32,10 +32,12 @@ const getRecommendedPluginRules = (): Record<string, RuleSeverity> => {
 
 const getRecommendedProjectRules = (): Record<string, RuleSeverity> =>
   Object.fromEntries(
-    PROJECT_RULES.map((projectRule) => [
-      projectRule.ruleId,
-      projectRule.severity === 'error' ? 'error' : 'warn',
-    ]),
+    PROJECT_RULES
+      .filter((projectRule) => projectRule.recommended)
+      .map((projectRule) => [
+        projectRule.ruleId,
+        projectRule.severity === 'error' ? 'error' : 'warn',
+      ]),
   )
 
 const getRecommendedRules = (): Record<string, RuleSeverity> => ({

@@ -1,17 +1,22 @@
+import { REPORT_SCHEMA_VERSION, SCORE_MODEL_VERSION } from '../constants.js'
 import type { JsonReport, ProjectScanResult, ScanResult } from '../types.js'
+import { getPackageVersion } from '../utils/get-package-version.js'
 
-const PACKAGE_VERSION = '0.1.0'
 const SCHEMA_URL = 'https://doctor.santi020k.com/schema/report.json'
 
 export const formatJsonReport = (
   result: ScanResult,
   directory: string,
   projects?: readonly ProjectScanResult[],
+  scope: JsonReport['scope'] = 'full',
 ): JsonReport => ({
   $schema: SCHEMA_URL,
-  version: PACKAGE_VERSION,
+  schemaVersion: REPORT_SCHEMA_VERSION,
+  version: getPackageVersion(),
+  scoreModel: SCORE_MODEL_VERSION,
   timestamp: new Date().toISOString(),
   directory,
+  scope,
   fileCount: result.fileCount,
   errorCount: result.errorCount,
   warningCount: result.warningCount,

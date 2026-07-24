@@ -17,7 +17,7 @@ inputs:
     required: false
     default: 'true'
   diff-only:
-    description: On PRs, scan only files changed in this PR (true | false)
+    description: On PRs, report only diagnostics introduced by this PR (true | false)
     required: false
     default: 'true'
   json-report:
@@ -88,8 +88,8 @@ runs:
         DIR_FLAG=(--dir "${{ inputs.working-directory }}")
         CHANGED_FLAG=()
 
-        if [ -n "${{ steps.diff.outputs.changed_files_from }}" ]; then
-          CHANGED_FLAG=(--changed-files-from "${{ steps.diff.outputs.changed_files_from }}")
+        if [ "${{ steps.diff.outputs.is_pr }}" = "true" ] && [ "${{ inputs.diff-only }}" = "true" ]; then
+          CHANGED_FLAG=(--scope changed --base "${{ github.event.pull_request.base.sha }}")
         fi
 
         set +e
@@ -115,7 +115,7 @@ runs:
           echo "errors=0" >> "$GITHUB_OUTPUT"
           echo "warnings=0" >> "$GITHUB_OUTPUT"
           echo "score=100" >> "$GITHUB_OUTPUT"
-          echo "score_label=A" >> "$GITHUB_OUTPUT"
+          echo "score_label=S" >> "$GITHUB_OUTPUT"
           exit 0
         fi
 
@@ -125,7 +125,7 @@ runs:
           echo "errors=0" >> "$GITHUB_OUTPUT"
           echo "warnings=0" >> "$GITHUB_OUTPUT"
           echo "score=100" >> "$GITHUB_OUTPUT"
-          echo "score_label=A" >> "$GITHUB_OUTPUT"
+          echo "score_label=S" >> "$GITHUB_OUTPUT"
           exit 0
         fi
 
@@ -147,6 +147,36 @@ runs:
       shell: bash
       run: cp /tmp/astro-doctor-report.json "${{ inputs.json-report }}"
 
+    - name: Publish workflow annotations
+      if: steps.diff.outputs.no_astro_changes != 'true' && steps.report.outputs.scan_failed != 'true'
+      shell: bash
+      run: |
+        node --input-type=module <<'EOF'
+        import { readFileSync } from 'node:fs'
+
+        const report = JSON.parse(readFileSync('/tmp/astro-doctor-report.json', 'utf8'))
+        const escapeData = (value) => String(value)
+          .replaceAll('%', '%25')
+          .replaceAll('\r', '%0D')
+          .replaceAll('\n', '%0A')
+        const escapeProperty = (value) => escapeData(value)
+          .replaceAll(':', '%3A')
+          .replaceAll(',', '%2C')
+
+        for (const diagnostic of report.diagnostics) {
+          const level = diagnostic.severity === 'error' ? 'error' : 'warning'
+          const title = diagnostic.ruleId.replace('astro-doctor/', '')
+          const properties = [
+            `file=${escapeProperty(diagnostic.filePath)}`,
+            `line=${diagnostic.line}`,
+            `col=${diagnostic.column}`,
+            `title=${escapeProperty(title)}`,
+          ].join(',')
+
+          console.log(`::${level} ${properties}::${escapeData(diagnostic.message)}`)
+        }
+        EOF
+
     - name: Post PR summary comment
       if: |
         github.event_name == 'pull_request' &&
@@ -161,12 +191,16 @@ runs:
 
           const scoreEmoji = { S: '🌟', A: '✅', B: '🟢', C: '🟡', D: '🟠', F: '🔴' }[report.scoreLabel] ?? '🟡'
           const diffMode = '${{ steps.diff.outputs.is_pr }}' === 'true' && '${{ inputs.diff-only }}' === 'true'
-          const scopeNote = diffMode ? ' _(changed files only)_' : ''
+          const scopeNote = diffMode ? ' _(introduced issues only)_' : ''
+          const escapeCell = value => String(value)
+            .replaceAll('|', '\\|')
+            .replaceAll('\r', '')
+            .replaceAll('\n', '<br>')
 
           const rows = report.diagnostics.slice(0, 25).map(d => {
             const rel = d.filePath.replace('${{ github.workspace }}/', '')
             const icon = d.severity === 'error' ? '🔴' : '🟡'
-            return `| ${icon} | \`${rel}\` | ${d.line}:${d.column} | ${d.message} | \`${d.ruleId.replace('astro-doctor/', '')}\` |`
+            return `| ${icon} | \`${escapeCell(rel)}\` | ${d.line}:${d.column} | ${escapeCell(d.message)} | \`${escapeCell(d.ruleId.replace('astro-doctor/', ''))}\` |`
           }).join('\n')
 
           const truncated = report.diagnostics.length > 25

@@ -39,8 +39,9 @@ jobs:
   <h2>PR diff mode (recommended)</h2>
 
   <p>
-    With <code>diff-only: true</code> the action detects changed <code>.astro</code> files via
-    <code>git diff</code> and scans only those — making it fast even on large monorepos.
+    With <code>diff-only: true</code> the action scans changed Astro files at the base and head
+    revisions, then reports only diagnostics introduced by the pull request. Existing findings in
+    touched files do not fail the new change.
   </p>
 
   <pre><code>{`- uses: actions/checkout@v7
@@ -83,7 +84,7 @@ jobs:
       <tr>
         <td><code>diff-only</code></td>
         <td><code>true</code></td>
-        <td>Scan only files changed in the PR</td>
+        <td>Report only diagnostics introduced by the PR</td>
       </tr>
       <tr>
         <td><code>json-report</code></td>
@@ -147,7 +148,7 @@ jobs:
 
   <p>When <code>comment: true</code>, the action posts a comment like:</p>
 
-  <pre><code>{`## Astro Doctor 🟢 85/100 (B) _(changed files only)_
+  <pre><code>{`## Astro Doctor 🟢 85/100 (B) _(introduced issues only)_
 
 | | File | Location | Message | Rule |
 |---|---|---|---|---|

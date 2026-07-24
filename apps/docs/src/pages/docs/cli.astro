@@ -26,6 +26,12 @@ import Docs from '@/layouts/Docs.astro'
     # Scan and write a JSON report
     astro-doctor --json report.json
 
+    # Apply safe automatic fixes
+    astro-doctor --fix
+
+    # Report only diagnostics introduced since main
+    astro-doctor --scope changed --base main
+
     # Scan without showing the health score
     astro-doctor --no-score
        </code>
@@ -66,9 +72,24 @@ import Docs from '@/layouts/Docs.astro'
         <td>Directory to scan</td>
       </tr>
       <tr>
+        <td><code>--scope &lt;scope&gt;</code></td>
+        <td><code>full</code></td>
+        <td>Choose <code>full</code>, changed <code>files</code>, or introduced diagnostics with <code>changed</code></td>
+      </tr>
+      <tr>
+        <td><code>--base &lt;ref&gt;</code></td>
+        <td>auto-detected</td>
+        <td>Base revision for <code>files</code> or <code>changed</code> scope</td>
+      </tr>
+      <tr>
         <td><code>--json [path]</code></td>
         <td><em>off</em></td>
         <td>Output JSON to stdout (no path) or to a file</td>
+      </tr>
+      <tr>
+        <td><code>--fix</code></td>
+        <td><em>off</em></td>
+        <td>Apply safe automatic fixes provided by rules</td>
       </tr>
       <tr>
         <td><code>--no-score</code></td>
@@ -98,15 +119,24 @@ import Docs from '@/layouts/Docs.astro'
   <p>When using <code>--json</code>, the output conforms to this schema:</p>
 
   <pre><code>{`{
-  "$schema": "https://doctor.santi020k.com/schema/config.json",
-  "version": "0.1.0",
+  "$schema": "https://doctor.santi020k.com/schema/report.json",
+  "schemaVersion": 1,
+  "version": "1.x.x",
+  "scoreModel": 2,
   "timestamp": "2024-01-01T00:00:00.000Z",
   "directory": "/my-project",
+  "scope": "full",
   "fileCount": 14,
   "errorCount": 1,
   "warningCount": 2,
   "score": 85,
   "scoreLabel": "B",
+  "scoreBreakdown": {
+    "performance": 90,
+    "accessibility": 75,
+    "security": 100,
+    "best-practices": 90
+  },
   "diagnostics": [
     {
       "ruleId": "astro-doctor/no-missing-alt",

@@ -28,7 +28,7 @@ export interface ScanResult {
   readonly fileCount: number
   readonly errorCount: number
   readonly warningCount: number
-  /** Health score 0–100. Penalizes errors (×10) and warnings (×3) per file. */
+  /** Health score 0–100. Penalizes errors by 25 and warnings by 10 per file. */
   readonly score: number
   readonly scoreLabel: ScoreLabel
   /** Per-category health scores using the same penalty formula as the overall score. */
@@ -42,6 +42,8 @@ export interface ScanOptions {
   readonly rules?: Record<string, 'error' | 'warn' | 'off'>
   /** Filter results to only these categories. When empty/undefined all categories are shown. */
   readonly categories?: readonly RuleCategory[]
+  /** Apply safe ESLint fixes to scanned Astro files. */
+  readonly fix?: boolean
   /** When true, skip lint entirely and return a clean result. */
   readonly noLint?: boolean
   /** When true, ignore eslint-disable comments (audit mode). */
@@ -59,9 +61,12 @@ export interface ProjectScanResult extends ScanResult {
 /** Shape of the machine-readable JSON report written by --json */
 export interface JsonReport {
   readonly $schema: string
+  readonly schemaVersion: number
   readonly version: string
+  readonly scoreModel: number
   readonly timestamp: string
   readonly directory: string
+  readonly scope: 'full' | 'files' | 'changed'
   readonly fileCount: number
   readonly errorCount: number
   readonly warningCount: number

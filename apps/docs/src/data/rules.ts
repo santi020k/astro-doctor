@@ -397,3 +397,8 @@ export const CATEGORY_COLORS: Record<RuleCategory, string> = {
   'best-practices': 'badge-best-practices',
   architecture: 'badge-architecture'
 }
+
+export const SEVERITY_COLORS: Record<Severity, string> = {
+  error: 'badge-error',
+  warn: 'badge-warning'
+}

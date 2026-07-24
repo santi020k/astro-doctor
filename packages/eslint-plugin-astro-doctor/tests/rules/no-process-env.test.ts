@@ -44,18 +44,21 @@ ruleTester.run('no-process-env', rule, {
     {
       code: `---\nconst apiKey = process.env.API_KEY\n---\n<p>{apiKey}</p>`,
       filename: 'test.astro',
+      output: `---\nconst apiKey = import.meta.env.API_KEY\n---\n<p>{apiKey}</p>`,
       errors: [{ messageId: 'useImportMetaEnv' }],
     },
     // Bare process.env access
     {
       code: `---\nconst env = process.env\n---\n<p>test</p>`,
       filename: 'test.astro',
+      output: `---\nconst env = import.meta.env\n---\n<p>test</p>`,
       errors: [{ messageId: 'useImportMetaEnv' }],
     },
     // process.env in a template expression
     {
       code: `---\n---\n<p>{process.env.SITE_NAME}</p>`,
       filename: 'test.astro',
+      output: `---\n---\n<p>{import.meta.env.SITE_NAME}</p>`,
       errors: [{ messageId: 'useImportMetaEnv' }],
     },
     // Multiple process.env usages — one error each
@@ -68,6 +71,13 @@ ruleTester.run('no-process-env', rule, {
         '<p>test</p>',
       ].join('\n'),
       filename: 'test.astro',
+      output: [
+        '---',
+        'const key = import.meta.env.API_KEY',
+        'const secret = import.meta.env.SECRET',
+        '---',
+        '<p>test</p>',
+      ].join('\n'),
       errors: [{ messageId: 'useImportMetaEnv' }, { messageId: 'useImportMetaEnv' }],
     },
   ],
