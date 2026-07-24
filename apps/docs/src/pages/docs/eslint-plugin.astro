@@ -1,6 +1,8 @@
 ---
 import PackageManagerTabs from '@/components/PackageManagerTabs.astro'
 import Docs from '@/layouts/Docs.astro'
+
+import { Callout } from '@santi020k/lumen-astro'
 ---
 
 <Docs
@@ -66,9 +68,9 @@ export default [
   }
 ]`}</code></pre>
 
-  <div class="callout callout-tip">
+  <Callout class="callout callout-tip">
     <strong>Tip:</strong> If you are using the Astro Doctor CLI instead of running ESLint directly, you can customize rule severities using a <code>doctor.config.ts</code> file. See the <a href="/docs/configuration">Configuration</a> page.
-  </div>
+  </Callout>
 
   <h2>Available Rules</h2>
 

@@ -1,5 +1,7 @@
 ---
 import Docs from '@/layouts/Docs.astro'
+
+import { Callout } from '@santi020k/lumen-astro'
 ---
 
 <Docs
@@ -66,11 +68,11 @@ import Docs from '@/layouts/Docs.astro'
   </code>
   </pre>
 
-  <div class="callout callout-tip">
+  <Callout class="callout callout-tip">
     <strong>Experimental:</strong> The LSP protocol, options, and caching behavior may change between
     releases, hence the <code>experimental-</code> prefix. The VS Code extension handles version
     management automatically.
-  </div>
+  </Callout>
 
   <h2>Rule configuration</h2>
 

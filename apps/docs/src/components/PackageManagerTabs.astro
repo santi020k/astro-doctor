@@ -1,4 +1,6 @@
 ---
+import { Tabs } from '@santi020k/lumen-astro'
+
 interface Props {
   pnpm?: string
   npm?: string
@@ -16,7 +18,7 @@ const tabs = [
 ].filter((t): t is { id: string, label: string, command: string } => Boolean(t.command))
 ---
 
-<div class="pm-tabs" data-pm-tabs>
+<Tabs class="pm-tabs" data-pm-tabs>
   <div class="pm-tabs-bar" role="tablist" aria-label="Package manager">
     {tabs.map((tab, i) => (
       <button
@@ -43,7 +45,7 @@ const tabs = [
       <pre><code>{tab.command}</code></pre>
     </div>
   ))}
-</div>
+</Tabs>
 
 <style>
   .pm-tabs {
@@ -53,10 +55,23 @@ const tabs = [
     overflow: hidden;
   }
 
+  :global(.pm-tabs.ui-tabs) {
+    display: block;
+  }
+
   .pm-tabs-bar {
     display: flex;
     border-bottom: 1px solid hsl(var(--line));
     background: hsl(var(--surface-muted));
+  }
+
+  :global(.pm-tabs.ui-tabs .pm-tabs-bar) {
+    width: auto;
+    gap: 0;
+    border: 0;
+    border-bottom: 1px solid hsl(var(--line));
+    border-radius: 0;
+    padding: 0;
   }
 
   .pm-tab-btn {

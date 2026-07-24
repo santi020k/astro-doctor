@@ -1,5 +1,7 @@
 ---
 import Docs from '@/layouts/Docs.astro'
+
+import { Callout } from '@santi020k/lumen-astro'
 ---
 
 <Docs
@@ -105,9 +107,9 @@ Skills: .agents/skills/astro-rules/SKILL.md
     </a>.
   </p>
 
-  <div class="callout callout-tip">
+  <Callout class="callout callout-tip">
     <strong>llms.txt:</strong> The repo root includes an <code>llms.txt</code> file (following the
     <a href="https://llmstxt.org" target="_blank" rel="noopener noreferrer">llmstxt.org</a>
     convention) that AI tools can fetch to understand the project at a high level.
-  </div>
+  </Callout>
 </Docs>

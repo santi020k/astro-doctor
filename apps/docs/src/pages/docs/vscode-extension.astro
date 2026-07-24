@@ -1,5 +1,7 @@
 ---
 import Docs from '@/layouts/Docs.astro'
+
+import { Callout } from '@santi020k/lumen-astro'
 ---
 
 <Docs
@@ -38,10 +40,10 @@ import Docs from '@/layouts/Docs.astro'
     <code>packages/vscode-astro-doctor/astro-doctor.vsix</code>.
   </p>
 
-  <div class="callout callout-tip">
+  <Callout class="callout callout-tip">
     <strong>Tip:</strong> The extension activates when you open an Astro file. If you only have
     TypeScript, JavaScript, or Markdown files open, VS Code may not start it yet.
-  </div>
+  </Callout>
 
   <h2>Features</h2>
 

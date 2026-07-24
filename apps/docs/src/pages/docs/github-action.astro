@@ -1,5 +1,7 @@
 ---
 import Docs from '@/layouts/Docs.astro'
+
+import { Callout } from '@santi020k/lumen-astro'
 ---
 
 <Docs
@@ -163,8 +165,8 @@ jobs:
     the existing comment.
   </p>
 
-  <div class="callout callout-tip">
+  <Callout class="callout callout-tip">
     <strong>Permissions:</strong> The <code>pull-requests: write</code> permission is only required
     when <code>comment: true</code>. If you disable comments, this permission is not needed.
-  </div>
+  </Callout>
 </Docs>

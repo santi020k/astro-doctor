@@ -1,5 +1,7 @@
 ---
 import Docs from '@/layouts/Docs.astro'
+
+import { Callout } from '@santi020k/lumen-astro'
 ---
 
 <Docs
@@ -114,14 +116,14 @@ export default {
   </code>
   </pre>
 
-  <div class="callout callout-tip">
+  <Callout class="callout callout-tip">
     <strong>Tip:</strong> Adding <code>"$schema"</code> enables autocompletion and inline docs for
     all rule names and values in VS Code, WebStorm, and any editor with JSON Schema support.
-  </div>
+  </Callout>
 
-  <div class="callout callout-tip">
+  <Callout class="callout callout-tip">
     <strong>Note:</strong> When using <code>doctor.config.ts</code>, your project must be able to
     execute TypeScript files (e.g. via tsx, ts-node, or Bun). If that's not available, use
     <code>doctor.config.js</code> (ESM) instead.
-  </div>
+  </Callout>
 </Docs>
