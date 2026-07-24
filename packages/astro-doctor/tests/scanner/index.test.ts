@@ -334,20 +334,29 @@ describe('scan', () => {
     )
   })
 
-  test('ignores inline directives for ESLint rules outside Astro Doctor', async () => {
+  test('ignores foreign inline directives while reporting configured rules', async () => {
     writeFileSync(
       join(testDirectory, 'index.astro'),
       [
         '---',
         '/* eslint-disable better-tailwindcss/no-unknown-classes */',
         '---',
-        '<div class="project-component">Clean</div>',
+        '<img class="project-component" src="/hero.png" alt="Hero" />',
       ].join('\n')
     )
 
     const scanResult = await scan({ directory: testDirectory })
 
-    expect(scanResult.diagnostics).toEqual([])
+    expect(scanResult.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ ruleId: 'astro-doctor/use-astro-image' }),
+      ]),
+    )
+    expect(scanResult.diagnostics).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ ruleId: 'better-tailwindcss/no-unknown-classes' }),
+      ]),
+    )
   })
 
   test('exposes the file path on each diagnostic', async () => {
