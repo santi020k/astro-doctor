@@ -68,6 +68,60 @@ describe('baseline comparison', () => {
     expect(introducedResult.diagnostics[0]?.ruleId).toBe('astro-doctor/no-missing-alt')
   })
 
+  test('preserves unchanged project context when scanning a changed-file baseline', async () => {
+    const layoutFilePath = join(testDirectory, 'layout.astro')
+    const componentFilePath = join(testDirectory, 'component.astro')
+    const lifecycleRules: Record<string, 'warn'> = {
+      'astro-doctor/require-client-router-script-lifecycle': 'warn',
+    }
+
+    writeFileSync(
+      layoutFilePath,
+      "---\nimport { ClientRouter } from 'astro:transitions'\n---\n<ClientRouter />",
+    )
+    writeFileSync(
+      componentFilePath,
+      "<script>document.addEventListener('DOMContentLoaded', () => {})</script>",
+    )
+    execFileSync('git', ['add', '.'], { cwd: testDirectory })
+    execFileSync('git', ['commit', '-m', 'baseline'], { cwd: testDirectory })
+
+    const baseRevision = resolveBaseRevision(testDirectory, 'HEAD')
+
+    writeFileSync(
+      componentFilePath,
+      "<script>document.addEventListener('DOMContentLoaded', () => {})</script>\n",
+    )
+
+    const currentResult = await scan({
+      directory: testDirectory,
+      files: [componentFilePath],
+      rules: lifecycleRules,
+    })
+    const baseline = await scanBaseline({
+      repositoryDirectory: testDirectory,
+      projectDirectory: testDirectory,
+      files: [componentFilePath],
+      baseRevision,
+      scanOptions: {
+        rules: lifecycleRules,
+      },
+    })
+    const introducedResult = filterIntroducedDiagnostics(
+      currentResult,
+      baseline.result,
+      testDirectory,
+      baseline.rootDirectory,
+    )
+
+    expect(currentResult.diagnostics).toEqual([
+      expect.objectContaining({
+        ruleId: 'astro-doctor/require-client-router-script-lifecycle',
+      }),
+    ])
+    expect(introducedResult.diagnostics).toEqual([])
+  })
+
   test('writes and applies a persistent baseline', async () => {
     const astroFilePath = join(testDirectory, 'index.astro')
     const baselineFilePath = join(testDirectory, '.astro-doctor-baseline.json')

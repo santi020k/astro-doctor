@@ -5,6 +5,7 @@ import { glob } from 'glob'
 
 import { scan } from './scanner/index.js'
 import { isFileInDirectory } from './utils/is-file-in-directory.js'
+import { readPnpmWorkspacePatterns } from './utils/read-pnpm-workspace-patterns.js'
 import { loadConfig } from './config.js'
 import { computeScoreLabel } from './scorer.js'
 import type {
@@ -24,30 +25,6 @@ interface MultiProjectOptions {
   readonly projectArgs: readonly string[]
   readonly rootConfig: AstroDoctorConfig | null
   readonly scanOptions: Omit<ScanOptions, 'directory' | 'ignore' | 'rules'>
-}
-
-const readPnpmWorkspaceGlobs = (rootDirectory: string): string[] => {
-  const pnpmWorkspacePath = join(rootDirectory, 'pnpm-workspace.yaml')
-
-  if (!existsSync(pnpmWorkspacePath)) return []
-
-  const content = readFileSync(pnpmWorkspacePath, 'utf8')
-  const matches = content.matchAll(/^\s+-\s+([^#\n]+)/gmu)
-  const globs: string[] = []
-
-  for (const match of matches) {
-    let pattern = match[1]?.trim()
-
-    if (!pattern) continue
-
-    if ((pattern.startsWith("'") && pattern.endsWith("'")) || (pattern.startsWith('"') && pattern.endsWith('"'))) {
-      pattern = pattern.slice(1, -1)
-    }
-
-    globs.push(pattern)
-  }
-
-  return globs
 }
 
 const readPackageJsonWorkspaceGlobs = (rootDirectory: string): string[] => {
@@ -96,7 +73,7 @@ const resolveDirectoryPackage = (directoryPath: string, rootDirectory: string): 
  * or yarn workspaces — return every workspace directory with its package name.
  */
 export const discoverWorkspacePackages = async (rootDirectory: string): Promise<WorkspacePackage[]> => {
-  const pnpmGlobs = readPnpmWorkspaceGlobs(rootDirectory)
+  const pnpmGlobs = readPnpmWorkspacePatterns(rootDirectory)
   const globs = pnpmGlobs.length > 0 ? pnpmGlobs : readPackageJsonWorkspaceGlobs(rootDirectory)
   const packages: WorkspacePackage[] = []
 

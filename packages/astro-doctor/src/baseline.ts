@@ -1,11 +1,11 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
 
 import { scan } from './scanner/index.js'
 import { createScanResult } from './utils/create-scan-result.js'
 import { PERSISTENT_BASELINE_VERSION } from './constants.js'
-import { getFileAtRevision } from './git.js'
+import { extractRevision } from './git.js'
 import type { Diagnostic, ScanOptions, ScanResult } from './types.js'
 
 interface BaselineScanOptions {
@@ -47,22 +47,15 @@ const createBaselineSnapshot = (options: BaselineScanOptions): BaselineSnapshot 
   const snapshotProjectDirectory = resolve(snapshotDirectory, projectPath)
   const snapshotFiles: string[] = []
 
+  extractRevision(options.repositoryDirectory, options.baseRevision, snapshotDirectory)
+
+  mkdirSync(snapshotProjectDirectory, { recursive: true })
+
   for (const filePath of options.files) {
     const repositoryPath = relative(options.repositoryDirectory, filePath).replaceAll('\\', '/')
-
-    const content = getFileAtRevision(
-      options.repositoryDirectory,
-      options.baseRevision,
-      repositoryPath,
-    )
-
-    if (content === undefined) continue
-
     const snapshotFilePath = resolve(snapshotDirectory, repositoryPath)
 
-    mkdirSync(dirname(snapshotFilePath), { recursive: true })
-
-    writeFileSync(snapshotFilePath, content, 'utf8')
+    if (!existsSync(snapshotFilePath)) continue
 
     snapshotFiles.push(snapshotFilePath)
   }
