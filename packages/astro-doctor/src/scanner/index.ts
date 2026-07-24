@@ -44,12 +44,20 @@ const EMPTY_RESULT = (fileCount = 0): ScanResult => ({
   scoreBreakdown: { performance: 100, accessibility: 100, security: 100, 'best-practices': 100 },
 })
 
+const isConfiguredRule = (ruleId: string): boolean => {
+  if (getAstroRuleCategory(ruleId) !== undefined) return true
+
+  const shortName = ruleId.replace('astro-doctor/', '')
+
+  return ruleId.startsWith('astro-doctor/') && astroDoctorPlugin.rules[shortName] !== undefined
+}
+
 const collectEslintDiagnostics = (results: ESLint.LintResult[]): Diagnostic[] => {
   const diagnostics: Diagnostic[] = []
 
   for (const fileResult of results) {
     for (const message of fileResult.messages) {
-      if (!message.ruleId) continue
+      if (!message.ruleId || !isConfiguredRule(message.ruleId)) continue
 
       const severity = SEVERITY_MAP[message.severity] ?? 'warning'
       const category = getRuleCategory(message.ruleId)

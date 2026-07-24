@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { isAbsolute, relative, resolve } from 'node:path'
+import { dirname, isAbsolute, relative, resolve } from 'node:path'
 
 import { globSync } from 'glob'
 
@@ -124,6 +124,23 @@ const readProjectFile = (rootDirectory: string, projectPath: string): string | u
   if (!existsSync(filePath)) return undefined
 
   return readFileSync(filePath, 'utf8')
+}
+
+const findPnpmWorkspaceDirectory = (projectDirectory: string): string | undefined => {
+  let currentDirectory = resolve(projectDirectory)
+  let parentDirectory = dirname(currentDirectory)
+
+  while (currentDirectory !== parentDirectory) {
+    if (existsSync(resolve(currentDirectory, 'pnpm-workspace.yaml'))) return currentDirectory
+
+    currentDirectory = parentDirectory
+
+    parentDirectory = dirname(currentDirectory)
+  }
+
+  return existsSync(resolve(currentDirectory, 'pnpm-workspace.yaml'))
+    ? currentDirectory
+    : undefined
 }
 
 const getLocation = (content: string, searchText: string): Location => {
@@ -346,30 +363,65 @@ const pushDiagnostic = (
   if (diagnostic !== undefined) diagnostics.push(diagnostic)
 }
 
+const isPackageManagerAuditSelected = (
+  selectedProjectPaths: Set<string> | undefined,
+): boolean =>
+  isSelected(selectedProjectPaths, PACKAGE_FILE_NAME) ||
+  isSelected(selectedProjectPaths, PACKAGE_LOCK_FILE_NAME) ||
+  isSelected(selectedProjectPaths, YARN_LOCK_FILE_NAME)
+
+const getPackageManagerContent = (
+  packageJsonContent: string,
+  workspaceDirectory: string | undefined,
+): string | undefined => {
+  if (packageJsonContent.includes('"packageManager"')) return packageJsonContent
+
+  if (workspaceDirectory === undefined) return undefined
+
+  return readProjectFile(workspaceDirectory, PACKAGE_FILE_NAME)
+}
+
+const hasLockFile = (
+  directories: ReadonlySet<string>,
+  lockFileName: string,
+): boolean =>
+  [...directories].some((directory) =>
+    existsSync(toAbsolutePath(directory, lockFileName))
+  )
+
 const auditPackageManager = (
   options: ProjectAuditOptions,
   selectedProjectPaths: Set<string> | undefined,
   diagnostics: Diagnostic[],
 ): void => {
-  if (
-    !isSelected(selectedProjectPaths, PACKAGE_FILE_NAME) &&
-    !isSelected(selectedProjectPaths, PACKAGE_LOCK_FILE_NAME) &&
-    !isSelected(selectedProjectPaths, YARN_LOCK_FILE_NAME)
-  ) {
-    return
-  }
+  if (!isPackageManagerAuditSelected(selectedProjectPaths)) return
 
   const packageJsonContent = readProjectFile(options.directory, PACKAGE_FILE_NAME)
 
   if (packageJsonContent === undefined) return
 
-  const packageLockExists = existsSync(toAbsolutePath(options.directory, PACKAGE_LOCK_FILE_NAME))
-  const yarnLockExists = existsSync(toAbsolutePath(options.directory, YARN_LOCK_FILE_NAME))
+  const workspaceDirectory = findPnpmWorkspaceDirectory(options.directory)
 
-  const usesPnpm = packageJsonContent.includes('"packageManager"') &&
-    packageJsonContent.includes('"pnpm@')
+  const packageManagerContent = getPackageManagerContent(
+    packageJsonContent,
+    workspaceDirectory,
+  )
 
-  if (usesPnpm && !packageLockExists && !yarnLockExists) return
+  const auditedDirectories = new Set([
+    options.directory,
+    ...(workspaceDirectory === undefined ? [] : [workspaceDirectory]),
+  ])
+
+  const usesPnpm = packageManagerContent?.includes('"packageManager"') === true &&
+    packageManagerContent.includes('"pnpm@')
+
+  if (
+    usesPnpm &&
+    !hasLockFile(auditedDirectories, PACKAGE_LOCK_FILE_NAME) &&
+    !hasLockFile(auditedDirectories, YARN_LOCK_FILE_NAME)
+  ) {
+    return
+  }
 
   pushDiagnostic(
     diagnostics,
@@ -378,7 +430,7 @@ const auditPackageManager = (
       options.rules,
       'astro-doctor/prefer-pnpm',
       PACKAGE_FILE_NAME,
-      'Use pnpm consistently: set packageManager to pnpm and remove npm/yarn lockfiles.',
+      'Use pnpm consistently: declare it in packageManager at the package or workspace root and remove npm/yarn lockfiles.',
       getLocation(packageJsonContent, '"packageManager"'),
     ),
   )
