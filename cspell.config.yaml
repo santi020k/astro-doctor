@@ -67,6 +67,7 @@ words:
   - oxlint
   - unrs
   - unstub
+  - wasi
   - workerd
   - behaviour
   - wght

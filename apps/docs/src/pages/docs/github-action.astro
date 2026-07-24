@@ -29,7 +29,7 @@ jobs:
     permissions:
       pull-requests: write   # needed to post PR comments
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: santi020k/astro-doctor@v1`}
        </code>
   </pre>
@@ -41,7 +41,7 @@ jobs:
     <code>git diff</code> and scans only those — making it fast even on large monorepos.
   </p>
 
-  <pre><code>{`- uses: actions/checkout@v4
+  <pre><code>{`- uses: actions/checkout@v7
   with:
     fetch-depth: 0        # required for diff detection
 - uses: santi020k/astro-doctor@v1

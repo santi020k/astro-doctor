@@ -51,19 +51,34 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
 
+      - name: Verify published CLI package
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          VERSION=$(node -p "require('./packages/astro-doctor/package.json').version")
+          PUBLISHED_VERSION=$(npx --yes "@santi020k/astro-doctor@${VERSION}" --version)
+
+          if [ "$PUBLISHED_VERSION" != "$VERSION" ]; then
+            echo "Expected published CLI version ${VERSION}, received ${PUBLISHED_VERSION}."
+            exit 1
+          fi
+
       - name: Create umbrella version tag
         if: steps.changesets.outputs.published == 'true'
         run: |
           VERSION=$(node -p "require('./packages/astro-doctor/package.json').version")
-          if git ls-remote --exit-code --tags origin "refs/tags/v${VERSION}" >/dev/null 2>&1; then
-            echo "Tag v${VERSION} already exists. Skipping."
-            exit 0
-          fi
-
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "v${VERSION}" -m "Release v${VERSION}"
-          git push origin "v${VERSION}"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/v${VERSION}" >/dev/null 2>&1; then
+            echo "Tag v${VERSION} already exists. Skipping."
+          else
+            git tag -a "v${VERSION}" -m "Release v${VERSION}"
+            git push origin "v${VERSION}"
+          fi
+
+          RELEASE_SHA=$(git rev-list -n 1 "v${VERSION}")
+          git tag -fa v1 "$RELEASE_SHA" -m "Update v1 to v${VERSION}"
+          git push --force origin refs/tags/v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
