@@ -101,32 +101,41 @@ const tabs = [
 </style>
 
 <script>
-  const PM_KEY = 'astro-doctor-preferred-pm'
+const PACKAGE_MANAGER_STORAGE_KEY = 'astro-doctor-preferred-pm'
 
-  function syncTabs(pm: string) {
-    document.querySelectorAll<HTMLElement>('[data-pm-tabs]').forEach(container => {
-      const hasTab = container.querySelector(`[data-pm-tab="${pm}"]`)
-      if (!hasTab) return
+const syncTabs = (preferredPackageManager: string) => {
+  for (const container of document.querySelectorAll<HTMLElement>('[data-pm-tabs]')) {
+    const hasTab = container.querySelector(`[data-pm-tab="${preferredPackageManager}"]`)
 
-      container.querySelectorAll<HTMLElement>('[data-pm-tab]').forEach(btn => {
-        const active = btn.dataset.pmTab === pm
-        btn.classList.toggle('pm-active', active)
-        btn.setAttribute('aria-selected', String(active))
-      })
-      container.querySelectorAll<HTMLElement>('[data-pm-panel]').forEach(panel => {
-        panel.classList.toggle('pm-active', panel.dataset.pmPanel === pm)
-      })
-    })
+    if (!hasTab) continue
+
+    for (const buttonNode of container.querySelectorAll<HTMLElement>('[data-pm-tab]')) {
+      const active = buttonNode.dataset.pmTab === preferredPackageManager
+
+      buttonNode.classList.toggle('pm-active', active)
+
+      buttonNode.setAttribute('aria-selected', String(active))
+    }
+
+    for (const panel of container.querySelectorAll<HTMLElement>('[data-pm-panel]')) {
+      panel.classList.toggle('pm-active', panel.dataset.pmPanel === preferredPackageManager)
+    }
   }
+}
 
-  const saved = localStorage.getItem(PM_KEY)
-  if (saved) syncTabs(saved)
+const savedPackageManager = localStorage.getItem(PACKAGE_MANAGER_STORAGE_KEY)
 
-  document.querySelectorAll<HTMLElement>('[data-pm-tabs] [data-pm-tab]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const pm = btn.dataset.pmTab!
-      localStorage.setItem(PM_KEY, pm)
-      syncTabs(pm)
-    })
+if (savedPackageManager) syncTabs(savedPackageManager)
+
+for (const buttonNode of document.querySelectorAll<HTMLElement>('[data-pm-tabs] [data-pm-tab]')) {
+  buttonNode.addEventListener('click', () => {
+    const preferredPackageManager = buttonNode.dataset.pmTab
+
+    if (!preferredPackageManager) return
+
+    localStorage.setItem(PACKAGE_MANAGER_STORAGE_KEY, preferredPackageManager)
+
+    syncTabs(preferredPackageManager)
   })
+}
 </script>

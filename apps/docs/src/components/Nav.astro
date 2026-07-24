@@ -134,15 +134,17 @@ class="
   const darkIcon = document.querySelector('.dark-icon') as HTMLElement | null
   const lightIcon = document.querySelector('.light-icon') as HTMLElement | null
 
-  const getTheme = () =>
-    html.getAttribute('data-theme') ??
+  const getTheme = () => html.getAttribute('data-theme') ??
     (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
 
   const applyTheme = (theme: string) => {
     html.setAttribute('data-theme', theme)
+
     localStorage.setItem('theme', theme)
+
     if (darkIcon && lightIcon) {
       darkIcon.classList.toggle('hidden', theme === 'light')
+
       lightIcon.classList.toggle('hidden', theme === 'dark')
     }
   }

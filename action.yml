@@ -43,8 +43,13 @@ outputs:
     value: ${{ steps.report.outputs.score_label }}
 
 runs:
-  using: composite
+  using: 'composite'
   steps:
+    - name: Setup supported Node.js runtime
+      uses: actions/setup-node@v6
+      with:
+        node-version: '24.16.0'
+
     - name: Detect changed Astro Doctor files (PR diff mode)
       id: diff
       if: github.event_name == 'pull_request' && inputs.diff-only == 'true'
@@ -92,7 +97,8 @@ runs:
           echo "Using local built Astro Doctor from $GITHUB_ACTION_PATH"
           node "$GITHUB_ACTION_PATH/packages/astro-doctor/dist/bin/astro-doctor.js" "${DIR_FLAG[@]}" "${JSON_FLAG[@]}" "${FAIL_FLAG[@]}" "${CHANGED_FLAG[@]}"
         else
-          npx --yes @santi020k/astro-doctor@latest "${DIR_FLAG[@]}" "${JSON_FLAG[@]}" "${FAIL_FLAG[@]}" "${CHANGED_FLAG[@]}"
+          PACKAGE_VERSION=$(node -p "require('$GITHUB_ACTION_PATH/packages/astro-doctor/package.json').version")
+          npx --yes "@santi020k/astro-doctor@$PACKAGE_VERSION" "${DIR_FLAG[@]}" "${JSON_FLAG[@]}" "${FAIL_FLAG[@]}" "${CHANGED_FLAG[@]}"
         fi
         SCAN_STATUS=$?
         set -e
