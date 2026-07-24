@@ -6,6 +6,7 @@
   font-display: swap;
 }
 
+@import "@santi020k/lumen-astro/styles.css";
 @import "tailwindcss";
 @import "./partials/tokens.css";
 @import "./partials/base.css";

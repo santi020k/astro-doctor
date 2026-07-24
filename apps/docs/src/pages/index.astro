@@ -2,6 +2,8 @@
 import LogoMark from '@/components/logo-mark.astro'
 import Base from '@/layouts/Base.astro'
 
+import { Badge, Button, ButtonLink, Card, Icon, Link } from '@santi020k/lumen-astro'
+
 import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
 import { REACT_DOCTOR_URL } from '@/site.config'
 ---
@@ -31,7 +33,7 @@ import { REACT_DOCTOR_URL } from '@/site.config'
     <div class="container-docs relative">
       <div class="mx-auto max-w-3xl text-center">
         <!-- Badge -->
-        <div
+        <Badge
 class="
   mb-6 inline-flex items-center gap-2 rounded-full border
   border-[hsl(var(--brand)/0.3)] bg-[hsl(var(--brand-soft))] px-4 py-1.5
@@ -44,7 +46,7 @@ data-reveal
           "
           ></span>
           <span class="text-xs font-medium text-[hsl(var(--brand))]">ESLint · CLI · GitHub Action · Agent Skills</span>
-        </div>
+        </Badge>
 
         <!-- Headline -->
         <h1
@@ -85,8 +87,9 @@ class="
 data-reveal
 style="animation-delay: 150ms"
         >
-          <a
+          <ButtonLink
             href="/docs"
+            variant="primary"
             class="
               flex items-center justify-center gap-2 rounded-xl
               bg-[hsl(var(--brand))] px-6 py-3 text-sm font-semibold text-white
@@ -96,12 +99,12 @@ style="animation-delay: 150ms"
             "
           >
             Get started
-            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </a>
-          <a
+            <Icon name="arrow-right" decorative />
+          </ButtonLink>
+          <ButtonLink
             href="https://github.com/santi020k/astro-doctor"
-            target="_blank"
-            rel="noopener noreferrer"
+            newTab
+            variant="secondary"
             class="
               flex items-center justify-center gap-2 rounded-xl border
               border-[hsl(var(--line))] bg-[hsl(var(--surface))] px-6 py-3
@@ -111,9 +114,9 @@ style="animation-delay: 150ms"
               hover:bg-[hsl(var(--surface-muted))]
             "
           >
-            <svg class="size-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            <Icon name="github" decorative />
             GitHub
-          </a>
+          </ButtonLink>
         </div>
 
         <!-- Install snippet -->
@@ -129,25 +132,27 @@ style="animation-delay: 200ms"
           <span class="text-[hsl(var(--ink-muted))]">$</span>
           <span class="text-[hsl(var(--brand))]">pnpm</span>
           <span class="text-[hsl(var(--ink))]">add -D @santi020k/astro-doctor</span>
-          <button
+          <Button
             id="copy-install"
             aria-label="Copy install command"
+            size="icon"
+            variant="ghost"
             class="
               ml-2 flex size-6 items-center justify-center rounded-sm
               text-[hsl(var(--ink-muted))] transition-colors
               hover:text-[hsl(var(--brand))]
             "
           >
-            <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          </button>
+            <Icon class="size-3.5" name="copy" decorative />
+          </Button>
         </div>
       </div>
 
       <!-- Terminal demo -->
       <div class="mx-auto mt-16 max-w-2xl" data-reveal style="animation-delay: 250ms">
-        <div class="
+        <Card class="
           overflow-hidden rounded-2xl border border-[hsl(var(--line)/0.5)]
-          bg-[hsl(var(--surface))] shadow-2xl
+          bg-[hsl(var(--surface))] p-0 shadow-2xl
         "
         >
           <!-- Terminal header -->
@@ -195,7 +200,7 @@ style="animation-delay: 200ms"
             </div>
             <div class="mt-1 text-xs text-red-400">Process exited with code 1</div>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   </section>
@@ -224,7 +229,7 @@ data-stagger="80"
           { grade: 'D', range: '40–59', desc: 'Needs attention', color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/30' },
           { grade: 'F', range: '0–39', desc: 'Critical', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/30' }
         ].map(({ grade, range, desc, color, bg }) => (
-          <div class:list={[
+          <Card class:list={[
             'flex flex-col items-center gap-2 rounded-xl border p-4',
             bg
           ]}
@@ -236,7 +241,7 @@ data-stagger="80"
             >{grade}</span>
             <span class="text-xs text-[hsl(var(--ink-muted))]">{range}</span>
             <span class="text-xs text-[hsl(var(--ink-muted))]">{desc}</span>
-          </div>
+          </Card>
         ))}
       </div>
 
@@ -299,7 +304,7 @@ data-stagger="70"
             desc: 'Pre-built skill files for Claude, Cursor, Copilot Workspace. Your AI agent knows the rules — and how to fix them.'
           }
         ].map(({ icon, title, desc }) => (
-          <div class="panel-card flex flex-col gap-4 p-6">
+          <Card class="panel-card flex flex-col gap-4 p-6">
             <div class="
               flex size-10 items-center justify-center rounded-xl
               bg-[hsl(var(--brand-soft))]
@@ -313,7 +318,7 @@ data-stagger="70"
               <h3 class="mb-1 font-semibold text-[hsl(var(--ink))]">{title}</h3>
               <p class="text-sm/relaxed text-[hsl(var(--ink-soft))]">{desc}</p>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
     </div>
@@ -336,12 +341,12 @@ class="
 data-stagger="60"
       >
         {RULES.map(rule => (
-          <a
+          <Link
             href={`/docs/rules/${rule.slug}`}
             class="group panel-card flex items-start gap-4 p-5 no-underline"
           >
             <div class="mt-0.5 shrink-0">
-              <span class:list={[
+              <Badge class:list={[
                 `
                   inline-flex items-center rounded-md px-2 py-0.5 text-xs
                   font-semibold
@@ -352,7 +357,7 @@ data-stagger="60"
               ]}
               >
                 {rule.severity}
-              </span>
+              </Badge>
             </div>
             <div class="min-w-0 flex-1">
               <div class="mb-1 flex items-center gap-2">
@@ -364,32 +369,31 @@ data-stagger="60"
                 >
                   {rule.id}
                 </span>
-                <span class:list={[`
+                <Badge class:list={[`
                   inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs
                   font-medium
                 `, CATEGORY_COLORS[rule.category]]}
                 >
                   {CATEGORY_LABELS[rule.category]}
-                </span>
+                </Badge>
               </div>
               <p class="text-sm text-[hsl(var(--ink-soft))]">{rule.description}</p>
             </div>
-            <svg
-class="
-  mt-0.5 size-4 shrink-0 text-[hsl(var(--ink-muted))] transition-colors
-  group-hover:text-[hsl(var(--brand))]
-"
-viewBox="0 0 24 24"
-fill="none"
-stroke="currentColor"
-stroke-width="2"
-            ><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </a>
+            <Icon
+              class="
+                mt-0.5 size-4 shrink-0 text-[hsl(var(--ink-muted))]
+                transition-colors
+                group-hover:text-[hsl(var(--brand))]
+              "
+              name="arrow-right"
+              decorative
+            />
+          </Link>
         ))}
       </div>
 
       <div class="mt-8 text-center">
-        <a
+        <Link
           href="/docs/rules"
           class="
             inline-flex items-center gap-2 text-sm text-[hsl(var(--brand))]
@@ -398,8 +402,8 @@ stroke-width="2"
           "
         >
           View all rules with examples
-          <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
+          <Icon name="arrow-right" decorative />
+        </Link>
       </div>
     </div>
   </section>
@@ -408,7 +412,7 @@ stroke-width="2"
   <section class="py-16">
     <div class="container-docs">
       <div class="mx-auto max-w-2xl" data-reveal>
-        <div class="section-shell">
+        <Card class="section-shell">
           <h2 class="mb-2 text-2xl font-bold text-[hsl(var(--ink))]">Up and running in 2 minutes</h2>
           <p class="mb-8 text-sm text-[hsl(var(--ink-soft))]">Install once, catch issues everywhere.</p>
 
@@ -458,8 +462,9 @@ export default [
           </ol>
 
           <div class="mt-8 flex gap-3">
-            <a
+            <ButtonLink
               href="/docs/quick-start"
+              variant="primary"
               class="
                 flex items-center gap-2 rounded-lg bg-[hsl(var(--brand))] px-4
                 py-2.5 text-sm font-semibold text-white no-underline
@@ -468,9 +473,10 @@ export default [
               "
             >
               Full quick start guide
-            </a>
-            <a
+            </ButtonLink>
+            <ButtonLink
               href="/docs/installation"
+              variant="secondary"
               class="
                 flex items-center gap-2 rounded-lg border
                 border-[hsl(var(--line))] px-4 py-2.5 text-sm font-medium
@@ -479,9 +485,9 @@ export default [
               "
             >
               Installation options
-            </a>
+            </ButtonLink>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   </section>
@@ -497,14 +503,14 @@ class="
 data-reveal
       >
         <div>
-          <span class="
+          <Badge class="
             mb-3 inline-flex items-center rounded-full
             bg-[hsl(var(--brand-soft))] px-3 py-1 text-xs font-medium
             text-[hsl(var(--brand))]
           "
           >
             CI / CD
-          </span>
+          </Badge>
           <h2 class="
             mb-4 text-3xl font-bold tracking-tight text-[hsl(var(--ink))]
           "
@@ -530,7 +536,7 @@ data-reveal
               </li>
             ))}
           </ul>
-          <a
+          <Link
             href="/docs/github-action"
             class="
               mt-6 inline-flex items-center gap-2 text-sm font-medium
@@ -539,13 +545,13 @@ data-reveal
             "
           >
             GitHub Action docs
-            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </a>
+            <Icon name="arrow-right" decorative />
+          </Link>
         </div>
 
-        <div class="
+        <Card class="
           overflow-hidden rounded-2xl border border-[hsl(var(--line)/0.5)]
-          bg-[hsl(var(--surface))]
+          bg-[hsl(var(--surface))] p-0
         "
         >
           <div class="border-b border-[hsl(var(--line)/0.4)] px-4 py-3">
@@ -576,7 +582,7 @@ jobs:
           fail-on: error`}
           </code>
           </pre>
-        </div>
+        </Card>
       </div>
     </div>
   </section>
@@ -585,13 +591,13 @@ jobs:
   <section class="py-16">
     <div class="container-docs">
       <div class="mx-auto mb-10 max-w-3xl text-center" data-reveal>
-        <span class="
+        <Badge class="
           mb-3 inline-flex items-center rounded-full bg-[hsl(var(--brand-soft))]
           px-3 py-1 text-xs font-medium text-[hsl(var(--brand))]
         "
         >
           AI-native
-        </span>
+        </Badge>
         <h2 class="
           mb-3 text-3xl font-bold tracking-tight text-[hsl(var(--ink))]
         "
@@ -626,7 +632,7 @@ data-stagger="70"
             compatible: ['Claude', 'Cursor']
           }
         ].map(({ name, desc, compatible }) => (
-          <div class="panel-card flex flex-col gap-3 p-5">
+          <Card class="panel-card flex flex-col gap-3 p-5">
             <div class="flex items-center gap-2">
               <div class="
                 flex size-8 items-center justify-center rounded-lg
@@ -640,14 +646,16 @@ data-stagger="70"
             <p class="flex-1 text-xs/relaxed text-[hsl(var(--ink-soft))]">{desc}</p>
             <div class="flex flex-wrap gap-1">
               {compatible.map(tool => (
-                <span class="
-                  rounded-sm bg-[hsl(var(--surface-strong))] px-1.5 py-0.5
-                  text-[10px] text-[hsl(var(--ink-muted))]
-                "
-                >{tool}</span>
+                <Badge
+variant="secondary"
+class="
+  rounded-sm bg-[hsl(var(--surface-strong))] px-1.5 py-0.5 text-[10px]
+  text-[hsl(var(--ink-muted))]
+"
+                >{tool}</Badge>
               ))}
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
@@ -660,13 +668,13 @@ data-stagger="70"
   <!-- ─── Special Thanks ────────────────────────────────────────────────── -->
   <section class="py-16">
     <div class="container-docs">
-      <div class="section-shell mx-auto max-w-3xl text-center" data-reveal>
+      <Card class="section-shell mx-auto max-w-3xl text-center" data-reveal>
         <h2 class="
           mb-3 text-2xl font-bold tracking-tight text-[hsl(var(--ink))]
         "
         >Special Thanks</h2>
         <p class="leading-relaxed text-[hsl(var(--ink-soft))]">
-          Astro Doctor was deeply inspired by <a
+          Astro Doctor was deeply inspired by <Link
 href={REACT_DOCTOR_URL}
 target="_blank"
 rel="noopener noreferrer"
@@ -674,16 +682,16 @@ class="
   font-semibold text-[hsl(var(--brand))]
   hover:underline
 "
-                                              >react-doctor</a> by Million Software, Inc. They pioneered this concept and philosophy for the React ecosystem, and we built Astro Doctor to bring the same excellent developer experience to Astro. Huge thanks to their team!
+                                              >react-doctor</Link> by Million Software, Inc. They pioneered this concept and philosophy for the React ecosystem, and we built Astro Doctor to bring the same excellent developer experience to Astro. Huge thanks to their team!
         </p>
-      </div>
+      </Card>
     </div>
   </section>
 
   <!-- ─── CTA ───────────────────────────────────────────────────────────── -->
   <section class="py-20">
     <div class="container-docs">
-      <div class="section-shell mx-auto max-w-2xl text-center" data-reveal>
+      <Card class="section-shell mx-auto max-w-2xl text-center" data-reveal>
         <div class="mb-6 flex justify-center">
           <LogoMark class="brand-glow size-16 rounded-2xl shadow-lg" />
         </div>
@@ -701,8 +709,9 @@ class="
           sm:flex-row
         "
         >
-          <a
+          <ButtonLink
             href="/docs"
+            variant="primary"
             class="
               flex items-center justify-center gap-2 rounded-xl
               bg-[hsl(var(--brand))] px-6 py-3 text-sm font-semibold text-white
@@ -712,11 +721,11 @@ class="
             "
           >
             Read the docs
-          </a>
-          <a
+          </ButtonLink>
+          <ButtonLink
             href="https://github.com/santi020k/astro-doctor"
-            target="_blank"
-            rel="noopener noreferrer"
+            newTab
+            variant="secondary"
             class="
               flex items-center justify-center gap-2 rounded-xl border
               border-[hsl(var(--line))] px-6 py-3 text-sm font-semibold
@@ -725,9 +734,9 @@ class="
             "
           >
             Star on GitHub ⭐
-          </a>
+          </ButtonLink>
         </div>
-      </div>
+      </Card>
     </div>
   </section>
 </Base>

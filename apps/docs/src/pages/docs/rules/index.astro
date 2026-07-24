@@ -1,6 +1,8 @@
 ---
 import Docs from '@/layouts/Docs.astro'
 
+import { Badge, Link } from '@santi020k/lumen-astro'
+
 import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
 ---
 
@@ -32,21 +34,21 @@ import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
       {RULES.map(rule => (
         <tr>
           <td>
-            <a href={`/docs/rules/${rule.slug}`}>
+            <Link href={`/docs/rules/${rule.slug}`}>
               <code>{rule.id}</code>
-            </a>
+            </Link>
           </td>
           <td>
-            <span class:list={[`
+            <Badge class:list={[`
               inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs
               font-medium
             `, CATEGORY_COLORS[rule.category]]}
             >
               {CATEGORY_LABELS[rule.category]}
-            </span>
+            </Badge>
           </td>
           <td>
-            <span class:list={[
+            <Badge class:list={[
               `
                 inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs
                 font-medium
@@ -57,7 +59,7 @@ import { CATEGORY_COLORS, CATEGORY_LABELS, RULES } from '@/data/rules'
             ]}
             >
               {rule.severity}
-            </span>
+            </Badge>
           </td>
           <td class="text-sm text-[hsl(var(--ink-muted))]">—</td>
         </tr>
@@ -118,5 +120,5 @@ export default [
   </code>
   </pre>
 
-  <p>Or use a <a href="/docs/configuration"><code>doctor.config.*</code></a> file for CLI-only overrides.</p>
+  <p>Or use a <Link href="/docs/configuration"><code>doctor.config.*</code></Link> file for CLI-only overrides.</p>
 </Docs>

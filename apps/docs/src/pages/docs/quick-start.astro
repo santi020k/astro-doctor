@@ -1,6 +1,8 @@
 ---
 import PackageManagerTabs from '@/components/PackageManagerTabs.astro'
 import Docs from '@/layouts/Docs.astro'
+
+import { Callout } from '@santi020k/lumen-astro'
 ---
 
 <Docs
@@ -102,8 +104,8 @@ jobs:
        </code>
   </pre>
 
-  <div class="callout callout-tip">
+  <Callout class="callout callout-tip">
     <strong>Next steps:</strong> Read the <a href="/docs/configuration">configuration guide</a> to
     tune presets, rules, ignore paths, and fail thresholds.
-  </div>
+  </Callout>
 </Docs>

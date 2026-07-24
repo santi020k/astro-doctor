@@ -1,6 +1,8 @@
 ---
 import PackageManagerTabs from '@/components/PackageManagerTabs.astro'
 import Docs from '@/layouts/Docs.astro'
+
+import { Callout } from '@santi020k/lumen-astro'
 ---
 
 <Docs
@@ -88,10 +90,10 @@ export default [
 
   <p>This copies three skill files to <code>.agents/skills/</code> in your project root.</p>
 
-  <div class="callout callout-tip">
+  <Callout class="callout callout-tip">
     <strong>Tip:</strong> Commit the <code>.agents/skills/</code> folder to your repository so all
     contributors and their AI tools benefit from the same context.
-  </div>
+  </Callout>
 
   <h2>GitHub Action</h2>
 
