@@ -665,6 +665,10 @@ const resolveFilesToScan = (options: CliOptions): string[] | undefined => {
     return files
   }
 
+  if (options.changedFilesFrom) {
+    return readChangedFiles(options.changedFilesFrom)
+  }
+
   if (options.scope !== 'full' || options.diff !== false) {
     const files = getDiffAstroFiles(options.directory, getBaseOption(options))
 
@@ -673,10 +677,6 @@ const resolveFilesToScan = (options: CliOptions): string[] | undefined => {
     }
 
     return files
-  }
-
-  if (options.changedFilesFrom) {
-    return readChangedFiles(options.changedFilesFrom)
   }
 
   return undefined
@@ -802,6 +802,7 @@ const filterIntroducedProjectResults = async (
         ...baseScanOptions,
         ignore: mergedConfig.ignore,
         rules: mergedConfig.rules,
+        overrides: mergedConfig.overrides,
       },
     })
 
@@ -964,6 +965,7 @@ const tryFilterIntroducedScanResult = async (
         ...baseScanOptions,
         ignore: config?.ignore,
         rules: getEffectiveRules(config, effectivePreset),
+        overrides: config?.overrides,
       },
     })
 

@@ -10,6 +10,7 @@ import {
 import { getProjectRuleMeta } from '../project-rules.js'
 import type { Diagnostic, ScanOptions, Severity } from '../types.js'
 import { maskCodeLiterals } from '../utils/mask-code-literals.js'
+import { readPnpmWorkspacePatterns } from '../utils/read-pnpm-workspace-patterns.js'
 
 import { buildIgnorePatterns } from './file-discovery.js'
 
@@ -32,8 +33,15 @@ const CONTENT_CONFIG_FILE_NAMES = [
 ]
 
 const PACKAGE_FILE_NAME = 'package.json'
-const PACKAGE_LOCK_FILE_NAME = 'package-lock.json'
-const YARN_LOCK_FILE_NAME = 'yarn.lock'
+
+const COMPETING_LOCK_FILE_NAMES = [
+  'package-lock.json',
+  'npm-shrinkwrap.json',
+  'yarn.lock',
+  'bun.lock',
+  'bun.lockb',
+]
+
 const ENV_EXAMPLE_FILE_NAME = '.env.example'
 const CONTENT_DIRECTORY_NAME = 'src/content'
 const ACTIONS_DIRECTORY_NAME = 'src/actions'
@@ -46,8 +54,7 @@ const PROJECT_AUDIT_FILE_NAMES = [
   ...ASTRO_CONFIG_FILE_NAMES,
   ...CONTENT_CONFIG_FILE_NAMES,
   PACKAGE_FILE_NAME,
-  PACKAGE_LOCK_FILE_NAME,
-  YARN_LOCK_FILE_NAME,
+  ...COMPETING_LOCK_FILE_NAMES,
   ENV_EXAMPLE_FILE_NAME,
 ]
 
@@ -126,19 +133,53 @@ const readProjectFile = (rootDirectory: string, projectPath: string): string | u
   return readFileSync(filePath, 'utf8')
 }
 
+const matchesWorkspacePattern = (
+  workspaceDirectory: string,
+  projectDirectory: string,
+  pattern: string,
+): boolean =>
+  globSync(pattern, { cwd: workspaceDirectory, absolute: true })
+    .some((matchedPath) => resolve(matchedPath) === resolve(projectDirectory))
+
+const isPnpmWorkspaceProject = (
+  workspaceDirectory: string,
+  projectDirectory: string,
+): boolean => {
+  if (resolve(workspaceDirectory) === resolve(projectDirectory)) return true
+
+  const patterns = readPnpmWorkspacePatterns(workspaceDirectory)
+  const includedPatterns = patterns.filter((pattern) => !pattern.startsWith('!'))
+
+  const excludedPatterns = patterns
+    .filter((pattern) => pattern.startsWith('!'))
+    .map((pattern) => pattern.slice(1))
+
+  return includedPatterns.some((pattern) =>
+    matchesWorkspacePattern(workspaceDirectory, projectDirectory, pattern)
+  ) && !excludedPatterns.some((pattern) =>
+    matchesWorkspacePattern(workspaceDirectory, projectDirectory, pattern)
+  )
+}
+
 const findPnpmWorkspaceDirectory = (projectDirectory: string): string | undefined => {
   let currentDirectory = resolve(projectDirectory)
   let parentDirectory = dirname(currentDirectory)
 
   while (currentDirectory !== parentDirectory) {
-    if (existsSync(resolve(currentDirectory, 'pnpm-workspace.yaml'))) return currentDirectory
+    if (
+      existsSync(resolve(currentDirectory, 'pnpm-workspace.yaml')) &&
+      isPnpmWorkspaceProject(currentDirectory, projectDirectory)
+    ) {
+      return currentDirectory
+    }
 
     currentDirectory = parentDirectory
 
     parentDirectory = dirname(currentDirectory)
   }
 
-  return existsSync(resolve(currentDirectory, 'pnpm-workspace.yaml'))
+  return existsSync(resolve(currentDirectory, 'pnpm-workspace.yaml')) &&
+    isPnpmWorkspaceProject(currentDirectory, projectDirectory)
     ? currentDirectory
     : undefined
 }
@@ -367,8 +408,9 @@ const isPackageManagerAuditSelected = (
   selectedProjectPaths: Set<string> | undefined,
 ): boolean =>
   isSelected(selectedProjectPaths, PACKAGE_FILE_NAME) ||
-  isSelected(selectedProjectPaths, PACKAGE_LOCK_FILE_NAME) ||
-  isSelected(selectedProjectPaths, YARN_LOCK_FILE_NAME)
+  COMPETING_LOCK_FILE_NAMES.some((lockFileName) =>
+    isSelected(selectedProjectPaths, lockFileName)
+  )
 
 const getPackageManagerContent = (
   packageJsonContent: string,
@@ -381,12 +423,13 @@ const getPackageManagerContent = (
   return readProjectFile(workspaceDirectory, PACKAGE_FILE_NAME)
 }
 
-const hasLockFile = (
+const hasCompetingLockFile = (
   directories: ReadonlySet<string>,
-  lockFileName: string,
 ): boolean =>
   [...directories].some((directory) =>
-    existsSync(toAbsolutePath(directory, lockFileName))
+    COMPETING_LOCK_FILE_NAMES.some((lockFileName) =>
+      existsSync(toAbsolutePath(directory, lockFileName))
+    )
   )
 
 const auditPackageManager = (
@@ -415,13 +458,7 @@ const auditPackageManager = (
   const usesPnpm = packageManagerContent?.includes('"packageManager"') === true &&
     packageManagerContent.includes('"pnpm@')
 
-  if (
-    usesPnpm &&
-    !hasLockFile(auditedDirectories, PACKAGE_LOCK_FILE_NAME) &&
-    !hasLockFile(auditedDirectories, YARN_LOCK_FILE_NAME)
-  ) {
-    return
-  }
+  if (usesPnpm && !hasCompetingLockFile(auditedDirectories)) return
 
   pushDiagnostic(
     diagnostics,
@@ -430,7 +467,7 @@ const auditPackageManager = (
       options.rules,
       'astro-doctor/prefer-pnpm',
       PACKAGE_FILE_NAME,
-      'Use pnpm consistently: declare it in packageManager at the package or workspace root and remove npm/yarn lockfiles.',
+      'Use pnpm consistently: declare it in packageManager at the package or workspace root and remove competing npm, Yarn, or Bun lockfiles.',
       getLocation(packageJsonContent, '"packageManager"'),
     ),
   )

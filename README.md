@@ -155,7 +155,7 @@ The CLI also checks project files such as `astro.config.*`, `package.json`, `.en
 | `no-insecure-session-cookie` | ⚠️ warning | Keep secure, HTTP-only, same-site session cookie protections enabled |
 | `no-open-allowed-domains` | ⚠️ warning | Avoid `security.allowedDomains: [{}]` |
 | `prefer-env-schema` | ⚠️ warning | Define an Astro env schema for documented env vars |
-| `prefer-pnpm` | opt-in | Use pnpm consistently and avoid npm/yarn lockfiles |
+| `prefer-pnpm` | opt-in | Use pnpm consistently and avoid npm, Yarn, and Bun lockfiles |
 | `require-action-input-schema` | ⚠️ warning | Validate untrusted Astro Action input before handlers run |
 | `require-client-router-script-lifecycle` | strict | Initialize scripts on `astro:page-load` when using ClientRouter |
 | `require-content-config` | ⚠️ warning | Add a content config when using `src/content/` |

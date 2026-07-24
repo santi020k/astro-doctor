@@ -24,12 +24,21 @@ const git = (args: string[], cwd: string): string[] => {
   }
 }
 
-const gitText = (args: string[], cwd: string): string =>
-  execFileSync('git', args, {
+export const extractRevision = (
+  cwd: string,
+  revision: string,
+  destinationDirectory: string,
+): void => {
+  const archive = execFileSync('git', ['archive', '--format=tar', revision], {
     cwd,
-    encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   })
+
+  execFileSync('tar', ['-xf', '-', '-C', destinationDirectory], {
+    input: archive,
+    stdio: ['pipe', 'ignore', 'pipe'],
+  })
+}
 
 const detectDefaultBase = (cwd: string): string => {
   for (const candidate of ['main', 'master', 'origin/main', 'origin/master']) {
@@ -53,18 +62,6 @@ export const resolveBaseRevision = (cwd: string, base?: string): string => {
   if (!revision) throw new Error(`Unable to resolve base revision "${requestedBase}".`)
 
   return revision
-}
-
-export const getFileAtRevision = (
-  cwd: string,
-  revision: string,
-  filePath: string,
-): string | undefined => {
-  try {
-    return gitText(['show', `${revision}:${filePath}`], cwd)
-  } catch {
-    return undefined
-  }
 }
 
 /**

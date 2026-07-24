@@ -46,6 +46,111 @@ describe('project audits', () => {
     )
   })
 
+  test('does not enforce pnpm unless prefer-pnpm is enabled', async () => {
+    writeFileSync(
+      join(testDirectory, 'package.json'),
+      JSON.stringify({ name: 'npm-project', packageManager: 'npm@11.0.0' }),
+    )
+    writeFileSync(join(testDirectory, 'package-lock.json'), '{}')
+
+    const scanResult = await scan({
+      directory: testDirectory,
+      files: ['package.json', 'package-lock.json'],
+    })
+
+    expect(scanResult.diagnostics).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ ruleId: 'astro-doctor/prefer-pnpm' }),
+      ]),
+    )
+  })
+
+  test.each([
+    { packageManager: 'npm@11.0.0', lockFileName: 'package-lock.json' },
+    { packageManager: 'yarn@4.9.0', lockFileName: 'yarn.lock' },
+    { packageManager: 'bun@1.2.0', lockFileName: 'bun.lock' },
+  ])(
+    'reports $packageManager when prefer-pnpm is enabled',
+    async ({ packageManager, lockFileName }) => {
+      writeFileSync(
+        join(testDirectory, 'package.json'),
+        JSON.stringify({ name: 'alternate-manager', packageManager }),
+      )
+      writeFileSync(join(testDirectory, lockFileName), '')
+
+      const scanResult = await scan({
+        directory: testDirectory,
+        files: ['package.json', lockFileName],
+        rules: {
+          'astro-doctor/prefer-pnpm': 'warn',
+        },
+      })
+
+      expect(scanResult.diagnostics).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ ruleId: 'astro-doctor/prefer-pnpm' }),
+        ]),
+      )
+    },
+  )
+
+  test.each([
+    'package-lock.json',
+    'npm-shrinkwrap.json',
+    'yarn.lock',
+    'bun.lock',
+    'bun.lockb',
+  ])('reports competing %s in a pnpm project', async (lockFileName) => {
+    writeFileSync(
+      join(testDirectory, 'package.json'),
+      JSON.stringify({ name: 'pnpm-project', packageManager: 'pnpm@10.0.0' }),
+    )
+    writeFileSync(join(testDirectory, lockFileName), '')
+
+    const scanResult = await scan({
+      directory: testDirectory,
+      files: ['package.json', lockFileName],
+      rules: {
+        'astro-doctor/prefer-pnpm': 'warn',
+      },
+    })
+
+    expect(scanResult.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ ruleId: 'astro-doctor/prefer-pnpm' }),
+      ]),
+    )
+  })
+
+  test.each([
+    'packages:\n  - apps/*\n',
+    "packages:\n  - tools/*\n  - '!tools/docs'\n",
+  ])('does not inherit pnpm for a package excluded by workspace globs', async (workspaceConfig) => {
+    const projectDirectory = join(testDirectory, 'tools', 'docs')
+
+    mkdirSync(projectDirectory, { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'package.json'),
+      JSON.stringify({ name: 'workspace', packageManager: 'pnpm@10.0.0' }),
+    )
+    writeFileSync(join(testDirectory, 'pnpm-workspace.yaml'), workspaceConfig)
+    writeFileSync(join(projectDirectory, 'package.json'), JSON.stringify({ name: 'docs' }))
+
+    const scanResult = await scan({
+      directory: projectDirectory,
+      files: ['package.json'],
+      rules: {
+        'astro-doctor/prefer-pnpm': 'warn',
+      },
+    })
+
+    expect(scanResult.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ ruleId: 'astro-doctor/prefer-pnpm' }),
+      ]),
+    )
+  })
+
   test('reports actions without a top-level input schema', async () => {
     mkdirSync(join(testDirectory, 'src', 'actions'), { recursive: true })
     writeFileSync(

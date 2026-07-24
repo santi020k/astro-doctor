@@ -68,7 +68,7 @@ runs:
         WORKING_DIRECTORY="${{ inputs.working-directory }}"
 
         git -C "$WORKING_DIRECTORY" diff --name-only --diff-filter=AMR --relative "$BASE_SHA"...HEAD \
-          | grep -E '(\.astro$|(^|/)astro\.config\.(ts|mjs|js|cjs|mts|cts)$|(^|/)package\.json$|(^|/)package-lock\.json$|(^|/)yarn\.lock$|(^|/)\.env\.example$|(^|/)src/content\.config\.(ts|mjs|js)$|(^|/)src/content/config\.(ts|mjs|js)$|(^|/)src/content/)' \
+          | grep -E '(\.astro$|(^|/)astro\.config\.(ts|mjs|js|cjs|mts|cts)$|(^|/)package\.json$|(^|/)(package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|bun\.lock|bun\.lockb)$|(^|/)\.env\.example$|(^|/)src/content\.config\.(ts|mjs|js)$|(^|/)src/content/config\.(ts|mjs|js)$|(^|/)src/content/|(^|/)src/actions/)' \
           > "$CHANGED_FILES_FILE" || true
 
         echo "changed_files_from=$CHANGED_FILES_FILE" >> "$GITHUB_OUTPUT"
