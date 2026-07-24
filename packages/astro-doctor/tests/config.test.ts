@@ -46,13 +46,19 @@ describe('loadConfig', () => {
       }),
     )
     const result = await loadConfig(testDirectory)
-    expect(result?.threshold).toBe(80)
-    expect(result?.failOn).toBe('error')
-    expect(result?.preset).toBe('recommended')
-    expect(result?.ignore).toEqual(['node_modules/**'])
-    expect(result?.rules?.['astro-doctor/no-set-html']).toBe('warn')
-    expect(result?.overrides?.[0]?.files).toEqual(['src/legacy/**'])
-    expect(result?.projects).toEqual(['apps/site'])
+
+    expect(result).toEqual({
+      threshold: 80,
+      failOn: 'error',
+      preset: 'recommended',
+      ignore: ['node_modules/**'],
+      rules: { 'astro-doctor/no-set-html': 'warn' },
+      overrides: [{
+        files: ['src/legacy/**'],
+        rules: { 'astro-doctor/no-set-html': 'off' },
+      }],
+      projects: ['apps/site'],
+    })
   })
 
   test('rejects overrides without file globs', async () => {

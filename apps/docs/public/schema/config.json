@@ -60,9 +60,12 @@
         "astro-doctor/no-process-env":         { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/prefer-content-collections": { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/no-disabled-origin-check": { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/no-insecure-session-cookie": { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/no-open-allowed-domains": { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/prefer-env-schema":      { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/prefer-pnpm":            { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/require-action-input-schema": { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/require-client-router-script-lifecycle": { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/require-content-config": { "type": "string", "enum": ["error", "warn", "off"] }
       }
     },

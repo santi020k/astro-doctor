@@ -529,8 +529,10 @@ Rules checked:
   Performance:    no-blocking-script, no-client-load-overuse, no-unprocessed-script-surprises,
                   require-image-dimensions, use-astro-image
   Accessibility:  no-missing-alt, no-missing-lang, require-island-fallback
-  Security:       no-public-secret-env, no-set-html
+  Security:       no-insecure-session-cookie, no-public-secret-env, no-set-html,
+                  require-action-input-schema
   Best Practices: no-process-env, prefer-class-list, prefer-content-collections
+  Strict audits:  require-client-router-script-lifecycle
   `)
 }
 
@@ -978,6 +980,30 @@ const tryFilterIntroducedScanResult = async (
   }
 }
 
+const resolveReportedScanResult = async (
+  options: CliOptions,
+  config: AstroDoctorConfig | null,
+  effectivePreset: PresetName | undefined,
+  baseScanOptions: BaseScanOptions,
+  filesToScan: readonly string[] | undefined,
+  scanResult: ScanResult,
+): Promise<ScanResult | null> => {
+  const introducedResult = options.scope === 'changed' && filesToScan
+    ? await tryFilterIntroducedScanResult(
+        options,
+        config,
+        effectivePreset,
+        baseScanOptions,
+        filesToScan,
+        scanResult,
+      )
+    : scanResult
+
+  return introducedResult === null
+    ? null
+    : tryApplyPersistentBaseline(introducedResult, options)
+}
+
 const executeSingleDirectoryScan = async (
   options: CliOptions,
   config: AstroDoctorConfig | null,
@@ -1009,22 +1035,14 @@ const executeSingleDirectoryScan = async (
 
   if (!scanResult) return
 
-  let effectiveScanResult: ScanResult | null = scanResult
-
-  if (options.scope === 'changed' && filesToScan) {
-    effectiveScanResult = await tryFilterIntroducedScanResult(
-      options,
-      config,
-      effectivePreset,
-      baseScanOptions,
-      filesToScan,
-      scanResult,
-    )
-  }
-
-  if (!effectiveScanResult) return
-
-  effectiveScanResult = tryApplyPersistentBaseline(effectiveScanResult, options)
+  const effectiveScanResult = await resolveReportedScanResult(
+    options,
+    config,
+    effectivePreset,
+    baseScanOptions,
+    filesToScan,
+    scanResult,
+  )
 
   if (!effectiveScanResult) return
 

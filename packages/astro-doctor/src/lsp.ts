@@ -55,7 +55,12 @@ import {
 import { getPresetRules } from './presets.js'
 import { getProjectRuleMeta } from './project-rules.js'
 import { computeCategoryBreakdown, computeScore, computeScoreLabel } from './scorer.js'
-import type { AstroDoctorConfig, Diagnostic as AstroDiagnostic, ScoreBreakdown } from './types.js'
+import type {
+  AstroDoctorConfig,
+  Diagnostic as AstroDiagnostic,
+  ScanResult,
+  ScoreBreakdown,
+} from './types.js'
 
 const noop = (): void => {
   // intentionally swallows errors from fire-and-forget calls
@@ -68,6 +73,15 @@ const SERVER_STATUS_METHOD = 'experimental/serverStatus'
 const HEALTH_SCORE_METHOD = 'experimental/healthScore'
 const TOP_ISSUES_METHOD = 'experimental/topIssues'
 const TOP_ISSUES_COUNT = 5
+const COMMAND_FIX_ALL = 'astro-doctor.fixAll'
+const COMMAND_SCAN_FILE = 'astro-doctor.scanFile'
+const COMMAND_SCAN_WORKSPACE = 'astro-doctor.scanWorkspace'
+
+export const LSP_EXECUTE_COMMANDS = [
+  COMMAND_FIX_ALL,
+  COMMAND_SCAN_FILE,
+  COMMAND_SCAN_WORKSPACE,
+]
 
 interface ServerStatusParams {
   readonly health: 'ok' | 'warning' | 'error'
@@ -119,6 +133,7 @@ const buildEslintInstance = (
   root: string,
   customRules?: Record<string, 'error' | 'warn' | 'off'>,
   overrides: AstroDoctorConfig['overrides'] = [],
+  fix = false,
 ): ESLint => {
   const pluginRules = customRules
     ? Object.fromEntries(
@@ -150,6 +165,7 @@ const buildEslintInstance = (
         rules: override.rules,
       })),
     ],
+    fix,
     ignore: false,
   })
 }
@@ -183,11 +199,6 @@ interface DiagnosticFixData {
     readonly newText: string
     readonly range: LspDiagnostic['range']
   }[]
-}
-
-interface LspTextEdit {
-  readonly newText: string
-  readonly range: LspDiagnostic['range']
 }
 
 const isDiagnosticFixData = (value: unknown): value is DiagnosticFixData => {
@@ -325,6 +336,147 @@ const lintFileContent = async (
   return { lsp, astro }
 }
 
+export const getFixedDocumentText = async (
+  eslint: ESLint,
+  content: string,
+  filePath: string,
+): Promise<string | undefined> => {
+  const results = await eslint.lintText(content, { filePath })
+
+  return results[0]?.output
+}
+
+const groupDiagnosticsByFile = (
+  diagnostics: readonly AstroDiagnostic[],
+): Map<string, AstroDiagnostic[]> => {
+  const diagnosticsByFile = new Map<string, AstroDiagnostic[]>()
+
+  for (const diagnostic of diagnostics) {
+    const existingDiagnostics = diagnosticsByFile.get(diagnostic.filePath) ?? []
+
+    diagnosticsByFile.set(diagnostic.filePath, [...existingDiagnostics, diagnostic])
+  }
+
+  return diagnosticsByFile
+}
+
+const findEslintInstanceForFile = (
+  filePath: string,
+  fallbackEslint: ESLint | null,
+  projectInstances: ReadonlyMap<string, ESLint>,
+): ESLint | null => {
+  let closestDirectory = ''
+  let closestEslint: ESLint | null = null
+
+  for (const [projectDirectory, projectEslint] of projectInstances) {
+    if (
+      isFileInDirectory(filePath, projectDirectory) &&
+      projectDirectory.length > closestDirectory.length
+    ) {
+      closestDirectory = projectDirectory
+
+      closestEslint = projectEslint
+    }
+  }
+
+  return closestEslint ?? fallbackEslint
+}
+
+const overlayOpenDocumentDiagnostics = async (
+  openDocuments: readonly TextDocument[],
+  getCurrentDocument: (uri: string) => TextDocument | undefined,
+  fallbackEslint: ESLint,
+  projectInstances: ReadonlyMap<string, ESLint>,
+  diagnosticsByFile: Map<string, AstroDiagnostic[]>,
+): Promise<void> => {
+  for (const document of openDocuments) {
+    let filePath: string
+
+    try {
+      filePath = fileURLToPath(document.uri)
+    } catch {
+      continue
+    }
+
+    if (!filePath.endsWith('.astro')) continue
+
+    const activeEslint = findEslintInstanceForFile(
+      filePath,
+      fallbackEslint,
+      projectInstances,
+    )
+
+    if (activeEslint === null) continue
+
+    const { astro } = await lintFileContent(activeEslint, document.getText(), filePath)
+
+    if (getCurrentDocument(document.uri)?.version !== document.version) continue
+
+    diagnosticsByFile.set(filePath, astro)
+  }
+}
+
+interface WorkspaceScanState {
+  readonly result: ScanResult
+  readonly projectEslintInstances: ReadonlyMap<string, ESLint>
+  readonly projectFixEslintInstances: ReadonlyMap<string, ESLint>
+}
+
+const scanWorkspaceState = async (
+  workspaceRoot: string,
+  config: AstroDoctorConfig | null,
+  effectiveRules: Record<string, 'error' | 'warn' | 'off'>,
+): Promise<WorkspaceScanState> => {
+  const discoveredProjects = await autoDiscoverAstroProjects(workspaceRoot)
+  const projectInstances = new Map<string, ESLint>()
+  const projectFixInstances = new Map<string, ESLint>()
+
+  if (discoveredProjects.length === 0) {
+    const result = await scan({
+      directory: workspaceRoot,
+      ignore: config?.ignore,
+      overrides: config?.overrides,
+      rules: effectiveRules,
+      cache: true,
+    })
+
+    return {
+      result,
+      projectEslintInstances: projectInstances,
+      projectFixEslintInstances: projectFixInstances,
+    }
+  }
+
+  for (const project of discoveredProjects) {
+    const projectConfig = await loadConfig(project.directory)
+    const mergedConfig = mergeConfigs(config, projectConfig)
+    const projectRules = getEffectiveRules(mergedConfig)
+
+    projectInstances.set(
+      project.directory,
+      buildEslintInstance(project.directory, projectRules, mergedConfig.overrides),
+    )
+
+    projectFixInstances.set(
+      project.directory,
+      buildEslintInstance(project.directory, projectRules, mergedConfig.overrides, true),
+    )
+  }
+
+  const projectResults = await scanProjects({
+    rootDirectory: workspaceRoot,
+    projectArgs: discoveredProjects.map((project) => project.directory),
+    rootConfig: config,
+    scanOptions: { cache: true, noLint: false, noRespectInlineDisables: false },
+  })
+
+  return {
+    result: aggregateResults(projectResults),
+    projectEslintInstances: projectInstances,
+    projectFixEslintInstances: projectFixInstances,
+  }
+}
+
 interface DiagnosticPosition {
   readonly line: number
   readonly character: number
@@ -434,9 +586,11 @@ export const runLsp = (): void => {
   let workspaceRoot = process.cwd()
   let hasWorkspaceFolder = false
   let eslintInstance: ESLint | null = null
+  let fixEslintInstance: ESLint | null = null
   let scanOnType = true
   let workspaceFileCount = 0
   const projectEslintInstances = new Map<string, ESLint>()
+  const projectFixEslintInstances = new Map<string, ESLint>()
   const pendingDocumentScans = new Map<string, NodeJS.Timeout>()
   let workspaceScanGeneration = 0
   // Keyed by absolute file path
@@ -490,6 +644,17 @@ export const runLsp = (): void => {
     connection.sendNotification(TOP_ISSUES_METHOD, topIssues).catch(noop)
   }
 
+  const replaceEslintInstances = (
+    targetInstances: Map<string, ESLint>,
+    nextInstances: ReadonlyMap<string, ESLint>,
+  ): void => {
+    targetInstances.clear()
+
+    for (const [projectDirectory, projectEslint] of nextInstances) {
+      targetInstances.set(projectDirectory, projectEslint)
+    }
+  }
+
   const doInitialScan = async (): Promise<void> => {
     const scanGeneration = ++workspaceScanGeneration
 
@@ -505,10 +670,19 @@ export const runLsp = (): void => {
         nextConfig?.overrides,
       )
 
+      const nextFixEslintInstance = buildEslintInstance(
+        workspaceRoot,
+        effectiveRules,
+        nextConfig?.overrides,
+        true,
+      )
+
       if (!hasWorkspaceFolder) {
         if (scanGeneration !== workspaceScanGeneration) return
 
         eslintInstance = nextEslintInstance
+
+        fixEslintInstance = nextFixEslintInstance
 
         workspaceFileCount = 0
 
@@ -521,71 +695,57 @@ export const runLsp = (): void => {
         return
       }
 
-      const discoveredProjects = await autoDiscoverAstroProjects(workspaceRoot)
-      const nextProjectEslintInstances = new Map<string, ESLint>()
-      let result
+      const {
+        result,
+        projectEslintInstances: nextProjectEslintInstances,
+        projectFixEslintInstances: nextProjectFixEslintInstances,
+      } = await scanWorkspaceState(workspaceRoot, nextConfig, effectiveRules)
 
-      if (discoveredProjects.length > 0) {
-        for (const pkg of discoveredProjects) {
-          const projectConfig = await loadConfig(pkg.directory)
-          const mergedConfig = mergeConfigs(nextConfig, projectConfig)
-          const projectRules = getEffectiveRules(mergedConfig)
+      const nextFileAstroDiagnostics = groupDiagnosticsByFile(result.diagnostics)
 
-          nextProjectEslintInstances.set(
-            pkg.directory,
-            buildEslintInstance(pkg.directory, projectRules, mergedConfig.overrides),
-          )
-        }
-
-        const projectResults = await scanProjects({
-          rootDirectory: workspaceRoot,
-          projectArgs: discoveredProjects.map((p) => p.directory),
-          rootConfig: nextConfig,
-          scanOptions: { cache: true, noLint: false, noRespectInlineDisables: false },
-        })
-
-        result = aggregateResults(projectResults)
-      } else {
-        result = await scan({
-          directory: workspaceRoot,
-          ignore: nextConfig?.ignore,
-          overrides: nextConfig?.overrides,
-          rules: effectiveRules,
-          cache: true,
-        })
-      }
+      await overlayOpenDocumentDiagnostics(
+        documents.all(),
+        (documentUri) => documents.get(documentUri),
+        nextEslintInstance,
+        nextProjectEslintInstances,
+        nextFileAstroDiagnostics,
+      )
 
       if (scanGeneration !== workspaceScanGeneration) return
 
       eslintInstance = nextEslintInstance
 
-      projectEslintInstances.clear()
+      fixEslintInstance = nextFixEslintInstance
 
-      for (const [projectDirectory, projectEslint] of nextProjectEslintInstances) {
-        projectEslintInstances.set(projectDirectory, projectEslint)
-      }
+      replaceEslintInstances(projectEslintInstances, nextProjectEslintInstances)
+
+      replaceEslintInstances(projectFixEslintInstances, nextProjectFixEslintInstances)
 
       workspaceFileCount = result.fileCount
 
       fileAstroDiagnostics.clear()
 
-      fileLspDiagnostics.clear()
-
-      // Group AstroDiagnostics by file path
-      for (const diag of result.diagnostics) {
-        const existing = fileAstroDiagnostics.get(diag.filePath) ?? []
-
-        fileAstroDiagnostics.set(diag.filePath, [...existing, diag])
+      for (const [filePath, diagnostics] of nextFileAstroDiagnostics) {
+        fileAstroDiagnostics.set(filePath, diagnostics)
       }
 
-      // Convert to LSP diagnostics and publish per file
+      const previousDiagnosticUris = new Set(fileLspDiagnostics.keys())
+
+      fileLspDiagnostics.clear()
+
       for (const [filePath, diags] of fileAstroDiagnostics.entries()) {
         const uri = pathToFileURL(filePath).toString()
         const lspDiags: LspDiagnostic[] = diags.map(buildAstroDiagLspDiagnostic)
 
+        previousDiagnosticUris.delete(uri)
+
         fileLspDiagnostics.set(uri, lspDiags)
 
         connection.sendDiagnostics({ uri, diagnostics: lspDiags }).catch(noop)
+      }
+
+      for (const uri of previousDiagnosticUris) {
+        connection.sendDiagnostics({ uri, diagnostics: [] }).catch(noop)
       }
 
       publishHealthScore()
@@ -600,20 +760,19 @@ export const runLsp = (): void => {
     }
   }
 
-  const getEslintInstanceForFile = (filePath: string): ESLint | null => {
-    let closestDir = ''
-    let closestEslint: ESLint | null = null
+  const getEslintInstanceForFile = (filePath: string): ESLint | null =>
+    findEslintInstanceForFile(
+      filePath,
+      eslintInstance,
+      projectEslintInstances,
+    )
 
-    for (const [dir, eslint] of projectEslintInstances.entries()) {
-      if (isFileInDirectory(filePath, dir) && dir.length > closestDir.length) {
-        closestDir = dir
-
-        closestEslint = eslint
-      }
-    }
-
-    return closestEslint ?? eslintInstance
-  }
+  const getFixEslintInstanceForFile = (filePath: string): ESLint | null =>
+    findEslintInstanceForFile(
+      filePath,
+      fixEslintInstance,
+      projectFixEslintInstances,
+    )
 
   const applyAllFixes = async (uri: string): Promise<void> => {
     const document = documents.get(uri)
@@ -628,29 +787,23 @@ export const runLsp = (): void => {
       return
     }
 
-    const activeEslint = getEslintInstanceForFile(filePath)
+    const activeEslint = getFixEslintInstanceForFile(filePath)
 
     if (!activeEslint) return
 
-    const { lsp } = await lintFileContent(activeEslint, document.getText(), filePath)
-    const edits: LspTextEdit[] = []
+    const fixedText = await getFixedDocumentText(activeEslint, document.getText(), filePath)
 
-    for (const diagnostic of lsp) {
-      const diagnosticData: unknown = diagnostic.data
-
-      if (!isDiagnosticFixData(diagnosticData) || diagnosticData.fix === undefined) continue
-
-      edits.push({
-        newText: diagnosticData.fix.newText,
-        range: diagnosticData.fix.range,
-      })
-    }
-
-    if (edits.length === 0) return
+    if (fixedText === undefined || fixedText === document.getText()) return
 
     await connection.workspace.applyEdit({
       changes: {
-        [uri]: edits,
+        [uri]: [{
+          newText: fixedText,
+          range: {
+            start: document.positionAt(0),
+            end: document.positionAt(document.getText().length),
+          },
+        }],
       },
     })
   }
@@ -739,7 +892,7 @@ export const runLsp = (): void => {
         textDocumentSync: TextDocumentSyncKind.Incremental,
         hoverProvider: true,
         executeCommandProvider: {
-          commands: ['astro-doctor.fixAll', 'astro-doctor.scanWorkspace'],
+          commands: LSP_EXECUTE_COMMANDS,
         },
         codeActionProvider: {
           codeActionKinds: [CodeActionKind.QuickFix],
@@ -755,20 +908,26 @@ export const runLsp = (): void => {
   connection.onExecuteCommand((parameters): void => {
     const { command } = parameters
 
-    if (command === 'astro-doctor.scanWorkspace') {
+    if (command === COMMAND_SCAN_WORKSPACE) {
       doInitialScan().catch(noop)
 
       return
     }
-
-    if (command !== 'astro-doctor.fixAll') return
 
     const commandArguments: unknown = parameters.arguments
     const uri = getCommandUri(commandArguments)
 
     if (typeof uri !== 'string') return
 
-    applyAllFixes(uri).catch(noop)
+    if (command === COMMAND_SCAN_FILE) {
+      const document = documents.get(uri)
+
+      if (document !== undefined) lintDocument(document).catch(noop)
+
+      return
+    }
+
+    if (command === COMMAND_FIX_ALL) applyAllFixes(uri).catch(noop)
   })
 
   documents.onDidOpen(({ document }) => {

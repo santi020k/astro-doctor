@@ -7,7 +7,7 @@ const DEFAULT_IGNORED_DIRECTORIES = ['node_modules', 'dist', '.astro', '.turbo',
 const ASTRO_FILE_EXTENSION = '.astro'
 const ASTRO_FILE_GLOB = '**/*.astro'
 
-const buildIgnorePatterns = (extraIgnore: readonly string[] = []): string[] => [
+export const buildIgnorePatterns = (extraIgnore: readonly string[] = []): string[] => [
   ...DEFAULT_IGNORED_DIRECTORIES.map((directory) => `**/${directory}/**`),
   ...extraIgnore,
 ]

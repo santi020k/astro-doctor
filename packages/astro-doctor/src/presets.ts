@@ -43,6 +43,13 @@ const getRecommendedProjectRules = (): Record<string, RuleSeverity> =>
       ]),
   )
 
+const getStrictProjectRules = (): Record<string, RuleSeverity> =>
+  Object.fromEntries(
+    PROJECT_RULES
+      .filter((projectRule) => projectRule.strict)
+      .map((projectRule) => [projectRule.ruleId, 'error']),
+  )
+
 const getRecommendedRules = (): Record<string, RuleSeverity> => ({
   ...getRecommendedPluginRules(),
   ...getRecommendedProjectRules(),
@@ -55,9 +62,14 @@ export const getPresetRules = (preset: PresetName): Record<string, RuleSeverity>
   const recommendedRules = getRecommendedRules()
   const ecosystemRules = getAstroEcosystemRules(preset)
 
+  const strictProjectRules = preset === 'strict' || preset === 'all'
+    ? getStrictProjectRules()
+    : {}
+
   const combinedRules = {
     ...recommendedRules,
     ...ecosystemRules,
+    ...strictProjectRules,
   }
 
   const presetRules: Record<string, RuleSeverity> = preset === 'strict' || preset === 'all'

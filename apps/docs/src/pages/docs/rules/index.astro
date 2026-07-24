@@ -5,19 +5,38 @@ import Docs from '@/layouts/Docs.astro'
 import { Badge, Link } from '@santi020k/lumen-astro'
 
 import { CATEGORY_COLORS, CATEGORY_LABELS, RULES, SEVERITY_COLORS } from '@/data/rules'
+
+interface ProjectAudit {
+  readonly ruleId: string
+  readonly category: keyof typeof CATEGORY_LABELS
+  readonly preset: string
+}
+
+const PROJECT_AUDITS: readonly ProjectAudit[] = [
+  { ruleId: 'astro-doctor/no-disabled-origin-check', category: 'security', preset: 'recommended' },
+  { ruleId: 'astro-doctor/no-insecure-session-cookie', category: 'security', preset: 'recommended' },
+  { ruleId: 'astro-doctor/no-open-allowed-domains', category: 'security', preset: 'recommended' },
+  { ruleId: 'astro-doctor/no-public-secret-env', category: 'security', preset: 'recommended' },
+  { ruleId: 'astro-doctor/prefer-env-schema', category: 'best-practices', preset: 'recommended' },
+  { ruleId: 'astro-doctor/prefer-pnpm', category: 'best-practices', preset: 'opt-in' },
+  { ruleId: 'astro-doctor/require-action-input-schema', category: 'security', preset: 'recommended' },
+  { ruleId: 'astro-doctor/require-client-router-script-lifecycle', category: 'best-practices', preset: 'strict' },
+  { ruleId: 'astro-doctor/require-content-config', category: 'best-practices', preset: 'recommended' }
+]
 ---
 
 <Docs
   title="Rules Overview"
-  description={`${RULES.length} proprietary Astro Doctor rules plus up to 54 official Astro ecosystem rules.`}
+  description={`${RULES.length} proprietary ESLint rules, ${PROJECT_AUDITS.length} project audits, and up to 54 official Astro ecosystem rules.`}
   editPath="apps/docs/src/pages/docs/rules/index.astro"
 >
   <h1>Rules</h1>
 
   <p>
-    astro-doctor provides {RULES.length} proprietary ESLint rules for <code>.astro</code> files and
-    composes them with up to 54 official <code>eslint-plugin-astro</code> rules. The
-    <code>all</code> preset exposes 63 unique ESLint checks after overlap deduplication.
+    astro-doctor provides {RULES.length} proprietary ESLint rules for <code>.astro</code> files,
+    {PROJECT_AUDITS.length} project-wide audits, and up to 54 official
+    <code>eslint-plugin-astro</code> rules. The <code>all</code> preset exposes 63 unique ESLint
+    checks after overlap deduplication, plus project audits.
   </p>
 
   <h2>Proprietary rules</h2>
@@ -61,6 +80,32 @@ import { CATEGORY_COLORS, CATEGORY_LABELS, RULES, SEVERITY_COLORS } from '@/data
             </Badge>
           </td>
           <td class="text-sm text-[hsl(var(--ink-muted))]">—</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+
+  <h2>Project audits</h2>
+
+  <p>
+    The CLI also evaluates configuration and relationships across files that an isolated ESLint rule
+    cannot see.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Check</th>
+        <th>Category</th>
+        <th>Preset</th>
+      </tr>
+    </thead>
+    <tbody>
+      {PROJECT_AUDITS.map(projectAudit => (
+        <tr>
+          <td><code>{projectAudit.ruleId}</code></td>
+          <td>{CATEGORY_LABELS[projectAudit.category]}</td>
+          <td>{projectAudit.preset}</td>
         </tr>
       ))}
     </tbody>

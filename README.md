@@ -147,14 +147,17 @@ Overlapping rules are deduplicated automatically.
 
 ### Project Audits
 
-The CLI also checks project files such as `astro.config.*`, `package.json`, `.env.example`, and `src/content/`.
+The CLI also checks project files such as `astro.config.*`, `package.json`, `.env.example`, `src/actions/`, `src/content/`, and Astro components.
 
 | Check | Severity | Description |
 | ----- | -------- | ----------- |
 | `no-disabled-origin-check` | ⚠️ warning | Keep Astro's CSRF origin check enabled |
+| `no-insecure-session-cookie` | ⚠️ warning | Keep secure, HTTP-only, same-site session cookie protections enabled |
 | `no-open-allowed-domains` | ⚠️ warning | Avoid `security.allowedDomains: [{}]` |
 | `prefer-env-schema` | ⚠️ warning | Define an Astro env schema for documented env vars |
 | `prefer-pnpm` | opt-in | Use pnpm consistently and avoid npm/yarn lockfiles |
+| `require-action-input-schema` | ⚠️ warning | Validate untrusted Astro Action input before handlers run |
+| `require-client-router-script-lifecycle` | strict | Initialize scripts on `astro:page-load` when using ClientRouter |
 | `require-content-config` | ⚠️ warning | Add a content config when using `src/content/` |
 
 ---
