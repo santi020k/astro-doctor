@@ -38,6 +38,11 @@ describe('loadConfig', () => {
         preset: 'recommended',
         ignore: ['node_modules/**'],
         rules: { 'astro-doctor/no-set-html': 'warn' },
+        overrides: [{
+          files: ['src/legacy/**'],
+          rules: { 'astro-doctor/no-set-html': 'off' },
+        }],
+        projects: ['apps/site'],
       }),
     )
     const result = await loadConfig(testDirectory)
@@ -46,6 +51,36 @@ describe('loadConfig', () => {
     expect(result?.preset).toBe('recommended')
     expect(result?.ignore).toEqual(['node_modules/**'])
     expect(result?.rules?.['astro-doctor/no-set-html']).toBe('warn')
+    expect(result?.overrides?.[0]?.files).toEqual(['src/legacy/**'])
+    expect(result?.projects).toEqual(['apps/site'])
+  })
+
+  test('rejects overrides without file globs', async () => {
+    writeFileSync(
+      join(testDirectory, 'doctor.config.json'),
+      JSON.stringify({
+        overrides: [{
+          files: [],
+          rules: { 'astro-doctor/no-set-html': 'off' },
+        }],
+      }),
+    )
+
+    await expect(loadConfig(testDirectory)).rejects.toThrow(/overrides.*files/i)
+  })
+
+  test('rejects overrides with invalid rules', async () => {
+    writeFileSync(
+      join(testDirectory, 'doctor.config.json'),
+      JSON.stringify({
+        overrides: [{
+          files: ['src/**'],
+          rules: { 'astro-doctor/no-set-html': 'sometimes' },
+        }],
+      }),
+    )
+
+    await expect(loadConfig(testDirectory)).rejects.toThrow('sometimes')
   })
 
   test('loads JSONC config with comments', async () => {
@@ -225,6 +260,16 @@ describe('loadConfig', () => {
     )
     const result = await loadConfig(testDirectory)
     expect(result?.preset).toBe('ci')
+  })
+
+  test("loads 'all' preset", async () => {
+    writeFileSync(
+      join(testDirectory, 'doctor.config.json'),
+      JSON.stringify({ preset: 'all' }),
+    )
+    const result = await loadConfig(testDirectory)
+
+    expect(result?.preset).toBe('all')
   })
 
   test("loads 'error' failOn", async () => {

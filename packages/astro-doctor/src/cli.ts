@@ -1,17 +1,27 @@
 import { readFileSync, writeFileSync } from 'node:fs'
-import { isAbsolute, relative, resolve, sep } from 'node:path'
+import { isAbsolute, resolve } from 'node:path'
 
 import type { RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
 
 import { formatConsoleReport, formatProjectScoreTable, formatScoreOnly } from './report/console.js'
 import { formatGithubReport } from './report/github.js'
 import { formatJsonReport, serializeJsonReport } from './report/json.js'
+import { formatSarifReport, serializeSarifReport } from './report/sarif.js'
 import { scan } from './scanner/index.js'
 import { isProjectAuditRelevantPath } from './scanner/project-audit.js'
 import { getPackageVersion } from './utils/get-package-version.js'
-import { filterIntroducedDiagnostics, scanBaseline } from './baseline.js'
+import { isFileInDirectory } from './utils/is-file-in-directory.js'
+import {
+  createPersistentBaseline,
+  filterIntroducedDiagnostics,
+  filterPersistentBaselineDiagnostics,
+  readPersistentBaseline,
+  scanBaseline,
+  writePersistentBaseline,
+} from './baseline.js'
 import { loadConfig } from './config.js'
 import {
+  DEFAULT_BASELINE_FILE_NAME,
   DISABLED_THRESHOLD_SCORE,
   MAXIMUM_THRESHOLD_SCORE,
   MINIMUM_THRESHOLD_SCORE,
@@ -38,7 +48,7 @@ import { trackRun } from './telemetry.js'
 import type { AstroDoctorConfig, ProjectScanResult, ScanOptions, ScanResult } from './types.js'
 import { runWhy } from './why.js'
 
-type OutputFormat = 'console' | 'github'
+type OutputFormat = 'console' | 'github' | 'sarif'
 
 type ScanScope = 'full' | 'files' | 'changed'
 
@@ -69,6 +79,8 @@ interface CliOptions {
   readonly noRespectInlineDisables: boolean
   readonly projects: readonly string[]
   readonly noTelemetry: boolean
+  readonly baseline?: string
+  readonly cache: boolean
 }
 
 const VALID_CATEGORIES: RuleCategory[] = [
@@ -77,6 +89,171 @@ const VALID_CATEGORIES: RuleCategory[] = [
   'security',
   'best-practices',
 ]
+
+const BOOLEAN_OPTIONS = new Set([
+  '--fix',
+  '--help',
+  '-h',
+  '--json-compact',
+  '--no-lint',
+  '--no-respect-inline-disables',
+  '--no-score',
+  '--no-telemetry',
+  '--quiet',
+  '--score',
+  '--staged',
+  '--verbose',
+  '--version',
+  '-v',
+  '--cache',
+])
+
+const VALUE_OPTIONS = new Set([
+  '--base',
+  '--baseline',
+  '--blocking',
+  '--category',
+  '--changed-files-from',
+  '--dir',
+  '-d',
+  '--fail-on',
+  '--format',
+  '--preset',
+  '--project',
+  '--scope',
+  '--threshold',
+])
+
+const OPTIONAL_VALUE_OPTIONS = new Set(['--diff', '--json'])
+
+const validateBooleanArgument = (
+  argument: string,
+  optionName: string,
+): boolean => {
+  if (!BOOLEAN_OPTIONS.has(optionName)) return false
+
+  if (argument.includes('=')) {
+    throw new Error(`Option "${optionName}" does not accept a value.`)
+  }
+
+  return true
+}
+
+const validateValueArgument = (
+  argv: readonly string[],
+  argumentIndex: number,
+  argument: string,
+  optionName: string,
+): number | undefined => {
+  if (!VALUE_OPTIONS.has(optionName)) return undefined
+
+  if (argument.includes('=')) {
+    if (argument.slice(argument.indexOf('=') + 1).length === 0) {
+      throw new Error(`Option "${optionName}" requires a value.`)
+    }
+
+    return argumentIndex
+  }
+
+  const optionValue = argv[argumentIndex + 1]
+
+  if (optionValue === undefined || optionValue.startsWith('-')) {
+    throw new Error(`Option "${optionName}" requires a value.`)
+  }
+
+  return argumentIndex + 1
+}
+
+const validateOptionalValueArgument = (
+  argv: readonly string[],
+  argumentIndex: number,
+  argument: string,
+  optionName: string,
+): number | undefined => {
+  if (!OPTIONAL_VALUE_OPTIONS.has(optionName)) return undefined
+
+  const optionValue = argv[argumentIndex + 1]
+
+  if (!argument.includes('=') && optionValue !== undefined && !optionValue.startsWith('-')) {
+    return argumentIndex + 1
+  }
+
+  return argumentIndex
+}
+
+const validateArguments = (argv: readonly string[]): void => {
+  for (let argumentIndex = 0; argumentIndex < argv.length; argumentIndex++) {
+    const argument = argv[argumentIndex]
+
+    if (argument === undefined) continue
+
+    const optionName = argument.split('=', 1)[0] ?? argument
+
+    if (validateBooleanArgument(argument, optionName)) continue
+
+    const validatedValueIndex = validateValueArgument(
+      argv,
+      argumentIndex,
+      argument,
+      optionName,
+    )
+
+    if (validatedValueIndex !== undefined) {
+      argumentIndex = validatedValueIndex
+
+      continue
+    }
+
+    const validatedOptionalIndex = validateOptionalValueArgument(
+      argv,
+      argumentIndex,
+      argument,
+      optionName,
+    )
+
+    if (validatedOptionalIndex !== undefined) {
+      argumentIndex = validatedOptionalIndex
+
+      continue
+    }
+
+    throw new Error(`Unknown option "${argument}". Run astro-doctor --help for usage.`)
+  }
+}
+
+const validateSimpleArguments = (
+  argv: readonly string[],
+  booleanOptions: ReadonlySet<string>,
+  valueOptions: ReadonlySet<string>,
+): void => {
+  for (let argumentIndex = 0; argumentIndex < argv.length; argumentIndex++) {
+    const argument = argv[argumentIndex]
+
+    if (argument === undefined) continue
+
+    const optionName = argument.split('=', 1)[0] ?? argument
+
+    if (booleanOptions.has(optionName)) {
+      if (argument.includes('=')) {
+        throw new Error(`Option "${optionName}" does not accept a value.`)
+      }
+
+      continue
+    }
+
+    if (!valueOptions.has(optionName)) {
+      throw new Error(`Unknown option "${argument}".`)
+    }
+
+    const validatedIndex = validateValueArgument(argv, argumentIndex, argument, optionName)
+
+    if (validatedIndex === undefined) {
+      throw new Error(`Option "${optionName}" requires a value.`)
+    }
+
+    argumentIndex = validatedIndex
+  }
+}
 
 const getOptionValue = (
   argv: readonly string[],
@@ -154,11 +331,7 @@ const parseScope = (argv: readonly string[]): ScanScope => {
 
   if (scope === 'full' || scope === 'files' || scope === 'changed') return scope
 
-  console.error('\nUnknown scope "' + scope + '". Valid values: full, files, changed\n')
-
-  process.exitCode = 1
-
-  return 'full'
+  throw new Error(`Unknown scope "${scope}". Valid values: full, files, changed.`)
 }
 
 const readChangedFiles = (filePath: string): string[] =>
@@ -175,9 +348,7 @@ const parseCategories = (argv: readonly string[]): RuleCategory[] => {
     if (VALID_CATEGORIES.includes(value as RuleCategory)) {
       valid.push(value as RuleCategory)
     } else {
-      console.error(`\nUnknown category "${value}". Valid values: ${VALID_CATEGORIES.join(', ')}\n`)
-
-      process.exitCode = 1
+      throw new Error(`Unknown category "${value}". Valid values: ${VALID_CATEGORIES.join(', ')}.`)
     }
   }
 
@@ -191,11 +362,7 @@ const parsePreset = (argv: readonly string[]): PresetName | undefined => {
 
   if (isPresetName(presetValue)) return presetValue
 
-  console.error('\nUnknown preset "' + presetValue + '". Valid values: recommended, strict, ci\n')
-
-  process.exitCode = 1
-
-  return undefined
+  throw new Error(`Unknown preset "${presetValue}". Valid values: recommended, strict, ci, all.`)
 }
 
 const getProjectsOption = (argv: readonly string[]): string[] => {
@@ -215,13 +382,21 @@ const getProjectsOption = (argv: readonly string[]): string[] => {
 const parseFailOn = (argv: readonly string[]): CliOptions['failOn'] => {
   const value = getOptionValue(argv, '--fail-on') ?? getOptionValue(argv, '--blocking')
 
-  return value === 'warning' || value === 'off' ? value : 'error'
+  if (value === undefined || value === 'error') return 'error'
+
+  if (value === 'warning' || value === 'off') return value
+
+  throw new Error(`Unknown fail-on level "${value}". Valid values: error, warning, off.`)
 }
 
 const parseFormat = (argv: readonly string[]): OutputFormat => {
   const value = getOptionValue(argv, '--format')
 
-  return value === 'github' ? 'github' : 'console'
+  if (value === undefined || value === 'console') return 'console'
+
+  if (value === 'github' || value === 'sarif') return value
+
+  throw new Error(`Unknown format "${value}". Valid values: console, github, sarif.`)
 }
 
 const parseThreshold = (argv: readonly string[]): number => {
@@ -229,14 +404,22 @@ const parseThreshold = (argv: readonly string[]): number => {
 
   if (value === undefined) return DISABLED_THRESHOLD_SCORE
 
+  if (!/^\d+$/u.test(value)) {
+    throw new Error(`Invalid threshold "${value}". Expected an integer from 0 to 100.`)
+  }
+
   const parsed = Number.parseInt(value, 10)
 
-  return Number.isNaN(parsed)
-    ? DISABLED_THRESHOLD_SCORE
-    : Math.min(MAXIMUM_THRESHOLD_SCORE, Math.max(MINIMUM_THRESHOLD_SCORE, parsed))
+  if (parsed < MINIMUM_THRESHOLD_SCORE || parsed > MAXIMUM_THRESHOLD_SCORE) {
+    throw new Error(`Invalid threshold "${value}". Expected an integer from 0 to 100.`)
+  }
+
+  return parsed
 }
 
 const parseArguments = (argv: string[]): CliOptions => {
+  validateArguments(argv)
+
   const directoryArg = getOptionValue(argv, '--dir', '-d')
   const directory = directoryArg ? resolve(directoryArg) : process.cwd()
   const failOnValue = getOptionValue(argv, '--fail-on') ?? getOptionValue(argv, '--blocking')
@@ -269,6 +452,8 @@ const parseArguments = (argv: string[]): CliOptions => {
     noRespectInlineDisables: argv.includes('--no-respect-inline-disables'),
     projects: getProjectsOption(argv),
     noTelemetry: argv.includes('--no-telemetry') || process.env.ASTRO_DOCTOR_NO_TELEMETRY === '1',
+    baseline: getOptionValue(argv, '--baseline'),
+    cache: argv.includes('--cache'),
   }
 }
 
@@ -286,6 +471,8 @@ Commands:
   why <file>:<line>        Explain the issue at a specific file location
   rules                    List all rules
   rules explain <rule-id>  Explain a rule in detail
+  baseline create          Save current findings as a persistent baseline
+  baseline update          Replace an existing persistent baseline
   experimental-lsp         Start the experimental language server (--stdio)
 
 Scan options:
@@ -299,8 +486,10 @@ Scan options:
       --changed-files-from <path>   Scan newline-separated changed files from a file
       --category <cat>              Filter to one category (repeat for multiple)
                                     Categories: performance | accessibility | security | best-practices
-      --preset <name>               recommended (default) | strict | ci
+      --preset <name>               recommended (default) | strict | ci | all
       --fix                         Apply safe automatic fixes
+      --cache                       Cache lint results by file content
+      --baseline <path>             Suppress findings stored in a persistent baseline
       --no-lint                     Skip lint; report a clean result
       --no-respect-inline-disables  Audit mode: ignore eslint-disable comments
 
@@ -310,7 +499,7 @@ Output options:
       --verbose                     Show per-rule summary alongside findings
       --json [path]                 Output a JSON report (stdout or a file)
       --json-compact                Compact single-line JSON (use with --json)
-      --format <fmt>                console (default) | github
+      --format <fmt>                console (default) | github | sarif
       --quiet                       Show errors only; suppress warnings from output
 
 Exit / threshold options:
@@ -325,7 +514,7 @@ Other:
   -h, --help                        Show this help message
 
 Install options:
-  init [--preset recommended|strict|ci]
+  init [--preset recommended|strict|ci|all]
 
   install [-y] [--dry-run] [--agent-hooks]
     -y, --yes      Skip all prompts
@@ -334,7 +523,7 @@ Install options:
 
 Configuration:
   Add a doctor.config.ts (or .js, .mjs, .cjs, .json, .jsonc) to your project root.
-  Supports: preset, rules, ignore, failOn, threshold
+  Supports: preset, rules, overrides, ignore, projects, failOn, threshold
 
 Rules checked:
   Performance:    no-blocking-script, no-client-load-overuse, no-unprocessed-script-surprises,
@@ -383,6 +572,11 @@ const printReport = (
     const githubOutput = formatGithubReport(scanResult)
 
     if (githubOutput) console.log(githubOutput)
+  } else if (options.format === 'sarif') {
+    console.log(serializeSarifReport(
+      formatSarifReport(scanResult, options.directory),
+      options.jsonCompact,
+    ))
   } else {
     const displayResult =
       options.quiet
@@ -486,14 +680,6 @@ const resolveFilesToScan = (options: CliOptions): string[] | undefined => {
   return undefined
 }
 
-const isFileInDirectory = (filePath: string, directory: string): boolean => {
-  const relativePath = relative(directory, filePath)
-
-  return relativePath !== '..' &&
-    !relativePath.startsWith(`..${sep}`) &&
-    !isAbsolute(relativePath)
-}
-
 const resolveEffectiveProjects = (options: CliOptions, config: AstroDoctorConfig | null): string[] => {
   if (options.projects.length > 0) return [...options.projects]
 
@@ -520,7 +706,9 @@ const hasOnlyIrrelevantChangedFiles = (files: string[] | undefined): boolean =>
   files !== undefined && files.length > 0 && !files.some(isScanRelevantPath)
 
 const shouldPrintProgress = (options: CliOptions): boolean =>
-  options.json !== true && !options.scoreOnly
+  options.json !== true &&
+  options.format === 'console' &&
+  !options.scoreOnly
 
 const shouldSkipIrrelevantFiles = (
   options: CliOptions,
@@ -549,12 +737,40 @@ const tryScan = async (scanOptions: ScanOptions): Promise<ScanResult | null> => 
   }
 }
 
+const applyPersistentBaseline = (
+  result: ScanResult,
+  options: CliOptions,
+): ScanResult => {
+  if (options.baseline === undefined) return result
+
+  const baselinePath = isAbsolute(options.baseline)
+    ? options.baseline
+    : resolve(options.directory, options.baseline)
+
+  const baseline = readPersistentBaseline(baselinePath)
+
+  return filterPersistentBaselineDiagnostics(result, baseline, options.directory)
+}
+
 const reportOperationFailure = (operation: string, error: unknown): void => {
   const message = error instanceof Error ? error.message : String(error)
 
   console.error(`\nFailed to ${operation}: ${message}`)
 
   process.exitCode = 1
+}
+
+const tryApplyPersistentBaseline = (
+  result: ScanResult,
+  options: CliOptions,
+): ScanResult | null => {
+  try {
+    return applyPersistentBaseline(result, options)
+  } catch (error) {
+    reportOperationFailure('apply persistent baseline', error)
+
+    return null
+  }
 }
 
 const filterIntroducedProjectResults = async (
@@ -685,6 +901,22 @@ const executeMultiProjectScan = async (
     if (!projectResults) return
   }
 
+  if (options.baseline !== undefined) {
+    try {
+      projectResults = projectResults.map((projectResult) =>
+        ({
+          ...applyPersistentBaseline(projectResult, options),
+          name: projectResult.name,
+          directory: projectResult.directory,
+        })
+      )
+    } catch (error) {
+      reportOperationFailure('apply persistent baseline', error)
+
+      return
+    }
+  }
+
   const aggregate = aggregateResults(projectResults)
 
   if (printReport(aggregate, options, projectResults)) return
@@ -697,6 +929,7 @@ interface BaseScanOptions {
   fix: boolean
   noLint: boolean
   noRespectInlineDisables: boolean
+  cache: boolean
 }
 
 const resolveProjectsWithDiscovery = async (options: CliOptions, config: AstroDoctorConfig | null): Promise<string[]> => {
@@ -765,6 +998,7 @@ const executeSingleDirectoryScan = async (
     files: filesToScan,
     ignore: config?.ignore,
     rules: getEffectiveRules(config, effectivePreset),
+    overrides: config?.overrides,
   }
 
   if (shouldPrintProgress(options)) {
@@ -790,6 +1024,10 @@ const executeSingleDirectoryScan = async (
 
   if (!effectiveScanResult) return
 
+  effectiveScanResult = tryApplyPersistentBaseline(effectiveScanResult, options)
+
+  if (!effectiveScanResult) return
+
   if (printReport(effectiveScanResult, options)) return
 
   checkThresholds(effectiveScanResult, effectiveFailOn, effectiveThreshold)
@@ -806,6 +1044,7 @@ const executeScan = async (options: CliOptions): Promise<void> => {
     fix: options.fix,
     noLint: options.noLint,
     noRespectInlineDisables: options.noRespectInlineDisables,
+    cache: options.cache,
   }
 
   // ── Multi-project mode ──────────────────────────────────────────────────────
@@ -829,23 +1068,129 @@ const executeScan = async (options: CliOptions): Promise<void> => {
   await executeSingleDirectoryScan(options, config, effectivePreset, effectiveFailOn, effectiveThreshold, baseScanOptions)
 }
 
+const removeValueOption = (argv: readonly string[], optionName: string): string[] => {
+  const remainingArguments: string[] = []
+
+  for (let argumentIndex = 0; argumentIndex < argv.length; argumentIndex++) {
+    const argument = argv[argumentIndex]
+
+    if (argument === optionName) {
+      argumentIndex++
+
+      continue
+    }
+
+    if (argument?.startsWith(`${optionName}=`)) continue
+
+    if (argument !== undefined) remainingArguments.push(argument)
+  }
+
+  return remainingArguments
+}
+
+const createBaselineResult = async (
+  options: CliOptions,
+): Promise<ScanResult | null> => {
+  const config = await loadConfig(options.directory)
+  const effectivePreset = getEffectivePreset(options, config)
+  const effectiveProjects = await resolveProjectsWithDiscovery(options, config)
+
+  const scanOptions: BaseScanOptions = {
+    categories: options.categories.length > 0 ? options.categories : undefined,
+    fix: false,
+    noLint: options.noLint,
+    noRespectInlineDisables: options.noRespectInlineDisables,
+    cache: options.cache,
+  }
+
+  if (effectiveProjects.length > 0) {
+    const projectResults = await tryScanProjects({
+      rootDirectory: options.directory,
+      projectArgs: effectiveProjects,
+      rootConfig: {
+        ...config,
+        preset: effectivePreset,
+        rules: getEffectiveRules(config, effectivePreset),
+      },
+      scanOptions,
+    })
+
+    return projectResults ? aggregateResults(projectResults) : null
+  }
+
+  return tryScan({
+    ...scanOptions,
+    directory: options.directory,
+    ignore: config?.ignore,
+    overrides: config?.overrides,
+    rules: getEffectiveRules(config, effectivePreset),
+  })
+}
+
+const runBaselineCommand = async (argv: string[]): Promise<void> => {
+  const action = argv[0]
+
+  if (action !== 'create' && action !== 'update') {
+    throw new Error('Usage: astro-doctor baseline create|update [--output <path>] [scan options]')
+  }
+
+  const outputValue = getOptionValue(argv, '--output')
+
+  if (argv.includes('--output') && outputValue === undefined) {
+    throw new Error('Option "--output" requires a value.')
+  }
+
+  const scanArguments = removeValueOption(argv.slice(1), '--output')
+  const options = parseArguments(scanArguments)
+  const result = await createBaselineResult(options)
+
+  if (!result) return
+
+  const outputPath = resolve(options.directory, outputValue ?? DEFAULT_BASELINE_FILE_NAME)
+
+  writePersistentBaseline(
+    outputPath,
+    createPersistentBaseline(result, options.directory),
+  )
+
+  console.log(
+    `Baseline written to ${outputPath} with ${result.diagnostics.length} finding${result.diagnostics.length === 1 ? '' : 's'}.`,
+  )
+}
+
 // eslint-disable-next-line complexity
 export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
   const subcommand = argv[0]
   const noTelemetry = argv.includes('--no-telemetry') || process.env.ASTRO_DOCTOR_NO_TELEMETRY === '1'
 
   if (subcommand === 'init') {
-    trackRun({ command: 'init', flags: {} }, noTelemetry)
+    try {
+      validateSimpleArguments(argv.slice(1), new Set(), new Set(['--preset']))
 
-    runInit(argv.slice(1))
+      trackRun({ command: 'init', flags: {} }, noTelemetry)
+
+      runInit(argv.slice(1))
+    } catch (error) {
+      reportOperationFailure('parse init arguments', error)
+    }
 
     return
   }
 
   if (subcommand === 'install') {
-    trackRun({ command: 'install', flags: { dryRun: argv.includes('--dry-run') } }, noTelemetry)
+    try {
+      validateSimpleArguments(
+        argv.slice(1),
+        new Set(['-y', '--yes', '--dry-run', '--agent-hooks']),
+        new Set(),
+      )
 
-    await runInstall(argv.slice(1))
+      trackRun({ command: 'install', flags: { dryRun: argv.includes('--dry-run') } }, noTelemetry)
+
+      await runInstall(argv.slice(1))
+    } catch (error) {
+      reportOperationFailure('parse install arguments', error)
+    }
 
     return
   }
@@ -879,14 +1224,40 @@ export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<vo
   }
 
   if (subcommand === 'experimental-lsp') {
-    trackRun({ command: 'lsp', flags: {} }, noTelemetry)
+    try {
+      validateSimpleArguments(argv.slice(1), new Set(['--stdio']), new Set())
 
-    runLsp()
+      trackRun({ command: 'lsp', flags: {} }, noTelemetry)
+
+      runLsp()
+    } catch (error) {
+      reportOperationFailure('parse LSP arguments', error)
+    }
 
     return
   }
 
-  const options = parseArguments(argv)
+  if (subcommand === 'baseline') {
+    trackRun({ command: 'baseline', flags: {} }, noTelemetry)
+
+    try {
+      await runBaselineCommand(argv.slice(1))
+    } catch (error) {
+      reportOperationFailure('manage baseline', error)
+    }
+
+    return
+  }
+
+  let options: CliOptions
+
+  try {
+    options = parseArguments(argv)
+  } catch (error) {
+    reportOperationFailure('parse arguments', error)
+
+    return
+  }
 
   if (options.version) {
     console.log(getPackageVersion())

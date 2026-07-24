@@ -29,6 +29,12 @@ describe('runInit', () => {
     expect(readFileSync(join(testDirectory, 'doctor.config.ts'), 'utf8')).toContain("preset: 'ci'")
   })
 
+  test('accepts the all preset', () => {
+    runInit(['--preset', 'all'], testDirectory)
+
+    expect(readFileSync(join(testDirectory, 'doctor.config.ts'), 'utf8')).toContain("preset: 'all'")
+  })
+
   test('does not overwrite existing files', () => {
     const eslintConfigPath = join(testDirectory, 'eslint.config.js')
 

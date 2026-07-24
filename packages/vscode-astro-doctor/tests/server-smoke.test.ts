@@ -44,6 +44,7 @@ test('bundled language server starts and responds to initialize', async () => {
 
     expect(response).toContain(`"id":"${SERVER_RESPONSE_ID}"`)
     expect(response).toContain('"capabilities"')
+    expect(response).toContain('"textDocumentSync":2')
   } finally {
     serverProcess.kill()
   }

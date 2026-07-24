@@ -1,12 +1,15 @@
-import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
+import astroDoctorPlugin, {
+  disableDuplicateAstroDoctorRules,
+  getAstroEcosystemRules,
+} from '@santi020k/eslint-plugin-astro-doctor'
 
 import { CI_THRESHOLD_SCORE, DISABLED_THRESHOLD_SCORE } from './constants.js'
 import { PROJECT_RULES } from './project-rules.js'
 
-export type PresetName = 'recommended' | 'strict' | 'ci'
+export type PresetName = 'recommended' | 'strict' | 'ci' | 'all'
 export type RuleSeverity = 'error' | 'warn' | 'off'
 
-const PRESET_NAMES = new Set(['recommended', 'strict', 'ci'])
+const PRESET_NAMES = new Set(['recommended', 'strict', 'ci', 'all'])
 
 const normalizeRuleSeverity = (severity: unknown): RuleSeverity | undefined => {
   if (severity === 'error' || severity === 'warn' || severity === 'off') return severity
@@ -50,12 +53,23 @@ export const isPresetName = (value: unknown): value is PresetName =>
 
 export const getPresetRules = (preset: PresetName): Record<string, RuleSeverity> => {
   const recommendedRules = getRecommendedRules()
+  const ecosystemRules = getAstroEcosystemRules(preset)
 
-  if (preset !== 'strict') return recommendedRules
+  const combinedRules = {
+    ...recommendedRules,
+    ...ecosystemRules,
+  }
 
-  return Object.fromEntries(
-    Object.keys(recommendedRules).map((ruleId) => [ruleId, 'error']),
-  )
+  const presetRules: Record<string, RuleSeverity> = preset === 'strict' || preset === 'all'
+    ? Object.fromEntries(
+        Object.entries(combinedRules).map(([ruleId, severity]) => [
+          ruleId,
+          severity === 'off' ? 'off' : 'error',
+        ] satisfies [string, RuleSeverity]),
+      )
+    : combinedRules
+
+  return disableDuplicateAstroDoctorRules(presetRules)
 }
 
 export const getPresetFailOn = (preset: PresetName): 'error' | 'warning' =>

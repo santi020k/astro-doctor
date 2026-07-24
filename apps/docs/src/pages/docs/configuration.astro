@@ -1,4 +1,5 @@
 ---
+import CodeBlock from '@/components/code-block.astro'
 import Docs from '@/layouts/Docs.astro'
 
 import { Callout } from '@santi020k/lumen-astro'
@@ -20,26 +21,44 @@ import { Callout } from '@santi020k/lumen-astro'
 
   <p>Any of the following file names are detected, in priority order:</p>
 
-  <pre><code>doctor.config.ts
-    doctor.config.js
-    doctor.config.mjs
-    doctor.config.cjs
-    doctor.config.json
-    doctor.config.jsonc
-       </code>
-  </pre>
+  <CodeBlock
+    code={`doctor.config.ts
+doctor.config.js
+doctor.config.mjs
+doctor.config.cjs
+doctor.config.json
+doctor.config.jsonc`}
+    language="text"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>Schema</h2>
 
-  <pre><code>{`// doctor.config.ts
+  <CodeBlock
+    code={`// doctor.config.ts
 import type { AstroDoctorConfig } from '@santi020k/astro-doctor'
 
 export default {
+  // 'recommended' | 'strict' | 'ci' | 'all'
+  preset: 'recommended',
+
   // Override rule severities
   rules: {
     'astro-doctor/no-client-load-overuse': 'error',   // upgrade to error
     'astro-doctor/prefer-class-list': 'off',           // disable a rule
   },
+
+  // Apply template-rule overrides to matching Astro files
+  overrides: [
+    {
+      files: ['src/legacy/**'],
+      rules: {
+        'astro-doctor/no-set-html': 'off',
+      },
+    },
+  ],
 
   // Glob patterns to ignore (relative to scanned directory)
   ignore: ['src/legacy/**', 'src/vendor/**'],
@@ -48,10 +67,23 @@ export default {
   // CLI flag --fail-on overrides this
   failOn: 'error',
 } satisfies AstroDoctorConfig`}
-  </code>
-  </pre>
+    label="doctor.config.ts"
+    language="typescript"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>Fields</h2>
+
+  <h3><code>preset</code></h3>
+
+  <p>
+    Select the rule surface: <code>recommended</code> uses the high-signal defaults,
+    <code>strict</code> adds accessibility, security, and best-practice checks,
+    <code>all</code> enables every non-deprecated official Astro rule, and
+    <code>ci</code> uses recommended coverage while failing on warnings.
+  </p>
 
   <h3><code>rules</code></h3>
 
@@ -66,6 +98,21 @@ export default {
     An array of glob patterns (relative to the scanned directory) to exclude from the scan.
     Useful for generated code, vendored components, or legacy directories you're not ready to
     fix yet.
+  </p>
+
+  <h3><code>overrides</code></h3>
+
+  <p>
+    Apply rule severities only to matching Astro file globs. Each entry requires a non-empty
+    <code>files</code> array and a <code>rules</code> object. Project-audit rules remain
+    project-wide.
+  </p>
+
+  <h3><code>projects</code></h3>
+
+  <p>
+    Select workspace packages by package name or relative path. Project-level configuration is
+    layered over the root configuration, including rule overrides.
   </p>
 
   <h3><code>failOn</code></h3>
@@ -103,7 +150,8 @@ export default {
 
   <h2>JSON / JSONC example</h2>
 
-  <pre><code>{`// doctor.config.jsonc
+  <CodeBlock
+    code={`// doctor.config.jsonc
 {
   "$schema": "https://doctor.santi020k.com/schema/config.json",
   // Comments are supported in .jsonc
@@ -113,8 +161,12 @@ export default {
   "ignore": ["src/vendor/**"],
   "failOn": "warning"
 }`}
-  </code>
-  </pre>
+    label="doctor.config.jsonc"
+    language="json"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <Callout class="callout callout-tip">
     <strong>Tip:</strong> Adding <code>"$schema"</code> enables autocompletion and inline docs for

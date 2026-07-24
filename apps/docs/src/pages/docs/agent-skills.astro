@@ -1,4 +1,5 @@
 ---
+import CodeBlock from '@/components/code-block.astro'
 import Docs from '@/layouts/Docs.astro'
 
 import { Callout } from '@santi020k/lumen-astro'
@@ -19,7 +20,7 @@ import { Callout } from '@santi020k/lumen-astro'
 
   <h2>Install</h2>
 
-  <pre><code>astro-doctor install</code></pre>
+  <CodeBlock code="astro-doctor install" language="bash" />
 
   <p>
     This copies the skill files to <code>.agents/skills/</code> in your project root. Commit this
@@ -77,13 +78,17 @@ import { Callout } from '@santi020k/lumen-astro'
     In Claude Code or Cowork mode, you can reference a skill directly:
   </p>
 
-  <pre><code>{`# In your CLAUDE.md or agent context:
+  <CodeBlock
+    code={`# In your CLAUDE.md or agent context:
 Skills: .agents/skills/astro-rules/SKILL.md
 
 # Or tell Claude:
 "Use the astro-rules skill to fix all warnings in src/components/"`}
-       </code>
-  </pre>
+    language="text"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>Using with Cursor</h2>
 
@@ -92,11 +97,16 @@ Skills: .agents/skills/astro-rules/SKILL.md
     system prompt:
   </p>
 
-  <pre><code>{`# .cursor/rules
+  <CodeBlock
+    code={`# .cursor/rules
 @.agents/skills/astro-rules/SKILL.md
 @.agents/skills/astro-performance/SKILL.md`}
-       </code>
-  </pre>
+    label=".cursor/rules"
+    language="text"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>Manual installation</h2>
 

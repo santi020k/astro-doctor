@@ -84,6 +84,7 @@ class="
       <!-- Theme toggle -->
       <ThemeToggle
         aria-label="Toggle color scheme"
+        data-ui-controlled
         class="
           site-theme-toggle flex size-8 items-center justify-center rounded-md
           text-[hsl(var(--ink-soft))] transition-colors
@@ -198,8 +199,10 @@ class="
 </style>
 
 <script>
+  import { transitionColorTheme } from '@/utils/transition-color-theme'
+
   const html = document.documentElement
-  const themeToggle = document.querySelector<HTMLElement>('[data-ui-theme-toggle]')
+  const themeToggle = document.querySelector<HTMLButtonElement>('[data-ui-theme-toggle]')
 
   const getTheme = () => html.getAttribute('data-theme') ??
     (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
@@ -213,6 +216,8 @@ class="
   applyTheme(localStorage.getItem('theme') ?? getTheme())
 
   themeToggle?.addEventListener('click', () => {
-    applyTheme(getTheme() === 'dark' ? 'light' : 'dark')
+    const nextTheme = getTheme() === 'dark' ? 'light' : 'dark'
+
+    transitionColorTheme(themeToggle, () => applyTheme(nextTheme))
   })
 </script>

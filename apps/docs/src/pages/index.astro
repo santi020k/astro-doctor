@@ -1,4 +1,5 @@
 ---
+import CodeBlock from '@/components/code-block.astro'
 import GitHubIcon from '@/components/github-icon.astro'
 import LogoMark from '@/components/logo-mark.astro'
 import Base from '@/layouts/Base.astro'
@@ -75,7 +76,7 @@ class="
 data-reveal
 style="animation-delay: 100ms"
         >
-          {RULES.length} opinionated ESLint rules for <code>.astro</code> files — performance, accessibility, security, best practices —
+          {RULES.length} proprietary rules and up to 68 unique checks for <code>.astro</code> projects —
           with a health score, CLI, and native GitHub Action.
         </p>
 
@@ -325,7 +326,7 @@ data-stagger="70"
   <section class="py-16">
     <div class="container-docs">
       <div class="mx-auto mb-12 max-w-3xl text-center" data-reveal>
-        <h2 class="mb-3 text-3xl font-bold tracking-tight">{RULES.length} rules. Zero excuses.</h2>
+        <h2 class="mb-3 text-3xl font-bold tracking-tight">{RULES.length} rules we own. 68 checks in all.</h2>
         <p class="text-[hsl(var(--ink-soft))]">Each rule targets a specific class of mistake that agents and developers commonly make in Astro projects.</p>
       </div>
 
@@ -420,7 +421,14 @@ data-stagger="60"
               >1</span>
               <div class="min-w-0">
                 <p class="mb-2 text-sm font-medium text-[hsl(var(--ink))]">Install the package</p>
-                <pre class="mt-0! text-xs!"><code>pnpm add -D @santi020k/astro-doctor</code></pre>
+                <CodeBlock
+                  class="mt-0!"
+                  code="pnpm add -D @santi020k/astro-doctor"
+                  language="bash"
+                  theme="auto"
+                  variant="block"
+                  copy
+                />
               </div>
             </li>
 
@@ -432,14 +440,20 @@ data-stagger="60"
               >2</span>
               <div class="min-w-0 flex-1">
                 <p class="mb-2 text-sm font-medium text-[hsl(var(--ink))]">Add to your ESLint config</p>
-                <pre class="mt-0! text-xs!"><code>{`// eslint.config.js
+                <CodeBlock
+                  class="mt-0!"
+                  code={`// eslint.config.js
 import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 
 export default [
   astroDoctorPlugin.configs.recommended,
 ]`}
-                </code>
-                </pre>
+                  label="eslint.config.js"
+                  language="javascript"
+                  theme="auto"
+                  variant="block"
+                  copy
+                />
               </div>
             </li>
 
@@ -451,7 +465,14 @@ export default [
               >3</span>
               <div class="min-w-0">
                 <p class="mb-2 text-sm font-medium text-[hsl(var(--ink))]">Scan your project</p>
-                <pre class="mt-0! text-xs!"><code>pnpm astro-doctor</code></pre>
+                <CodeBlock
+                  class="mt-0!"
+                  code="pnpm astro-doctor"
+                  language="bash"
+                  theme="auto"
+                  variant="block"
+                  copy
+                />
               </div>
             </li>
           </ol>
@@ -544,19 +565,8 @@ data-reveal
           </Link>
         </div>
 
-        <Card class="
-          overflow-hidden rounded-2xl border border-[hsl(var(--line)/0.5)]
-          bg-[hsl(var(--surface))] p-0
-        "
-        >
-          <div class="border-b border-[hsl(var(--line)/0.4)] px-4 py-3">
-            <span class="text-xs font-medium text-[hsl(var(--ink-muted))]">.github/workflows/astro-doctor.yml</span>
-          </div>
-          <pre class="
-            overflow-auto rounded-none! border-none! bg-transparent! p-5!
-            text-xs!
-          "
-          ><code>{`name: Astro Doctor
+        <CodeBlock
+          code={`name: Astro Doctor
 on:
   pull_request:
     paths: ['**/*.astro']
@@ -575,9 +585,12 @@ jobs:
           diff-only: true
           comment: true
           fail-on: error`}
-          </code>
-          </pre>
-        </Card>
+          label=".github/workflows/astro-doctor.yml"
+          language="yaml"
+          theme="auto"
+          variant="block"
+          copy
+        />
       </div>
     </div>
   </section>
@@ -697,7 +710,7 @@ class="
           Start fixing bad Astro today
         </h2>
         <p class="mb-8 leading-relaxed text-[hsl(var(--ink-soft))]">
-          One package. {RULES.length} rules. A score your team can improve sprint over sprint.
+          One package. Up to 68 unique checks. A score your team can improve sprint over sprint.
         </p>
         <div class="
           flex flex-col justify-center gap-3

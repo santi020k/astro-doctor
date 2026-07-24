@@ -45,6 +45,7 @@
     "@types/node": "catalog:",
     "@types/vscode": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "astro-eslint-parser": "catalog:",
     "esbuild": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
@@ -61,7 +62,7 @@
       },
       {
         "command": "astro-doctor.fixAll",
-        "title": "Astro Doctor: Suppress All Issues in File"
+        "title": "Astro Doctor: Apply All Safe Fixes in File"
       },
       {
         "command": "astro-doctor.restart",

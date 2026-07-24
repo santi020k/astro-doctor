@@ -1,4 +1,5 @@
 ---
+import CodeBlock from '@/components/code-block.astro'
 import Docs from '@/layouts/Docs.astro'
 
 import { Callout } from '@santi020k/lumen-astro'
@@ -41,20 +42,31 @@ import { Callout } from '@santi020k/lumen-astro'
     Any editor that supports LSP can connect directly to the Astro Doctor language server:
   </p>
 
-  <pre><code>astro-doctor experimental-lsp --stdio</code></pre>
+  <CodeBlock
+    code="astro-doctor experimental-lsp --stdio"
+    language="bash"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h3>Neovim (nvim-lspconfig)</h3>
 
-  <pre><code>{`require('lspconfig').astro_doctor.setup({
+  <CodeBlock
+    code={`require('lspconfig').astro_doctor.setup({
   cmd = { 'astro-doctor', 'experimental-lsp', '--stdio' },
   filetypes = { 'astro' },
 })`}
-  </code>
-  </pre>
+    language="lua"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h3>Zed</h3>
 
-  <pre><code>{`// .zed/settings.json
+  <CodeBlock
+    code={`// .zed/settings.json
 {
   "lsp": {
     "astro-doctor": {
@@ -65,8 +77,12 @@ import { Callout } from '@santi020k/lumen-astro'
     }
   }
 }`}
-  </code>
-  </pre>
+    label=".zed/settings.json"
+    language="json"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <Callout class="callout callout-tip">
     <strong>Experimental:</strong> The LSP protocol, options, and caching behavior may change between
@@ -79,6 +95,9 @@ import { Callout } from '@santi020k/lumen-astro'
   <p>
     The LSP server reads your <code>doctor.config.*</code> file from the workspace root, so all
     rule overrides, ignore patterns, and thresholds defined there apply to editor diagnostics too.
+    Configuration and workspace manifest changes trigger a fresh scan automatically. Edits use
+    incremental document synchronization and debounced scans so stale results cannot replace newer
+    diagnostics.
     See the <a href="/docs/configuration">Configuration</a> page for the full schema.
   </p>
 </Docs>

@@ -1,4 +1,5 @@
 ---
+import CodeBlock from '@/components/code-block.astro'
 import Docs from '@/layouts/Docs.astro'
 
 import { Badge, Link } from '@santi020k/lumen-astro'
@@ -8,18 +9,18 @@ import { CATEGORY_COLORS, CATEGORY_LABELS, RULES, SEVERITY_COLORS } from '@/data
 
 <Docs
   title="Rules Overview"
-  description={`All ${RULES.length} astro-doctor ESLint rules with categories and default severities.`}
+  description={`${RULES.length} proprietary Astro Doctor rules plus up to 54 official Astro ecosystem rules.`}
   editPath="apps/docs/src/pages/docs/rules/index.astro"
 >
   <h1>Rules</h1>
 
   <p>
-    astro-doctor provides {RULES.length} ESLint rules for <code>.astro</code> files, covering performance,
-    accessibility, security, and best practices. All rules are enabled in the
-    <code>recommended</code> config at their default severities.
+    astro-doctor provides {RULES.length} proprietary ESLint rules for <code>.astro</code> files and
+    composes them with up to 54 official <code>eslint-plugin-astro</code> rules. The
+    <code>all</code> preset exposes 63 unique ESLint checks after overlap deduplication.
   </p>
 
-  <h2>All rules</h2>
+  <h2>Proprietary rules</h2>
 
   <table>
     <thead>
@@ -102,7 +103,8 @@ import { CATEGORY_COLORS, CATEGORY_LABELS, RULES, SEVERITY_COLORS } from '@/data
 
   <p>Override any rule severity in your <code>eslint.config.js</code>:</p>
 
-  <pre><code>{`import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
+  <CodeBlock
+    code={`import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 
 export default [
   astroDoctorPlugin.configs.recommended,
@@ -115,8 +117,12 @@ export default [
     },
   },
 ]`}
-  </code>
-  </pre>
+    label="eslint.config.js"
+    language="javascript"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <p>Or use a <Link href="/docs/configuration"><code>doctor.config.*</code></Link> file for CLI-only overrides.</p>
 </Docs>

@@ -1,7 +1,9 @@
 import { relative } from 'node:path'
 
 import type { AstroDoctorRule } from '@santi020k/eslint-plugin-astro-doctor'
-import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
+import astroDoctorPlugin, {
+  getAstroEcosystemRuleDocs,
+} from '@santi020k/eslint-plugin-astro-doctor'
 
 import type { Diagnostic, ProjectScanResult, ScanResult } from '../types.js'
 
@@ -112,14 +114,17 @@ const formatScoreLine = (result: ScanResult, showScore: boolean): string => {
 }
 
 const getRuleDocs = (): Record<string, string> =>
-  Object.fromEntries(
-    Object.entries(astroDoctorPlugin.rules).map(([ruleId, rule]) => {
-      const ruleMetadata = (rule as AstroDoctorRule).meta
-      const category = ruleMetadata.docs.category.replace('-', ' ')
+  ({
+    ...Object.fromEntries(
+      Object.entries(astroDoctorPlugin.rules).map(([ruleId, rule]) => {
+        const ruleMetadata = (rule as AstroDoctorRule).meta
+        const category = ruleMetadata.docs.category.replace('-', ' ')
 
-      return [ruleId, `${category} · ${ruleMetadata.docs.description}`]
-    }),
-  )
+        return [ruleId, `${category} · ${ruleMetadata.docs.description}`]
+      }),
+    ),
+    ...getAstroEcosystemRuleDocs(),
+  })
 
 const formatVerboseRuleSummary = (diagnostics: readonly Diagnostic[]): string => {
   const countByRule = new Map<string, number>()
@@ -138,6 +143,16 @@ const formatVerboseRuleSummary = (diagnostics: readonly Diagnostic[]): string =>
   })
 
   return `\nRule summary:\n${lines.join('\n')}`
+}
+
+const formatTimings = (result: ScanResult): string => {
+  const timings = result.timings
+
+  if (timings === undefined) return ''
+
+  const cacheStatus = timings.cacheEnabled ? 'enabled' : 'disabled'
+
+  return `\nTimings: discovery ${timings.discoveryMs}ms · audit ${timings.auditMs}ms · lint ${timings.lintMs}ms · total ${timings.totalMs}ms · cache ${cacheStatus}`
 }
 
 export const formatScoreOnly = (result: ScanResult): string => String(result.score)
@@ -178,11 +193,12 @@ export const formatConsoleReport = (
 ): string => {
   const scoreLine = formatScoreLine(result, showScore)
   const verboseSummary = verbose ? formatVerboseRuleSummary(result.diagnostics) : ''
+  const timings = verbose ? formatTimings(result) : ''
 
   if (result.diagnostics.length === 0) {
     const fileLabel = result.fileCount === 1 ? '1 file' : `${result.fileCount} files`
 
-    return `\n${green('✔')} No issues found across ${fileLabel}. Your Astro is healthy!${verboseSummary}${scoreLine}\n`
+    return `\n${green('✔')} No issues found across ${fileLabel}. Your Astro is healthy!${verboseSummary}${timings}${scoreLine}\n`
   }
 
   const grouped = groupByFile(result.diagnostics)
@@ -193,5 +209,5 @@ export const formatConsoleReport = (
 
   const summaryLine = formatSummaryLine(result)
 
-  return `\n${fileBlocks}\n\n${summaryLine}${verboseSummary}${scoreLine}\n`
+  return `\n${fileBlocks}\n\n${summaryLine}${verboseSummary}${timings}${scoreLine}\n`
 }

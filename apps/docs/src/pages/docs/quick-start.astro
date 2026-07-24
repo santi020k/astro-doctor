@@ -1,4 +1,5 @@
 ---
+import CodeBlock from '@/components/code-block.astro'
 import PackageManagerTabs from '@/components/PackageManagerTabs.astro'
 import Docs from '@/layouts/Docs.astro'
 
@@ -27,15 +28,20 @@ import { Callout } from '@santi020k/lumen-astro'
 
   <p>Add the plugin to your existing <code>eslint.config.js</code> (flat config):</p>
 
-  <pre><code>{`// eslint.config.js
+  <CodeBlock
+    code={`// eslint.config.js
 import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 
 export default [
   // your existing config...
   astroDoctorPlugin.configs.recommended,
 ]`}
-       </code>
-  </pre>
+    label="eslint.config.js"
+    language="javascript"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>Step 3 — Run a scan</h2>
 
@@ -48,7 +54,8 @@ export default [
 
   <p>You'll see output like:</p>
 
-  <pre><code>{`Scanning /my-project...
+  <CodeBlock
+    code={`Scanning /my-project...
 
   ✗  error  src/pages/blog.astro:12:5
      no-missing-alt — img element is missing a non-empty alt attribute
@@ -59,25 +66,34 @@ export default [
 14 files scanned · 1 error · 1 warning
 
 Astro Doctor Score: 85/100 (B) 🟡`}
-       </code>
-  </pre>
+    language="text"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>Step 4 — Add to package.json</h2>
 
-  <pre><code>{`{
+  <CodeBlock
+    code={`{
   "scripts": {
     "astro:check": "astro-doctor",
     "astro:check:json": "astro-doctor --json report.json"
   }
 }`}
-       </code>
-  </pre>
+    label="package.json"
+    language="json"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>Step 5 — Add to CI (optional)</h2>
 
   <p>Drop this into <code>.github/workflows/astro-doctor.yml</code>:</p>
 
-  <pre><code>{`name: Astro Doctor
+  <CodeBlock
+    code={`name: Astro Doctor
 on:
   pull_request:
     paths:
@@ -101,8 +117,12 @@ jobs:
           diff-only: true
           comment: true
           fail-on: error`}
-       </code>
-  </pre>
+    label=".github/workflows/astro-doctor.yml"
+    language="yaml"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <Callout class="callout callout-tip">
     <strong>Next steps:</strong> Read the <a href="/docs/configuration">configuration guide</a> to

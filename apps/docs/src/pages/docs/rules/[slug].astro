@@ -1,6 +1,7 @@
 ---
 import type { GetStaticPaths } from 'astro'
 
+import CodeBlock from '@/components/code-block.astro'
 import Docs from '@/layouts/Docs.astro'
 
 import { Badge, Icon, Link } from '@santi020k/lumen-astro'
@@ -67,7 +68,13 @@ if (!rule) {
     </span>
   </h3>
   <p class="text-sm text-[hsl(var(--ink-muted))]">{rule.bad.label}</p>
-  <pre><code>{rule.bad.code}</code></pre>
+  <CodeBlock
+    code={rule.bad.code}
+    language="astro"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h3>
     <span class="inline-flex items-center gap-1.5">
@@ -76,13 +83,20 @@ if (!rule) {
     </span>
   </h3>
   <p class="text-sm text-[hsl(var(--ink-muted))]">{rule.good.label}</p>
-  <pre><code>{rule.good.code}</code></pre>
+  <CodeBlock
+    code={rule.good.code}
+    language="astro"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>Configuration</h2>
 
   <p>Override the default severity in your ESLint config:</p>
 
-  <pre><code>{`// eslint.config.js
+  <CodeBlock
+    code={`// eslint.config.js
 import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 
 export default [
@@ -93,18 +107,27 @@ export default [
     },
   },
 ]`}
-       </code>
-  </pre>
+    label="eslint.config.js"
+    language="javascript"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <p>Or in your <Link href="/docs/configuration"><code>doctor.config.ts</code></Link>:</p>
 
-  <pre><code>{`export default {
+  <CodeBlock
+    code={`export default {
   rules: {
     '${rule.id}': 'error',
   },
 }`}
-       </code>
-  </pre>
+    label="doctor.config.ts"
+    language="typescript"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>All rules</h2>
 

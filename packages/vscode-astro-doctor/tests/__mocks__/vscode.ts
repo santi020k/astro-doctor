@@ -20,6 +20,9 @@ export const Uri = {
 }
 
 export const workspace = {
+  createFileSystemWatcher: vi.fn(() => ({
+    dispose: vi.fn(),
+  })),
   fs: {
     stat: vi.fn(),
   },

@@ -1,4 +1,5 @@
 ---
+import CodeBlock from '@/components/code-block.astro'
 import Docs from '@/layouts/Docs.astro'
 
 import { Callout } from '@santi020k/lumen-astro'
@@ -20,7 +21,8 @@ import { Callout } from '@santi020k/lumen-astro'
 
   <p>Create <code>.github/workflows/astro-doctor.yml</code>:</p>
 
-  <pre><code>{`name: Astro Doctor
+  <CodeBlock
+    code={`name: Astro Doctor
 on:
   pull_request:
     paths: ['**/*.astro']
@@ -30,11 +32,16 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write   # needed to post PR comments
+      security-events: write # needed only when upload-sarif is true
     steps:
       - uses: actions/checkout@v7
       - uses: santi020k/astro-doctor@v1`}
-       </code>
-  </pre>
+    label=".github/workflows/astro-doctor.yml"
+    language="yaml"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>PR diff mode (recommended)</h2>
 
@@ -44,7 +51,8 @@ jobs:
     touched files do not fail the new change.
   </p>
 
-  <pre><code>{`- uses: actions/checkout@v7
+  <CodeBlock
+    code={`- uses: actions/checkout@v7
   with:
     fetch-depth: 0        # required for diff detection
 - uses: santi020k/astro-doctor@v1
@@ -52,8 +60,11 @@ jobs:
     diff-only: true
     comment: true
     fail-on: error`}
-       </code>
-  </pre>
+    language="yaml"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>Inputs</h2>
 
@@ -90,6 +101,16 @@ jobs:
         <td><code>json-report</code></td>
         <td><em>empty</em></td>
         <td>Path to write a JSON report; leave empty to skip</td>
+      </tr>
+      <tr>
+        <td><code>sarif-report</code></td>
+        <td><em>empty</em></td>
+        <td>Path to write a SARIF 2.1.0 report; leave empty to skip</td>
+      </tr>
+      <tr>
+        <td><code>upload-sarif</code></td>
+        <td><code>false</code></td>
+        <td>Upload findings to GitHub Code Scanning; requires <code>security-events: write</code></td>
       </tr>
     </tbody>
   </table>
@@ -129,7 +150,8 @@ jobs:
 
   <h2>Using outputs in downstream steps</h2>
 
-  <pre><code>{`steps:
+  <CodeBlock
+    code={`steps:
   - uses: santi020k/astro-doctor@v1
     id: doctor
     with:
@@ -141,14 +163,18 @@ jobs:
         echo "Score $SCORE is below threshold (80)"
         exit 1
       fi`}
-       </code>
-  </pre>
+    language="yaml"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>PR comment format</h2>
 
   <p>When <code>comment: true</code>, the action posts a comment like:</p>
 
-  <pre><code>{`## Astro Doctor 🟢 85/100 (B) _(introduced issues only)_
+  <CodeBlock
+    code={`## Astro Doctor 🟢 85/100 (B) _(introduced issues only)_
 
 | | File | Location | Message | Rule |
 |---|---|---|---|---|
@@ -158,8 +184,11 @@ jobs:
 **1 error, 1 warning** across 14 files
 
 <sub>Powered by [Astro Doctor](https://github.com/santi020k/astro-doctor)</sub>`}
-       </code>
-  </pre>
+    language="markdown"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <p>
     The comment is updated (not re-created) on every push. It uses a hidden HTML marker to identify

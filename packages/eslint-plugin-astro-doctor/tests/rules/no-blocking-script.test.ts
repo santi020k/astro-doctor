@@ -54,13 +54,19 @@ ruleTester.run('no-blocking-script', rule, {
     {
       code: `---\n---\n<script src="https://cdn.example.com/widget.js"></script>`,
       filename: 'test.astro',
-      errors: [{ messageId: 'blockingScript' }],
+      errors: [{
+        messageId: 'blockingScript',
+        suggestions: [{
+          messageId: 'addDefer',
+          output: `---\n---\n<script defer src="https://cdn.example.com/widget.js"></script>`,
+        }],
+      }],
     },
     // is:inline + src without defer/async
     {
       code: `---\n---\n<script is:inline src="/legacy.js"></script>`,
       filename: 'test.astro',
-      errors: [{ messageId: 'blockingScript' }],
+      errors: [{ messageId: 'blockingScript', suggestions: 1 }],
     },
     // Multiple blocking scripts — one error each
     {
@@ -71,7 +77,10 @@ ruleTester.run('no-blocking-script', rule, {
         '<script src="/widget.js"></script>',
       ].join('\n'),
       filename: 'test.astro',
-      errors: [{ messageId: 'blockingScript' }, { messageId: 'blockingScript' }],
+      errors: [
+        { messageId: 'blockingScript', suggestions: 1 },
+        { messageId: 'blockingScript', suggestions: 1 },
+      ],
     },
   ],
 })

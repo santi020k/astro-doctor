@@ -58,7 +58,7 @@ Only run `pnpm --filter vscode-astro-doctor run package` and install the generat
 
 * `Astro Doctor: Scan Workspace`
 * `Astro Doctor: Scan Current File`
-* `Astro Doctor: Suppress All Issues in File`
+* `Astro Doctor: Apply All Safe Fixes in File`
 * `Astro Doctor: Restart Server`
 * `Astro Doctor: Show Output`
 * `Astro Doctor: Open Documentation`
