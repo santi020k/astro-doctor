@@ -1,0 +1,51 @@
+---
+import type { ComponentProps } from 'astro/types'
+
+import { Code as HighlightedCode } from 'astro:components'
+
+import { Code } from '@santi020k/lumen-astro'
+
+interface Props {
+  class?: string
+  code: string
+  copy?: boolean
+  label?: string
+  language?: ComponentProps<typeof HighlightedCode>['lang']
+  theme?: 'auto'
+  variant?: 'block'
+}
+
+const {
+  class: className,
+  code,
+  copy = true,
+  label,
+  language = 'text',
+  theme = 'auto',
+  variant = 'block'
+} = Astro.props
+
+const languageLabel = typeof language === 'string' ? language : language.name
+
+const themes = {
+  dark: 'catppuccin-mocha',
+  light: 'catppuccin-latte'
+} satisfies NonNullable<ComponentProps<typeof HighlightedCode>['themes']>
+---
+
+<Code
+  class={className}
+  copy={copy}
+  highlighted
+  label={label}
+  language={languageLabel}
+  theme={theme}
+  variant={variant}
+>
+  <HighlightedCode
+    code={code}
+    defaultColor={false}
+    lang={language}
+    themes={themes}
+  />
+</Code>

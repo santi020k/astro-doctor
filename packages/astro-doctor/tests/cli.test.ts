@@ -109,4 +109,116 @@ describe('runCli', () => {
     expect(report.diagnostics).toHaveLength(1)
     expect(report.diagnostics[0]?.ruleId).toBe('astro-doctor/no-missing-alt')
   })
+
+  test.each([
+    [['--format', 'xml'], 'Unknown format'],
+    [['--fail-on', 'sometimes'], 'Unknown fail-on'],
+    [['--threshold', '101'], 'Invalid threshold'],
+    [['--unknown'], 'Unknown option'],
+    [['--dir'], 'requires a value'],
+    [['init', '--unknown'], 'Unknown option'],
+    [['install', '--unknown'], 'Unknown option'],
+  ])('rejects invalid arguments: %j', async (argumentsList, expectedMessage) => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(vi.fn())
+
+    await runCli(argumentsList)
+
+    expect(process.exitCode).toBe(1)
+    expect(String(consoleError.mock.calls.at(-1)?.[0])).toContain(expectedMessage)
+  })
+
+  test('creates and applies a persistent baseline from the CLI', async () => {
+    const astroFilePath = join(testDirectory, 'index.astro')
+    const baselineFilePath = join(testDirectory, 'baseline.json')
+
+    writeFileSync(astroFilePath, '---\n---\n<img src="/hero.png" />')
+
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())
+
+    await runCli([
+      'baseline',
+      'create',
+      '--dir',
+      testDirectory,
+      '--output',
+      baselineFilePath,
+    ])
+
+    expect(consoleLog).toHaveBeenCalledWith(
+      expect.stringContaining('Baseline written'),
+    )
+
+    consoleLog.mockClear()
+
+    await runCli([
+      '--dir',
+      testDirectory,
+      '--baseline',
+      baselineFilePath,
+      '--json',
+      '--fail-on',
+      'off',
+    ])
+
+    const report = JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0])) as JsonReport
+
+    expect(report.diagnostics).toEqual([])
+  })
+
+  test('emits clean SARIF to stdout', async () => {
+    writeFileSync(
+      join(testDirectory, 'index.astro'),
+      '---\n---\n<img src="/hero.png" />',
+    )
+
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())
+
+    await runCli([
+      '--dir',
+      testDirectory,
+      '--format',
+      'sarif',
+      '--fail-on',
+      'off',
+    ])
+
+    expect(consoleLog).toHaveBeenCalledTimes(1)
+
+    const report = JSON.parse(String(consoleLog.mock.calls[0]?.[0])) as {
+      version: string
+      runs: readonly unknown[]
+    }
+
+    expect(report.version).toBe('2.1.0')
+    expect(report.runs).toHaveLength(1)
+  })
+
+  test('accepts the all preset and runs all-only upstream rules', async () => {
+    writeFileSync(
+      join(testDirectory, 'index.astro'),
+      '---\n---\n<button aria-hidden="true">Hidden action</button>',
+    )
+
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())
+
+    await runCli([
+      '--dir',
+      testDirectory,
+      '--preset',
+      'all',
+      '--json',
+      '--fail-on',
+      'off',
+    ])
+
+    const report = JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0])) as JsonReport
+
+    expect(report.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: 'astro/jsx-a11y/no-aria-hidden-on-focusable',
+        }),
+      ]),
+    )
+  })
 })

@@ -10,7 +10,7 @@
 
 ## What This Project Is
 
-Astro Doctor scans `.astro` files and project config files, reporting issues across four categories with 13 ESLint rules plus project audits:
+Astro Doctor scans `.astro` files and project config files, reporting issues across four categories with 13 proprietary ESLint rules, up to 54 official Astro ecosystem rules, and project audits. The `all` preset provides up to 68 unique checks after overlap deduplication:
 - **Performance** — `no-client-load-overuse`, `use-astro-image`, `require-image-dimensions`, `no-blocking-script`, `no-unprocessed-script-surprises`
 - **Accessibility** — `no-missing-alt`, `no-missing-lang`, `require-island-fallback`
 - **Security** — `no-set-html`, `no-public-secret-env`
@@ -44,8 +44,8 @@ packages/
   astro-doctor/                 PUBLISHED  The CLI + public API
     bin/astro-doctor.ts         Entry point
     src/
-      cli.ts                    Argument parsing + orchestration (--json, --no-score, --fail-on)
-      config.ts                 loadConfig() — doctor.config.ts/js/json/jsonc loader
+      cli.ts                    Strict argument parsing + orchestration (JSON, SARIF, baseline, cache)
+      config.ts                 loadConfig() — config loader with glob rule overrides
       scorer.ts                 computeScore() / computeScoreLabel() — 0-100 health score
       install.ts                runInstall() — copies agent skills into the user's project
       lsp.ts                    runLsp() — experimental LSP server (diagnostics, hover, code actions,
@@ -54,6 +54,7 @@ packages/
       report/
         console.ts              formatConsoleReport() — terminal output with score
         json.ts                 formatJsonReport() — JsonReport shape for --json
+        sarif.ts                formatSarifReport() — SARIF 2.1.0 for code-scanning tools
       types.ts                  Diagnostic, ScanResult, ScanOptions, ScoreLabel,
                                 JsonReport, AstroDoctorConfig
       index.ts                  Public API exports
@@ -85,7 +86,9 @@ action.yml                      GitHub Action (composite, PR diff mode, sticky c
 - **Versioning**: Changesets with linked packages (both packages version together)
 - **Score formula**: Each file scored independently — errors cost 25 pts, warnings cost 10 pts, clamped to [0, 100]. Per-file scores are averaged across all scanned files. Unresolved errors cap the score at 89; unresolved security errors cap it at 74. Multi-project scans use the lowest project score. Grades: S (100), A (90–99), B (75–89), C (60–74), D (40–59), F (0–39)
 - **GitHub Action**: Composite action (no pre-bundled JS). Uses `npx` + `jq` + `actions/github-script`
-- **Config files**: `doctor.config.*` (following react-doctor's naming). Supports TS/JS/JSON/JSONC via native import() + readFileSync. JSON/JSONC configs support `"$schema": "https://doctor.santi020k.com/schema/config.json"` for IDE autocompletion.
+- **Config files**: `doctor.config.*` (following react-doctor's naming). Supports TS/JS/JSON/JSONC, workspace projects, and glob-based template rule overrides. JSON/JSONC configs support `"$schema": "https://doctor.santi020k.com/schema/config.json"` for IDE autocompletion.
+- **Adoption**: `baseline create|update` writes a versioned persistent baseline; `--baseline` filters recorded findings while preserving newly introduced diagnostics.
+- **Performance**: `--cache` uses content-based ESLint caching and `--verbose` reports discovery, audit, lint, and total durations.
 - **Agent skills**: Three skills in `.agents/skills/` (rules, performance, add-rule). `install` subcommand copies to user's project.
 
 ## Environment Variables

@@ -16,6 +16,10 @@ describe('isPresetName', () => {
     expect(isPresetName('ci')).toBe(true)
   })
 
+  test("returns true for 'all'", () => {
+    expect(isPresetName('all')).toBe(true)
+  })
+
   test('returns false for arbitrary string', () => {
     expect(isPresetName('other')).toBe(false)
   })
@@ -52,17 +56,23 @@ describe('getPresetRules', () => {
     }
   })
 
-  test("'strict' all values are 'error'", () => {
+  test("'strict' enables every non-duplicate rule as an error", () => {
     const rules = getPresetRules('strict')
+
     for (const value of Object.values(rules)) {
-      expect(value).toBe('error')
+      expect(['error', 'off']).toContain(value)
     }
+
+    expect(Object.values(rules)).not.toContain('warn')
   })
 
-  test("'strict' has same keys as 'recommended'", () => {
+  test("'strict' includes additional accessibility and strict Astro rules", () => {
     const recommendedKeys = Object.keys(getPresetRules('recommended')).sort()
     const strictKeys = Object.keys(getPresetRules('strict')).sort()
-    expect(strictKeys).toEqual(recommendedKeys)
+
+    expect(strictKeys.length).toBeGreaterThan(recommendedKeys.length)
+    expect(strictKeys).toContain('astro/no-unused-css-selector')
+    expect(strictKeys).toContain('astro/jsx-a11y/anchor-is-valid')
   })
 
   test("'ci' returns same rules as 'recommended'", () => {
@@ -73,6 +83,24 @@ describe('getPresetRules', () => {
 
   test("'recommended' leaves package-manager preference opt-in", () => {
     expect(getPresetRules('recommended')).not.toHaveProperty('astro-doctor/prefer-pnpm')
+  })
+
+  test("'all' enables at least every strict rule", () => {
+    const allRules = getPresetRules('all')
+    const strictRules = getPresetRules('strict')
+
+    expect(Object.keys(allRules).length).toBeGreaterThanOrEqual(Object.keys(strictRules).length)
+  })
+
+  test("'all' enables all 54 non-deprecated upstream rules", () => {
+    const allRules = getPresetRules('all')
+    const activeAstroRuleIds = Object.entries(allRules)
+      .filter(([ruleId, severity]) => ruleId.startsWith('astro/') && severity !== 'off')
+
+    expect(activeAstroRuleIds).toHaveLength(54)
+    expect(allRules['astro/sort-attributes']).toBe('error')
+    expect(allRules['astro/valid-compile']).toBeUndefined()
+    expect(allRules['astro-doctor/prefer-class-list']).toBe('off')
   })
 })
 

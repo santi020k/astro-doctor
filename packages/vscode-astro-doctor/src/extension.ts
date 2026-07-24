@@ -282,6 +282,14 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
   // Sidebar
   const sidebarProvider = new AstroDoctorSidebarProvider()
 
+  const configurationWatcher = vscode.workspace.createFileSystemWatcher(
+    '**/doctor.config.{ts,js,mjs,cjs,json,jsonc}',
+  )
+
+  const workspaceWatcher = vscode.workspace.createFileSystemWatcher(
+    '**/{pnpm-workspace.yaml,package.json}',
+  )
+
   const clientOptions: LanguageClientOptions = {
     documentSelector: [{ language: 'astro', scheme: 'file' }],
     initializationOptions: {
@@ -317,6 +325,9 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
       },
     },
     outputChannel,
+    synchronize: {
+      fileEvents: [configurationWatcher, workspaceWatcher],
+    },
     traceOutputChannel: outputChannel,
   }
 
@@ -345,6 +356,8 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
 
   context.subscriptions.push(
     outputChannel,
+    configurationWatcher,
+    workspaceWatcher,
     languageClient,
     statusBarItem,
     vscode.window.registerWebviewViewProvider(

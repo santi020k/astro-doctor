@@ -1,4 +1,5 @@
 ---
+import CodeBlock from '@/components/code-block.astro'
 import Docs from '@/layouts/Docs.astro'
 ---
 
@@ -9,7 +10,13 @@ import Docs from '@/layouts/Docs.astro'
 >
   <h1>CLI Reference</h1>
 
-  <pre><code>astro-doctor [command] [options]</code></pre>
+  <CodeBlock
+    code="astro-doctor [command] [options]"
+    language="bash"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>Commands</h2>
 
@@ -17,25 +24,39 @@ import Docs from '@/layouts/Docs.astro'
 
   <p>Scans the target directory for Astro issues and prints a health report.</p>
 
-  <pre><code># Scan current directory
-    astro-doctor
+  <CodeBlock
+    code={`# Scan current directory
+astro-doctor
 
-    # Scan a specific directory
-    astro-doctor --dir ./src
+# Scan a specific directory
+astro-doctor --dir ./src
 
-    # Scan and write a JSON report
-    astro-doctor --json report.json
+# Scan and write a JSON report
+astro-doctor --json report.json
 
-    # Apply safe automatic fixes
-    astro-doctor --fix
+# Emit SARIF for code-scanning tools
+astro-doctor --format sarif > astro-doctor.sarif
 
-    # Report only diagnostics introduced since main
-    astro-doctor --scope changed --base main
+# Apply safe automatic fixes
+astro-doctor --fix
 
-    # Scan without showing the health score
-    astro-doctor --no-score
-       </code>
-  </pre>
+# Cache repeated scans by file content
+astro-doctor --cache
+
+# Save and apply a persistent baseline
+astro-doctor baseline create
+astro-doctor --baseline .astro-doctor-baseline.json
+
+# Report only diagnostics introduced since main
+astro-doctor --scope changed --base main
+
+# Scan without showing the health score
+astro-doctor --no-score`}
+    language="bash"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h3><code>install</code></h3>
 
@@ -44,7 +65,24 @@ import Docs from '@/layouts/Docs.astro'
     Run once per project.
   </p>
 
-  <pre><code>astro-doctor install</code></pre>
+  <CodeBlock code="astro-doctor install" language="bash" />
+
+  <h3><code>baseline create|update</code></h3>
+
+  <p>
+    Saves the current findings to <code>.astro-doctor-baseline.json</code>. Subsequent scans with
+    <code>--baseline</code> report only findings that are not already recorded, making gradual
+    adoption practical in existing projects.
+  </p>
+
+  <CodeBlock
+    code={`astro-doctor baseline create
+astro-doctor baseline update --output ./config/astro-baseline.json`}
+    language="bash"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h3><code>experimental-lsp</code></h3>
 
@@ -53,7 +91,13 @@ import Docs from '@/layouts/Docs.astro'
     This feature is a work in progress.
   </p>
 
-  <pre><code>astro-doctor experimental-lsp --stdio</code></pre>
+  <CodeBlock
+    code="astro-doctor experimental-lsp --stdio"
+    language="bash"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>Options</h2>
 
@@ -92,6 +136,26 @@ import Docs from '@/layouts/Docs.astro'
         <td>Apply safe automatic fixes provided by rules</td>
       </tr>
       <tr>
+        <td><code>--preset &lt;name&gt;</code></td>
+        <td><code>recommended</code></td>
+        <td><code>recommended</code> | <code>strict</code> | <code>ci</code> | <code>all</code></td>
+      </tr>
+      <tr>
+        <td><code>--cache</code></td>
+        <td><em>off</em></td>
+        <td>Cache ESLint results by file content at <code>.astro-doctor/cache</code>; add it to <code>.gitignore</code></td>
+      </tr>
+      <tr>
+        <td><code>--baseline &lt;path&gt;</code></td>
+        <td><em>off</em></td>
+        <td>Suppress findings recorded in a persistent baseline</td>
+      </tr>
+      <tr>
+        <td><code>--format &lt;format&gt;</code></td>
+        <td><code>console</code></td>
+        <td>Choose <code>console</code>, <code>github</code>, or <code>sarif</code></td>
+      </tr>
+      <tr>
         <td><code>--no-score</code></td>
         <td><em>show score</em></td>
         <td>Omit the health score from output</td>
@@ -118,7 +182,8 @@ import Docs from '@/layouts/Docs.astro'
 
   <p>When using <code>--json</code>, the output conforms to this schema:</p>
 
-  <pre><code>{`{
+  <CodeBlock
+    code={`{
   "$schema": "https://doctor.santi020k.com/schema/report.json",
   "schemaVersion": 1,
   "version": "1.x.x",
@@ -149,8 +214,11 @@ import Docs from '@/layouts/Docs.astro'
     }
   ]
 }`}
-  </code>
-  </pre>
+    language="json"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>Exit codes</h2>
 
@@ -175,17 +243,21 @@ import Docs from '@/layouts/Docs.astro'
 
   <h2>Examples</h2>
 
-  <pre><code># CI: fail on any warning
-    astro-doctor --fail-on warning
+  <CodeBlock
+    code={`# CI: fail on any warning
+astro-doctor --fail-on warning
 
-    # CI: never fail, just report
-    astro-doctor --fail-on off
+# CI: never fail, just report
+astro-doctor --fail-on off
 
-    # Output JSON for downstream tools
-    astro-doctor --json | jq '.score'
+# Output JSON for downstream tools
+astro-doctor --json | jq '.score'
 
-    # Write JSON to a file and show console output
-    astro-doctor --json ./astro-report.json
-       </code>
-  </pre>
+# Write JSON to a file and show console output
+astro-doctor --json ./astro-report.json`}
+    language="bash"
+    theme="auto"
+    variant="block"
+    copy
+  />
 </Docs>

@@ -5,6 +5,7 @@ coverage
 *.tsbuildinfo
 .eslintcache
 .cspellcache
+.astro-doctor/cache
 .env
 .env.local
 *.vsix

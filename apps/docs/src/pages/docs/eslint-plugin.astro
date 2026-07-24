@@ -1,4 +1,5 @@
 ---
+import CodeBlock from '@/components/code-block.astro'
 import PackageManagerTabs from '@/components/PackageManagerTabs.astro'
 import Docs from '@/layouts/Docs.astro'
 
@@ -19,13 +20,13 @@ import { Callout } from '@santi020k/lumen-astro'
 
   <h2>Installation</h2>
 
-  <p>Install the plugin and the Astro parser as development dependencies:</p>
+  <p>Install the plugin as a development dependency. Its Astro and accessibility rule dependencies are included:</p>
 
   <PackageManagerTabs
-    pnpm="pnpm add -D @santi020k/eslint-plugin-astro-doctor astro-eslint-parser"
-    npm="npm install --save-dev @santi020k/eslint-plugin-astro-doctor astro-eslint-parser"
-    yarn="yarn add -D @santi020k/eslint-plugin-astro-doctor astro-eslint-parser"
-    bun="bun add -D @santi020k/eslint-plugin-astro-doctor astro-eslint-parser"
+    pnpm="pnpm add -D @santi020k/eslint-plugin-astro-doctor"
+    npm="npm install --save-dev @santi020k/eslint-plugin-astro-doctor"
+    yarn="yarn add -D @santi020k/eslint-plugin-astro-doctor"
+    bun="bun add -D @santi020k/eslint-plugin-astro-doctor"
   />
 
   <h2>Usage</h2>
@@ -34,17 +35,36 @@ import { Callout } from '@santi020k/lumen-astro'
     Astro Doctor fully supports the new ESLint "flat config" format. Import the plugin and add the <code>recommended</code> config to your <code>eslint.config.js</code> file:
   </p>
 
-  <pre><code>{`// eslint.config.js
+  <CodeBlock
+    code={`// eslint.config.js
 import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 
 export default [
   // ...your other configs
 
   astroDoctorPlugin.configs.recommended,
-]`}</code></pre>
+]`}
+    label="eslint.config.js"
+    language="javascript"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <p>
-    The <code>recommended</code> config automatically sets up <code>astro-eslint-parser</code> for <code>*.astro</code> files and enables all of the Astro Doctor rules with their default severities.
+    The <code>recommended</code> config automatically sets up <code>astro-eslint-parser</code> for <code>*.astro</code> files and enables the proprietary rules alongside the official Astro recommended rules.
+  </p>
+
+  <h2>Presets</h2>
+
+  <ul>
+    <li><code>recommended</code> — proprietary rules plus official Astro recommended rules.</li>
+    <li><code>strict</code> — adds official accessibility, security, and best-practice rules.</li>
+    <li><code>all</code> — all 54 non-deprecated official Astro rules, including stylistic rules.</li>
+  </ul>
+
+  <p>
+    Astro Doctor deduplicates overlapping checks. The <code>all</code> preset exposes 63 unique ESLint checks rather than reporting the same problem twice.
   </p>
 
   <h2>Customizing Rules</h2>
@@ -53,7 +73,8 @@ export default [
     If you are using the ESLint plugin directly, you can override the default severity of any rule just like any other ESLint plugin:
   </p>
 
-  <pre><code>{`// eslint.config.js
+  <CodeBlock
+    code={`// eslint.config.js
 import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 
 export default [
@@ -66,7 +87,13 @@ export default [
       'astro-doctor/prefer-class-list': 'off',
     }
   }
-]`}</code></pre>
+]`}
+    label="eslint.config.js"
+    language="javascript"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <Callout class="callout callout-tip">
     <strong>Tip:</strong> If you are using the Astro Doctor CLI instead of running ESLint directly, you can customize rule severities using a <code>doctor.config.ts</code> file. See the <a href="/docs/configuration">Configuration</a> page.

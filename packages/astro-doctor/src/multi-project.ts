@@ -1,9 +1,10 @@
 import { existsSync, readFileSync, statSync } from 'node:fs'
-import { isAbsolute, join, relative, resolve, sep } from 'node:path'
+import { join, resolve } from 'node:path'
 
 import { glob } from 'glob'
 
 import { scan } from './scanner/index.js'
+import { isFileInDirectory } from './utils/is-file-in-directory.js'
 import { loadConfig } from './config.js'
 import { computeScoreLabel } from './scorer.js'
 import type {
@@ -208,6 +209,14 @@ const mergeIgnore = (
   ...(project?.ignore ?? []),
 ]
 
+const mergeOverrides = (
+  root: AstroDoctorConfig | null,
+  project: AstroDoctorConfig | null,
+): AstroDoctorConfig['overrides'] => [
+  ...(root?.overrides ?? []),
+  ...(project?.overrides ?? []),
+]
+
 /**
  * Merge root config with a project-level config.
  * Project-level rules and ignore lists layer on top; failOn and threshold are overridden only
@@ -219,6 +228,8 @@ export const mergeConfigs = (
 ): AstroDoctorConfig => ({
   rules: mergeRules(root, project),
   ignore: mergeIgnore(root, project),
+  overrides: mergeOverrides(root, project),
+  preset: project?.preset ?? root?.preset,
   failOn: project?.failOn ?? root?.failOn,
   threshold: project?.threshold ?? root?.threshold,
 })
@@ -253,7 +264,26 @@ export const aggregateResults = (results: readonly ProjectScanResult[]): ScanRes
     ),
   }
 
-  return { diagnostics, fileCount, errorCount, warningCount, score, scoreLabel, scoreBreakdown }
+  const timings = results.some((result) => result.timings !== undefined)
+    ? {
+        discoveryMs: results.reduce((total, result) => total + (result.timings?.discoveryMs ?? 0), 0),
+        auditMs: results.reduce((total, result) => total + (result.timings?.auditMs ?? 0), 0),
+        lintMs: results.reduce((total, result) => total + (result.timings?.lintMs ?? 0), 0),
+        totalMs: results.reduce((total, result) => total + (result.timings?.totalMs ?? 0), 0),
+        cacheEnabled: results.every((result) => Boolean(result.timings?.cacheEnabled)),
+      }
+    : undefined
+
+  return {
+    diagnostics,
+    fileCount,
+    errorCount,
+    warningCount,
+    score,
+    scoreLabel,
+    scoreBreakdown,
+    ...(timings === undefined ? {} : { timings }),
+  }
 }
 
 /** Scan each project individually, applying layered config. */
@@ -269,13 +299,9 @@ export const scanProjects = async (options: MultiProjectOptions): Promise<Projec
     const projectConfig = await loadConfig(project.directory)
     const mergedConfig = mergeConfigs(rootConfig, projectConfig)
 
-    const projectFiles = scanOptions.files?.filter((filePath) => {
-      const relativePath = relative(project.directory, filePath)
-
-      return relativePath !== '..' &&
-        !relativePath.startsWith(`..${sep}`) &&
-        !isAbsolute(relativePath)
-    })
+    const projectFiles = scanOptions.files?.filter((filePath) =>
+      isFileInDirectory(filePath, project.directory)
+    )
 
     const result = await scan({
       ...scanOptions,
@@ -283,6 +309,7 @@ export const scanProjects = async (options: MultiProjectOptions): Promise<Projec
       files: projectFiles,
       ignore: mergedConfig.ignore,
       rules: mergedConfig.rules,
+      overrides: mergedConfig.overrides,
     })
 
     results.push({ ...result, name: project.name, directory: project.directory })
