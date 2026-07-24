@@ -10,18 +10,18 @@
 
 ## What This Project Is
 
-Astro Doctor scans `.astro` files and project config files, reporting issues across four categories with 13 proprietary ESLint rules, up to 54 official Astro ecosystem rules, and project audits. The `all` preset provides up to 68 unique checks after overlap deduplication:
+Astro Doctor scans `.astro` files and project config files, reporting issues across four categories with 13 proprietary ESLint rules, up to 54 official Astro ecosystem rules, and project audits. The `all` preset provides up to 71 checks:
 - **Performance** — `no-client-load-overuse`, `use-astro-image`, `require-image-dimensions`, `no-blocking-script`, `no-unprocessed-script-surprises`
 - **Accessibility** — `no-missing-alt`, `no-missing-lang`, `require-island-fallback`
-- **Security** — `no-set-html`, `no-public-secret-env`
-- **Best Practices** — `prefer-class-list`, `no-process-env`, `prefer-content-collections`, project package/env/content config checks
+- **Security** — `no-set-html`, `no-public-secret-env`, disabled origin checks, open allowed domains, insecure session cookies, and missing Astro Action input schemas
+- **Best Practices** — `prefer-class-list`, `no-process-env`, `prefer-content-collections`, package/env/content config checks, and ClientRouter script lifecycle checks
 
 It ships as:
 1. A **CLI** (`@santi020k/astro-doctor`) — `pnpm dlx @santi020k/astro-doctor@latest`
 2. An **ESLint plugin** (`@santi020k/eslint-plugin-astro-doctor`) — for inline editor diagnostics
 3. A **GitHub Action** — PR diff mode, sticky summary comment, health score output
 4. **Agent skills** (`.agents/skills/`) — installed into Claude Code, Cursor, Codex, etc.
-5. An **experimental LSP** — `astro-doctor experimental-lsp --stdio` (diagnostics, hover, code actions)
+5. An **experimental LSP** — `astro-doctor experimental-lsp --stdio` (project-aware workspace scans, diagnostics, hover, code actions, and safe fixes)
 6. A **VS Code extension** (`vscode-astro-doctor`) — inline diagnostics, sidebar health panel, status bar
 
 ## Inspiration
@@ -48,11 +48,13 @@ packages/
       config.ts                 loadConfig() — config loader with glob rule overrides
       scorer.ts                 computeScore() / computeScoreLabel() — 0-100 health score
       install.ts                runInstall() — copies agent skills into the user's project
-      lsp.ts                    runLsp() — experimental LSP server (diagnostics, hover, code actions,
-                                           health score notifications via experimental/ methods)
+      lsp.ts                    runLsp() — experimental LSP server (project-aware workspace scans,
+                                           diagnostics, hover, code actions, safe fixes, and health
+                                           score notifications via experimental/ methods)
       scanner/                  File discovery (glob) + ESLint runner + project audits
       report/
         console.ts              formatConsoleReport() — terminal output with score
+        github.ts               formatGithubReport() — GitHub Actions workflow annotations
         json.ts                 formatJsonReport() — JsonReport shape for --json
         sarif.ts                formatSarifReport() — SARIF 2.1.0 for code-scanning tools
       types.ts                  Diagnostic, ScanResult, ScanOptions, ScoreLabel,

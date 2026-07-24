@@ -7,7 +7,7 @@
 
 The CLI for Astro Doctor — scans your Astro project and reports issues across performance, accessibility, security, and best practices.
 
-It combines 13 proprietary Astro rules with the official Astro ESLint catalog and project-level audits, providing up to 68 unique checks with the `all` preset.
+It combines 13 proprietary Astro rules with the official Astro ESLint catalog and project-level audits, providing up to 71 checks with the `all` preset.
 
 ## Quick Start
 
@@ -41,11 +41,18 @@ pnpm dlx @santi020k/astro-doctor@latest --baseline .astro-doctor-baseline.json
 ## Programmatic API
 
 ```ts
-import { scan, formatConsoleReport } from '@santi020k/astro-doctor'
+import {
+  formatConsoleReport,
+  formatGithubReport,
+  formatJsonReport,
+  formatSarifReport,
+  scan,
+} from '@santi020k/astro-doctor'
 
 const result = await scan({ directory: './src' })
 
 console.log(formatConsoleReport(result))
+// Other formatters support JSON, GitHub Actions annotations, and SARIF.
 // result.diagnostics  — array of findings
 // result.errorCount   — number of errors
 // result.warningCount — number of warnings
