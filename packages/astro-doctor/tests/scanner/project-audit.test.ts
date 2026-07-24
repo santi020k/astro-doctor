@@ -19,6 +19,33 @@ describe('project audits', () => {
     rmSync(testDirectory, { recursive: true, force: true })
   })
 
+  test('inherits pnpm configuration from the workspace root', async () => {
+    const projectDirectory = join(testDirectory, 'apps', 'docs')
+
+    mkdirSync(projectDirectory, { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'package.json'),
+      JSON.stringify({ name: 'workspace', packageManager: 'pnpm@10.0.0' }),
+    )
+    writeFileSync(join(testDirectory, 'pnpm-workspace.yaml'), 'packages:\n  - apps/*\n')
+    writeFileSync(join(testDirectory, 'pnpm-lock.yaml'), 'lockfileVersion: 9\n')
+    writeFileSync(join(projectDirectory, 'package.json'), JSON.stringify({ name: 'docs' }))
+
+    const scanResult = await scan({
+      directory: projectDirectory,
+      files: ['package.json'],
+      rules: {
+        'astro-doctor/prefer-pnpm': 'warn',
+      },
+    })
+
+    expect(scanResult.diagnostics).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ ruleId: 'astro-doctor/prefer-pnpm' }),
+      ]),
+    )
+  })
+
   test('reports actions without a top-level input schema', async () => {
     mkdirSync(join(testDirectory, 'src', 'actions'), { recursive: true })
     writeFileSync(
