@@ -6,15 +6,6 @@ const { build } = require('esbuild')
 const PACKAGE_ROOT = resolve(__dirname, '..')
 const DIST_PATH = resolve(PACKAGE_ROOT, 'dist')
 
-const ASTRO_ESLINT_PARSER_PACKAGE_PATH = require.resolve('astro-eslint-parser/package.json', {
-  paths: [resolve(PACKAGE_ROOT, '../astro-doctor')],
-})
-
-const ASTRO_ESLINT_PARSER_PATH = resolve(
-  dirname(ASTRO_ESLINT_PARSER_PACKAGE_PATH),
-  'lib/index.mjs',
-)
-
 const ASTRO_COMPILER_WASI_PACKAGE_PATH = require.resolve(
   '@astrojs/compiler-binding-wasm32-wasi/package.json',
 )
@@ -60,7 +51,6 @@ const run = async () => {
     build({
       alias: {
         '@astrojs/compiler-binding': ASTRO_COMPILER_WASI_ENTRY_PATH,
-        'astro-eslint-parser': ASTRO_ESLINT_PARSER_PATH,
       },
       banner: { js: SERVER_BANNER },
       bundle: true,
