@@ -29,6 +29,7 @@ test('bundled language server starts and responds to initialize', async () => {
 
   try {
     const response = await new Promise<string>((resolve, reject) => {
+      let errorOutput = ''
       let output = ''
 
       serverProcess.stdout.on('data', (outputChunk: Buffer) => {
@@ -36,9 +37,19 @@ test('bundled language server starts and responds to initialize', async () => {
 
         if (output.includes(`"id":"${SERVER_RESPONSE_ID}"`)) resolve(output)
       })
+      serverProcess.stderr.on('data', (outputChunk: Buffer) => {
+        errorOutput += outputChunk.toString()
+      })
       serverProcess.once('error', reject)
       serverProcess.once('exit', exitCode => {
-        reject(new Error(`Bundled language server exited before initialization with code ${String(exitCode)}.`))
+        const errorDetails = errorOutput.trim()
+        const errorSuffix = errorDetails ? `\n${errorDetails}` : ''
+
+        reject(
+          new Error(
+            `Bundled language server exited before initialization with code ${String(exitCode)}.${errorSuffix}`,
+          ),
+        )
       })
     })
 
