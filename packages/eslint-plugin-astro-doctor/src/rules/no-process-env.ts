@@ -5,6 +5,7 @@ import { createRule, isAstroFile } from '../utils/rule.js'
 export default createRule({
   meta: {
     type: 'suggestion',
+    fixable: 'code',
     docs: {
       description: 'Disallow process.env in Astro files — use import.meta.env instead',
       category: 'best-practices',
@@ -27,6 +28,7 @@ export default createRule({
         context.report({
           node,
           messageId: 'useImportMetaEnv',
+          fix: (fixer) => fixer.replaceText(node, 'import.meta.env'),
         })
       },
     }

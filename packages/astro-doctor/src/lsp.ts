@@ -155,6 +155,40 @@ interface LintResult {
   readonly astro: AstroDiagnostic[]
 }
 
+interface DiagnosticFixData {
+  readonly fix: {
+    readonly newText: string
+    readonly range: LspDiagnostic['range']
+  }
+}
+
+interface LspTextEdit {
+  readonly newText: string
+  readonly range: LspDiagnostic['range']
+}
+
+const isDiagnosticFixData = (value: unknown): value is DiagnosticFixData => {
+  if (typeof value !== 'object' || value === null || !('fix' in value)) return false
+
+  const fix = value.fix
+
+  return typeof fix === 'object' && fix !== null &&
+    'newText' in fix && typeof fix.newText === 'string' &&
+    'range' in fix && typeof fix.range === 'object' && fix.range !== null
+}
+
+const getCommandUri = (commandArguments: unknown): string | undefined => {
+  if (!Array.isArray(commandArguments)) return undefined
+
+  const firstArgument: unknown = commandArguments[0]
+
+  if (typeof firstArgument !== 'object' || firstArgument === null || !('uri' in firstArgument)) {
+    return undefined
+  }
+
+  return typeof firstArgument.uri === 'string' ? firstArgument.uri : undefined
+}
+
 const getRuleDocUrl = (shortName: string): string | undefined => {
   const ruleDocs = (
     astroDoctorPlugin.rules[shortName]?.meta as
@@ -165,7 +199,11 @@ const getRuleDocUrl = (shortName: string): string | undefined => {
   return ruleDocs?.url
 }
 
-const buildMessageDiagnostics = (msg: EslintLintMessage, filePath: string): MessageDiagnostics | null => {
+const buildMessageDiagnostics = (
+  msg: EslintLintMessage,
+  filePath: string,
+  document: TextDocument,
+): MessageDiagnostics | null => {
   if (!msg.ruleId) return null
 
   const startLine = Math.max(0, msg.line - 1)
@@ -174,6 +212,18 @@ const buildMessageDiagnostics = (msg: EslintLintMessage, filePath: string): Mess
   const endChar = msg.endColumn === undefined ? startChar + 1 : Math.max(0, msg.endColumn - 1)
   const shortName = msg.ruleId.replace('astro-doctor/', '')
   const docUrl = getRuleDocUrl(shortName)
+
+  const fixData: DiagnosticFixData | undefined = msg.fix
+    ? {
+        fix: {
+          newText: msg.fix.text,
+          range: {
+            start: document.positionAt(msg.fix.range[0]),
+            end: document.positionAt(msg.fix.range[1]),
+          },
+        },
+      }
+    : undefined
 
   return {
     lsp: {
@@ -186,6 +236,7 @@ const buildMessageDiagnostics = (msg: EslintLintMessage, filePath: string): Mess
       codeDescription: docUrl ? { href: docUrl } : undefined,
       source: 'astro-doctor',
       message: msg.message,
+      data: fixData,
     },
     astro: {
       ruleId: msg.ruleId,
@@ -206,6 +257,7 @@ const lintFileContent = async (
 ): Promise<LintResult> => {
   const results = await eslint.lintText(content, { filePath })
   const result = results[0]
+  const document = TextDocument.create(pathToFileURL(filePath).toString(), 'astro', 1, content)
 
   if (!result) return { lsp: [], astro: [] }
 
@@ -213,7 +265,7 @@ const lintFileContent = async (
   const astro: AstroDiagnostic[] = []
 
   for (const msg of result.messages) {
-    const diags = buildMessageDiagnostics(msg, filePath)
+    const diags = buildMessageDiagnostics(msg, filePath, document)
 
     if (!diags) continue
 
@@ -417,6 +469,46 @@ export const runLsp = (): void => {
     return closestEslint ?? eslintInstance
   }
 
+  const applyAllFixes = async (uri: string): Promise<void> => {
+    const document = documents.get(uri)
+
+    if (!document) return
+
+    let filePath: string
+
+    try {
+      filePath = fileURLToPath(uri)
+    } catch {
+      return
+    }
+
+    const activeEslint = getEslintInstanceForFile(filePath)
+
+    if (!activeEslint) return
+
+    const { lsp } = await lintFileContent(activeEslint, document.getText(), filePath)
+    const edits: LspTextEdit[] = []
+
+    for (const diagnostic of lsp) {
+      const diagnosticData: unknown = diagnostic.data
+
+      if (!isDiagnosticFixData(diagnosticData)) continue
+
+      edits.push({
+        newText: diagnosticData.fix.newText,
+        range: diagnosticData.fix.range,
+      })
+    }
+
+    if (edits.length === 0) return
+
+    await connection.workspace.applyEdit({
+      changes: {
+        [uri]: edits,
+      },
+    })
+  }
+
   const lintDocument = async (document: TextDocument): Promise<void> => {
     let filePath: string
 
@@ -484,7 +576,7 @@ export const runLsp = (): void => {
         textDocumentSync: TextDocumentSyncKind.Full,
         hoverProvider: true,
         executeCommandProvider: {
-          commands: ['astro-doctor.scanWorkspace'],
+          commands: ['astro-doctor.fixAll', 'astro-doctor.scanWorkspace'],
         },
         codeActionProvider: {
           codeActionKinds: [CodeActionKind.QuickFix],
@@ -497,8 +589,23 @@ export const runLsp = (): void => {
     doInitialScan().catch(noop)
   })
 
-  connection.onExecuteCommand(({ command }): void => {
-    if (command === 'astro-doctor.scanWorkspace') doInitialScan().catch(noop)
+  connection.onExecuteCommand((parameters): void => {
+    const { command } = parameters
+
+    if (command === 'astro-doctor.scanWorkspace') {
+      doInitialScan().catch(noop)
+
+      return
+    }
+
+    if (command !== 'astro-doctor.fixAll') return
+
+    const commandArguments: unknown = parameters.arguments
+    const uri = getCommandUri(commandArguments)
+
+    if (typeof uri !== 'string') return
+
+    applyAllFixes(uri).catch(noop)
   })
 
   documents.onDidOpen(({ document }) => {
@@ -558,8 +665,28 @@ export const runLsp = (): void => {
 
       const shortName = diag.code.replace('astro-doctor/', '')
       const docUrl = getRuleDocUrl(shortName)
-      // Disable rule for this line
       const line = diag.range.start.line
+      const diagnosticData: unknown = diag.data
+      const fixData = isDiagnosticFixData(diagnosticData) ? diagnosticData : undefined
+
+      if (fixData) {
+        actions.push({
+          title: `Fix ${diag.code}`,
+          kind: CodeActionKind.QuickFix,
+          diagnostics: [diag],
+          isPreferred: true,
+          edit: {
+            changes: {
+              [textDocument.uri]: [
+                {
+                  range: fixData.fix.range,
+                  newText: fixData.fix.newText,
+                },
+              ],
+            },
+          },
+        })
+      }
 
       actions.push({
         title: `Disable ${diag.code} for this line`,
@@ -577,7 +704,6 @@ export const runLsp = (): void => {
         },
       })
 
-      // Open documentation
       if (docUrl) {
         actions.push({
           title: `Open documentation for ${diag.code}`,

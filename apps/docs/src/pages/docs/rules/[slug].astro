@@ -5,7 +5,7 @@ import Docs from '@/layouts/Docs.astro'
 
 import { Badge, Icon, Link } from '@santi020k/lumen-astro'
 
-import { CATEGORY_COLORS, CATEGORY_LABELS, RULE_BY_SLUG, RULES } from '@/data/rules'
+import { CATEGORY_COLORS, CATEGORY_LABELS, RULE_BY_SLUG, RULES, SEVERITY_COLORS } from '@/data/rules'
 
 export const getStaticPaths = (() => RULES.map(rule => ({
   params: { slug: rule.slug }
@@ -37,9 +37,7 @@ if (!rule) {
         inline-flex items-center rounded-md border px-2 py-1 text-xs
         font-semibold
       `,
-      rule.severity === 'error' ?
-        'border-red-500/20 bg-red-500/10 text-red-400' :
-        'border-yellow-500/20 bg-yellow-500/10 text-yellow-400'
+      SEVERITY_COLORS[rule.severity]
     ]}
     >
       {rule.severity} by default
@@ -64,7 +62,7 @@ if (!rule) {
 
   <h3>
     <span class="inline-flex items-center gap-1.5">
-      <Icon class="text-red-400" name="x" decorative />
+      <Icon class="text-[hsl(var(--danger))]" name="x" decorative />
       Incorrect
     </span>
   </h3>
@@ -73,7 +71,7 @@ if (!rule) {
 
   <h3>
     <span class="inline-flex items-center gap-1.5">
-      <Icon class="text-green-400" name="check" decorative />
+      <Icon class="text-[hsl(var(--success))]" name="check" decorative />
       Correct
     </span>
   </h3>

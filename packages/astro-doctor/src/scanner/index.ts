@@ -5,8 +5,8 @@ import * as astroParser from 'astro-eslint-parser'
 import { ESLint } from 'eslint'
 
 import { getProjectRuleMeta } from '../project-rules.js'
-import { computeCategoryBreakdown, computeScore, computeScoreLabel } from '../scorer.js'
 import type { Diagnostic, ScanOptions, ScanResult, Severity } from '../types.js'
+import { createScanResult } from '../utils/create-scan-result.js'
 
 import { discoverAstroFiles, resolveAstroFiles } from './file-discovery.js'
 import { auditProject } from './project-audit.js'
@@ -87,6 +87,7 @@ const buildEslintConfig = (options: ScanOptions): ESLint.Options => {
       },
     ],
     ignore: false,
+    fix: options.fix,
     ...(options.noRespectInlineDisables ? { allowInlineConfig: false } : {}),
   }
 }
@@ -112,36 +113,24 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
     const eslint = new ESLint(buildEslintConfig(options))
     const eslintResults = await eslint.lintFiles(astroFiles)
 
+    if (options.fix) await ESLint.outputFixes(eslintResults)
+
     allDiagnostics.push(...collectEslintDiagnostics(eslintResults))
   }
 
   allDiagnostics.push(...projectDiagnostics)
 
-  const fileCount = new Set([
-    ...astroFiles,
-    ...allDiagnostics.map((diagnostic) => diagnostic.filePath),
-  ]).size
-
-  const score = computeScore(allDiagnostics, fileCount)
-  const scoreLabel = computeScoreLabel(score)
-  const scoreBreakdown = computeCategoryBreakdown(allDiagnostics, fileCount)
   const { categories } = options
 
   const diagnostics =
     categories && categories.length > 0
-      ? allDiagnostics.filter((d) => categories.includes(d.category))
+      ? allDiagnostics.filter((diagnostic) => categories.includes(diagnostic.category))
       : allDiagnostics
 
-  const errorCount = diagnostics.filter((diagnostic) => diagnostic.severity === 'error').length
-  const warningCount = diagnostics.filter((diagnostic) => diagnostic.severity === 'warning').length
+  const fileCount = new Set([
+    ...astroFiles,
+    ...diagnostics.map((diagnostic) => diagnostic.filePath),
+  ]).size
 
-  return {
-    diagnostics,
-    fileCount,
-    errorCount,
-    warningCount,
-    score,
-    scoreLabel,
-    scoreBreakdown,
-  }
+  return createScanResult(diagnostics, fileCount)
 }

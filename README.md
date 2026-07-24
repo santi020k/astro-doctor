@@ -63,7 +63,7 @@ This copies skills to your project that work with Claude Code, Cursor, Codex, Op
 
 ### 4. Run in CI (GitHub Actions)
 
-On pull requests, Astro Doctor reports only issues **introduced by your change** — not pre-existing ones — and posts a sticky summary comment that updates in-place.
+On pull requests, Astro Doctor compares the branch against its base and reports only issues **introduced by your change** — not pre-existing findings in touched files — then posts a sticky summary comment that updates in-place.
 
 ```yaml
 name: Astro Doctor
@@ -142,7 +142,7 @@ The CLI also checks project files such as `astro.config.*`, `package.json`, `.en
 | `no-disabled-origin-check` | ⚠️ warning | Keep Astro's CSRF origin check enabled |
 | `no-open-allowed-domains` | ⚠️ warning | Avoid `security.allowedDomains: [{}]` |
 | `prefer-env-schema` | ⚠️ warning | Define an Astro env schema for documented env vars |
-| `prefer-pnpm` | ⚠️ warning | Use pnpm consistently and avoid npm/yarn lockfiles |
+| `prefer-pnpm` | opt-in | Use pnpm consistently and avoid npm/yarn lockfiles |
 | `require-content-config` | ⚠️ warning | Add a content config when using `src/content/` |
 
 ---
@@ -152,6 +152,8 @@ The CLI also checks project files such as `astro.config.*`, `package.json`, `.en
 Every scan produces a score from **0 to 100** with a letter grade (S–F).
 
 Each file is scored independently: errors cost 25 points and warnings cost 10 points (clamped to 0–100 per file). The per-file scores are then averaged, so a single heavily-broken file doesn't drag down the score of an otherwise-clean project.
+
+Projects with unresolved errors cannot score above 89, and projects with unresolved security errors cannot score above 74. Multi-project scans use the lowest project score as the aggregate so a healthy package cannot hide an unhealthy one.
 
 | Grade | Score | Meaning |
 |-------|-------|---------|
@@ -183,6 +185,12 @@ pnpm dlx @santi020k/astro-doctor@latest --json
 
 # Output a JSON report to a file
 pnpm dlx @santi020k/astro-doctor@latest --json ./report.json
+
+# Apply safe automatic fixes where supported
+pnpm dlx @santi020k/astro-doctor@latest --fix
+
+# Report only diagnostics introduced since main
+pnpm dlx @santi020k/astro-doctor@latest --scope changed --base main
 
 # Fail on warnings too (default: only errors)
 pnpm dlx @santi020k/astro-doctor@latest --fail-on warning
@@ -248,7 +256,7 @@ Or in JSON:
     working-directory: '.'      # directory to scan
     fail-on: 'error'            # error | warning | off
     comment: 'true'             # post sticky PR summary comment
-    diff-only: 'true'           # on PRs, scan only changed Astro Doctor files
+    diff-only: 'true'           # on PRs, report only newly introduced diagnostics
     json-report: ''             # path to write JSON report (optional)
 ```
 
@@ -270,7 +278,7 @@ Or in JSON:
 
 Astro Doctor has an official extension for VS Code and Cursor. It provides:
 - **Live Diagnostics:** Real-time linting as you type.
-- **Quick Fixes:** Automatically fix common Astro anti-patterns.
+- **Quick Fixes:** Apply safe rule fixes where supported and offer suppression actions for the rest.
 - **Health Sidebar:** A visual health report with a score ring and category breakdown inside the VS Code Sidebar.
 - **Hover Info:** Detailed explanations when hovering over issues.
 
@@ -299,7 +307,7 @@ Three skills are available for coding agents:
 
 | Skill | Location | Description |
 |-------|----------|-------------|
-| Astro Rules | `.agents/skills/astro-rules/` | All 14 rules with before/after examples |
+| Astro Rules | `.agents/skills/astro-rules/` | All 13 rules with before/after examples |
 | Astro Performance | `.agents/skills/astro-performance/` | Islands architecture patterns |
 | Add Rule | `.agents/skills/add-rule/` | How to add a new rule to astro-doctor |
 

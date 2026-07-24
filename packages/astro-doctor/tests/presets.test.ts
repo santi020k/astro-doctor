@@ -70,6 +70,10 @@ describe('getPresetRules', () => {
     const recommendedRules = getPresetRules('recommended')
     expect(ciRules).toEqual(recommendedRules)
   })
+
+  test("'recommended' leaves package-manager preference opt-in", () => {
+    expect(getPresetRules('recommended')).not.toHaveProperty('astro-doctor/prefer-pnpm')
+  })
 })
 
 describe('getPresetFailOn', () => {
