@@ -102,7 +102,7 @@ Pin to a commit SHA for hardened CI:
 
 Astro Doctor owns 13 opinionated Astro rules and composes them with the official
 `eslint-plugin-astro` catalog. Depending on the preset, the CLI provides up to
-**68 unique checks**: 63 ESLint checks plus five recommended project audits.
+**Up to 71 checks**: 63 ESLint checks plus eight project audits in the `all` preset.
 Overlapping rules are deduplicated automatically.
 
 | Preset | Coverage |
