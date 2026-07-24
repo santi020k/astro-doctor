@@ -30,8 +30,8 @@
     "publish:ext": "pnpm run package && pnpm run publish:vsce && pnpm run publish:ovsx",
     "publish:vsce": "pnpm dlx @vscode/vsce publish -i astro-doctor.vsix --skip-duplicate --pat \"$VSCE_PAT\"",
     "publish:ovsx": "pnpm dlx ovsx --pat \"$OVSX_PAT\" publish astro-doctor.vsix --skip-duplicate",
-    "test": "vitest run --config vitest.config.ts",
-    "test:coverage": "vitest run --config vitest.config.ts --coverage",
+    "test": "pnpm run build && vitest run --config vitest.config.ts",
+    "test:coverage": "pnpm run build && vitest run --config vitest.config.ts --coverage",
     "test:watch": "vitest --config vitest.config.ts",
     "clean": "rm -rf dist"
   },
