@@ -334,6 +334,22 @@ describe('scan', () => {
     )
   })
 
+  test('ignores inline directives for ESLint rules outside Astro Doctor', async () => {
+    writeFileSync(
+      join(testDirectory, 'index.astro'),
+      [
+        '---',
+        '/* eslint-disable better-tailwindcss/no-unknown-classes */',
+        '---',
+        '<div class="project-component">Clean</div>',
+      ].join('\n')
+    )
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(scanResult.diagnostics).toEqual([])
+  })
+
   test('exposes the file path on each diagnostic', async () => {
     writeFileSync(
       join(testDirectory, 'index.astro'),
