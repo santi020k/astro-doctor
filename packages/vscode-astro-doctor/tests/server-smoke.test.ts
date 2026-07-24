@@ -3,6 +3,8 @@ import { resolve } from 'node:path'
 
 import { expect, test } from 'vitest'
 
+import { SERVER_RESPONSE_TIMEOUT_MS, SERVER_TEST_TIMEOUT_MS } from './constants.js'
+
 const SERVER_RESPONSE_ID = 'astro-doctor-server-smoke'
 
 test('bundled language server starts and responds to initialize', async () => {
@@ -25,23 +27,40 @@ test('bundled language server starts and responds to initialize', async () => {
     },
   })
 
-  serverProcess.stdin.write(`Content-Length: ${Buffer.byteLength(requestBody)}\r\n\r\n${requestBody}`)
-
   try {
     const response = await new Promise<string>((resolve, reject) => {
       let errorOutput = ''
       let output = ''
+      const responseTimeout = setTimeout(() => {
+        const errorDetails = errorOutput.trim()
+        const errorSuffix = errorDetails ? `\n${errorDetails}` : ''
+
+        reject(
+          new Error(
+            `Bundled language server did not initialize within ${String(SERVER_RESPONSE_TIMEOUT_MS)}ms.${errorSuffix}`,
+          ),
+        )
+      }, SERVER_RESPONSE_TIMEOUT_MS)
+
+      const rejectWithCleanup = (error: Error): void => {
+        clearTimeout(responseTimeout)
+        reject(error)
+      }
 
       serverProcess.stdout.on('data', (outputChunk: Buffer) => {
         output += outputChunk.toString()
 
-        if (output.includes(`"id":"${SERVER_RESPONSE_ID}"`)) resolve(output)
+        if (output.includes(`"id":"${SERVER_RESPONSE_ID}"`)) {
+          clearTimeout(responseTimeout)
+          resolve(output)
+        }
       })
       serverProcess.stderr.on('data', (outputChunk: Buffer) => {
         errorOutput += outputChunk.toString()
       })
-      serverProcess.once('error', reject)
+      serverProcess.once('error', rejectWithCleanup)
       serverProcess.once('exit', exitCode => {
+        clearTimeout(responseTimeout)
         const errorDetails = errorOutput.trim()
         const errorSuffix = errorDetails ? `\n${errorDetails}` : ''
 
@@ -51,6 +70,10 @@ test('bundled language server starts and responds to initialize', async () => {
           ),
         )
       })
+
+      serverProcess.stdin.write(
+        `Content-Length: ${Buffer.byteLength(requestBody)}\r\n\r\n${requestBody}`,
+      )
     })
 
     expect(response).toContain(`"id":"${SERVER_RESPONSE_ID}"`)
@@ -59,4 +82,4 @@ test('bundled language server starts and responds to initialize', async () => {
   } finally {
     serverProcess.kill()
   }
-})
+}, SERVER_TEST_TIMEOUT_MS)
