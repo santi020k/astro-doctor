@@ -134,6 +134,8 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
     directory: options.directory,
     files: options.files,
     rules: options.rules,
+    astroFiles,
+    ignore: options.ignore,
   })
 
   const auditFinishedAt = performance.now()

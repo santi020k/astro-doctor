@@ -444,20 +444,32 @@ export const buildSidebarHtml = (nonce: string): string => `<!DOCTYPE html>
       return filePath.replace(/\\\\/g, '/').split('/').pop() || filePath
     }
 
+    function escapeHtml(value) {
+      const replacements = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }
+
+      return String(value).replace(/[&<>"']/g, (character) => replacements[character])
+    }
+
     function renderTopIssues(issues) {
       if (!issues || issues.length === 0) return ''
 
       const items = issues.map((issue, index) => \`
         <div class="issue" data-index="\${index}" tabindex="0" role="button"
-             aria-label="Open \${basename(issue.filePath)} at line \${issue.line}">
+             aria-label="Open \${escapeHtml(basename(issue.filePath))} at line \${escapeHtml(issue.line)}">
           <div class="issue-header">
             <span class="issue-badge \${issue.severity === 'error' ? 'error' : 'warn'}">
-              \${issue.severity}
+              \${escapeHtml(issue.severity)}
             </span>
-            <span class="issue-rule">\${issue.ruleId.replace('astro-doctor/', '')}</span>
+            <span class="issue-rule">\${escapeHtml(issue.ruleId.replace('astro-doctor/', ''))}</span>
           </div>
-          <div class="issue-message">\${issue.message}</div>
-          <div class="issue-location">\${basename(issue.filePath)}:\${issue.line}:\${issue.column} &bull; \${categoryLabel(issue.category)}</div>
+          <div class="issue-message">\${escapeHtml(issue.message)}</div>
+          <div class="issue-location">\${escapeHtml(basename(issue.filePath))}:\${escapeHtml(issue.line)}:\${escapeHtml(issue.column)} &bull; \${escapeHtml(categoryLabel(issue.category))}</div>
         </div>
       \`).join('')
 
@@ -514,7 +526,7 @@ export const buildSidebarHtml = (nonce: string): string => `<!DOCTYPE html>
             </svg>
             <div class="score-center">
               <span class="score-number" style="color:\${color}">\${score}</span>
-              <span class="score-grade" style="color:\${gColor}">Grade \${scoreLabel}</span>
+              <span class="score-grade" style="color:\${gColor}">Grade \${escapeHtml(scoreLabel)}</span>
             </div>
           </div>
           <span class="score-title">Health Score</span>
@@ -600,7 +612,7 @@ export const buildSidebarHtml = (nonce: string): string => `<!DOCTYPE html>
           <div class="state-center error">
             <div class="state-icon">⚠️</div>
             <div class="state-title">Something went wrong</div>
-            <div class="state-body">\${data.message}</div>
+            <div class="state-body">\${escapeHtml(data.message)}</div>
           </div>
         \`
       } else if (data.type === 'update') {

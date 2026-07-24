@@ -30,8 +30,7 @@
   },
   "dependencies": {
     "astro-eslint-parser": "catalog:",
-    "eslint-plugin-astro": "catalog:",
-    "eslint-plugin-jsx-a11y": "catalog:"
+    "eslint-plugin-astro": "catalog:"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",

@@ -81,6 +81,15 @@ describe('buildSidebarHtml', () => {
 
     expect(occurrences).toBeGreaterThanOrEqual(4)
   })
+
+  test('escapes diagnostic and error content before rendering it', () => {
+    const html = buildSidebarHtml('safe')
+
+    expect(html).toContain('function escapeHtml(value)')
+    expect(html).toContain('${escapeHtml(issue.message)}')
+    expect(html).toContain('${escapeHtml(basename(issue.filePath))}')
+    expect(html).toContain('${escapeHtml(data.message)}')
+  })
 })
 
 describe('AstroDoctorSidebarProvider', () => {

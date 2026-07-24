@@ -85,6 +85,16 @@ describe('getPresetRules', () => {
     expect(getPresetRules('recommended')).not.toHaveProperty('astro-doctor/prefer-pnpm')
   })
 
+  test("'strict' enables the ClientRouter lifecycle audit without adding it to recommended", () => {
+    expect(getPresetRules('recommended')).not.toHaveProperty(
+      'astro-doctor/require-client-router-script-lifecycle',
+    )
+    expect(getPresetRules('strict')).toHaveProperty(
+      'astro-doctor/require-client-router-script-lifecycle',
+      'error',
+    )
+  })
+
   test("'all' enables at least every strict rule", () => {
     const allRules = getPresetRules('all')
     const strictRules = getPresetRules('strict')

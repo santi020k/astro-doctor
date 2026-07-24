@@ -1,7 +1,66 @@
+import { ESLint } from 'eslint'
 import { describe, expect, test } from 'vitest'
 import { DiagnosticSeverity } from 'vscode-languageserver/node'
 
-import { buildCodeActionsForDiagnostic } from '../src/lsp.js'
+import {
+  buildCodeActionsForDiagnostic,
+  getFixedDocumentText,
+  LSP_EXECUTE_COMMANDS,
+} from '../src/lsp.js'
+
+describe('LSP commands', () => {
+  test('advertises current-file scanning', () => {
+    expect(LSP_EXECUTE_COMMANDS).toContain('astro-doctor.scanFile')
+  })
+
+  test('uses ESLint multipass output for safe document fixes', async () => {
+    let nextReplacement = 'second'
+    const eslint = new ESLint({
+      fix: true,
+      overrideConfigFile: true,
+      overrideConfig: [{
+        files: ['**/*.js'],
+        plugins: {
+          test: {
+            rules: {
+              'multipass-fix': {
+                create: (context) => ({
+                  Program: (programNode) => {
+                    if (nextReplacement === 'done') return
+
+                    const replacement = nextReplacement
+
+                    nextReplacement = nextReplacement === 'second' ? 'final' : 'done'
+
+                    context.report({
+                      fix: (fixer) => fixer.replaceText(programNode, replacement),
+                      messageId: 'replace',
+                      node: programNode,
+                    })
+                  },
+                }),
+                meta: {
+                  fixable: 'code',
+                  messages: {
+                    replace: 'Replace content.',
+                  },
+                  schema: [],
+                  type: 'problem',
+                },
+              },
+            },
+          },
+        },
+        rules: {
+          'test/multipass-fix': 'error',
+        },
+      }],
+    })
+
+    await expect(getFixedDocumentText(eslint, 'first', `${process.cwd()}/example.js`))
+      .resolves.toBe('final')
+  })
+})
 
 describe('LSP code actions', () => {
   test('exposes rule suggestions alongside suppression and documentation actions', () => {
