@@ -1,6 +1,6 @@
 {
   "name": "@santi020k/astro-doctor",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Your agent writes bad Astro. This catches it.",
   "type": "module",
   "sideEffects": false,
