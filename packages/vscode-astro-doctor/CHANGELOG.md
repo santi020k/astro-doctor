@@ -1,5 +1,11 @@
 # vscode-astro-doctor
 
+## 1.1.0
+
+### Patch Changes
+
+- [#12](https://github.com/santi020k/astro-doctor/pull/12) [`c538858`](https://github.com/santi020k/astro-doctor/commit/c5388587f5b93d55de101c01f192db10cb127f74) Thanks [@santi020k](https://github.com/santi020k)! - Fix current-file scanning and conflict-safe automatic fixes in the language server, restart the VS Code client when extension settings change, and escape dynamic sidebar content.
+
 ## 1.0.4
 
 ## 1.0.3
