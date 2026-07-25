@@ -1,10 +1,11 @@
 export type RuleCategory = 'performance' | 'accessibility' | 'security' | 'best-practices' | 'architecture'
 export type Severity = 'error' | 'warn'
+export type RuleExampleLanguage = 'astro' | 'json' | 'text' | 'typescript'
 
 export interface RuleExample {
   readonly label: string
   readonly code: string
-  readonly language?: string
+  readonly language?: RuleExampleLanguage
 }
 
 export interface Rule {
@@ -18,6 +19,10 @@ export interface Rule {
   readonly bad: RuleExample
   readonly good: RuleExample
   readonly options?: readonly string[]
+}
+
+export interface ProjectAuditRule extends Rule {
+  readonly preset: 'recommended' | 'strict' | 'opt-in'
 }
 
 export const RULES: readonly Rule[] = [
@@ -380,7 +385,268 @@ const posts = await getCollection('blog', ({ data }) => !data.draft)
   }
 ]
 
-export const RULE_BY_SLUG = Object.fromEntries(RULES.map(rule => [rule.slug, rule]))
+export const PROJECT_AUDIT_RULES: readonly ProjectAuditRule[] = [
+  {
+    id: 'astro-doctor/no-disabled-origin-check',
+    name: 'no-disabled-origin-check',
+    slug: 'no-disabled-origin-check',
+    category: 'security',
+    severity: 'warn',
+    preset: 'recommended',
+    description: 'Keep Astro\'s built-in CSRF origin check enabled.',
+    why: 'Astro checks the Origin header for on-demand rendered pages to help prevent cross-site request forgery. Setting security.checkOrigin to false removes that protection from form submissions and other state-changing requests unless the application supplies an equivalent defense.',
+    bad: {
+      label: 'Origin checking disabled',
+      language: 'typescript',
+      code: `import { defineConfig } from 'astro/config'
+
+export default defineConfig({
+  security: {
+    checkOrigin: false,
+  },
+})`
+    },
+    good: {
+      label: 'Use Astro\'s secure default',
+      language: 'typescript',
+      code: `import { defineConfig } from 'astro/config'
+
+export default defineConfig({
+  security: {
+    checkOrigin: true,
+  },
+})`
+    }
+  },
+  {
+    id: 'astro-doctor/no-insecure-session-cookie',
+    name: 'no-insecure-session-cookie',
+    slug: 'no-insecure-session-cookie',
+    category: 'security',
+    severity: 'warn',
+    preset: 'recommended',
+    description: 'Keep secure, HTTP-only, same-site session cookie protections enabled.',
+    why: 'Astro session cookies are secure, HTTP-only, and same-site by default. Explicitly disabling those properties can expose a session identifier to client-side scripts, insecure transport, or cross-site requests.',
+    bad: {
+      label: 'Session cookie protections disabled',
+      language: 'typescript',
+      code: `export default defineConfig({
+  session: {
+    cookie: {
+      secure: false,
+      httpOnly: false,
+      sameSite: false,
+    },
+  },
+})`
+    },
+    good: {
+      label: 'Keep the secure defaults',
+      language: 'typescript',
+      code: `export default defineConfig({
+  session: {
+    cookie: {
+      secure: true,
+      httpOnly: true,
+      sameSite: 'lax',
+    },
+  },
+})`
+    }
+  },
+  {
+    id: 'astro-doctor/no-open-allowed-domains',
+    name: 'no-open-allowed-domains',
+    slug: 'no-open-allowed-domains',
+    category: 'security',
+    severity: 'warn',
+    preset: 'recommended',
+    description: 'Configure explicit trusted host patterns instead of allowing every domain.',
+    why: 'An empty allowed-domain pattern matches every host and defeats the protection that security.allowedDomains is intended to provide. List the exact hostnames or constrained wildcard patterns that should be trusted.',
+    bad: {
+      label: 'Every domain is allowed',
+      language: 'typescript',
+      code: `export default defineConfig({
+  security: {
+    allowedDomains: [{}],
+  },
+})`
+    },
+    good: {
+      label: 'Allow an explicit trusted hostname',
+      language: 'typescript',
+      code: `export default defineConfig({
+  security: {
+    allowedDomains: [
+      { hostname: 'www.example.com', protocol: 'https' },
+    ],
+  },
+})`
+    }
+  },
+  {
+    id: 'astro-doctor/prefer-env-schema',
+    name: 'prefer-env-schema',
+    slug: 'prefer-env-schema',
+    category: 'best-practices',
+    severity: 'warn',
+    preset: 'recommended',
+    description: 'Define an Astro env schema for variables documented in .env.example.',
+    why: 'An env schema validates required variables at startup and generates TypeScript types for server and client imports. Without one, documented variables can be missing, malformed, or used under the wrong name without an early error.',
+    bad: {
+      label: 'Documented variables without a schema',
+      language: 'text',
+      code: `# .env.example
+DATABASE_URL=
+PUBLIC_API_URL=`
+    },
+    good: {
+      label: 'Validate documented variables in astro.config.ts',
+      language: 'typescript',
+      code: `import { defineConfig, envField } from 'astro/config'
+
+export default defineConfig({
+  env: {
+    schema: {
+      DATABASE_URL: envField.string({ context: 'server', access: 'secret' }),
+      PUBLIC_API_URL: envField.string({ context: 'client', access: 'public' }),
+    },
+  },
+})`
+    }
+  },
+  {
+    id: 'astro-doctor/prefer-pnpm',
+    name: 'prefer-pnpm',
+    slug: 'prefer-pnpm',
+    category: 'best-practices',
+    severity: 'warn',
+    preset: 'opt-in',
+    description: 'Use pnpm consistently and remove competing package-manager lockfiles.',
+    why: 'Declaring pnpm in packageManager makes local development and CI use the same package-manager version. Keeping npm, Yarn, or Bun lockfiles alongside pnpm-lock.yaml can produce different dependency graphs and non-reproducible installs.',
+    bad: {
+      label: 'Package manager is unspecified or competing lockfiles exist',
+      language: 'json',
+      code: `{
+  "name": "my-astro-project"
+}
+
+# package-lock.json also exists`
+    },
+    good: {
+      label: 'Declare pnpm and keep only its lockfile',
+      language: 'json',
+      code: `{
+  "name": "my-astro-project",
+  "packageManager": "pnpm@10.34.3"
+}
+
+# pnpm-lock.yaml`
+    }
+  },
+  {
+    id: 'astro-doctor/require-action-input-schema',
+    name: 'require-action-input-schema',
+    slug: 'require-action-input-schema',
+    category: 'security',
+    severity: 'warn',
+    preset: 'recommended',
+    description: 'Validate untrusted Astro Action input before the handler runs.',
+    why: 'Astro Actions are public endpoints. An input schema rejects malformed or unexpected request data before it reaches application logic and gives the handler typed input.',
+    bad: {
+      label: 'Handler consumes input without validation',
+      language: 'typescript',
+      code: `export const server = {
+  createUser: defineAction({
+    handler: async (input) => createUser(input),
+  }),
+}`
+    },
+    good: {
+      label: 'Validate input with a schema',
+      language: 'typescript',
+      code: `import { z } from 'astro:schema'
+
+export const server = {
+  createUser: defineAction({
+    input: z.object({
+      email: z.string().email(),
+    }),
+    handler: async ({ email }) => createUser({ email }),
+  }),
+}`
+    }
+  },
+  {
+    id: 'astro-doctor/require-client-router-script-lifecycle',
+    name: 'require-client-router-script-lifecycle',
+    slug: 'require-client-router-script-lifecycle',
+    category: 'best-practices',
+    severity: 'warn',
+    preset: 'strict',
+    description: 'Initialize scripts on astro:page-load when using ClientRouter.',
+    why: 'ClientRouter navigation swaps page content without reloading the document, so DOMContentLoaded only initializes the first page. Astro emits astro:page-load after the initial load and every client-side navigation.',
+    bad: {
+      label: 'Only initializes after the first document load',
+      code: `<script>
+  document.addEventListener('DOMContentLoaded', initialize)
+</script>`
+    },
+    good: {
+      label: 'Initializes after every routed page load',
+      code: `<script>
+  document.addEventListener('astro:page-load', initialize)
+</script>`
+    }
+  },
+  {
+    id: 'astro-doctor/require-content-config',
+    name: 'require-content-config',
+    slug: 'require-content-config',
+    category: 'best-practices',
+    severity: 'warn',
+    preset: 'recommended',
+    description: 'Add a content config when src/content contains entries.',
+    why: 'A content config defines collections and their schemas so Astro can type and validate content entries. Content files without defineCollection() lose those guarantees and allow invalid frontmatter to reach a build or production page.',
+    bad: {
+      label: 'Content entries exist without src/content.config.ts',
+      language: 'text',
+      code: `src/
+  content/
+    blog/
+      first-post.md`
+    },
+    good: {
+      label: 'Define and export the collection',
+      language: 'typescript',
+      code: `import { defineCollection, z } from 'astro:content'
+
+const blog = defineCollection({
+  schema: z.object({
+    title: z.string(),
+  }),
+})
+
+export const collections = { blog }`
+    }
+  }
+]
+
+export const ALL_RULES: readonly Rule[] = [...RULES, ...PROJECT_AUDIT_RULES]
+
+export const RULE_BY_SLUG = Object.fromEntries(ALL_RULES.map(rule => [rule.slug, rule]))
+
+const publicSecretEnvRule = RULES.find(rule => rule.id === 'astro-doctor/no-public-secret-env')
+const projectAudits: ProjectAuditRule[] = [...PROJECT_AUDIT_RULES]
+
+if (publicSecretEnvRule !== undefined) {
+  projectAudits.push({
+    ...publicSecretEnvRule,
+    preset: 'recommended'
+  })
+}
+
+export const PROJECT_AUDITS: readonly ProjectAuditRule[] = projectAudits
 
 export const CATEGORY_LABELS: Record<RuleCategory, string> = {
   performance: 'Performance',

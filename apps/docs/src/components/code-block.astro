@@ -29,12 +29,6 @@ const {
 
 const languageLabel = typeof language === 'string' ? language : language.name
 
-const blockClassName = [
-  'docs-code-block',
-  wrap && 'ui-code--wrap',
-  className
-].filter(Boolean).join(' ')
-
 const themes = {
   dark: 'catppuccin-mocha',
   light: 'catppuccin-latte'
@@ -42,13 +36,14 @@ const themes = {
 ---
 
 <Code
-  class={blockClassName}
+  class={className}
   copy={copy}
   highlighted
   label={label}
   language={languageLabel}
   theme={theme}
   variant={variant}
+  wrap={wrap}
 >
   <HighlightedCode
     code={code}
@@ -57,21 +52,3 @@ const themes = {
     themes={themes}
   />
 </Code>
-
-<style>
-  :global(.docs-code-block) {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-  }
-
-  :global(.docs-code-block.ui-code--wrap pre) {
-    overflow-x: hidden;
-  }
-
-  :global(.docs-code-block.ui-code--wrap code) {
-    min-width: 0;
-    overflow-wrap: anywhere;
-    white-space: pre-wrap;
-  }
-</style>

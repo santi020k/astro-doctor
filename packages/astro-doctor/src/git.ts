@@ -1,4 +1,7 @@
 import { execFileSync } from 'node:child_process'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 import { isProjectAuditRelevantPath } from './scanner/project-audit.js'
 
@@ -29,15 +32,21 @@ export const extractRevision = (
   revision: string,
   destinationDirectory: string,
 ): void => {
-  const archive = execFileSync('git', ['archive', '--format=tar', revision], {
-    cwd,
-    stdio: ['ignore', 'pipe', 'pipe'],
-  })
+  const archiveDirectory = mkdtempSync(join(tmpdir(), 'astro-doctor-git-archive-'))
+  const archivePath = join(archiveDirectory, 'snapshot.tar')
 
-  execFileSync('tar', ['-xf', '-', '-C', destinationDirectory], {
-    input: archive,
-    stdio: ['pipe', 'ignore', 'pipe'],
-  })
+  try {
+    execFileSync('git', ['archive', '--format=tar', '--output', archivePath, revision], {
+      cwd,
+      stdio: ['ignore', 'ignore', 'pipe'],
+    })
+
+    execFileSync('tar', ['-xf', archivePath, '-C', destinationDirectory], {
+      stdio: ['ignore', 'ignore', 'pipe'],
+    })
+  } finally {
+    rmSync(archiveDirectory, { recursive: true, force: true })
+  }
 }
 
 const detectDefaultBase = (cwd: string): string => {
