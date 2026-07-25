@@ -1,5 +1,6 @@
 import type { Rule } from 'eslint'
 
+import { RULE_DOCS_BASE_URL } from '../constants.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
 
 export default createRule({
@@ -10,7 +11,7 @@ export default createRule({
       description: 'Disallow process.env in Astro files — use import.meta.env instead',
       category: 'best-practices',
       recommended: true,
-      url: 'https://github.com/santi020k/astro-doctor/blob/main/docs/rules/no-process-env.md',
+      url: `${RULE_DOCS_BASE_URL}/no-process-env`,
     },
     messages: {
       useImportMetaEnv:

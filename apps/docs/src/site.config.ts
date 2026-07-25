@@ -16,6 +16,6 @@ export const TWITTER_HANDLE = '@santi020k'
 
 export const GITHUB_URL = 'https://github.com/santi020k/astro-doctor'
 export const NPM_URL = 'https://www.npmjs.com/package/@santi020k/astro-doctor'
-export const CHANGELOG_URL = `${GITHUB_URL}/blob/main/CHANGELOG.md`
+export const CHANGELOG_URL = `${GITHUB_URL}/blob/main/packages/astro-doctor/CHANGELOG.md`
 export const REACT_DOCTOR_URL = 'https://react.doctor'
 export const FREE_SOFTWARE_PRICE_USD = 0

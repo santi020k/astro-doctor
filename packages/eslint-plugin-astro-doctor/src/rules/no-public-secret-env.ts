@@ -1,5 +1,6 @@
 import type { Rule } from 'eslint'
 
+import { RULE_DOCS_BASE_URL } from '../constants.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
 
 const PUBLIC_ENV_PREFIX = 'PUBLIC_'
@@ -34,7 +35,7 @@ export default createRule({
       description: 'Warn when PUBLIC_ environment variables appear to contain secrets',
       category: 'security',
       recommended: true,
-      url: 'https://github.com/santi020k/astro-doctor/blob/main/docs/rules/no-public-secret-env.md',
+      url: `${RULE_DOCS_BASE_URL}/no-public-secret-env`,
     },
     messages: {
       publicSecretEnv:

@@ -34,7 +34,7 @@ const projectAuditRule = PROJECT_AUDITS.find(candidateRule => candidateRule.slug
 <Docs
   title={rule.name}
   description={rule.description}
-  editPath={`apps/docs/src/pages/docs/rules/${slug}.astro`}
+  editPath="apps/docs/src/pages/docs/rules/[slug].astro"
 >
   <!-- Rule header -->
   <div class="mb-8 flex flex-wrap items-center gap-3">

@@ -1,3 +1,4 @@
+import { RULE_DOCS_BASE_URL } from '../constants.js'
 import type { AstroAttributeNode } from '../utils/astro-ast.js'
 import { forEachAstroAttribute, reportAstroNode } from '../utils/astro-ast.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
@@ -13,7 +14,7 @@ export default createRule({
         'Disallow overuse of client:load — prefer client:idle or client:visible for non-critical components',
       category: 'performance',
       recommended: true,
-      url: 'https://github.com/santi020k/astro-doctor/blob/main/docs/rules/no-client-load-overuse.md',
+      url: `${RULE_DOCS_BASE_URL}/no-client-load-overuse`,
     },
     messages: {
       preferLazyDirective:

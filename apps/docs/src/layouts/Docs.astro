@@ -16,6 +16,7 @@ interface Props {
 
 const { title, description, editPath } = Astro.props
 const ogImage = getOgImagePath(Astro.url.pathname)
+const encodedEditPath = editPath?.split('/').map(pathSegment => encodeURIComponent(pathSegment)).join('/')
 // Find prev/next pages for navigation
 const allPages = DOCS_NAV.flatMap(section => section.items)
 const currentPath = Astro.url.pathname.replace(/\/$/, '')
@@ -93,10 +94,10 @@ const nextPage = currentIndex < allPages.length - 1 ? allPages[currentIndex + 1]
         )}
 
         <!-- Edit on GitHub -->
-        {editPath && (
+        {encodedEditPath && (
           <div class="mt-8 text-right">
             <Link
-              href={`https://github.com/santi020k/astro-doctor/edit/main/${editPath}`}
+              href={`https://github.com/santi020k/astro-doctor/edit/main/${encodedEditPath}`}
               target="_blank"
               rel="noopener noreferrer"
               class="
