@@ -16,6 +16,8 @@ import {
 import { resolveBaseRevision } from '../src/git.js'
 import { scan } from '../src/scanner/index.js'
 
+const ARCHIVE_REGRESSION_FILE_SIZE_BYTES = 2 * 1024 * 1024
+
 describe('baseline comparison', () => {
   let testDirectory: string
 
@@ -120,6 +122,27 @@ describe('baseline comparison', () => {
       }),
     ])
     expect(introducedResult.diagnostics).toEqual([])
+  })
+
+  test('scans a baseline when the repository archive exceeds the child process buffer', async () => {
+    const astroFilePath = join(testDirectory, 'index.astro')
+    const largeFilePath = join(testDirectory, 'large.bin')
+
+    writeFileSync(astroFilePath, '---\n---\n<img src="/hero.png" alt="Hero" />')
+    writeFileSync(largeFilePath, Buffer.alloc(ARCHIVE_REGRESSION_FILE_SIZE_BYTES))
+    execFileSync('git', ['add', '.'], { cwd: testDirectory })
+    execFileSync('git', ['commit', '-m', 'large baseline'], { cwd: testDirectory })
+
+    const baseRevision = resolveBaseRevision(testDirectory, 'HEAD')
+    const baseline = await scanBaseline({
+      repositoryDirectory: testDirectory,
+      projectDirectory: testDirectory,
+      files: [astroFilePath],
+      baseRevision,
+      scanOptions: {},
+    })
+
+    expect(baseline.result.fileCount).toBe(1)
   })
 
   test('writes and applies a persistent baseline', async () => {

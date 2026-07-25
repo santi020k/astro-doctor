@@ -116,7 +116,7 @@
   color: hsl(var(--accent));
 }
 
-.prose pre {
+.prose > pre {
   margin: 1.25rem 0;
 }
 
