@@ -1,5 +1,13 @@
 # @santi020k/eslint-plugin-astro-doctor
 
+## 1.1.0
+
+### Minor Changes
+
+- [#12](https://github.com/santi020k/astro-doctor/pull/12) [`e5bb5a7`](https://github.com/santi020k/astro-doctor/commit/e5bb5a7e455b6a00a509502e919212bf51cacd7d) Thanks [@santi020k](https://github.com/santi020k)! - Compose Astro Doctor with the official Astro ESLint ecosystem. The recommended preset now includes official recommended rules, strict adds accessibility, security, and best-practice checks, and the new all preset enables every non-deprecated upstream rule with automatic overlap deduplication.
+
+- [#12](https://github.com/santi020k/astro-doctor/pull/12) [`d71e1d1`](https://github.com/santi020k/astro-doctor/commit/d71e1d1fb7584685b35aa7c904b244b51db1a7d4) Thanks [@santi020k](https://github.com/santi020k)! - Add safe automatic fixes and suggestions to the CLI and editor, official eslint-plugin-astro rule presets, baseline-aware changed scope, persistent baseline files, content-based scan caching, glob-based config overrides, SARIF output, strict CLI validation, verbose phase timings, and versioned JSON and baseline schemas. Harden the LSP with incremental document sync, debounced stale-result protection, configuration watching, workspace caching, and path-safe project selection. Category filters now score only visible diagnostics, GitHub workflows receive annotations, unresolved errors or unhealthy workspace projects cannot receive misleadingly high scores, and package-manager preference is opt-in.
+
 ## 1.0.4
 
 ## 1.0.3
