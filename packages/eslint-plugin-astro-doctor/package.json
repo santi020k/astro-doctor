@@ -29,7 +29,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "astro-eslint-parser": "catalog:"
+    "astro-eslint-parser": "catalog:",
+    "eslint-plugin-astro": "catalog:"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",

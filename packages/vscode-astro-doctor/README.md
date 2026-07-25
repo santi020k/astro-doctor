@@ -5,7 +5,7 @@ Astro Doctor diagnostics, hovers, and quick fixes right in your editor.
 ## Features
 
 - **Live Diagnostics:** Real-time linting and health checks for your Astro files using Astro Doctor rules.
-- **Quick Fixes:** Automatically fix common Astro anti-patterns and issues.
+- **Quick Fixes:** Apply safe rule fixes where supported and offer suppression actions for the rest.
 - **Health Sidebar:** Provides a visual health report with a score ring and category breakdown of issues (Performance, Accessibility, Security, etc.) inside the VS Code Sidebar.
 - **Hover Info:** Get detailed explanations and rule documentation when hovering over reported issues.
 
@@ -58,7 +58,7 @@ Only run `pnpm --filter vscode-astro-doctor run package` and install the generat
 
 * `Astro Doctor: Scan Workspace`
 * `Astro Doctor: Scan Current File`
-* `Astro Doctor: Suppress All Issues in File`
+* `Astro Doctor: Apply All Safe Fixes in File`
 * `Astro Doctor: Restart Server`
 * `Astro Doctor: Show Output`
 * `Astro Doctor: Open Documentation`

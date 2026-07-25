@@ -183,6 +183,7 @@ interface ReportLocation {
 interface AstroReportDescriptor {
   readonly loc: ReportLocation
   readonly messageId: string
+  readonly suggest?: Rule.SuggestionReportDescriptor[]
 }
 
 const getParserServiceSourceCode = (context: Rule.RuleContext): ParserServiceSourceCode =>
@@ -259,10 +260,12 @@ export const reportAstroNode = (
   context: Rule.RuleContext,
   node: AstroNodeBase,
   messageId: string,
+  suggest?: Rule.SuggestionReportDescriptor[],
 ): void => {
   const descriptor: AstroReportDescriptor = {
     loc: getReportLocation(node),
     messageId,
+    ...(suggest === undefined ? {} : { suggest }),
   }
 
   context.report(descriptor)

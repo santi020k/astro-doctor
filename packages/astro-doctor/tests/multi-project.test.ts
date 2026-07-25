@@ -56,6 +56,37 @@ describe('multi-project', () => {
       expect(agg.diagnostics).toHaveLength(1)
       expect(agg.score).toBeLessThan(100)
     })
+
+    test('uses the worst project score instead of diluting unhealthy projects', () => {
+      const healthyProject: ProjectScanResult = {
+        name: 'healthy',
+        directory: '/healthy',
+        diagnostics: [],
+        fileCount: 100,
+        errorCount: 0,
+        warningCount: 0,
+        score: 100,
+        scoreLabel: 'S',
+        scoreBreakdown: { performance: 100, accessibility: 100, security: 100, 'best-practices': 100 },
+      }
+      const unhealthyProject: ProjectScanResult = {
+        name: 'unhealthy',
+        directory: '/unhealthy',
+        diagnostics: [],
+        fileCount: 1,
+        errorCount: 0,
+        warningCount: 5,
+        score: 50,
+        scoreLabel: 'D',
+        scoreBreakdown: { performance: 50, accessibility: 100, security: 100, 'best-practices': 80 },
+      }
+
+      const aggregate = aggregateResults([healthyProject, unhealthyProject])
+
+      expect(aggregate.score).toBe(50)
+      expect(aggregate.scoreBreakdown.performance).toBe(50)
+      expect(aggregate.scoreBreakdown['best-practices']).toBe(80)
+    })
   })
 
   describe('resolveProjectDirectories', () => {

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lumen UI"
+  short_description: "Build product interfaces with Lumen UI"
+  default_prompt: "Use $lumen-ui to build this interface with the correct Lumen package, primitives, tokens, and accessibility patterns."

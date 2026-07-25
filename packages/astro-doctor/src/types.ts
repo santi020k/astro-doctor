@@ -1,5 +1,7 @@
 import type { RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
 
+import type { PresetName } from './presets.js'
+
 export type Severity = 'error' | 'warning'
 
 /** Per-category health scores (0–100 each, same scale as the overall score). */
@@ -23,16 +25,30 @@ export interface Diagnostic {
   readonly category: RuleCategory
 }
 
+export interface ScanTimings {
+  readonly discoveryMs: number
+  readonly auditMs: number
+  readonly lintMs: number
+  readonly totalMs: number
+  readonly cacheEnabled: boolean
+}
+
 export interface ScanResult {
   readonly diagnostics: readonly Diagnostic[]
   readonly fileCount: number
   readonly errorCount: number
   readonly warningCount: number
-  /** Health score 0–100. Penalizes errors (×10) and warnings (×3) per file. */
+  /** Health score 0–100. Penalizes errors by 25 and warnings by 10 per file. */
   readonly score: number
   readonly scoreLabel: ScoreLabel
   /** Per-category health scores using the same penalty formula as the overall score. */
   readonly scoreBreakdown: ScoreBreakdown
+  readonly timings?: ScanTimings
+}
+
+export interface RuleOverrideConfig {
+  readonly files: readonly string[]
+  readonly rules: Record<string, 'error' | 'warn' | 'off'>
 }
 
 export interface ScanOptions {
@@ -40,12 +56,17 @@ export interface ScanOptions {
   readonly files?: readonly string[]
   readonly ignore?: readonly string[]
   readonly rules?: Record<string, 'error' | 'warn' | 'off'>
+  readonly overrides?: readonly RuleOverrideConfig[]
   /** Filter results to only these categories. When empty/undefined all categories are shown. */
   readonly categories?: readonly RuleCategory[]
+  /** Apply safe ESLint fixes to scanned Astro files. */
+  readonly fix?: boolean
   /** When true, skip lint entirely and return a clean result. */
   readonly noLint?: boolean
   /** When true, ignore eslint-disable comments (audit mode). */
   readonly noRespectInlineDisables?: boolean
+  /** Cache ESLint results using file contents. */
+  readonly cache?: boolean
 }
 
 /** A single project's scan result within a multi-project run. */
@@ -59,9 +80,12 @@ export interface ProjectScanResult extends ScanResult {
 /** Shape of the machine-readable JSON report written by --json */
 export interface JsonReport {
   readonly $schema: string
+  readonly schemaVersion: number
   readonly version: string
+  readonly scoreModel: number
   readonly timestamp: string
   readonly directory: string
+  readonly scope: 'full' | 'files' | 'changed'
   readonly fileCount: number
   readonly errorCount: number
   readonly warningCount: number
@@ -88,8 +112,10 @@ export interface ProjectJsonEntry {
 
 /** Shape of doctor.config.ts / doctor.config.json */
 export interface AstroDoctorConfig {
-  readonly preset?: 'recommended' | 'strict' | 'ci'
+  readonly preset?: PresetName
   readonly rules?: Record<string, 'error' | 'warn' | 'off'>
+  /** Apply Astro template rule severities to matching file globs. */
+  readonly overrides?: readonly RuleOverrideConfig[]
   readonly ignore?: readonly string[]
   readonly failOn?: 'error' | 'warning' | 'off'
   /** Exit 1 when the health score falls below this value (0–100). */

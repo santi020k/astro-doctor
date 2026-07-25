@@ -9,13 +9,11 @@
 
 ```bash
 pnpm add -D @santi020k/eslint-plugin-astro-doctor
-# also requires astro-eslint-parser for .astro file parsing
-pnpm add -D astro-eslint-parser
 ```
 
 ## Usage
 
-### Recommended config (all rules, default severities)
+### Presets
 
 ```js
 // eslint.config.js
@@ -23,8 +21,16 @@ import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 
 export default [
   astroDoctorPlugin.configs.recommended,
+  // astroDoctorPlugin.configs.strict,
+  // astroDoctorPlugin.configs.all,
 ]
 ```
+
+- `recommended` enables the 13 proprietary rules plus the official Astro recommended rules.
+- `strict` adds official accessibility, security, and best-practice rules.
+- `all` enables every non-deprecated official Astro rule, including stylistic rules.
+
+Overlapping checks are automatically disabled so a problem is reported once. The `all` preset provides 63 unique ESLint checks: 13 proprietary rules plus 54 upstream rules, minus four overlaps.
 
 ### Manual config
 
@@ -71,7 +77,7 @@ export default await defineConfig({
 }, astroDoctorPlugin.configs.recommended)
 ```
 
-## Rules
+## Proprietary Rules
 
 | Rule | Category | Default |
 | ---- | -------- | ------- |

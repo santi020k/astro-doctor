@@ -1,11 +1,22 @@
 ---
 import type { GetStaticPaths } from 'astro'
 
+import CodeBlock from '@/components/code-block.astro'
 import Docs from '@/layouts/Docs.astro'
 
-import { CATEGORY_COLORS, CATEGORY_LABELS, RULE_BY_SLUG, RULES } from '@/data/rules'
+import { Badge, Icon, Link } from '@santi020k/lumen-astro'
 
-export const getStaticPaths = (() => RULES.map(rule => ({
+import {
+  ALL_RULES,
+  CATEGORY_COLORS,
+  CATEGORY_LABELS,
+  PROJECT_AUDITS,
+  RULE_BY_SLUG,
+  RULES,
+  SEVERITY_COLORS
+} from '@/data/rules'
+
+export const getStaticPaths = (() => ALL_RULES.map(rule => ({
   params: { slug: rule.slug }
 }))) satisfies GetStaticPaths
 
@@ -15,33 +26,43 @@ const rule = RULE_BY_SLUG[slug]
 if (!rule) {
   return Astro.redirect('/docs/rules')
 }
+
+const isEslintRule = RULES.some(candidateRule => candidateRule.slug === rule.slug)
+const projectAuditRule = PROJECT_AUDITS.find(candidateRule => candidateRule.slug === rule.slug)
 ---
 
 <Docs
   title={rule.name}
   description={rule.description}
-  editPath={`apps/docs/src/pages/docs/rules/${slug}.astro`}
+  editPath="apps/docs/src/pages/docs/rules/[slug].astro"
 >
   <!-- Rule header -->
   <div class="mb-8 flex flex-wrap items-center gap-3">
-    <span class:list={[`
+    <Badge class:list={[`
       inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold
     `, CATEGORY_COLORS[rule.category]]}
     >
       {CATEGORY_LABELS[rule.category]}
-    </span>
-    <span class:list={[
+    </Badge>
+    <Badge class:list={[
       `
         inline-flex items-center rounded-md border px-2 py-1 text-xs
         font-semibold
       `,
-      rule.severity === 'error' ?
-        'border-red-500/20 bg-red-500/10 text-red-400' :
-        'border-yellow-500/20 bg-yellow-500/10 text-yellow-400'
+      SEVERITY_COLORS[rule.severity]
     ]}
     >
       {rule.severity} by default
-    </span>
+    </Badge>
+    {projectAuditRule && (
+      <Badge class="
+        inline-flex items-center rounded-md border px-2 py-1 text-xs
+        font-semibold
+      "
+      >
+        {projectAuditRule.preset} preset
+      </Badge>
+    )}
     <code class="
       rounded-md border border-[hsl(var(--line)/0.5)]
       bg-[hsl(var(--surface-muted))] px-2 py-1 text-xs text-[hsl(var(--brand))]
@@ -62,27 +83,59 @@ if (!rule) {
 
   <h3>
     <span class="inline-flex items-center gap-1.5">
-      <span class="text-red-400">✗</span>
+      <Icon class="text-[hsl(var(--danger))]" name="x" decorative />
       Incorrect
     </span>
   </h3>
   <p class="text-sm text-[hsl(var(--ink-muted))]">{rule.bad.label}</p>
-  <pre><code>{rule.bad.code}</code></pre>
+  <CodeBlock
+    code={rule.bad.code}
+    language={rule.bad.language ?? 'astro'}
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h3>
     <span class="inline-flex items-center gap-1.5">
-      <span class="text-green-400">✓</span>
+      <Icon class="text-[hsl(var(--success))]" name="check" decorative />
       Correct
     </span>
   </h3>
   <p class="text-sm text-[hsl(var(--ink-muted))]">{rule.good.label}</p>
-  <pre><code>{rule.good.code}</code></pre>
+  <CodeBlock
+    code={rule.good.code}
+    language={rule.good.language ?? 'astro'}
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>Configuration</h2>
 
-  <p>Override the default severity in your ESLint config:</p>
-
-  <pre><code>{`// eslint.config.js
+  {!isEslintRule ?
+    (
+    <>
+      <p>Project audits are configured in <code>doctor.config.ts</code>:</p>
+      <CodeBlock
+        code={`export default {
+            rules: {
+              '${rule.id}': 'error', // or 'warn' or 'off'
+            },
+          }`}
+        label="doctor.config.ts"
+        language="typescript"
+        theme="auto"
+        variant="block"
+        copy
+      />
+    </>
+    ) :
+    (
+    <>
+      <p>Override the default severity in your ESLint config:</p>
+      <CodeBlock
+        code={`// eslint.config.js
 import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 
 export default [
@@ -93,33 +146,42 @@ export default [
     },
   },
 ]`}
-       </code>
-  </pre>
-
-  <p>Or in your <a href="/docs/configuration"><code>doctor.config.ts</code></a>:</p>
-
-  <pre><code>{`export default {
+        label="eslint.config.js"
+        language="javascript"
+        theme="auto"
+        variant="block"
+        copy
+      />
+      <p>Or in your <Link href="/docs/configuration"><code>doctor.config.ts</code></Link>:</p>
+      <CodeBlock
+        code={`export default {
   rules: {
     '${rule.id}': 'error',
   },
 }`}
-       </code>
-  </pre>
+        label="doctor.config.ts"
+        language="typescript"
+        theme="auto"
+        variant="block"
+        copy
+      />
+    </>
+    )}
 
   <h2>All rules</h2>
 
   <ul>
-    {RULES.map(r => (
+    {ALL_RULES.map(innerRule => (
       <li>
-        <a
-href={`/docs/rules/${r.slug}`}
-class:list={[r.slug === slug ?
+        <Link
+href={`/docs/rules/${innerRule.slug}`}
+class:list={[innerRule.slug === slug ?
 'font-semibold text-[hsl(var(--brand))]' :
 '']}
         >
-          <code>{r.id}</code>
-        </a>
-        {r.slug === slug && (
+          <code>{innerRule.id}</code>
+        </Link>
+        {innerRule.slug === slug && (
 <span class="ml-2 text-xs text-[hsl(var(--ink-muted))]">(this page)</span>
 )}
       </li>

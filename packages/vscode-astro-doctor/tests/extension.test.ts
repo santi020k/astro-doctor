@@ -1,11 +1,15 @@
 import * as path from 'node:path'
 
+import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import * as vscode from 'vscode'
+import { LanguageClient } from 'vscode-languageclient/node'
 
 import {
+  activate,
   createServerOptions,
   createServerStatusFeature,
+  deactivate,
   renderStatus,
   resolveBundledServer,
   resolveConfiguredServer,
@@ -399,5 +403,84 @@ describe('createServerStatusFeature', () => {
     expect(
       (capabilities.experimental as Record<string, unknown>).otherFlag,
     ).toBe(true)
+  })
+})
+
+describe('configuration lifecycle', () => {
+  afterEach(async () => {
+    await deactivate()
+    vi.mocked(LanguageClient).mockClear()
+    vi.mocked(vscode.workspace.getConfiguration).mockReset()
+    vi.mocked(vscode.workspace.onDidChangeConfiguration).mockClear()
+    resetWorkspaceFileSystemMock()
+  })
+
+  test('starts, stops, and rebuilds the client when settings change', async () => {
+    let enabled = false
+    let scanOnType = true
+    const subscriptions: vscode.Disposable[] = []
+    const configuration = {
+      get: vi.fn((key: string, defaultValue?: unknown) => {
+        if (key === 'enable') return enabled
+        if (key === 'scanOnType') return scanOnType
+        if (key === 'serverPath') return ''
+
+        return defaultValue
+      }),
+    }
+
+    vi.mocked(vscode.workspace.getConfiguration).mockReturnValue(
+      configuration as unknown as vscode.WorkspaceConfiguration,
+    )
+    mockExistingWorkspaceFile()
+
+    await activate({
+      extensionMode: vscode.ExtensionMode.Production,
+      extensionPath: '/ext',
+      subscriptions,
+    } as unknown as vscode.ExtensionContext)
+
+    expect(LanguageClient).not.toHaveBeenCalled()
+
+    const configurationListener = vi.mocked(vscode.workspace.onDidChangeConfiguration)
+      .mock.calls[0]?.[0]
+
+    enabled = true
+    configurationListener?.({
+      affectsConfiguration: () => true,
+    })
+
+    await vi.waitFor(() => {
+      expect(LanguageClient).toHaveBeenCalledOnce()
+    })
+
+    const firstClient = vi.mocked(LanguageClient).mock.results[0]?.value as unknown as { stop: Mock }
+
+    scanOnType = false
+    configurationListener?.({
+      affectsConfiguration: () => true,
+    })
+
+    await vi.waitFor(() => {
+      expect(firstClient.stop).toHaveBeenCalledOnce()
+      expect(LanguageClient).toHaveBeenCalledTimes(2)
+    })
+
+    expect(vi.mocked(LanguageClient).mock.calls[1]?.[3]).toMatchObject({
+      initializationOptions: {
+        scanOnType: false,
+      },
+    })
+
+    enabled = false
+    configurationListener?.({
+      affectsConfiguration: () => true,
+    })
+
+    const secondClient = vi.mocked(LanguageClient).mock.results[1]?.value as unknown as { stop: Mock }
+
+    await vi.waitFor(() => {
+      expect(secondClient.stop).toHaveBeenCalledOnce()
+    })
   })
 })

@@ -1,3 +1,4 @@
+import { RULE_DOCS_BASE_URL } from '../constants.js'
 import { forEachAstroElement, reportAstroNode } from '../utils/astro-ast.js'
 import { getAstroAttributeValue, hasAstroAttribute } from '../utils/attribute.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
@@ -24,7 +25,7 @@ export default createRule({
         'Require width and height for public or remote astro:assets images to avoid layout shift',
       category: 'performance',
       recommended: true,
-      url: 'https://github.com/santi020k/astro-doctor/blob/main/docs/rules/require-image-dimensions.md',
+      url: `${RULE_DOCS_BASE_URL}/require-image-dimensions`,
     },
     messages: {
       publicImageDimensions:

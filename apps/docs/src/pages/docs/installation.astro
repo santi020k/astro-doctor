@@ -1,6 +1,9 @@
 ---
+import CodeBlock from '@/components/code-block.astro'
 import PackageManagerTabs from '@/components/PackageManagerTabs.astro'
 import Docs from '@/layouts/Docs.astro'
+
+import { Callout } from '@santi020k/lumen-astro'
 ---
 
 <Docs
@@ -41,7 +44,13 @@ import Docs from '@/layouts/Docs.astro'
     <a href="https://marketplace.visualstudio.com/items?itemName=santi020k.vscode-astro-doctor" target="_blank" rel="noopener noreferrer">Marketplace</a>:
   </p>
 
-  <pre><code>ext install santi020k.vscode-astro-doctor</code></pre>
+  <CodeBlock
+    code="ext install santi020k.vscode-astro-doctor"
+    language="bash"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <p>
     This provides live diagnostics, hovers, quick fixes, and a visual health score sidebar. See
@@ -62,15 +71,20 @@ import Docs from '@/layouts/Docs.astro'
     bun="bun add -D @santi020k/eslint-plugin-astro-doctor astro-eslint-parser"
   />
 
-  <pre><code>{`// eslint.config.js
+  <CodeBlock
+    code={`// eslint.config.js
 import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 
 export default [
   astroDoctorPlugin.configs.recommended,
   // Add your other config here
 ]`}
-  </code>
-  </pre>
+    label="eslint.config.js"
+    language="javascript"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <p>
     The <code>recommended</code> config includes <code>astro-eslint-parser</code> as the parser for
@@ -84,14 +98,14 @@ export default [
     the rules and how to fix them):
   </p>
 
-  <pre><code>astro-doctor install</code></pre>
+  <CodeBlock code="astro-doctor install" language="bash" />
 
   <p>This copies three skill files to <code>.agents/skills/</code> in your project root.</p>
 
-  <div class="callout callout-tip">
+  <Callout class="callout callout-tip">
     <strong>Tip:</strong> Commit the <code>.agents/skills/</code> folder to your repository so all
     contributors and their AI tools benefit from the same context.
-  </div>
+  </Callout>
 
   <h2>GitHub Action</h2>
 

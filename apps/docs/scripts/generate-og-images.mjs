@@ -8,6 +8,7 @@
  * Set FORCE_OG=1 to regenerate files that already exist.
  */
 
+import { createHash } from 'node:crypto'
 import fs, { promises as fsp } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -17,6 +18,7 @@ import { renderOgCard } from './render-og-card.js'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 const OUT_DIR = path.join(ROOT, 'public', 'og')
+const CACHE_FILE = path.join(__dirname, 'og-image-manifest.json')
 const FORCE = process.env.FORCE_OG === '1'
 // ─── Page specs ───────────────────────────────────────────────────────────────
 /** @type {Array<{ outFile: string, props: object }>} */
@@ -127,9 +129,37 @@ for (const rule of RULES) {
 
 // ─── Generator ────────────────────────────────────────────────────────────────
 
-const generateOne = async ({ outFile, props }) => {
-  if (!FORCE && fs.existsSync(outFile)) return
+const getTemplateHash = () => {
+  const sourceFiles = [
+    path.join(__dirname, 'render-og-card.js'),
+    path.join(ROOT, 'public', 'favicon.svg'),
+    path.join(ROOT, 'public', 'fonts', 'Montserrat-Regular.ttf'),
+    path.join(ROOT, 'public', 'fonts', 'Montserrat-ExtraBold.ttf')
+  ]
 
+  const templateHash = createHash('sha256')
+
+  for (const sourceFile of sourceFiles) {
+    templateHash.update(fs.readFileSync(sourceFile))
+  }
+
+  return templateHash.digest('hex')
+}
+
+const getSpecHash = (props, templateHash) => createHash('sha256')
+  .update(templateHash)
+  .update(JSON.stringify(props))
+  .digest('hex')
+
+const readCache = async () => {
+  try {
+    return JSON.parse(await fsp.readFile(CACHE_FILE, 'utf8'))
+  } catch {
+    return {}
+  }
+}
+
+const generateOne = async ({ outFile, props }) => {
   const buffer = await renderOgCard(props)
 
   await fsp.mkdir(path.dirname(outFile), { recursive: true })
@@ -140,11 +170,28 @@ const generateOne = async ({ outFile, props }) => {
 }
 
 const start = performance.now()
-const pending = FORCE ? SPECS : SPECS.filter(s => !fs.existsSync(s.outFile))
+const templateHash = getTemplateHash()
+const previousCache = await readCache()
+
+const nextCache = Object.fromEntries(SPECS.map(({ outFile, props }) => {
+  const cacheKey = path.relative(OUT_DIR, outFile)
+
+  return [cacheKey, getSpecHash(props, templateHash)]
+}))
+
+const pending = SPECS.filter(({ outFile }) => {
+  const cacheKey = path.relative(OUT_DIR, outFile)
+
+  return FORCE || !fs.existsSync(outFile) || previousCache[cacheKey] !== nextCache[cacheKey]
+})
 
 console.log(`\n🖼  Generating ${pending.length}/${SPECS.length} OG images…\n`)
 
 await Promise.all(pending.map(generateOne))
+
+await fsp.mkdir(path.dirname(CACHE_FILE), { recursive: true })
+
+await fsp.writeFile(CACHE_FILE, `${JSON.stringify(nextCache, null, 2)}\n`)
 
 const elapsed = ((performance.now() - start) / 1000).toFixed(2)
 

@@ -4,8 +4,10 @@ import { join, resolve } from 'node:path'
 import { glob } from 'glob'
 
 import { scan } from './scanner/index.js'
+import { isFileInDirectory } from './utils/is-file-in-directory.js'
+import { readPnpmWorkspacePatterns } from './utils/read-pnpm-workspace-patterns.js'
 import { loadConfig } from './config.js'
-import { computeCategoryBreakdown,computeScore, computeScoreLabel } from './scorer.js'
+import { computeScoreLabel } from './scorer.js'
 import type {
   AstroDoctorConfig,
   ProjectScanResult,
@@ -23,30 +25,6 @@ interface MultiProjectOptions {
   readonly projectArgs: readonly string[]
   readonly rootConfig: AstroDoctorConfig | null
   readonly scanOptions: Omit<ScanOptions, 'directory' | 'ignore' | 'rules'>
-}
-
-const readPnpmWorkspaceGlobs = (rootDirectory: string): string[] => {
-  const pnpmWorkspacePath = join(rootDirectory, 'pnpm-workspace.yaml')
-
-  if (!existsSync(pnpmWorkspacePath)) return []
-
-  const content = readFileSync(pnpmWorkspacePath, 'utf8')
-  const matches = content.matchAll(/^\s+-\s+([^#\n]+)/gmu)
-  const globs: string[] = []
-
-  for (const match of matches) {
-    let pattern = match[1]?.trim()
-
-    if (!pattern) continue
-
-    if ((pattern.startsWith("'") && pattern.endsWith("'")) || (pattern.startsWith('"') && pattern.endsWith('"'))) {
-      pattern = pattern.slice(1, -1)
-    }
-
-    globs.push(pattern)
-  }
-
-  return globs
 }
 
 const readPackageJsonWorkspaceGlobs = (rootDirectory: string): string[] => {
@@ -95,7 +73,7 @@ const resolveDirectoryPackage = (directoryPath: string, rootDirectory: string): 
  * or yarn workspaces — return every workspace directory with its package name.
  */
 export const discoverWorkspacePackages = async (rootDirectory: string): Promise<WorkspacePackage[]> => {
-  const pnpmGlobs = readPnpmWorkspaceGlobs(rootDirectory)
+  const pnpmGlobs = readPnpmWorkspacePatterns(rootDirectory)
   const globs = pnpmGlobs.length > 0 ? pnpmGlobs : readPackageJsonWorkspaceGlobs(rootDirectory)
   const packages: WorkspacePackage[] = []
 
@@ -208,6 +186,14 @@ const mergeIgnore = (
   ...(project?.ignore ?? []),
 ]
 
+const mergeOverrides = (
+  root: AstroDoctorConfig | null,
+  project: AstroDoctorConfig | null,
+): AstroDoctorConfig['overrides'] => [
+  ...(root?.overrides ?? []),
+  ...(project?.overrides ?? []),
+]
+
 /**
  * Merge root config with a project-level config.
  * Project-level rules and ignore lists layer on top; failOn and threshold are overridden only
@@ -219,6 +205,8 @@ export const mergeConfigs = (
 ): AstroDoctorConfig => ({
   rules: mergeRules(root, project),
   ignore: mergeIgnore(root, project),
+  overrides: mergeOverrides(root, project),
+  preset: project?.preset ?? root?.preset,
   failOn: project?.failOn ?? root?.failOn,
   threshold: project?.threshold ?? root?.threshold,
 })
@@ -241,11 +229,38 @@ export const aggregateResults = (results: readonly ProjectScanResult[]): ScanRes
   const fileCount = results.reduce((sum, r) => sum + r.fileCount, 0)
   const errorCount = results.reduce((sum, r) => sum + r.errorCount, 0)
   const warningCount = results.reduce((sum, r) => sum + r.warningCount, 0)
-  const score = computeScore(diagnostics, fileCount)
+  const score = Math.min(...results.map((result) => result.score))
   const scoreLabel = computeScoreLabel(score)
-  const scoreBreakdown = computeCategoryBreakdown(diagnostics, fileCount)
 
-  return { diagnostics, fileCount, errorCount, warningCount, score, scoreLabel, scoreBreakdown }
+  const scoreBreakdown = {
+    performance: Math.min(...results.map((result) => result.scoreBreakdown.performance)),
+    accessibility: Math.min(...results.map((result) => result.scoreBreakdown.accessibility)),
+    security: Math.min(...results.map((result) => result.scoreBreakdown.security)),
+    'best-practices': Math.min(
+      ...results.map((result) => result.scoreBreakdown['best-practices']),
+    ),
+  }
+
+  const timings = results.some((result) => result.timings !== undefined)
+    ? {
+        discoveryMs: results.reduce((total, result) => total + (result.timings?.discoveryMs ?? 0), 0),
+        auditMs: results.reduce((total, result) => total + (result.timings?.auditMs ?? 0), 0),
+        lintMs: results.reduce((total, result) => total + (result.timings?.lintMs ?? 0), 0),
+        totalMs: results.reduce((total, result) => total + (result.timings?.totalMs ?? 0), 0),
+        cacheEnabled: results.every((result) => Boolean(result.timings?.cacheEnabled)),
+      }
+    : undefined
+
+  return {
+    diagnostics,
+    fileCount,
+    errorCount,
+    warningCount,
+    score,
+    scoreLabel,
+    scoreBreakdown,
+    ...(timings === undefined ? {} : { timings }),
+  }
 }
 
 /** Scan each project individually, applying layered config. */
@@ -261,11 +276,17 @@ export const scanProjects = async (options: MultiProjectOptions): Promise<Projec
     const projectConfig = await loadConfig(project.directory)
     const mergedConfig = mergeConfigs(rootConfig, projectConfig)
 
+    const projectFiles = scanOptions.files?.filter((filePath) =>
+      isFileInDirectory(filePath, project.directory)
+    )
+
     const result = await scan({
       ...scanOptions,
       directory: project.directory,
+      files: projectFiles,
       ignore: mergedConfig.ignore,
       rules: mergedConfig.rules,
+      overrides: mergedConfig.overrides,
     })
 
     results.push({ ...result, name: project.name, directory: project.directory })

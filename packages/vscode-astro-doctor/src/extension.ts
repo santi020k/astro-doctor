@@ -267,71 +267,21 @@ export const createServerStatusFeature = (): StaticFeature => ({
 })
 
 export const activate = async (context: vscode.ExtensionContext): Promise<void> => {
-  const configuration = vscode.workspace.getConfiguration(CLIENT_ID)
-
-  if (!configuration.get<boolean>('enable', true)) return
-
   const runtime = resolveRuntime(context)
   const outputChannel = vscode.window.createOutputChannel(CLIENT_NAME, { log: true })
-  const serverOptions = await createServerOptions(configuration, context.extensionPath, outputChannel, runtime)
-
-  if (!serverOptions) return
 
   outputChannel.appendLine(`${CLIENT_NAME}: using ${runtime.environment} environment`)
 
-  // Sidebar
   const sidebarProvider = new AstroDoctorSidebarProvider()
 
-  const clientOptions: LanguageClientOptions = {
-    documentSelector: [{ language: 'astro', scheme: 'file' }],
-    initializationOptions: {
-      scanOnType: configuration.get<boolean>('scanOnType', true),
-    },
-    middleware: {
-      executeCommand: async (command, commandArguments, forwardToServer) => {
-        if (command === COMMAND_RESTART) {
-          await client?.restart()
-
-          return
-        }
-
-        if (!ACTIVE_FILE_COMMANDS.has(command) || commandArguments.length > 0) {
-          const result: unknown = await Promise.resolve(forwardToServer(command, commandArguments))
-
-          return result
-        }
-
-        const activeDocumentUri = vscode.window.activeTextEditor?.document.uri.toString()
-
-        if (activeDocumentUri === undefined) {
-          await vscode.window.showInformationMessage(
-            `${CLIENT_NAME}: open an Astro file in the editor to run this command.`,
-          )
-
-          return
-        }
-
-        const result: unknown = await Promise.resolve(forwardToServer(command, [{ uri: activeDocumentUri }]))
-
-        return result
-      },
-    },
-    outputChannel,
-    traceOutputChannel: outputChannel,
-  }
-
-  const languageClient = new LanguageClient(
-    CLIENT_ID,
-    CLIENT_NAME,
-    serverOptions,
-    clientOptions,
+  const configurationWatcher = vscode.workspace.createFileSystemWatcher(
+    '**/doctor.config.{ts,js,mjs,cjs,json,jsonc}',
   )
 
-  client = languageClient
+  const workspaceWatcher = vscode.workspace.createFileSystemWatcher(
+    '**/{pnpm-workspace.yaml,package.json}',
+  )
 
-  languageClient.registerFeature(createServerStatusFeature())
-
-  // Status bar item (footer)
   const statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
     STATUS_BAR_PRIORITY,
@@ -343,9 +293,193 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
 
   statusBarItem.show()
 
+  let clientNotificationDisposables: vscode.Disposable[] = []
+
+  sidebarProvider.onOpenFile(({ filePath, line }) => {
+    const uri = vscode.Uri.file(filePath)
+
+    Promise.resolve(vscode.window.showTextDocument(uri))
+      .then((editor) => {
+        const targetPosition = new vscode.Position(Math.max(0, line - 1), 0)
+
+        editor.revealRange(
+          new vscode.Range(targetPosition, targetPosition),
+          vscode.TextEditorRevealType.InCenter,
+        )
+
+        editor.selection = new vscode.Selection(targetPosition, targetPosition)
+
+        return editor
+      })
+      .catch(noop)
+  })
+
+  const stopClient = async (): Promise<void> => {
+    const activeClient = client
+
+    client = undefined
+
+    for (const disposable of clientNotificationDisposables) disposable.dispose()
+
+    clientNotificationDisposables = []
+
+    if (activeClient !== undefined) await activeClient.stop()
+  }
+
+  const startClient = async (): Promise<void> => {
+    const configuration = vscode.workspace.getConfiguration(CLIENT_ID)
+
+    if (!configuration.get<boolean>('enable', true)) {
+      statusBarItem.text = '$(circle-slash) Astro Doctor'
+
+      statusBarItem.tooltip = `${CLIENT_NAME}: disabled`
+
+      await sidebarProvider.setError('Astro Doctor is disabled in settings.')
+
+      return
+    }
+
+    renderStatus(statusBarItem, {
+      health: 'ok',
+      message: `${CLIENT_NAME}: starting…`,
+      quiescent: false,
+    })
+
+    const serverOptions = await createServerOptions(
+      configuration,
+      context.extensionPath,
+      outputChannel,
+      runtime,
+    )
+
+    if (serverOptions === undefined) {
+      renderStatus(statusBarItem, {
+        health: 'error',
+        message: `${CLIENT_NAME}: language server not found`,
+        quiescent: true,
+      })
+
+      await sidebarProvider.setError('Language server not found.')
+
+      return
+    }
+
+    const clientOptions: LanguageClientOptions = {
+      documentSelector: [{ language: 'astro', scheme: 'file' }],
+      initializationOptions: {
+        scanOnType: configuration.get<boolean>('scanOnType', true),
+      },
+      middleware: {
+        executeCommand: async (command, commandArguments, forwardToServer) => {
+          if (!ACTIVE_FILE_COMMANDS.has(command) || commandArguments.length > 0) {
+            const result: unknown = await Promise.resolve(
+              forwardToServer(command, commandArguments),
+            )
+
+            return result
+          }
+
+          const activeDocumentUri = vscode.window.activeTextEditor?.document.uri.toString()
+
+          if (activeDocumentUri === undefined) {
+            await vscode.window.showInformationMessage(
+              `${CLIENT_NAME}: open an Astro file in the editor to run this command.`,
+            )
+
+            return
+          }
+
+          const result: unknown = await Promise.resolve(
+            forwardToServer(command, [{ uri: activeDocumentUri }]),
+          )
+
+          return result
+        },
+      },
+      outputChannel,
+      synchronize: {
+        fileEvents: [configurationWatcher, workspaceWatcher],
+      },
+      traceOutputChannel: outputChannel,
+    }
+
+    const languageClient = new LanguageClient(
+      CLIENT_ID,
+      CLIENT_NAME,
+      serverOptions,
+      clientOptions,
+    )
+
+    client = languageClient
+
+    languageClient.registerFeature(createServerStatusFeature())
+
+    clientNotificationDisposables = [
+      languageClient.onNotification(SERVER_STATUS_METHOD, (status: ServerStatusParams) => {
+        renderStatus(statusBarItem, status)
+
+        if (!status.quiescent) {
+          sidebarProvider.setLoading().catch(noop)
+        } else if (status.health === 'error') {
+          sidebarProvider.setError(status.message ?? 'Server error').catch(noop)
+        }
+      }),
+      languageClient.onNotification(HEALTH_SCORE_METHOD, (data: HealthScoreData) => {
+        sidebarProvider.update(data).catch(noop)
+
+        const label = data.scoreLabel
+        const score = data.score
+
+        if (data.errorCount > 0) {
+          statusBarItem.text = `$(error) Astro Doctor ${score}/100`
+        } else if (data.warningCount > 0) {
+          statusBarItem.text = `$(warning) Astro Doctor ${score}/100`
+        } else {
+          statusBarItem.text = `$(check) Astro Doctor ${score}/100`
+        }
+
+        statusBarItem.tooltip = `Astro Doctor: Grade ${label} (${score}/100) — ${data.fileCount} files, ${data.errorCount} errors, ${data.warningCount} warnings`
+      }),
+      languageClient.onNotification(TOP_ISSUES_METHOD, (issues: TopIssueData[]) => {
+        sidebarProvider.updateTopIssues(issues).catch(noop)
+      }),
+    ]
+
+    try {
+      await languageClient.start()
+
+      renderStatus(statusBarItem, { health: 'ok', quiescent: true })
+    } catch (error) {
+      client = undefined
+
+      for (const disposable of clientNotificationDisposables) disposable.dispose()
+
+      clientNotificationDisposables = []
+
+      renderStatus(statusBarItem, {
+        health: 'error',
+        message: `${CLIENT_NAME}: failed to start`,
+        quiescent: true,
+      })
+
+      await sidebarProvider.setError(
+        'Failed to start. Ensure Node.js is installed and astro-doctor is available.',
+      )
+
+      await showStartFailure(outputChannel, error)
+    }
+  }
+
+  const restartClient = async (): Promise<void> => {
+    await stopClient()
+
+    await startClient()
+  }
+
   context.subscriptions.push(
     outputChannel,
-    languageClient,
+    configurationWatcher,
+    workspaceWatcher,
     statusBarItem,
     vscode.window.registerWebviewViewProvider(
       AstroDoctorSidebarProvider.VIEW_TYPE,
@@ -356,76 +490,19 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
       await vscode.env.openExternal(vscode.Uri.parse(url))
     }),
     vscode.commands.registerCommand(COMMAND_RESTART, async () => {
-      await client?.restart()
+      await restartClient()
     }),
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration(CLIENT_ID)) restartClient().catch(noop)
+    }),
+    {
+      dispose: () => {
+        stopClient().catch(noop)
+      },
+    },
   )
 
-  try {
-    await languageClient.start()
-
-    languageClient.onNotification(SERVER_STATUS_METHOD, (status: ServerStatusParams) => {
-      renderStatus(statusBarItem, status)
-
-      if (!status.quiescent) {
-        sidebarProvider.setLoading().catch(noop)
-      } else if (status.health === 'error') {
-        sidebarProvider.setError(status.message ?? 'Server error').catch(noop)
-      }
-    })
-
-    languageClient.onNotification(HEALTH_SCORE_METHOD, (data: HealthScoreData) => {
-      sidebarProvider.update(data).catch(noop)
-
-      // Update status bar score text
-      const label = data.scoreLabel
-      const score = data.score
-
-      if (data.errorCount > 0) {
-        statusBarItem.text = `$(error) Astro Doctor ${score}/100`
-      } else if (data.warningCount > 0) {
-        statusBarItem.text = `$(warning) Astro Doctor ${score}/100`
-      } else {
-        statusBarItem.text = `$(check) Astro Doctor ${score}/100`
-      }
-
-      statusBarItem.tooltip = `Astro Doctor: Grade ${label} (${score}/100) — ${data.fileCount} files, ${data.errorCount} errors, ${data.warningCount} warnings`
-    })
-
-    languageClient.onNotification(TOP_ISSUES_METHOD, (issues: TopIssueData[]) => {
-      sidebarProvider.updateTopIssues(issues).catch(noop)
-    })
-
-    sidebarProvider.onOpenFile(({ filePath, line }) => {
-      const uri = vscode.Uri.file(filePath)
-
-      Promise.resolve(vscode.window.showTextDocument(uri))
-        .then((editor) => {
-          const targetPosition = new vscode.Position(Math.max(0, line - 1), 0)
-
-          editor.revealRange(
-            new vscode.Range(targetPosition, targetPosition),
-            vscode.TextEditorRevealType.InCenter,
-          )
-
-          editor.selection = new vscode.Selection(targetPosition, targetPosition)
-
-          return editor
-        })
-        .catch(noop)
-    })
-
-    renderStatus(statusBarItem, { health: 'ok', quiescent: true })
-  } catch (error) {
-    renderStatus(statusBarItem, {
-      health: 'error',
-      message: `${CLIENT_NAME}: failed to start`,
-      quiescent: true,
-    })
-
-    await sidebarProvider.setError('Failed to start. Ensure Node.js is installed and astro-doctor is available.')
-
-    await showStartFailure(outputChannel, error)
-  }
+  await startClient()
 }
 
 export const deactivate = (): Thenable<void> | undefined => client?.stop()

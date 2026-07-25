@@ -1,6 +1,4 @@
-import { createRequire } from 'node:module'
-import { fileURLToPath } from 'node:url'
-
+import { getPackageVersion } from './utils/get-package-version.js'
 import { TELEMETRY_REQUEST_TIMEOUT_MS } from './constants.js'
 import type { ScanResult } from './types.js'
 
@@ -39,17 +37,6 @@ const noop = (): void => {
   // intentionally swallows errors from fire-and-forget calls
 }
 
-const getVersion = (): string => {
-  try {
-    const require = createRequire(fileURLToPath(import.meta.url))
-    const packageJson = require('../../package.json') as { version: string }
-
-    return packageJson.version
-  } catch {
-    return '0.0.0'
-  }
-}
-
 const isCI = (): boolean =>
   Boolean(
     process.env.CI ||
@@ -78,7 +65,7 @@ export interface TelemetryOptions {
 }
 
 const buildPayload = (options: TelemetryOptions): TelemetryPayload => ({
-  version: getVersion(),
+  version: getPackageVersion(),
   node: process.version,
   platform: process.platform,
   command: options.command,

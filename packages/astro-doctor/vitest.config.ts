@@ -9,14 +9,10 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/**'],
       exclude: [
-        'src/cli.ts',
         'src/install.ts',
         'src/lsp.ts',
         'src/why.ts',
         'src/rules-explain.ts',
-        'src/report/github.ts',
-        'src/report/json.ts',
-        'src/report/index.ts',
       ],
       thresholds: {
         statements: 70,

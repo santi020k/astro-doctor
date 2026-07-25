@@ -1,4 +1,6 @@
 ---
+import { CodeTabs } from '@santi020k/lumen-astro'
+
 interface Props {
   pnpm?: string
   npm?: string
@@ -6,136 +8,32 @@ interface Props {
   bun?: string
 }
 
+interface PackageManagerTab {
+  code: string
+  label: string
+  language: string
+  value: string
+}
+
 const { pnpm, npm, yarn, bun } = Astro.props
 
 const tabs = [
-  { id: 'pnpm', label: 'pnpm', command: pnpm },
-  { id: 'npm',  label: 'npm',  command: npm  },
-  { id: 'yarn', label: 'yarn', command: yarn },
-  { id: 'bun',  label: 'bun',  command: bun  }
-].filter((t): t is { id: string, label: string, command: string } => Boolean(t.command))
+  { code: pnpm, label: 'pnpm', language: 'bash', value: 'pnpm' },
+  { code: npm, label: 'npm', language: 'bash', value: 'npm' },
+  { code: yarn, label: 'yarn', language: 'bash', value: 'yarn' },
+  { code: bun, label: 'bun', language: 'bash', value: 'bun' }
+].filter((tabDefinition): tabDefinition is PackageManagerTab => Boolean(tabDefinition.code))
 ---
 
-<div class="pm-tabs" data-pm-tabs>
-  <div class="pm-tabs-bar" role="tablist" aria-label="Package manager">
-    {tabs.map((tab, i) => (
-      <button
-        role="tab"
-        class={`
-          pm-tab-btn${i === 0 ? 'pm-active' : ''}
-        `}
-        data-pm-tab={tab.id}
-        aria-selected={i === 0 ? 'true' : 'false'}
-        type="button"
-      >
-        {tab.label}
-      </button>
-    ))}
-  </div>
-  {tabs.map((tab, i) => (
-    <div
-      role="tabpanel"
-      class={`
-        pm-panel${i === 0 ? 'pm-active' : ''}
-      `}
-      data-pm-panel={tab.id}
-    >
-      <pre><code>{tab.command}</code></pre>
-    </div>
-  ))}
-</div>
+<CodeTabs
+  ariaLabel="Package manager"
+  class="pm-tabs"
+  items={tabs}
+  storageKey="astro-doctor-preferred-pm"
+/>
 
-<style>
-  .pm-tabs {
+<style is:global>
+  .pm-tabs.ui-code-tabs {
     margin: 1.25rem 0;
-    border-radius: 0.75rem;
-    border: 1px solid hsl(var(--line));
-    overflow: hidden;
-  }
-
-  .pm-tabs-bar {
-    display: flex;
-    border-bottom: 1px solid hsl(var(--line));
-    background: hsl(var(--surface-muted));
-  }
-
-  .pm-tab-btn {
-    padding: 0.45rem 1rem;
-    font-size: 0.8125rem;
-    font-family: var(--font-mono);
-    font-weight: 500;
-    color: hsl(var(--ink-muted));
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-  }
-
-  .pm-tab-btn:hover {
-    color: hsl(var(--ink));
-    background: hsl(var(--surface-strong) / 0.4);
-  }
-
-  .pm-tab-btn.pm-active {
-    color: hsl(var(--brand));
-    border-bottom-color: hsl(var(--brand));
-    background: hsl(var(--surface));
-  }
-
-  .pm-panel {
-    display: none;
-  }
-
-  .pm-panel.pm-active {
-    display: block;
-  }
-
-  .pm-panel pre {
-    margin: 0;
-    border: none;
-    border-radius: 0;
-    background: hsl(var(--surface));
   }
 </style>
-
-<script>
-const PACKAGE_MANAGER_STORAGE_KEY = 'astro-doctor-preferred-pm'
-
-const syncTabs = (preferredPackageManager: string) => {
-  for (const container of document.querySelectorAll<HTMLElement>('[data-pm-tabs]')) {
-    const hasTab = container.querySelector(`[data-pm-tab="${preferredPackageManager}"]`)
-
-    if (!hasTab) continue
-
-    for (const buttonNode of container.querySelectorAll<HTMLElement>('[data-pm-tab]')) {
-      const active = buttonNode.dataset.pmTab === preferredPackageManager
-
-      buttonNode.classList.toggle('pm-active', active)
-
-      buttonNode.setAttribute('aria-selected', String(active))
-    }
-
-    for (const panel of container.querySelectorAll<HTMLElement>('[data-pm-panel]')) {
-      panel.classList.toggle('pm-active', panel.dataset.pmPanel === preferredPackageManager)
-    }
-  }
-}
-
-const savedPackageManager = localStorage.getItem(PACKAGE_MANAGER_STORAGE_KEY)
-
-if (savedPackageManager) syncTabs(savedPackageManager)
-
-for (const buttonNode of document.querySelectorAll<HTMLElement>('[data-pm-tabs] [data-pm-tab]')) {
-  buttonNode.addEventListener('click', () => {
-    const preferredPackageManager = buttonNode.dataset.pmTab
-
-    if (!preferredPackageManager) return
-
-    localStorage.setItem(PACKAGE_MANAGER_STORAGE_KEY, preferredPackageManager)
-
-    syncTabs(preferredPackageManager)
-  })
-}
-</script>

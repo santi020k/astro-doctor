@@ -2,13 +2,19 @@
 import Footer from '@/components/Footer.astro'
 import Nav from '@/components/Nav.astro'
 
+import { serializeJsonLd } from '@/utils/serialize-json-ld'
+
 import '@/styles/global.css'
+
+import { SkipLink, UIPrimitives } from '@santi020k/lumen-astro'
 
 import {
   AUTHOR,
   AUTHOR_URL,
+  FREE_SOFTWARE_PRICE_USD,
   getOgImagePath,
   GITHUB_URL,
+  NPM_URL,
   SITE_DESCRIPTION,
   SITE_NAME,
   SITE_URL,
@@ -18,6 +24,7 @@ interface Props {
   title: string
   description?: string
   ogImage?: string
+  ogImageAlt?: string
   ogType?: 'website' | 'article'
   noIndex?: boolean
 }
@@ -26,6 +33,7 @@ const {
   title,
   description = SITE_DESCRIPTION,
   ogImage,
+  ogImageAlt,
   ogType = 'website',
   noIndex = false
 } = Astro.props
@@ -36,15 +44,36 @@ const resolvedOgImage = ogImage ?
 
 const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE_URL).href
 const fullTitle = title === SITE_NAME ? title : `${title} · ${SITE_NAME}`
+const resolvedOgImageAlt = ogImageAlt ?? `${title} — ${SITE_NAME}`
+const imageType = resolvedOgImage.endsWith('.png') ? 'image/png' : 'image/webp'
+const pathnameSegments = Astro.url.pathname.split('/').filter(Boolean)
 
-const websiteJsonLd = JSON.stringify({
+const breadcrumbs = pathnameSegments.length > 0 ?
+  [
+    {
+      name: 'Home',
+      url: new URL('/', Astro.site ?? SITE_URL).href
+    },
+    ...pathnameSegments.map((segment, index) => ({
+      name: index === pathnameSegments.length - 1 ?
+        title :
+        segment
+          .split('-')
+          .map(word => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
+          .join(' '),
+      url: new URL(`/${pathnameSegments.slice(0, index + 1).join('/')}/`, Astro.site ?? SITE_URL).href
+    }))
+  ] :
+  []
+
+const websiteJsonLd = serializeJsonLd({
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   '@id': `${SITE_URL}/#website`,
   name: SITE_NAME,
   url: `${SITE_URL}/`,
   description: SITE_DESCRIPTION,
-  inLanguage: 'en',
+  inLanguage: 'en-US',
   author: {
     '@type': 'Person',
     name: AUTHOR,
@@ -52,32 +81,45 @@ const websiteJsonLd = JSON.stringify({
   }
 })
 
-const softwareJsonLd = JSON.stringify({
+const softwareJsonLd = serializeJsonLd({
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
+  '@id': `${SITE_URL}/#software`,
   name: SITE_NAME,
   applicationCategory: 'DeveloperApplication',
   operatingSystem: 'Any',
   description: 'ESLint plugin, CLI, and GitHub Action for diagnosing Astro codebases.',
   url: `${SITE_URL}/`,
+  downloadUrl: NPM_URL,
+  softwareHelp: `${SITE_URL}/docs/`,
   author: {
     '@type': 'Person',
     name: AUTHOR,
     url: AUTHOR_URL
   },
   license: 'https://opensource.org/licenses/MIT',
-  codeRepository: GITHUB_URL
+  codeRepository: GITHUB_URL,
+  offers: {
+    '@type': 'Offer',
+    price: FREE_SOFTWARE_PRICE_USD,
+    priceCurrency: 'USD'
+  }
 })
 
 const articleJsonLd = ogType === 'article' ?
-JSON.stringify({
+serializeJsonLd({
   '@context': 'https://schema.org',
   '@type': 'TechArticle',
+  '@id': `${canonical}#article`,
   headline: fullTitle,
   description,
   url: canonical,
   image: resolvedOgImage,
-  inLanguage: 'en',
+  inLanguage: 'en-US',
+  mainEntityOfPage: {
+    '@type': 'WebPage',
+    '@id': canonical
+  },
   author: {
     '@type': 'Person',
     name: AUTHOR,
@@ -94,6 +136,19 @@ JSON.stringify({
   }
 }) :
 null
+
+const breadcrumbsJsonLd = breadcrumbs.length > 0 ?
+  serializeJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbs.map((breadcrumb, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: breadcrumb.name,
+      item: breadcrumb.url
+    }))
+  }) :
+  null
 ---
 
 <!doctype html>
@@ -104,6 +159,7 @@ null
     <meta name="generator" content={Astro.generator} />
 
     <title>{fullTitle}</title>
+    <meta name="title" content={fullTitle} />
     <meta name="description" content={description} />
     <meta name="author" content={AUTHOR} />
     <meta name="color-scheme" content="light dark" />
@@ -125,10 +181,11 @@ null
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={resolvedOgImage} />
-    <meta property="og:image:type" content="image/webp" />
+    <meta property="og:image:secure_url" content={resolvedOgImage} />
+    <meta property="og:image:type" content={imageType} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={fullTitle} />
+    <meta property="og:image:alt" content={resolvedOgImageAlt} />
     <meta property="og:url" content={canonical} />
     <meta property="og:site_name" content={SITE_NAME} />
     <meta property="og:locale" content="en_US" />
@@ -137,10 +194,11 @@ null
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content={TWITTER_HANDLE} />
     <meta name="twitter:creator" content={TWITTER_HANDLE} />
+    <meta name="twitter:url" content={canonical} />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={resolvedOgImage} />
-    <meta name="twitter:image:alt" content={fullTitle} />
+    <meta name="twitter:image:alt" content={resolvedOgImageAlt} />
 
     <!-- Theme init (inline to prevent flash) -->
     <script is:inline>
@@ -156,13 +214,16 @@ null
     <script type="application/ld+json" is:inline set:html={websiteJsonLd} />
     <script type="application/ld+json" is:inline set:html={softwareJsonLd} />
     {articleJsonLd && <script type="application/ld+json" is:inline set:html={articleJsonLd} />}
+    {breadcrumbsJsonLd && <script type="application/ld+json" is:inline set:html={breadcrumbsJsonLd} />}
   </head>
   <body>
+    <SkipLink href="#main-content">Skip to content</SkipLink>
     <Nav />
-    <main>
+    <main id="main-content" tabindex="-1">
       <slot />
     </main>
     <Footer />
+    <UIPrimitives />
 
     <!-- Scroll reveal -->
     <script>

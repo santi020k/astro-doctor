@@ -7,12 +7,15 @@ export const TransportKind = {
   stdio: 3,
 } as const
 
-export const LanguageClient = vi.fn().mockImplementation(() => ({
-  dispose: vi.fn(),
-  onNotification: vi.fn(),
-  registerFeature: vi.fn(),
-  restart: vi.fn(),
-  sendRequest: vi.fn(),
-  start: vi.fn().mockResolvedValue(),
-  stop: vi.fn().mockResolvedValue(),
-}))
+export const LanguageClient = vi.fn(class {
+  public readonly dispose = vi.fn()
+  public readonly onNotification = vi.fn(() => ({
+    dispose: vi.fn(),
+  }))
+
+  public readonly registerFeature = vi.fn()
+  public readonly restart = vi.fn()
+  public readonly sendRequest = vi.fn()
+  public readonly start = vi.fn().mockResolvedValue()
+  public readonly stop = vi.fn().mockResolvedValue()
+})
