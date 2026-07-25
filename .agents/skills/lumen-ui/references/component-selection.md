@@ -18,6 +18,7 @@ component docs before implementation.
 | Supplemental side surface | `Drawer`, `Sheet` |
 | Anchored supplemental content | `Popover`, `HoverCard`, `Tooltip` |
 | Navigation | `Breadcrumb`, `NavigationMenu`, `Tabs`, `Pagination`, `Sidebar` |
+| Related code or command variants | `CodeTabs` |
 | Structured content | `Card`, `Item`, `Table`, `DataTable`, `Descriptions` |
 | Hierarchical or large collections | `Tree`, `TreeGrid`, `VirtualList` |
 | Dates and planning | `Calendar`, `DatePicker`, `DateRangePicker`, `Schedule`, `Agenda` |
@@ -60,6 +61,14 @@ real measures with labels, time ranges, and context. Avoid filling space with in
 
 Compose `Schedule` with `Agenda`, `Calendar`, or date fields according to the task. Make event names,
 times, conflicts, selected state, and keyboard movement understandable without color alone.
+
+### Code examples
+
+Use `CodeTabs` for package-manager commands, language variants, or alternative configuration
+examples. Give each item a stable `value`, visible `label`, `code`, and optional `language`. Set a
+descriptive `ariaLabel`, and reuse a stable `storageKey` only when matching groups should persist
+and synchronize the reader's choice. Use `wrap={false}` for command lines that should scroll rather
+than wrap. Do not recreate tab activation, keyboard behavior, copy controls, or persistence.
 
 ## Selection Tests
 
