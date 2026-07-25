@@ -1178,96 +1178,101 @@ const runBaselineCommand = async (argv: string[]): Promise<void> => {
   )
 }
 
-// eslint-disable-next-line complexity
+
+const handleInit = (argv: string[], noTelemetry: boolean) => {
+  try {
+    validateSimpleArguments(argv.slice(1), new Set(), new Set(['--preset']))
+
+    trackRun({ command: 'init', flags: {} }, noTelemetry)
+
+    runInit(argv.slice(1))
+  } catch (error) {
+    reportOperationFailure('parse init arguments', error)
+  }
+}
+
+const handleInstall = async (argv: string[], noTelemetry: boolean) => {
+  try {
+    validateSimpleArguments(
+      argv.slice(1),
+      new Set(['-y', '--yes', '--dry-run', '--agent-hooks']),
+      new Set(),
+    )
+
+    trackRun({ command: 'install', flags: { dryRun: argv.includes('--dry-run') } }, noTelemetry)
+
+    await runInstall(argv.slice(1))
+  } catch (error) {
+    reportOperationFailure('parse install arguments', error)
+  }
+}
+
+const handleWhy = async (argv: string[], noTelemetry: boolean) => {
+  const location = argv[1]
+
+  if (!location) {
+    console.error(
+      '\nUsage: astro-doctor why <file>:<line>\nExample: astro-doctor why src/pages/index.astro:42\n',
+    )
+
+    process.exitCode = 1
+
+    return
+  }
+
+  trackRun({ command: 'why', flags: {} }, noTelemetry)
+
+  await runWhy(location)
+}
+
+const handleRules = (argv: string[], noTelemetry: boolean) => {
+  trackRun({ command: 'rules', flags: {} }, noTelemetry)
+
+  runRulesExplain(argv.slice(1))
+}
+
+const handleLsp = (argv: string[], noTelemetry: boolean) => {
+  try {
+    validateSimpleArguments(argv.slice(1), new Set(['--stdio']), new Set())
+
+    trackRun({ command: 'lsp', flags: {} }, noTelemetry)
+
+    runLsp()
+  } catch (error) {
+    reportOperationFailure('parse LSP arguments', error)
+  }
+}
+
+const handleBaseline = async (argv: string[], noTelemetry: boolean) => {
+  trackRun({ command: 'baseline', flags: {} }, noTelemetry)
+
+  try {
+    await runBaselineCommand(argv.slice(1))
+  } catch (error) {
+    reportOperationFailure('manage baseline', error)
+  }
+}
+
+const commandRunners: Record<string, (argv: string[], noTelemetry: boolean) => Promise<void> | void> = {
+  init: handleInit,
+  install: handleInstall,
+  why: handleWhy,
+  rules: handleRules,
+  'experimental-lsp': handleLsp,
+  baseline: handleBaseline,
+}
+
 export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
   const subcommand = argv[0]
   const noTelemetry = argv.includes('--no-telemetry') || process.env.ASTRO_DOCTOR_NO_TELEMETRY === '1'
+  const runner = subcommand ? commandRunners[subcommand] : undefined
 
-  if (subcommand === 'init') {
-    try {
-      validateSimpleArguments(argv.slice(1), new Set(), new Set(['--preset']))
-
-      trackRun({ command: 'init', flags: {} }, noTelemetry)
-
-      runInit(argv.slice(1))
-    } catch (error) {
-      reportOperationFailure('parse init arguments', error)
-    }
+  if (runner) {
+    await runner(argv, noTelemetry)
 
     return
   }
 
-  if (subcommand === 'install') {
-    try {
-      validateSimpleArguments(
-        argv.slice(1),
-        new Set(['-y', '--yes', '--dry-run', '--agent-hooks']),
-        new Set(),
-      )
-
-      trackRun({ command: 'install', flags: { dryRun: argv.includes('--dry-run') } }, noTelemetry)
-
-      await runInstall(argv.slice(1))
-    } catch (error) {
-      reportOperationFailure('parse install arguments', error)
-    }
-
-    return
-  }
-
-  if (subcommand === 'why') {
-    const location = argv[1]
-
-    if (!location) {
-      console.error(
-        '\nUsage: astro-doctor why <file>:<line>\nExample: astro-doctor why src/pages/index.astro:42\n',
-      )
-
-      process.exitCode = 1
-
-      return
-    }
-
-    trackRun({ command: 'why', flags: {} }, noTelemetry)
-
-    await runWhy(location)
-
-    return
-  }
-
-  if (subcommand === 'rules') {
-    trackRun({ command: 'rules', flags: {} }, noTelemetry)
-
-    runRulesExplain(argv.slice(1))
-
-    return
-  }
-
-  if (subcommand === 'experimental-lsp') {
-    try {
-      validateSimpleArguments(argv.slice(1), new Set(['--stdio']), new Set())
-
-      trackRun({ command: 'lsp', flags: {} }, noTelemetry)
-
-      runLsp()
-    } catch (error) {
-      reportOperationFailure('parse LSP arguments', error)
-    }
-
-    return
-  }
-
-  if (subcommand === 'baseline') {
-    trackRun({ command: 'baseline', flags: {} }, noTelemetry)
-
-    try {
-      await runBaselineCommand(argv.slice(1))
-    } catch (error) {
-      reportOperationFailure('manage baseline', error)
-    }
-
-    return
-  }
 
   let options: CliOptions
 

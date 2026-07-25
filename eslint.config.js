@@ -32,17 +32,7 @@ export default await defineConfig(
     workspacePrefixes: ['@santi020k'],
   },
 
-  // The ESLint plugin source works with unknown AST node shapes from astro-eslint-parser.
-  // Casting to `any` is unavoidable there — relax the rule for those files only.
-  {
-    files: ['packages/eslint-plugin-astro-doctor/src/rules/**/*.ts'],
-    name: 'local-plugin-rules-any',
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unsafe-argument': 'off',
-    },
-  },
+
   // The CLI, install helper, and LSP stub intentionally write to stdout/stderr.
   {
     files: [
@@ -64,18 +54,7 @@ export default await defineConfig(
       'n/hashbang': 'off',
     },
   },
-  {
-    files: ['packages/vscode-astro-doctor/**/*.ts'],
-    name: 'vscode-astro-doctor-any',
-    rules: {
-      '@typescript-eslint/no-redundant-type-constituents': 'off',
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-unsafe-argument': 'off',
-      '@typescript-eslint/no-unsafe-return': 'off',
-    },
-  },
+
   {
     files: ['**/*.config.ts', '**/*.config.js'],
     languageOptions: {

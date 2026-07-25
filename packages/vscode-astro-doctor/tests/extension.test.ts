@@ -1,5 +1,6 @@
 import * as path from 'node:path'
 
+import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import * as vscode from 'vscode'
 import { LanguageClient } from 'vscode-languageclient/node'
@@ -453,7 +454,7 @@ describe('configuration lifecycle', () => {
       expect(LanguageClient).toHaveBeenCalledOnce()
     })
 
-    const firstClient = vi.mocked(LanguageClient).mock.results[0]?.value
+    const firstClient = vi.mocked(LanguageClient).mock.results[0]?.value as unknown as { stop: Mock }
 
     scanOnType = false
     configurationListener?.({
@@ -476,7 +477,7 @@ describe('configuration lifecycle', () => {
       affectsConfiguration: () => true,
     })
 
-    const secondClient = vi.mocked(LanguageClient).mock.results[1]?.value
+    const secondClient = vi.mocked(LanguageClient).mock.results[1]?.value as unknown as { stop: Mock }
 
     await vi.waitFor(() => {
       expect(secondClient.stop).toHaveBeenCalledOnce()
