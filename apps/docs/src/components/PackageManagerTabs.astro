@@ -1,7 +1,5 @@
 ---
-import CodeBlock from '@/components/code-block.astro'
-
-import { Tabs } from '@santi020k/lumen-astro'
+import { CodeTabs } from '@santi020k/lumen-astro'
 
 interface Props {
   pnpm?: string
@@ -11,146 +9,31 @@ interface Props {
 }
 
 interface PackageManagerTab {
-  id: string
+  code: string
   label: string
-  command: string
+  language: string
+  value: string
 }
 
 const { pnpm, npm, yarn, bun } = Astro.props
 
 const tabs = [
-  { id: 'pnpm', label: 'pnpm', command: pnpm },
-  { id: 'npm', label: 'npm', command: npm },
-  { id: 'yarn', label: 'yarn', command: yarn },
-  { id: 'bun', label: 'bun', command: bun }
-].filter((tabDefinition): tabDefinition is PackageManagerTab => Boolean(tabDefinition.command))
+  { code: pnpm, label: 'pnpm', language: 'bash', value: 'pnpm' },
+  { code: npm, label: 'npm', language: 'bash', value: 'npm' },
+  { code: yarn, label: 'yarn', language: 'bash', value: 'yarn' },
+  { code: bun, label: 'bun', language: 'bash', value: 'bun' }
+].filter((tabDefinition): tabDefinition is PackageManagerTab => Boolean(tabDefinition.code))
 ---
 
-<Tabs
+<CodeTabs
+  ariaLabel="Package manager"
   class="pm-tabs"
-  initialValue={tabs[0]?.id}
+  items={tabs}
   storageKey="astro-doctor-preferred-pm"
->
-  <div class="pm-tabs-bar" role="tablist" aria-label="Package manager">
-    {tabs.map((tabDefinition, tabIndex) => (
-      <button
-        role="tab"
-        class="pm-tab-btn"
-        data-value={tabDefinition.id}
-        aria-selected={tabIndex === 0 ? 'true' : 'false'}
-        type="button"
-      >
-        {tabDefinition.label}
-      </button>
-    ))}
-  </div>
-  {tabs.map((tabDefinition, tabIndex) => (
-    <div
-      role="tabpanel"
-      class="pm-panel"
-      data-value={tabDefinition.id}
-      hidden={tabIndex !== 0}
-    >
-      <CodeBlock code={tabDefinition.command} language="bash" />
-    </div>
-  ))}
-</Tabs>
+/>
 
-<style>
-  .pm-tabs {
+<style is:global>
+  .pm-tabs.ui-code-tabs {
     margin: 1.25rem 0;
-    border: 1px solid hsl(var(--line));
-    border-radius: 0.75rem;
-    background: hsl(var(--surface-muted));
-    overflow: hidden;
-  }
-
-  :global(.pm-tabs.ui-tabs) {
-    display: block;
-  }
-
-  .pm-tabs-bar {
-    display: flex;
-    border-bottom: 1px solid hsl(var(--line));
-    background: hsl(var(--surface));
-  }
-
-  :global(.pm-tabs.ui-tabs .pm-tabs-bar) {
-    width: auto;
-    gap: 0.25rem;
-    border: 0;
-    border-bottom: 1px solid hsl(var(--line));
-    border-radius: 0;
-    padding: 0.375rem;
-  }
-
-  .pm-tab-btn {
-    min-width: 4.25rem;
-    padding: 0.5rem 0.875rem;
-    border: 0;
-    border-radius: 0.5rem;
-    background: transparent;
-    color: hsl(var(--ink-muted));
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 150ms ease, color 150ms ease;
-  }
-
-  .pm-tab-btn:hover {
-    color: hsl(var(--ink));
-    background: hsl(var(--surface-muted));
-  }
-
-  :global(.pm-tabs.ui-tabs .pm-tab-btn[aria-selected='true']) {
-    background: hsl(var(--brand-soft));
-    box-shadow: none;
-    color: hsl(var(--brand-solid));
-  }
-
-  .pm-tab-btn:focus-visible {
-    outline: 2px solid hsl(var(--brand));
-    outline-offset: 1px;
-  }
-
-  .pm-panel {
-    color: hsl(var(--ink));
-  }
-
-  :global(.pm-panel .ui-code--block) {
-    margin: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  :global(.pm-panel .ui-code__header) {
-    position: absolute;
-    z-index: 1;
-    top: 0.75rem;
-    right: 0.75rem;
-    display: block;
-    min-height: 0;
-    border: 0;
-    background: transparent;
-    padding: 0;
-  }
-
-  :global(.pm-panel .ui-code__dots),
-  :global(.pm-panel .ui-code__meta) {
-    display: none;
-  }
-
-  :global(.pm-panel .ui-code--block pre) {
-    min-height: 3.5rem;
-    padding: 1rem 3.75rem 1rem 1.25rem;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .pm-tab-btn {
-      transition: none;
-    }
   }
 </style>
