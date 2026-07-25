@@ -1,5 +1,8 @@
 ---
+import CodeBlock from '@/components/code-block.astro'
 import Docs from '@/layouts/Docs.astro'
+
+import { Callout } from '@santi020k/lumen-astro'
 ---
 
 <Docs
@@ -17,7 +20,7 @@ import Docs from '@/layouts/Docs.astro'
 
   <h2>Install</h2>
 
-  <pre><code>astro-doctor install</code></pre>
+  <CodeBlock code="astro-doctor install" language="bash" />
 
   <p>
     This copies the skill files to <code>.agents/skills/</code> in your project root. Commit this
@@ -29,7 +32,7 @@ import Docs from '@/layouts/Docs.astro'
   <h3><code>.agents/skills/astro-rules/SKILL.md</code></h3>
 
   <p>
-    Documents all 14 rules with before/after code examples. When your agent references this skill,
+    Documents all 13 rules with before/after code examples. When your agent references this skill,
     it knows exactly what patterns to avoid and what to write instead.
   </p>
 
@@ -75,13 +78,17 @@ import Docs from '@/layouts/Docs.astro'
     In Claude Code or Cowork mode, you can reference a skill directly:
   </p>
 
-  <pre><code>{`# In your CLAUDE.md or agent context:
+  <CodeBlock
+    code={`# In your CLAUDE.md or agent context:
 Skills: .agents/skills/astro-rules/SKILL.md
 
 # Or tell Claude:
 "Use the astro-rules skill to fix all warnings in src/components/"`}
-       </code>
-  </pre>
+    language="text"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>Using with Cursor</h2>
 
@@ -90,11 +97,16 @@ Skills: .agents/skills/astro-rules/SKILL.md
     system prompt:
   </p>
 
-  <pre><code>{`# .cursor/rules
+  <CodeBlock
+    code={`# .cursor/rules
 @.agents/skills/astro-rules/SKILL.md
 @.agents/skills/astro-performance/SKILL.md`}
-       </code>
-  </pre>
+    label=".cursor/rules"
+    language="text"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>Manual installation</h2>
 
@@ -105,9 +117,9 @@ Skills: .agents/skills/astro-rules/SKILL.md
     </a>.
   </p>
 
-  <div class="callout callout-tip">
+  <Callout class="callout callout-tip">
     <strong>llms.txt:</strong> The repo root includes an <code>llms.txt</code> file (following the
     <a href="https://llmstxt.org" target="_blank" rel="noopener noreferrer">llmstxt.org</a>
     convention) that AI tools can fetch to understand the project at a high level.
-  </div>
+  </Callout>
 </Docs>

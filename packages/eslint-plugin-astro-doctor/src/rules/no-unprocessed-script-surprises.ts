@@ -1,3 +1,4 @@
+import { RULE_DOCS_BASE_URL } from '../constants.js'
 import { forEachAstroElement, reportAstroNode } from '../utils/astro-ast.js'
 import { getAstroAttributeValue, hasAstroAttribute } from '../utils/attribute.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
@@ -16,7 +17,7 @@ export default createRule({
         'Warn when script attributes opt out of Astro script processing, bundling, and deduplication',
       category: 'performance',
       recommended: true,
-      url: 'https://github.com/santi020k/astro-doctor/blob/main/docs/rules/no-unprocessed-script-surprises.md',
+      url: `${RULE_DOCS_BASE_URL}/no-unprocessed-script-surprises`,
     },
     messages: {
       unprocessedScript:

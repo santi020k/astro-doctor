@@ -20,6 +20,7 @@ export default await defineConfig(
       '@stylistic/indent': 'off',
       '@stylistic/jsx-closing-tag-location': 'off',
       '@stylistic/max-len': 'off',
+      'better-tailwindcss/enforce-consistent-class-order': 'off',
       'better-tailwindcss/no-unknown-classes': 'off'
     }
   }, {

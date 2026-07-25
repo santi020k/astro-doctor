@@ -20,11 +20,17 @@ export const Uri = {
 }
 
 export const workspace = {
+  createFileSystemWatcher: vi.fn(() => ({
+    dispose: vi.fn(),
+  })),
   fs: {
     stat: vi.fn(),
   },
   getConfiguration: vi.fn(() => ({
     get: vi.fn(),
+  })),
+  onDidChangeConfiguration: vi.fn(() => ({
+    dispose: vi.fn(),
   })),
   workspaceFolders: [] as { uri: { fsPath: string } }[],
 }

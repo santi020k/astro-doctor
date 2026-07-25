@@ -36,6 +36,7 @@ words:
   - vscodeignore
   - vsix
   - vscode
+  - webp
   - webview
   - workspaces
   - quiescent
@@ -58,6 +59,7 @@ words:
   - frontmatter
   - OVSX
   - resvg
+  - sarif
   - ACMR
   - lockfiles
   - bunx

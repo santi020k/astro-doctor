@@ -1,5 +1,11 @@
 export { loadConfig } from './config.js'
-export { formatConsoleReport, formatJsonReport } from './report/index.js'
+export {
+  formatConsoleReport,
+  formatGithubReport,
+  formatJsonReport,
+  formatSarifReport,
+} from './report/index.js'
+export type { SarifReport } from './report/sarif.js'
 export { scan } from './scanner/index.js'
 export { computeScore, computeScoreLabel } from './scorer.js'
 export type {
@@ -8,6 +14,7 @@ export type {
   JsonReport,
   ScanOptions,
   ScanResult,
+  ScanTimings,
   ScoreLabel,
   Severity,
 } from './types.js'

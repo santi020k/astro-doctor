@@ -1,3 +1,4 @@
+import { RULE_DOCS_BASE_URL } from '../constants.js'
 import type { AstroElementNode } from '../utils/astro-ast.js'
 import { forEachAstroElement, reportAstroNode } from '../utils/astro-ast.js'
 import { hasAstroAttribute } from '../utils/attribute.js'
@@ -41,7 +42,7 @@ export default createRule({
         'Require fallback content for client-only and deferred server islands',
       category: 'accessibility',
       recommended: true,
-      url: 'https://github.com/santi020k/astro-doctor/blob/main/docs/rules/require-island-fallback.md',
+      url: `${RULE_DOCS_BASE_URL}/require-island-fallback`,
     },
     messages: {
       clientOnlyFallback:

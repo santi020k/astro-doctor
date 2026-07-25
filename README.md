@@ -63,7 +63,7 @@ This copies skills to your project that work with Claude Code, Cursor, Codex, Op
 
 ### 4. Run in CI (GitHub Actions)
 
-On pull requests, Astro Doctor reports only issues **introduced by your change** — not pre-existing ones — and posts a sticky summary comment that updates in-place.
+On pull requests, Astro Doctor compares the branch against its base and reports only issues **introduced by your change** — not pre-existing findings in touched files — then posts a sticky summary comment that updates in-place.
 
 ```yaml
 name: Astro Doctor
@@ -100,6 +100,18 @@ Pin to a commit SHA for hardened CI:
 
 ## Rules
 
+Astro Doctor owns 13 opinionated Astro rules and composes them with the official
+`eslint-plugin-astro` catalog. Depending on the preset, the CLI provides up to
+**Up to 71 checks**: 63 ESLint checks plus eight project audits in the `all` preset.
+Overlapping rules are deduplicated automatically.
+
+| Preset | Coverage |
+| ------ | -------- |
+| `recommended` | Astro Doctor rules, project audits, and official Astro recommended rules |
+| `strict` | Recommended plus official accessibility, security, and best-practice rules |
+| `all` | Every non-deprecated official Astro rule, including stylistic rules |
+| `ci` | Recommended coverage, failing on warnings with the CI score threshold |
+
 ### Performance
 
 | Rule | Severity | Description |
@@ -135,14 +147,17 @@ Pin to a commit SHA for hardened CI:
 
 ### Project Audits
 
-The CLI also checks project files such as `astro.config.*`, `package.json`, `.env.example`, and `src/content/`.
+The CLI also checks project files such as `astro.config.*`, `package.json`, `.env.example`, `src/actions/`, `src/content/`, and Astro components.
 
 | Check | Severity | Description |
 | ----- | -------- | ----------- |
 | `no-disabled-origin-check` | ⚠️ warning | Keep Astro's CSRF origin check enabled |
+| `no-insecure-session-cookie` | ⚠️ warning | Keep secure, HTTP-only, same-site session cookie protections enabled |
 | `no-open-allowed-domains` | ⚠️ warning | Avoid `security.allowedDomains: [{}]` |
 | `prefer-env-schema` | ⚠️ warning | Define an Astro env schema for documented env vars |
-| `prefer-pnpm` | ⚠️ warning | Use pnpm consistently and avoid npm/yarn lockfiles |
+| `prefer-pnpm` | opt-in | Use pnpm consistently and avoid npm, Yarn, and Bun lockfiles |
+| `require-action-input-schema` | ⚠️ warning | Validate untrusted Astro Action input before handlers run |
+| `require-client-router-script-lifecycle` | strict | Initialize scripts on `astro:page-load` when using ClientRouter |
 | `require-content-config` | ⚠️ warning | Add a content config when using `src/content/` |
 
 ---
@@ -152,6 +167,8 @@ The CLI also checks project files such as `astro.config.*`, `package.json`, `.en
 Every scan produces a score from **0 to 100** with a letter grade (S–F).
 
 Each file is scored independently: errors cost 25 points and warnings cost 10 points (clamped to 0–100 per file). The per-file scores are then averaged, so a single heavily-broken file doesn't drag down the score of an otherwise-clean project.
+
+Projects with unresolved errors cannot score above 89, and projects with unresolved security errors cannot score above 74. Multi-project scans use the lowest project score as the aggregate so a healthy package cannot hide an unhealthy one.
 
 | Grade | Score | Meaning |
 |-------|-------|---------|
@@ -184,11 +201,30 @@ pnpm dlx @santi020k/astro-doctor@latest --json
 # Output a JSON report to a file
 pnpm dlx @santi020k/astro-doctor@latest --json ./report.json
 
+# Output SARIF for GitHub Code Scanning or other SARIF consumers
+pnpm dlx @santi020k/astro-doctor@latest --format sarif > astro-doctor.sarif
+
+# Apply safe automatic fixes where supported
+pnpm dlx @santi020k/astro-doctor@latest --fix
+
+# Cache lint results by file content
+pnpm dlx @santi020k/astro-doctor@latest --cache
+
+# Adopt Astro Doctor without failing on existing findings
+pnpm dlx @santi020k/astro-doctor@latest baseline create
+pnpm dlx @santi020k/astro-doctor@latest --baseline .astro-doctor-baseline.json
+
+# Report only diagnostics introduced since main
+pnpm dlx @santi020k/astro-doctor@latest --scope changed --base main
+
 # Fail on warnings too (default: only errors)
 pnpm dlx @santi020k/astro-doctor@latest --fail-on warning
 
 # Use the CI preset (fail on warnings, score threshold 90)
 pnpm dlx @santi020k/astro-doctor@latest --preset ci
+
+# Run all non-deprecated official Astro rules
+pnpm dlx @santi020k/astro-doctor@latest --preset all
 
 # Hide the health score
 pnpm dlx @santi020k/astro-doctor@latest --no-score
@@ -221,6 +257,14 @@ export default {
     // Disable if you sanitize set:html globally
     'astro-doctor/no-set-html': 'off',
   },
+  overrides: [
+    {
+      files: ['src/legacy/**'],
+      rules: {
+        'astro-doctor/no-set-html': 'off',
+      },
+    },
+  ],
   ignore: ['src/legacy/**'],
   failOn: 'error',
 } satisfies AstroDoctorConfig
@@ -248,9 +292,13 @@ Or in JSON:
     working-directory: '.'      # directory to scan
     fail-on: 'error'            # error | warning | off
     comment: 'true'             # post sticky PR summary comment
-    diff-only: 'true'           # on PRs, scan only changed Astro Doctor files
+    diff-only: 'true'           # on PRs, report only newly introduced diagnostics
     json-report: ''             # path to write JSON report (optional)
+    sarif-report: ''            # path to write SARIF 2.1.0 (optional)
+    upload-sarif: 'false'       # upload to GitHub Code Scanning
 ```
+
+Set `security-events: write` in the workflow permissions when `upload-sarif` is enabled.
 
 **Outputs:**
 
@@ -270,7 +318,7 @@ Or in JSON:
 
 Astro Doctor has an official extension for VS Code and Cursor. It provides:
 - **Live Diagnostics:** Real-time linting as you type.
-- **Quick Fixes:** Automatically fix common Astro anti-patterns.
+- **Quick Fixes:** Apply safe rule fixes where supported and offer suppression actions for the rest.
 - **Health Sidebar:** A visual health report with a score ring and category breakdown inside the VS Code Sidebar.
 - **Hover Info:** Detailed explanations when hovering over issues.
 
@@ -279,7 +327,7 @@ Astro Doctor has an official extension for VS Code and Cursor. It provides:
 Commands available in the Command Palette:
 - `Astro Doctor: Scan Workspace`
 - `Astro Doctor: Scan Current File`
-- `Astro Doctor: Suppress All Issues in File`
+- `Astro Doctor: Apply All Safe Fixes in File`
 
 ### Other Editors (Experimental LSP)
 
@@ -299,7 +347,7 @@ Three skills are available for coding agents:
 
 | Skill | Location | Description |
 |-------|----------|-------------|
-| Astro Rules | `.agents/skills/astro-rules/` | All 14 rules with before/after examples |
+| Astro Rules | `.agents/skills/astro-rules/` | All 13 rules with before/after examples |
 | Astro Performance | `.agents/skills/astro-performance/` | Islands architecture patterns |
 | Add Rule | `.agents/skills/add-rule/` | How to add a new rule to astro-doctor |
 

@@ -7,6 +7,8 @@
 
 The CLI for Astro Doctor — scans your Astro project and reports issues across performance, accessibility, security, and best practices.
 
+It combines 13 proprietary Astro rules with the official Astro ESLint catalog and project-level audits, providing up to 71 checks with the `all` preset.
+
 ## Quick Start
 
 ```bash
@@ -19,18 +21,38 @@ pnpm dlx @santi020k/astro-doctor@latest --dir ./src
 # Scaffold config, ESLint setup, and GitHub Action
 pnpm dlx @santi020k/astro-doctor@latest init
 
+# Enable every non-deprecated official Astro rule
+pnpm dlx @santi020k/astro-doctor@latest --preset all
+
 # Install the agent skill after scanning
 pnpm dlx @santi020k/astro-doctor@latest install
+
+# Cache repeated scans
+pnpm dlx @santi020k/astro-doctor@latest --cache
+
+# Emit SARIF for code-scanning tools
+pnpm dlx @santi020k/astro-doctor@latest --format sarif > astro-doctor.sarif
+
+# Record existing findings and report only new ones
+pnpm dlx @santi020k/astro-doctor@latest baseline create
+pnpm dlx @santi020k/astro-doctor@latest --baseline .astro-doctor-baseline.json
 ```
 
 ## Programmatic API
 
 ```ts
-import { scan, formatConsoleReport } from '@santi020k/astro-doctor'
+import {
+  formatConsoleReport,
+  formatGithubReport,
+  formatJsonReport,
+  formatSarifReport,
+  scan,
+} from '@santi020k/astro-doctor'
 
 const result = await scan({ directory: './src' })
 
 console.log(formatConsoleReport(result))
+// Other formatters support JSON, GitHub Actions annotations, and SARIF.
 // result.diagnostics  — array of findings
 // result.errorCount   — number of errors
 // result.warningCount — number of warnings

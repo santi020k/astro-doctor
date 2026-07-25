@@ -38,7 +38,7 @@ const getPreset = (argv: readonly string[]): PresetName | undefined => {
 
   if (isPresetName(presetValue)) return presetValue
 
-  console.error('\nUnknown preset "' + presetValue + '". Valid values: recommended, strict, ci\n')
+  console.error('\nUnknown preset "' + presetValue + '". Valid values: recommended, strict, ci, all\n')
 
   process.exitCode = 1
 

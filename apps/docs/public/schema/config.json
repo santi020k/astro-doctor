@@ -6,11 +6,37 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "$schema": {
+      "const": "https://doctor.santi020k.com/schema/config.json"
+    },
     "preset": {
       "description": "Rule preset to apply before explicit rule overrides.",
       "type": "string",
-      "enum": ["recommended", "strict", "ci"],
+      "enum": ["recommended", "strict", "ci", "all"],
       "default": "recommended"
+    },
+    "overrides": {
+      "description": "Apply Astro template rule severities to matching file globs.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["files", "rules"],
+        "properties": {
+          "files": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" }
+          },
+          "rules": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "enum": ["error", "warn", "off"]
+            }
+          }
+        }
+      }
     },
     "rules": {
       "description": "Override default rule severities. Omit to use recommended defaults.",
@@ -34,9 +60,12 @@
         "astro-doctor/no-process-env":         { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/prefer-content-collections": { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/no-disabled-origin-check": { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/no-insecure-session-cookie": { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/no-open-allowed-domains": { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/prefer-env-schema":      { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/prefer-pnpm":            { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/require-action-input-schema": { "type": "string", "enum": ["error", "warn", "off"] },
+        "astro-doctor/require-client-router-script-lifecycle": { "type": "string", "enum": ["error", "warn", "off"] },
         "astro-doctor/require-content-config": { "type": "string", "enum": ["error", "warn", "off"] }
       }
     },
@@ -53,11 +82,16 @@
       "default": "error"
     },
     "threshold": {
-      "description": "Minimum health score (0–100) required to pass. -1 disables the threshold check.",
+      "description": "Minimum health score (0–100) required to pass.",
       "type": "integer",
-      "minimum": -1,
+      "minimum": 0,
       "maximum": 100,
-      "default": -1
+      "default": 0
+    },
+    "projects": {
+      "description": "Workspace package names or paths to scan.",
+      "type": "array",
+      "items": { "type": "string" }
     }
   }
 }

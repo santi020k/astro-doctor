@@ -1,3 +1,4 @@
+import { RULE_DOCS_BASE_URL } from '../constants.js'
 import { forEachAstroElement, reportAstroNode } from '../utils/astro-ast.js'
 import { hasAstroAttribute } from '../utils/attribute.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
@@ -13,7 +14,7 @@ export default createRule({
         'Enforce the use of <Image> or <Picture> from astro:assets instead of raw <img> elements',
       category: 'performance',
       recommended: true,
-      url: 'https://github.com/santi020k/astro-doctor/blob/main/docs/rules/use-astro-image.md',
+      url: `${RULE_DOCS_BASE_URL}/use-astro-image`,
     },
     messages: {
       useAstroImage:

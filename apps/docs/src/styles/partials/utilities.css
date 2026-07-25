@@ -83,31 +83,79 @@
 /* ─── Badge variants ────────────────────────────────────────────────────────── */
 
 @utility badge-performance {
-  background: hsl(25 90% 12%);
-  color: hsl(25 90% 65%);
-  border: 1px solid hsl(25 60% 25%);
+  background: hsl(var(--brand) / 0.1);
+  color: hsl(var(--brand-solid));
+  border: 1px solid hsl(var(--brand) / 0.25);
 }
 
 @utility badge-security {
-  background: hsl(0 80% 10%);
-  color: hsl(0 80% 65%);
-  border: 1px solid hsl(0 55% 25%);
+  background: hsl(var(--danger) / 0.1);
+  color: hsl(var(--danger));
+  border: 1px solid hsl(var(--danger) / 0.25);
 }
 
 @utility badge-accessibility {
-  background: hsl(210 80% 10%);
-  color: hsl(210 80% 65%);
-  border: 1px solid hsl(210 55% 25%);
+  background: hsl(var(--info) / 0.1);
+  color: hsl(var(--info));
+  border: 1px solid hsl(var(--info) / 0.25);
 }
 
 @utility badge-best-practices {
-  background: hsl(142 60% 8%);
-  color: hsl(142 60% 55%);
-  border: 1px solid hsl(142 40% 20%);
+  background: hsl(var(--success) / 0.1);
+  color: hsl(var(--success));
+  border: 1px solid hsl(var(--success) / 0.25);
 }
 
 @utility badge-architecture {
-  background: hsl(270 60% 10%);
-  color: hsl(270 60% 70%);
-  border: 1px solid hsl(270 40% 25%);
+  background: hsl(var(--grade-s) / 0.1);
+  color: hsl(var(--grade-s));
+  border: 1px solid hsl(var(--grade-s) / 0.25);
+}
+
+@utility badge-error {
+  background: hsl(var(--danger) / 0.1);
+  color: hsl(var(--danger));
+  border: 1px solid hsl(var(--danger) / 0.25);
+}
+
+@utility badge-warning {
+  background: hsl(var(--warning) / 0.1);
+  color: hsl(var(--warning));
+  border: 1px solid hsl(var(--warning) / 0.25);
+}
+
+@utility grade-s {
+  background: hsl(var(--grade-s) / 0.1);
+  color: hsl(var(--grade-s));
+  border-color: hsl(var(--grade-s) / 0.3);
+}
+
+@utility grade-a {
+  background: hsl(var(--grade-a) / 0.1);
+  color: hsl(var(--grade-a));
+  border-color: hsl(var(--grade-a) / 0.3);
+}
+
+@utility grade-b {
+  background: hsl(var(--grade-b) / 0.1);
+  color: hsl(var(--grade-b));
+  border-color: hsl(var(--grade-b) / 0.3);
+}
+
+@utility grade-c {
+  background: hsl(var(--grade-c) / 0.1);
+  color: hsl(var(--grade-c));
+  border-color: hsl(var(--grade-c) / 0.3);
+}
+
+@utility grade-d {
+  background: hsl(var(--grade-d) / 0.1);
+  color: hsl(var(--grade-d));
+  border-color: hsl(var(--grade-d) / 0.3);
+}
+
+@utility grade-f {
+  background: hsl(var(--grade-f) / 0.1);
+  color: hsl(var(--grade-f));
+  border-color: hsl(var(--grade-f) / 0.3);
 }

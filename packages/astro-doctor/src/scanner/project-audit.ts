@@ -1,5 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { isAbsolute, relative, resolve } from 'node:path'
+import { dirname, isAbsolute, relative, resolve } from 'node:path'
+
+import { globSync } from 'glob'
 
 import {
   DEFAULT_DIAGNOSTIC_COLUMN_NUMBER,
@@ -7,6 +9,10 @@ import {
 } from '../constants.js'
 import { getProjectRuleMeta } from '../project-rules.js'
 import type { Diagnostic, ScanOptions, Severity } from '../types.js'
+import { maskCodeLiterals } from '../utils/mask-code-literals.js'
+import { readPnpmWorkspacePatterns } from '../utils/read-pnpm-workspace-patterns.js'
+
+import { buildIgnorePatterns } from './file-discovery.js'
 
 const ASTRO_CONFIG_FILE_NAMES = [
   'astro.config.ts',
@@ -27,10 +33,20 @@ const CONTENT_CONFIG_FILE_NAMES = [
 ]
 
 const PACKAGE_FILE_NAME = 'package.json'
-const PACKAGE_LOCK_FILE_NAME = 'package-lock.json'
-const YARN_LOCK_FILE_NAME = 'yarn.lock'
+
+const COMPETING_LOCK_FILE_NAMES = [
+  'package-lock.json',
+  'npm-shrinkwrap.json',
+  'yarn.lock',
+  'bun.lock',
+  'bun.lockb',
+]
+
 const ENV_EXAMPLE_FILE_NAME = '.env.example'
 const CONTENT_DIRECTORY_NAME = 'src/content'
+const ACTIONS_DIRECTORY_NAME = 'src/actions'
+const ACTION_FILE_GLOB = 'src/actions/**/*.{js,mjs,cjs,ts,mts,cts}'
+const ASTRO_FILE_GLOB = '**/*.astro'
 const PUBLIC_ENV_PREFIX = 'PUBLIC_'
 const SECRET_ENV_NAME_PARTS = ['TOKEN', 'SECRET', 'PASSWORD', 'PRIVATE', 'KEY']
 
@@ -38,8 +54,7 @@ const PROJECT_AUDIT_FILE_NAMES = [
   ...ASTRO_CONFIG_FILE_NAMES,
   ...CONTENT_CONFIG_FILE_NAMES,
   PACKAGE_FILE_NAME,
-  PACKAGE_LOCK_FILE_NAME,
-  YARN_LOCK_FILE_NAME,
+  ...COMPETING_LOCK_FILE_NAMES,
   ENV_EXAMPLE_FILE_NAME,
 ]
 
@@ -48,10 +63,22 @@ interface Location {
   readonly column: number
 }
 
+interface ObjectRange {
+  readonly openingIndex: number
+  readonly closingIndex: number
+}
+
+interface InsecureCookieProperty {
+  readonly propertyName: string
+  readonly index: number
+}
+
 interface ProjectAuditOptions {
   readonly directory: string
   readonly files?: readonly string[]
   readonly rules?: ScanOptions['rules']
+  readonly astroFiles?: readonly string[]
+  readonly ignore?: readonly string[]
 }
 
 const toProjectPath = (rootDirectory: string, filePath: string): string =>
@@ -64,7 +91,9 @@ export const isProjectAuditRelevantPath = (filePath: string): boolean => {
     (projectPath) =>
       normalizedFilePath === projectPath || normalizedFilePath.endsWith(`/${projectPath}`),
   ) || normalizedFilePath.startsWith(`${CONTENT_DIRECTORY_NAME}/`) ||
-    normalizedFilePath.includes(`/${CONTENT_DIRECTORY_NAME}/`)
+    normalizedFilePath.includes(`/${CONTENT_DIRECTORY_NAME}/`) ||
+    normalizedFilePath.startsWith(`${ACTIONS_DIRECTORY_NAME}/`) ||
+    normalizedFilePath.includes(`/${ACTIONS_DIRECTORY_NAME}/`)
 }
 
 const toAbsolutePath = (rootDirectory: string, projectPath: string): string =>
@@ -104,6 +133,57 @@ const readProjectFile = (rootDirectory: string, projectPath: string): string | u
   return readFileSync(filePath, 'utf8')
 }
 
+const matchesWorkspacePattern = (
+  workspaceDirectory: string,
+  projectDirectory: string,
+  pattern: string,
+): boolean =>
+  globSync(pattern, { cwd: workspaceDirectory, absolute: true })
+    .some((matchedPath) => resolve(matchedPath) === resolve(projectDirectory))
+
+const isPnpmWorkspaceProject = (
+  workspaceDirectory: string,
+  projectDirectory: string,
+): boolean => {
+  if (resolve(workspaceDirectory) === resolve(projectDirectory)) return true
+
+  const patterns = readPnpmWorkspacePatterns(workspaceDirectory)
+  const includedPatterns = patterns.filter((pattern) => !pattern.startsWith('!'))
+
+  const excludedPatterns = patterns
+    .filter((pattern) => pattern.startsWith('!'))
+    .map((pattern) => pattern.slice(1))
+
+  return includedPatterns.some((pattern) =>
+    matchesWorkspacePattern(workspaceDirectory, projectDirectory, pattern)
+  ) && !excludedPatterns.some((pattern) =>
+    matchesWorkspacePattern(workspaceDirectory, projectDirectory, pattern)
+  )
+}
+
+const findPnpmWorkspaceDirectory = (projectDirectory: string): string | undefined => {
+  let currentDirectory = resolve(projectDirectory)
+  let parentDirectory = dirname(currentDirectory)
+
+  while (currentDirectory !== parentDirectory) {
+    if (
+      existsSync(resolve(currentDirectory, 'pnpm-workspace.yaml')) &&
+      isPnpmWorkspaceProject(currentDirectory, projectDirectory)
+    ) {
+      return currentDirectory
+    }
+
+    currentDirectory = parentDirectory
+
+    parentDirectory = dirname(currentDirectory)
+  }
+
+  return existsSync(resolve(currentDirectory, 'pnpm-workspace.yaml')) &&
+    isPnpmWorkspaceProject(currentDirectory, projectDirectory)
+    ? currentDirectory
+    : undefined
+}
+
 const getLocation = (content: string, searchText: string): Location => {
   const matchIndex = content.indexOf(searchText)
 
@@ -124,6 +204,155 @@ const getLocation = (content: string, searchText: string): Location => {
   }
 }
 
+const getLocationAtIndex = (content: string, matchIndex: number): Location => {
+  if (matchIndex < 0) {
+    return {
+      line: DEFAULT_DIAGNOSTIC_LINE_NUMBER,
+      column: DEFAULT_DIAGNOSTIC_COLUMN_NUMBER,
+    }
+  }
+
+  const contentBeforeMatch = content.slice(0, matchIndex)
+  const lines = contentBeforeMatch.split(/\r?\n/u)
+  const lastLine = lines.at(-1) ?? ''
+
+  return {
+    line: lines.length,
+    column: lastLine.length + DEFAULT_DIAGNOSTIC_COLUMN_NUMBER,
+  }
+}
+
+const findObjectRange = (
+  maskedContent: string,
+  openingIndex: number,
+): ObjectRange | undefined => {
+  if (maskedContent[openingIndex] !== '{') return undefined
+
+  let objectDepth = 0
+
+  for (
+    let characterIndex = openingIndex;
+    characterIndex < maskedContent.length;
+    characterIndex += 1
+  ) {
+    const character = maskedContent[characterIndex]
+
+    if (character === '{') objectDepth += 1
+
+    if (character !== '}') continue
+
+    objectDepth -= 1
+
+    if (objectDepth === 0) {
+      return {
+        openingIndex,
+        closingIndex: characterIndex,
+      }
+    }
+  }
+
+  return undefined
+}
+
+const findNextNonWhitespaceIndex = (content: string, startIndex: number): number => {
+  for (let characterIndex = startIndex; characterIndex < content.length; characterIndex += 1) {
+    if (!/\s/u.test(content[characterIndex] ?? '')) return characterIndex
+  }
+
+  return -1
+}
+
+const findTopLevelPropertyIndex = (
+  maskedContent: string,
+  objectRange: ObjectRange,
+  propertyName: string,
+): number | undefined => {
+  const propertyPattern = new RegExp(`^${propertyName}\\s*:`, 'u')
+  let objectDepth = 1
+
+  for (
+    let characterIndex = objectRange.openingIndex + 1;
+    characterIndex < objectRange.closingIndex;
+    characterIndex += 1
+  ) {
+    const character = maskedContent[characterIndex]
+
+    if (character === '{') {
+      objectDepth += 1
+
+      continue
+    }
+
+    if (character === '}') {
+      objectDepth -= 1
+
+      continue
+    }
+
+    if (objectDepth !== 1) continue
+
+    const previousCharacter = maskedContent[characterIndex - 1] ?? ''
+
+    if (
+      !/[A-Za-z0-9_$]/u.test(previousCharacter) &&
+      propertyPattern.test(maskedContent.slice(characterIndex))
+    ) {
+      return characterIndex
+    }
+  }
+
+  return undefined
+}
+
+const hasTopLevelProperty = (
+  maskedContent: string,
+  objectRange: ObjectRange,
+  propertyName: string,
+): boolean => findTopLevelPropertyIndex(maskedContent, objectRange, propertyName) !== undefined
+
+const findTopLevelObjectProperty = (
+  maskedContent: string,
+  objectRange: ObjectRange,
+  propertyName: string,
+): ObjectRange | undefined => {
+  let objectDepth = 1
+
+  for (
+    let characterIndex = objectRange.openingIndex + 1;
+    characterIndex < objectRange.closingIndex;
+    characterIndex += 1
+  ) {
+    const character = maskedContent[characterIndex]
+
+    if (character === '{') {
+      objectDepth += 1
+
+      continue
+    }
+
+    if (character === '}') {
+      objectDepth -= 1
+
+      continue
+    }
+
+    if (objectDepth !== 1) continue
+
+    const previousCharacter = maskedContent[characterIndex - 1] ?? ''
+    const propertyPattern = new RegExp(`^${propertyName}\\s*:\\s*\\{`, 'u')
+    const propertyMatch = propertyPattern.exec(maskedContent.slice(characterIndex))
+
+    if (/[A-Za-z0-9_$]/u.test(previousCharacter) || propertyMatch === null) continue
+
+    const relativeOpeningIndex = propertyMatch[0].lastIndexOf('{')
+    const propertyOpeningIndex = characterIndex + relativeOpeningIndex
+
+    return findObjectRange(maskedContent, propertyOpeningIndex)
+  }
+
+  return undefined
+}
+
 const getEffectiveSeverity = (
   ruleId: string,
   rules: ScanOptions['rules'],
@@ -136,7 +365,9 @@ const getEffectiveSeverity = (
 
   if (ruleOverride === 'warn') return 'warning'
 
-  return getProjectRuleMeta(ruleId)?.severity
+  const projectRuleMetadata = getProjectRuleMeta(ruleId)
+
+  return projectRuleMetadata?.recommended ? projectRuleMetadata.severity : undefined
 }
 
 const createDiagnostic = (
@@ -173,30 +404,61 @@ const pushDiagnostic = (
   if (diagnostic !== undefined) diagnostics.push(diagnostic)
 }
 
+const isPackageManagerAuditSelected = (
+  selectedProjectPaths: Set<string> | undefined,
+): boolean =>
+  isSelected(selectedProjectPaths, PACKAGE_FILE_NAME) ||
+  COMPETING_LOCK_FILE_NAMES.some((lockFileName) =>
+    isSelected(selectedProjectPaths, lockFileName)
+  )
+
+const getPackageManagerContent = (
+  packageJsonContent: string,
+  workspaceDirectory: string | undefined,
+): string | undefined => {
+  if (packageJsonContent.includes('"packageManager"')) return packageJsonContent
+
+  if (workspaceDirectory === undefined) return undefined
+
+  return readProjectFile(workspaceDirectory, PACKAGE_FILE_NAME)
+}
+
+const hasCompetingLockFile = (
+  directories: ReadonlySet<string>,
+): boolean =>
+  [...directories].some((directory) =>
+    COMPETING_LOCK_FILE_NAMES.some((lockFileName) =>
+      existsSync(toAbsolutePath(directory, lockFileName))
+    )
+  )
+
 const auditPackageManager = (
   options: ProjectAuditOptions,
   selectedProjectPaths: Set<string> | undefined,
   diagnostics: Diagnostic[],
 ): void => {
-  if (
-    !isSelected(selectedProjectPaths, PACKAGE_FILE_NAME) &&
-    !isSelected(selectedProjectPaths, PACKAGE_LOCK_FILE_NAME) &&
-    !isSelected(selectedProjectPaths, YARN_LOCK_FILE_NAME)
-  ) {
-    return
-  }
+  if (!isPackageManagerAuditSelected(selectedProjectPaths)) return
 
   const packageJsonContent = readProjectFile(options.directory, PACKAGE_FILE_NAME)
 
   if (packageJsonContent === undefined) return
 
-  const packageLockExists = existsSync(toAbsolutePath(options.directory, PACKAGE_LOCK_FILE_NAME))
-  const yarnLockExists = existsSync(toAbsolutePath(options.directory, YARN_LOCK_FILE_NAME))
+  const workspaceDirectory = findPnpmWorkspaceDirectory(options.directory)
 
-  const usesPnpm = packageJsonContent.includes('"packageManager"') &&
-    packageJsonContent.includes('"pnpm@')
+  const packageManagerContent = getPackageManagerContent(
+    packageJsonContent,
+    workspaceDirectory,
+  )
 
-  if (usesPnpm && !packageLockExists && !yarnLockExists) return
+  const auditedDirectories = new Set([
+    options.directory,
+    ...(workspaceDirectory === undefined ? [] : [workspaceDirectory]),
+  ])
+
+  const usesPnpm = packageManagerContent?.includes('"packageManager"') === true &&
+    packageManagerContent.includes('"pnpm@')
+
+  if (usesPnpm && !hasCompetingLockFile(auditedDirectories)) return
 
   pushDiagnostic(
     diagnostics,
@@ -205,7 +467,7 @@ const auditPackageManager = (
       options.rules,
       'astro-doctor/prefer-pnpm',
       PACKAGE_FILE_NAME,
-      'Use pnpm consistently: set packageManager to pnpm and remove npm/yarn lockfiles.',
+      'Use pnpm consistently: declare it in packageManager at the package or workspace root and remove competing npm, Yarn, or Bun lockfiles.',
       getLocation(packageJsonContent, '"packageManager"'),
     ),
   )
@@ -252,6 +514,300 @@ const auditAstroSecurityConfig = (
         getLocation(astroConfigContent, 'allowedDomains'),
       ),
     )
+  }
+}
+
+const findInsecureCookieProperties = (
+  maskedContent: string,
+  cookieObjectRange: ObjectRange,
+): InsecureCookieProperty[] => {
+  const insecureProperties: InsecureCookieProperty[] = []
+  let objectDepth = 1
+
+  for (
+    let characterIndex = cookieObjectRange.openingIndex + 1;
+    characterIndex < cookieObjectRange.closingIndex;
+    characterIndex += 1
+  ) {
+    const character = maskedContent[characterIndex]
+
+    if (character === '{') {
+      objectDepth += 1
+
+      continue
+    }
+
+    if (character === '}') {
+      objectDepth -= 1
+
+      continue
+    }
+
+    if (objectDepth !== 1) continue
+
+    const previousCharacter = maskedContent[characterIndex - 1] ?? ''
+
+    if (/[A-Za-z0-9_$]/u.test(previousCharacter)) continue
+
+    const insecurePropertyMatch =
+      /^(secure|httpOnly|sameSite)\s*:\s*false\b/u.exec(maskedContent.slice(characterIndex))
+
+    if (insecurePropertyMatch === null) continue
+
+    insecureProperties.push({
+      propertyName: insecurePropertyMatch[1] ?? '',
+      index: characterIndex,
+    })
+
+    characterIndex += insecurePropertyMatch[0].length - 1
+  }
+
+  return insecureProperties
+}
+
+const auditSessionCookie = (
+  options: ProjectAuditOptions,
+  selectedProjectPaths: Set<string> | undefined,
+  diagnostics: Diagnostic[],
+): void => {
+  const astroConfigProjectPath = findExistingProjectFile(options.directory, ASTRO_CONFIG_FILE_NAMES)
+
+  if (astroConfigProjectPath === undefined || !isSelected(selectedProjectPaths, astroConfigProjectPath)) {
+    return
+  }
+
+  const astroConfigContent = readProjectFile(options.directory, astroConfigProjectPath)
+
+  if (astroConfigContent === undefined) return
+
+  const maskedContent = maskCodeLiterals(astroConfigContent)
+  const defineConfigMatch = /\bdefineConfig\s*\(/u.exec(maskedContent)
+
+  if (defineConfigMatch?.index === undefined) return
+
+  const defineConfigOpeningIndex =
+    defineConfigMatch.index + defineConfigMatch[0].lastIndexOf('(')
+
+  const rootOpeningIndex = findNextNonWhitespaceIndex(
+    maskedContent,
+    defineConfigOpeningIndex + 1,
+  )
+
+  const rootObjectRange = findObjectRange(maskedContent, rootOpeningIndex)
+
+  if (rootObjectRange === undefined) return
+
+  const sessionObjectRange = findTopLevelObjectProperty(maskedContent, rootObjectRange, 'session')
+
+  if (sessionObjectRange === undefined) return
+
+  const cookieObjectRange = findTopLevelObjectProperty(maskedContent, sessionObjectRange, 'cookie')
+
+  if (cookieObjectRange === undefined) return
+
+  for (const insecureProperty of findInsecureCookieProperties(maskedContent, cookieObjectRange)) {
+    pushDiagnostic(
+      diagnostics,
+      createDiagnostic(
+        options.directory,
+        options.rules,
+        'astro-doctor/no-insecure-session-cookie',
+        astroConfigProjectPath,
+        `Do not set session.cookie.${insecureProperty.propertyName} to false. Keep Astro's secure session cookie defaults.`,
+        getLocationAtIndex(astroConfigContent, insecureProperty.index),
+      ),
+    )
+  }
+}
+
+const getActionProjectPaths = (
+  options: ProjectAuditOptions,
+  selectedProjectPaths: Set<string> | undefined,
+): string[] => {
+  if (selectedProjectPaths !== undefined) {
+    return [...selectedProjectPaths]
+      .filter((projectPath) => (
+        projectPath.startsWith(`${ACTIONS_DIRECTORY_NAME}/`) &&
+        /\.(?:[cm]?[jt]s)$/u.test(projectPath) &&
+        existsSync(toAbsolutePath(options.directory, projectPath))
+      ))
+      .sort()
+  }
+
+  return globSync(ACTION_FILE_GLOB, {
+    cwd: options.directory,
+    ignore: buildIgnorePatterns(options.ignore),
+  }).sort()
+}
+
+const getDefineActionIdentifiers = (actionFileContent: string): string[] => {
+  const defineActionIdentifiers: string[] = []
+
+  const defineActionImportPattern =
+    /import\s*\{([^}]*)\}\s*from\s*(['"])astro:actions\2/gu
+
+  for (const importMatch of actionFileContent.matchAll(defineActionImportPattern)) {
+    const importedNames = importMatch[1] ?? ''
+
+    for (const importedName of importedNames.split(',')) {
+      const defineActionImportMatch =
+        /^\s*defineAction(?:\s+as\s+([A-Za-z_$][\w$]*))?\s*$/u.exec(importedName)
+
+      if (defineActionImportMatch !== null) {
+        defineActionIdentifiers.push(defineActionImportMatch[1] ?? 'defineAction')
+      }
+    }
+  }
+
+  return defineActionIdentifiers
+}
+
+const actionConsumesUncheckedInput = (
+  actionFileContent: string,
+  maskedContent: string,
+  actionObjectRange: ObjectRange,
+): boolean => {
+  if (hasTopLevelProperty(maskedContent, actionObjectRange, 'input')) return false
+
+  const acceptPropertyIndex = findTopLevelPropertyIndex(
+    maskedContent,
+    actionObjectRange,
+    'accept',
+  )
+
+  if (
+    acceptPropertyIndex !== undefined &&
+    /^accept\s*:\s*(['"])form\1/u.test(actionFileContent.slice(acceptPropertyIndex))
+  ) {
+    return false
+  }
+
+  const handlerPropertyIndex = findTopLevelPropertyIndex(
+    maskedContent,
+    actionObjectRange,
+    'handler',
+  )
+
+  if (handlerPropertyIndex === undefined) return false
+
+  const handlerContent = actionFileContent.slice(
+    handlerPropertyIndex,
+    actionObjectRange.closingIndex,
+  )
+
+  const handlerInputMatch =
+    /^handler\s*:\s*(?:async\s+)?(?:function\s*)?\(\s*([^,\s)]*)/u.exec(handlerContent) ??
+    /^handler\s*:\s*(?:async\s+)?([A-Za-z_$][\w$]*)\s*=>/u.exec(handlerContent)
+
+  const handlerInput = handlerInputMatch?.[1] ?? ''
+
+  return handlerInput.length > 0 && !handlerInput.startsWith('_')
+}
+
+const getActionWithoutInputIndices = (actionFileContent: string): number[] => {
+  const maskedContent = maskCodeLiterals(actionFileContent)
+  const missingInputIndices: number[] = []
+  const defineActionIdentifiers = getDefineActionIdentifiers(actionFileContent)
+
+  if (defineActionIdentifiers.length === 0) return missingInputIndices
+
+  const defineActionPattern = new RegExp(
+    `\\b(?:${defineActionIdentifiers.join('|')})\\s*\\(`,
+    'gu',
+  )
+
+  for (const defineActionMatch of maskedContent.matchAll(defineActionPattern)) {
+    const callOpeningIndex = defineActionMatch.index + defineActionMatch[0].lastIndexOf('(')
+    const objectOpeningIndex = findNextNonWhitespaceIndex(maskedContent, callOpeningIndex + 1)
+    const actionObjectRange = findObjectRange(maskedContent, objectOpeningIndex)
+
+    if (
+      actionObjectRange !== undefined &&
+      actionConsumesUncheckedInput(actionFileContent, maskedContent, actionObjectRange)
+    ) {
+      missingInputIndices.push(defineActionMatch.index)
+    }
+  }
+
+  return missingInputIndices
+}
+
+const auditActionInputSchemas = (
+  options: ProjectAuditOptions,
+  selectedProjectPaths: Set<string> | undefined,
+  diagnostics: Diagnostic[],
+): void => {
+  for (const actionProjectPath of getActionProjectPaths(options, selectedProjectPaths)) {
+    const actionFileContent = readProjectFile(options.directory, actionProjectPath)
+
+    if (actionFileContent === undefined) continue
+
+    for (const actionIndex of getActionWithoutInputIndices(actionFileContent)) {
+      pushDiagnostic(
+        diagnostics,
+        createDiagnostic(
+          options.directory,
+          options.rules,
+          'astro-doctor/require-action-input-schema',
+          actionProjectPath,
+          'Add an input schema to this action so untrusted input is validated before the handler runs.',
+          getLocationAtIndex(actionFileContent, actionIndex),
+        ),
+      )
+    }
+  }
+}
+
+const getProjectAstroFiles = (options: ProjectAuditOptions): string[] =>
+  options.files === undefined
+    ? [...options.astroFiles ?? []]
+    : globSync(ASTRO_FILE_GLOB, {
+        cwd: options.directory,
+        absolute: true,
+        ignore: buildIgnorePatterns(options.ignore),
+      }).sort()
+
+const projectUsesClientRouter = (options: ProjectAuditOptions): boolean =>
+  getProjectAstroFiles(options).some((astroFilePath) =>
+    readFileSync(astroFilePath, 'utf8').includes('<ClientRouter'),
+  )
+
+const auditClientRouterScriptLifecycle = (
+  options: ProjectAuditOptions,
+  diagnostics: Diagnostic[],
+): void => {
+  if (!projectUsesClientRouter(options)) return
+
+  for (const astroFilePath of options.astroFiles ?? []) {
+    const astroFileContent = readFileSync(astroFilePath, 'utf8')
+    const scriptPattern = /<script\b[^>]*>[\s\S]*?<\/script>/gu
+
+    const domContentLoadedPattern =
+      /\b(?:document|window)\s*\.\s*addEventListener\s*\(\s*(['"])DOMContentLoaded\1/u
+
+    for (const scriptMatch of astroFileContent.matchAll(scriptPattern)) {
+      const lifecycleEventMatch = domContentLoadedPattern.exec(scriptMatch[0])
+
+      if (lifecycleEventMatch?.index === undefined) continue
+
+      const lifecycleEventIndex = scriptMatch.index +
+        lifecycleEventMatch.index +
+        lifecycleEventMatch[0].lastIndexOf('DOMContentLoaded')
+
+      const projectPath = toProjectPath(options.directory, astroFilePath)
+
+      pushDiagnostic(
+        diagnostics,
+        createDiagnostic(
+          options.directory,
+          options.rules,
+          'astro-doctor/require-client-router-script-lifecycle',
+          projectPath,
+          "DOMContentLoaded only runs on the initial page load with ClientRouter. Initialize on 'astro:page-load' instead.",
+          getLocationAtIndex(astroFileContent, lifecycleEventIndex),
+        ),
+      )
+    }
   }
 }
 
@@ -387,6 +943,12 @@ export const auditProject = (options: ProjectAuditOptions): Diagnostic[] => {
   auditPackageManager(options, selectedProjectPaths, diagnostics)
 
   auditAstroSecurityConfig(options, selectedProjectPaths, diagnostics)
+
+  auditSessionCookie(options, selectedProjectPaths, diagnostics)
+
+  auditActionInputSchemas(options, selectedProjectPaths, diagnostics)
+
+  auditClientRouterScriptLifecycle(options, diagnostics)
 
   auditEnvExample(options, selectedProjectPaths, diagnostics)
 

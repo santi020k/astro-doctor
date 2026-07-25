@@ -1,5 +1,8 @@
 ---
+import CodeBlock from '@/components/code-block.astro'
 import Docs from '@/layouts/Docs.astro'
+
+import { Callout } from '@santi020k/lumen-astro'
 ---
 
 <Docs
@@ -26,7 +29,7 @@ import Docs from '@/layouts/Docs.astro'
 
   <h3>Features</h3>
   <ul>
-    <li><strong>Inline diagnostics</strong> — all 14 rules highlighted as you type</li>
+    <li><strong>Inline diagnostics</strong> — all 13 rules highlighted as you type</li>
     <li><strong>Hover cards</strong> — rule name, category, description, and docs link on hover</li>
     <li><strong>Quick fixes</strong> — disable a rule for one line via the lightbulb menu</li>
     <li><strong>Status bar</strong> — shows health score and issue counts at a glance</li>
@@ -39,20 +42,31 @@ import Docs from '@/layouts/Docs.astro'
     Any editor that supports LSP can connect directly to the Astro Doctor language server:
   </p>
 
-  <pre><code>astro-doctor experimental-lsp --stdio</code></pre>
+  <CodeBlock
+    code="astro-doctor experimental-lsp --stdio"
+    language="bash"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h3>Neovim (nvim-lspconfig)</h3>
 
-  <pre><code>{`require('lspconfig').astro_doctor.setup({
+  <CodeBlock
+    code={`require('lspconfig').astro_doctor.setup({
   cmd = { 'astro-doctor', 'experimental-lsp', '--stdio' },
   filetypes = { 'astro' },
 })`}
-  </code>
-  </pre>
+    language="lua"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h3>Zed</h3>
 
-  <pre><code>{`// .zed/settings.json
+  <CodeBlock
+    code={`// .zed/settings.json
 {
   "lsp": {
     "astro-doctor": {
@@ -63,20 +77,27 @@ import Docs from '@/layouts/Docs.astro'
     }
   }
 }`}
-  </code>
-  </pre>
+    label=".zed/settings.json"
+    language="json"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
-  <div class="callout callout-tip">
+  <Callout class="callout callout-tip">
     <strong>Experimental:</strong> The LSP protocol, options, and caching behavior may change between
     releases, hence the <code>experimental-</code> prefix. The VS Code extension handles version
     management automatically.
-  </div>
+  </Callout>
 
   <h2>Rule configuration</h2>
 
   <p>
     The LSP server reads your <code>doctor.config.*</code> file from the workspace root, so all
     rule overrides, ignore patterns, and thresholds defined there apply to editor diagnostics too.
+    Configuration and workspace manifest changes trigger a fresh scan automatically. Edits use
+    incremental document synchronization and debounced scans so stale results cannot replace newer
+    diagnostics.
     See the <a href="/docs/configuration">Configuration</a> page for the full schema.
   </p>
 </Docs>

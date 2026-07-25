@@ -19,6 +19,7 @@
   "dependencies": {
     "@astrojs/mdx": "catalog:",
     "@astrojs/sitemap": "catalog:",
+    "@santi020k/lumen-astro": "^0.3.0",
     "@tailwindcss/vite": "catalog:",
     "astro": "catalog:",
     "tailwindcss": "catalog:"

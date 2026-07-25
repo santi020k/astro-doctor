@@ -88,6 +88,30 @@ const RULE_DETAILS: Record<string, {
     good: 'const apiKey = import.meta.env.API_KEY\nconst apiUrl = import.meta.env.PUBLIC_API_URL',
     docs: 'https://docs.astro.build/en/guides/environment-variables/',
   },
+  'no-insecure-session-cookie': {
+    category: 'security',
+    severity: 'warning',
+    why: 'Astro session cookies are secure, HTTP-only, and same-site by default. Explicitly disabling those protections can expose session identifiers to scripts, insecure transport, or cross-site requests.',
+    bad: 'session: { cookie: { secure: false, httpOnly: false, sameSite: false } }',
+    good: 'session: { cookie: { secure: true, httpOnly: true, sameSite: "lax" } }',
+    docs: 'https://docs.astro.build/en/reference/configuration-reference/#sessioncookie',
+  },
+  'require-action-input-schema': {
+    category: 'security',
+    severity: 'warning',
+    why: 'Astro Actions are public endpoints. An input schema validates untrusted request data before it reaches the action handler and provides typed handler input.',
+    bad: 'defineAction({ handler: async (input) => save(input) })',
+    good: 'defineAction({ input: z.object({ name: z.string() }), handler: async ({ name }) => save(name) })',
+    docs: 'https://docs.astro.build/en/guides/actions/#define-actions',
+  },
+  'require-client-router-script-lifecycle': {
+    category: 'best-practices',
+    severity: 'warning',
+    why: 'ClientRouter navigation does not reload the document, so DOMContentLoaded only initializes the first page. Astro provides astro:page-load for initialization after every navigation.',
+    bad: "document.addEventListener('DOMContentLoaded', initialize)",
+    good: "document.addEventListener('astro:page-load', initialize)",
+    docs: 'https://docs.astro.build/en/guides/view-transitions/#script-behavior-with-view-transitions',
+  },
   'no-process-env': {
     category: 'best-practices',
     severity: 'warning',
@@ -152,7 +176,7 @@ const explainRule = (ruleId: string): void => {
   const detail = RULE_DETAILS[short]
   const pluginRule = astroDoctorPlugin.rules[short]
 
-  if (!detail || !pluginRule) {
+  if (!detail) {
     console.error(`\nUnknown rule: "${ruleId}"\n`)
 
     listAllRules()
@@ -168,7 +192,7 @@ const explainRule = (ruleId: string): void => {
 
   console.log(`Category: ${detail.category}  |  Default severity: ${detail.severity}`)
 
-  console.log(`\n${pluginRule.meta?.docs?.description ?? detail.why}\n`)
+  console.log(`\n${pluginRule?.meta?.docs?.description ?? detail.why}\n`)
 
   console.log(`Why this matters:\n  ${detail.why}\n`)
 

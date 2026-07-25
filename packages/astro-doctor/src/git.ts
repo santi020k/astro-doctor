@@ -1,4 +1,7 @@
 import { execFileSync } from 'node:child_process'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 import { isProjectAuditRelevantPath } from './scanner/project-audit.js'
 
@@ -24,6 +27,28 @@ const git = (args: string[], cwd: string): string[] => {
   }
 }
 
+export const extractRevision = (
+  cwd: string,
+  revision: string,
+  destinationDirectory: string,
+): void => {
+  const archiveDirectory = mkdtempSync(join(tmpdir(), 'astro-doctor-git-archive-'))
+  const archivePath = join(archiveDirectory, 'snapshot.tar')
+
+  try {
+    execFileSync('git', ['archive', '--format=tar', '--output', archivePath, revision], {
+      cwd,
+      stdio: ['ignore', 'ignore', 'pipe'],
+    })
+
+    execFileSync('tar', ['-xf', archivePath, '-C', destinationDirectory], {
+      stdio: ['ignore', 'ignore', 'pipe'],
+    })
+  } finally {
+    rmSync(archiveDirectory, { recursive: true, force: true })
+  }
+}
+
 const detectDefaultBase = (cwd: string): string => {
   for (const candidate of ['main', 'master', 'origin/main', 'origin/master']) {
     try {
@@ -37,6 +62,15 @@ const detectDefaultBase = (cwd: string): string => {
 
   // Fallback to parent commit
   return 'HEAD~1'
+}
+
+export const resolveBaseRevision = (cwd: string, base?: string): string => {
+  const requestedBase = base ?? detectDefaultBase(cwd)
+  const revision = git(['rev-parse', '--verify', `${requestedBase}^{commit}`], cwd)[0]
+
+  if (!revision) throw new Error(`Unable to resolve base revision "${requestedBase}".`)
+
+  return revision
 }
 
 /**

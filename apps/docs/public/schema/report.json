@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor.santi020k.com/schema/report.json",
+  "title": "Astro Doctor JSON report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "version",
+    "scoreModel",
+    "timestamp",
+    "directory",
+    "scope",
+    "fileCount",
+    "errorCount",
+    "warningCount",
+    "score",
+    "scoreLabel",
+    "scoreBreakdown",
+    "diagnostics"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://doctor.santi020k.com/schema/report.json"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "version": {
+      "type": "string"
+    },
+    "scoreModel": {
+      "const": 2
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "directory": {
+      "type": "string"
+    },
+    "scope": {
+      "enum": ["full", "files", "changed"]
+    },
+    "fileCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "errorCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "warningCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "scoreLabel": {
+      "enum": ["S", "A", "B", "C", "D", "F"]
+    },
+    "scoreBreakdown": {
+      "$ref": "#/$defs/scoreBreakdown"
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diagnostic"
+      }
+    },
+    "projects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/project"
+      }
+    }
+  },
+  "$defs": {
+    "scoreBreakdown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["performance", "accessibility", "security", "best-practices"],
+      "properties": {
+        "performance": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "accessibility": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "security": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "best-practices": { "type": "integer", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ruleId", "severity", "message", "filePath", "line", "column", "category"],
+      "properties": {
+        "ruleId": { "type": "string" },
+        "severity": { "enum": ["error", "warning"] },
+        "message": { "type": "string" },
+        "filePath": { "type": "string" },
+        "line": { "type": "integer", "minimum": 1 },
+        "column": { "type": "integer", "minimum": 1 },
+        "category": {
+          "enum": ["performance", "accessibility", "security", "best-practices", "architecture"]
+        }
+      }
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "directory",
+        "fileCount",
+        "errorCount",
+        "warningCount",
+        "score",
+        "scoreLabel",
+        "scoreBreakdown",
+        "diagnostics"
+      ],
+      "properties": {
+        "name": { "type": "string" },
+        "directory": { "type": "string" },
+        "fileCount": { "type": "integer", "minimum": 0 },
+        "errorCount": { "type": "integer", "minimum": 0 },
+        "warningCount": { "type": "integer", "minimum": 0 },
+        "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "scoreLabel": { "enum": ["S", "A", "B", "C", "D", "F"] },
+        "scoreBreakdown": { "$ref": "#/$defs/scoreBreakdown" },
+        "diagnostics": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/diagnostic" }
+        }
+      }
+    }
+  }
+}

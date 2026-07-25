@@ -17,13 +17,21 @@ inputs:
     required: false
     default: 'true'
   diff-only:
-    description: On PRs, scan only files changed in this PR (true | false)
+    description: On PRs, report only diagnostics introduced by this PR (true | false)
     required: false
     default: 'true'
   json-report:
     description: Path to write a JSON report (leave empty to skip)
     required: false
     default: ''
+  sarif-report:
+    description: Path to write a SARIF 2.1.0 report (leave empty to skip)
+    required: false
+    default: ''
+  upload-sarif:
+    description: Upload SARIF findings to GitHub Code Scanning (true | false)
+    required: false
+    default: 'false'
 
 outputs:
   total:
@@ -60,7 +68,7 @@ runs:
         WORKING_DIRECTORY="${{ inputs.working-directory }}"
 
         git -C "$WORKING_DIRECTORY" diff --name-only --diff-filter=AMR --relative "$BASE_SHA"...HEAD \
-          | grep -E '(\.astro$|(^|/)astro\.config\.(ts|mjs|js|cjs|mts|cts)$|(^|/)package\.json$|(^|/)package-lock\.json$|(^|/)yarn\.lock$|(^|/)\.env\.example$|(^|/)src/content\.config\.(ts|mjs|js)$|(^|/)src/content/config\.(ts|mjs|js)$|(^|/)src/content/)' \
+          | grep -E '(\.astro$|(^|/)astro\.config\.(ts|mjs|js|cjs|mts|cts)$|(^|/)package\.json$|(^|/)(package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|bun\.lock|bun\.lockb)$|(^|/)\.env\.example$|(^|/)src/content\.config\.(ts|mjs|js)$|(^|/)src/content/config\.(ts|mjs|js)$|(^|/)src/content/|(^|/)src/actions/)' \
           > "$CHANGED_FILES_FILE" || true
 
         echo "changed_files_from=$CHANGED_FILES_FILE" >> "$GITHUB_OUTPUT"
@@ -88,8 +96,8 @@ runs:
         DIR_FLAG=(--dir "${{ inputs.working-directory }}")
         CHANGED_FLAG=()
 
-        if [ -n "${{ steps.diff.outputs.changed_files_from }}" ]; then
-          CHANGED_FLAG=(--changed-files-from "${{ steps.diff.outputs.changed_files_from }}")
+        if [ "${{ steps.diff.outputs.is_pr }}" = "true" ] && [ "${{ inputs.diff-only }}" = "true" ]; then
+          CHANGED_FLAG=(--scope changed --base "${{ github.event.pull_request.base.sha }}")
         fi
 
         set +e
@@ -115,7 +123,7 @@ runs:
           echo "errors=0" >> "$GITHUB_OUTPUT"
           echo "warnings=0" >> "$GITHUB_OUTPUT"
           echo "score=100" >> "$GITHUB_OUTPUT"
-          echo "score_label=A" >> "$GITHUB_OUTPUT"
+          echo "score_label=S" >> "$GITHUB_OUTPUT"
           exit 0
         fi
 
@@ -125,7 +133,7 @@ runs:
           echo "errors=0" >> "$GITHUB_OUTPUT"
           echo "warnings=0" >> "$GITHUB_OUTPUT"
           echo "score=100" >> "$GITHUB_OUTPUT"
-          echo "score_label=A" >> "$GITHUB_OUTPUT"
+          echo "score_label=S" >> "$GITHUB_OUTPUT"
           exit 0
         fi
 
@@ -147,6 +155,75 @@ runs:
       shell: bash
       run: cp /tmp/astro-doctor-report.json "${{ inputs.json-report }}"
 
+    - name: Generate SARIF report
+      id: sarif
+      if: |
+        steps.diff.outputs.no_astro_changes != 'true' &&
+        steps.report.outputs.scan_failed != 'true' &&
+        (inputs.sarif-report != '' || inputs.upload-sarif == 'true')
+      shell: bash
+      run: |
+        SARIF_PATH="${{ inputs.sarif-report }}"
+        if [ -z "$SARIF_PATH" ]; then
+          SARIF_PATH="${RUNNER_TEMP:-/tmp}/astro-doctor.sarif"
+        fi
+
+        mkdir -p "$(dirname "$SARIF_PATH")"
+
+        DIR_FLAG=(--dir "${{ inputs.working-directory }}")
+        CHANGED_FLAG=()
+
+        if [ "${{ steps.diff.outputs.is_pr }}" = "true" ] && [ "${{ inputs.diff-only }}" = "true" ]; then
+          CHANGED_FLAG=(--scope changed --base "${{ github.event.pull_request.base.sha }}")
+        fi
+
+        if [ -f "$GITHUB_ACTION_PATH/packages/astro-doctor/dist/bin/astro-doctor.js" ]; then
+          node "$GITHUB_ACTION_PATH/packages/astro-doctor/dist/bin/astro-doctor.js" \
+            "${DIR_FLAG[@]}" --format sarif --fail-on off "${CHANGED_FLAG[@]}" > "$SARIF_PATH"
+        else
+          PACKAGE_VERSION=$(node -p "require('$GITHUB_ACTION_PATH/packages/astro-doctor/package.json').version")
+          npx --yes "@santi020k/astro-doctor@$PACKAGE_VERSION" \
+            "${DIR_FLAG[@]}" --format sarif --fail-on off "${CHANGED_FLAG[@]}" > "$SARIF_PATH"
+        fi
+
+        echo "path=$SARIF_PATH" >> "$GITHUB_OUTPUT"
+
+    - name: Upload SARIF to GitHub Code Scanning
+      if: inputs.upload-sarif == 'true' && steps.sarif.outputs.path != ''
+      uses: github/codeql-action/upload-sarif@v4
+      with:
+        sarif_file: ${{ steps.sarif.outputs.path }}
+
+    - name: Publish workflow annotations
+      if: steps.diff.outputs.no_astro_changes != 'true' && steps.report.outputs.scan_failed != 'true'
+      shell: bash
+      run: |
+        node --input-type=module <<'EOF'
+        import { readFileSync } from 'node:fs'
+
+        const report = JSON.parse(readFileSync('/tmp/astro-doctor-report.json', 'utf8'))
+        const escapeData = (value) => String(value)
+          .replaceAll('%', '%25')
+          .replaceAll('\r', '%0D')
+          .replaceAll('\n', '%0A')
+        const escapeProperty = (value) => escapeData(value)
+          .replaceAll(':', '%3A')
+          .replaceAll(',', '%2C')
+
+        for (const diagnostic of report.diagnostics) {
+          const level = diagnostic.severity === 'error' ? 'error' : 'warning'
+          const title = diagnostic.ruleId.replace('astro-doctor/', '')
+          const properties = [
+            `file=${escapeProperty(diagnostic.filePath)}`,
+            `line=${diagnostic.line}`,
+            `col=${diagnostic.column}`,
+            `title=${escapeProperty(title)}`,
+          ].join(',')
+
+          console.log(`::${level} ${properties}::${escapeData(diagnostic.message)}`)
+        }
+        EOF
+
     - name: Post PR summary comment
       if: |
         github.event_name == 'pull_request' &&
@@ -161,12 +238,16 @@ runs:
 
           const scoreEmoji = { S: '🌟', A: '✅', B: '🟢', C: '🟡', D: '🟠', F: '🔴' }[report.scoreLabel] ?? '🟡'
           const diffMode = '${{ steps.diff.outputs.is_pr }}' === 'true' && '${{ inputs.diff-only }}' === 'true'
-          const scopeNote = diffMode ? ' _(changed files only)_' : ''
+          const scopeNote = diffMode ? ' _(introduced issues only)_' : ''
+          const escapeCell = value => String(value)
+            .replaceAll('|', '\\|')
+            .replaceAll('\r', '')
+            .replaceAll('\n', '<br>')
 
           const rows = report.diagnostics.slice(0, 25).map(d => {
             const rel = d.filePath.replace('${{ github.workspace }}/', '')
             const icon = d.severity === 'error' ? '🔴' : '🟡'
-            return `| ${icon} | \`${rel}\` | ${d.line}:${d.column} | ${d.message} | \`${d.ruleId.replace('astro-doctor/', '')}\` |`
+            return `| ${icon} | \`${escapeCell(rel)}\` | ${d.line}:${d.column} | ${escapeCell(d.message)} | \`${escapeCell(d.ruleId.replace('astro-doctor/', ''))}\` |`
           }).join('\n')
 
           const truncated = report.diagnostics.length > 25

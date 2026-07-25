@@ -1,5 +1,8 @@
 ---
+import CodeBlock from '@/components/code-block.astro'
 import Docs from '@/layouts/Docs.astro'
+
+import { Callout } from '@santi020k/lumen-astro'
 ---
 
 <Docs
@@ -22,7 +25,13 @@ import Docs from '@/layouts/Docs.astro'
     from the <a href="https://marketplace.visualstudio.com/items?itemName=santi020k.vscode-astro-doctor" target="_blank" rel="noopener noreferrer">Visual Studio Marketplace</a>.
   </p>
 
-  <pre><code>ext install santi020k.vscode-astro-doctor</code></pre>
+  <CodeBlock
+    code="ext install santi020k.vscode-astro-doctor"
+    language="bash"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <h2>Install locally (for contributors)</h2>
 
@@ -31,17 +40,23 @@ import Docs from '@/layouts/Docs.astro'
     package from this monorepo:
   </p>
 
-  <pre><code>pnpm --filter vscode-astro-doctor package</code></pre>
+  <CodeBlock
+    code="pnpm --filter vscode-astro-doctor package"
+    language="bash"
+    theme="auto"
+    variant="block"
+    copy
+  />
 
   <p>
     Then run <strong>Extensions: Install from VSIX...</strong> in VS Code and select
     <code>packages/vscode-astro-doctor/astro-doctor.vsix</code>.
   </p>
 
-  <div class="callout callout-tip">
+  <Callout class="callout callout-tip">
     <strong>Tip:</strong> The extension activates when you open an Astro file. If you only have
     TypeScript, JavaScript, or Markdown files open, VS Code may not start it yet.
-  </div>
+  </Callout>
 
   <h2>Features</h2>
 
@@ -72,8 +87,8 @@ import Docs from '@/layouts/Docs.astro'
         <td>Re-check the active Astro file</td>
       </tr>
       <tr>
-        <td><code>Astro Doctor: Suppress All Issues in File</code></td>
-        <td>Add suppressions for all current diagnostics in the active file</td>
+        <td><code>Astro Doctor: Apply All Safe Fixes in File</code></td>
+        <td>Apply every safe automatic fix available for the active file</td>
       </tr>
       <tr>
         <td><code>Astro Doctor: Restart Server</code></td>

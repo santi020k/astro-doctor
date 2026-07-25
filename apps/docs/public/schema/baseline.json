@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://doctor.santi020k.com/schema/baseline.json",
+  "title": "Astro Doctor persistent baseline",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "version", "generatedAt", "entries"],
+  "properties": {
+    "$schema": {
+      "const": "https://doctor.santi020k.com/schema/baseline.json"
+    },
+    "version": {
+      "const": 1
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["fingerprint", "count"],
+        "properties": {
+          "fingerprint": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  }
+}

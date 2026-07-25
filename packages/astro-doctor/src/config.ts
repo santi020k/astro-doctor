@@ -69,7 +69,7 @@ const validatePreset = (preset: unknown): AstroDoctorConfig['preset'] => {
   if (isPresetName(preset)) return preset
 
   throw new Error(
-    `Invalid preset value "${describeConfigValue(preset)}". Expected "recommended", "strict", or "ci".`,
+    `Invalid preset value "${describeConfigValue(preset)}". Expected "recommended", "strict", "ci", or "all".`,
   )
 }
 
@@ -97,6 +97,14 @@ const validateIgnore = (ignore: unknown): AstroDoctorConfig['ignore'] => {
   throw new TypeError('Config ignore must be an array of glob strings.')
 }
 
+const validateProjects = (projects: unknown): AstroDoctorConfig['projects'] => {
+  if (projects === undefined) return undefined
+
+  if (isStringArray(projects)) return projects
+
+  throw new TypeError('Config projects must be an array of package names or paths.')
+}
+
 const validateRules = (rules: unknown): AstroDoctorConfig['rules'] => {
   if (rules === undefined) return undefined
 
@@ -115,12 +123,43 @@ const validateRules = (rules: unknown): AstroDoctorConfig['rules'] => {
   return isRulesConfig(rules) ? rules : undefined
 }
 
+const validateOverrides = (overrides: unknown): AstroDoctorConfig['overrides'] => {
+  if (overrides === undefined) return undefined
+
+  if (!Array.isArray(overrides)) {
+    throw new TypeError('Config overrides must be an array.')
+  }
+
+  return overrides.map((override, overrideIndex) => {
+    if (!isPlainObject(override)) {
+      throw new TypeError(`Config overrides[${overrideIndex}] must be a plain object.`)
+    }
+
+    if (!isStringArray(override.files) || override.files.length === 0) {
+      throw new TypeError(`Config overrides[${overrideIndex}].files must be a non-empty array of glob strings.`)
+    }
+
+    const rules = validateRules(override.rules)
+
+    if (rules === undefined) {
+      throw new TypeError(`Config overrides[${overrideIndex}].rules is required.`)
+    }
+
+    return {
+      files: override.files,
+      rules,
+    }
+  })
+}
+
 const validateConfig = (config: Record<string, unknown>): AstroDoctorConfig => {
   const preset = validatePreset(config.preset)
   const failOn = validateFailOn(config.failOn)
   const threshold = validateThreshold(config.threshold)
   const ignore = validateIgnore(config.ignore)
   const rules = validateRules(config.rules)
+  const overrides = validateOverrides(config.overrides)
+  const projects = validateProjects(config.projects)
 
   return {
     ...(preset === undefined ? {} : { preset }),
@@ -128,6 +167,8 @@ const validateConfig = (config: Record<string, unknown>): AstroDoctorConfig => {
     ...(threshold === undefined ? {} : { threshold }),
     ...(ignore === undefined ? {} : { ignore }),
     ...(rules === undefined || !isRulesConfig(rules) ? {} : { rules }),
+    ...(overrides === undefined ? {} : { overrides }),
+    ...(projects === undefined ? {} : { projects }),
   }
 }
 

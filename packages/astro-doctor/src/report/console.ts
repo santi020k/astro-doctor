@@ -1,5 +1,10 @@
 import { relative } from 'node:path'
 
+import type { AstroDoctorRule } from '@santi020k/eslint-plugin-astro-doctor'
+import astroDoctorPlugin, {
+  getAstroEcosystemRuleDocs,
+} from '@santi020k/eslint-plugin-astro-doctor'
+
 import type { Diagnostic, ProjectScanResult, ScanResult } from '../types.js'
 
 const useColor = (): boolean => process.stdout.isTTY && process.env.NO_COLOR === undefined
@@ -108,17 +113,18 @@ const formatScoreLine = (result: ScanResult, showScore: boolean): string => {
   return `\nAstro Doctor Score: ${score} ${emoji}\n${breakdown}`
 }
 
-const RULE_DOCS: Record<string, string> = {
-  'no-blocking-script': 'Performance · <script src> must use defer, async, or type="module"',
-  'no-client-load-overuse': 'Performance · Prefer client:idle / client:visible over client:load',
-  'use-astro-image': 'Performance · Use <Image> from astro:assets instead of raw <img>',
-  'no-missing-alt': 'Accessibility · All images must have an alt attribute',
-  'no-missing-lang': 'Accessibility · <html> must have a lang attribute',
-  'no-set-html': 'Security · Avoid set:html to prevent XSS',
-  'no-process-env': 'Best Practices · Use import.meta.env instead of process.env',
-  'prefer-class-list': 'Best Practices · Use class:list for dynamic class names',
-  'prefer-content-collections': 'Best Practices · Use getCollection() instead of Astro.glob()',
-}
+const getRuleDocs = (): Record<string, string> =>
+  ({
+    ...Object.fromEntries(
+      Object.entries(astroDoctorPlugin.rules).map(([ruleId, rule]) => {
+        const ruleMetadata = (rule as AstroDoctorRule).meta
+        const category = ruleMetadata.docs.category.replace('-', ' ')
+
+        return [ruleId, `${category} · ${ruleMetadata.docs.description}`]
+      }),
+    ),
+    ...getAstroEcosystemRuleDocs(),
+  })
 
 const formatVerboseRuleSummary = (diagnostics: readonly Diagnostic[]): string => {
   const countByRule = new Map<string, number>()
@@ -129,7 +135,7 @@ const formatVerboseRuleSummary = (diagnostics: readonly Diagnostic[]): string =>
     countByRule.set(short, (countByRule.get(short) ?? 0) + 1)
   }
 
-  const lines = Object.entries(RULE_DOCS).map(([ruleId, doc]) => {
+  const lines = Object.entries(getRuleDocs()).map(([ruleId, doc]) => {
     const count = countByRule.get(ruleId) ?? 0
     const status = count === 0 ? green('✔') : red(`✖ ${count}`)
 
@@ -137,6 +143,16 @@ const formatVerboseRuleSummary = (diagnostics: readonly Diagnostic[]): string =>
   })
 
   return `\nRule summary:\n${lines.join('\n')}`
+}
+
+const formatTimings = (result: ScanResult): string => {
+  const timings = result.timings
+
+  if (timings === undefined) return ''
+
+  const cacheStatus = timings.cacheEnabled ? 'enabled' : 'disabled'
+
+  return `\nTimings: discovery ${timings.discoveryMs}ms · audit ${timings.auditMs}ms · lint ${timings.lintMs}ms · total ${timings.totalMs}ms · cache ${cacheStatus}`
 }
 
 export const formatScoreOnly = (result: ScanResult): string => String(result.score)
@@ -177,11 +193,12 @@ export const formatConsoleReport = (
 ): string => {
   const scoreLine = formatScoreLine(result, showScore)
   const verboseSummary = verbose ? formatVerboseRuleSummary(result.diagnostics) : ''
+  const timings = verbose ? formatTimings(result) : ''
 
   if (result.diagnostics.length === 0) {
     const fileLabel = result.fileCount === 1 ? '1 file' : `${result.fileCount} files`
 
-    return `\n${green('✔')} No issues found across ${fileLabel}. Your Astro is healthy!${verboseSummary}${scoreLine}\n`
+    return `\n${green('✔')} No issues found across ${fileLabel}. Your Astro is healthy!${verboseSummary}${timings}${scoreLine}\n`
   }
 
   const grouped = groupByFile(result.diagnostics)
@@ -192,5 +209,5 @@ export const formatConsoleReport = (
 
   const summaryLine = formatSummaryLine(result)
 
-  return `\n${fileBlocks}\n\n${summaryLine}${verboseSummary}${scoreLine}\n`
+  return `\n${fileBlocks}\n\n${summaryLine}${verboseSummary}${timings}${scoreLine}\n`
 }
