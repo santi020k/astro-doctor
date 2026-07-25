@@ -1,5 +1,28 @@
 # @santi020k/astro-doctor
 
+## 1.1.0
+
+### Minor Changes
+
+- [#12](https://github.com/santi020k/astro-doctor/pull/12) [`e5bb5a7`](https://github.com/santi020k/astro-doctor/commit/e5bb5a7e455b6a00a509502e919212bf51cacd7d) Thanks [@santi020k](https://github.com/santi020k)! - Compose Astro Doctor with the official Astro ESLint ecosystem. The recommended preset now includes official recommended rules, strict adds accessibility, security, and best-practice checks, and the new all preset enables every non-deprecated upstream rule with automatic overlap deduplication.
+
+- [#12](https://github.com/santi020k/astro-doctor/pull/12) [`c538858`](https://github.com/santi020k/astro-doctor/commit/c5388587f5b93d55de101c01f192db10cb127f74) Thanks [@santi020k](https://github.com/santi020k)! - Add project-aware audits for missing Astro Action input schemas, insecure session cookie overrides, and ClientRouter scripts that incorrectly rely on `DOMContentLoaded`.
+
+- [#12](https://github.com/santi020k/astro-doctor/pull/12) [`d71e1d1`](https://github.com/santi020k/astro-doctor/commit/d71e1d1fb7584685b35aa7c904b244b51db1a7d4) Thanks [@santi020k](https://github.com/santi020k)! - Add safe automatic fixes and suggestions to the CLI and editor, official eslint-plugin-astro rule presets, baseline-aware changed scope, persistent baseline files, content-based scan caching, glob-based config overrides, SARIF output, strict CLI validation, verbose phase timings, and versioned JSON and baseline schemas. Harden the LSP with incremental document sync, debounced stale-result protection, configuration watching, workspace caching, and path-safe project selection. Category filters now score only visible diagnostics, GitHub workflows receive annotations, unresolved errors or unhealthy workspace projects cannot receive misleadingly high scores, and package-manager preference is opt-in.
+
+### Patch Changes
+
+- [#12](https://github.com/santi020k/astro-doctor/pull/12) [`a7e3981`](https://github.com/santi020k/astro-doctor/commit/a7e39817f5d48cc1413bae6a35ad008e894de792) Thanks [@santi020k](https://github.com/santi020k)! - Ignore diagnostics from ESLint rules that are not part of Astro Doctor's standalone scanner, and
+  inherit pnpm package-manager configuration from a workspace root when auditing included nested
+  projects. Package-manager audits now recognize npm, Yarn, and Bun lockfiles.
+
+- [#12](https://github.com/santi020k/astro-doctor/pull/12) [`c538858`](https://github.com/santi020k/astro-doctor/commit/c5388587f5b93d55de101c01f192db10cb127f74) Thanks [@santi020k](https://github.com/santi020k)! - Fix current-file scanning and conflict-safe automatic fixes in the language server, restart the VS Code client when extension settings change, and escape dynamic sidebar content.
+
+- [#12](https://github.com/santi020k/astro-doctor/pull/12) [`7269d52`](https://github.com/santi020k/astro-doctor/commit/7269d52d32c3258944f587acd88274b16dac3c8c) Thanks [@santi020k](https://github.com/santi020k)! - Make GitHub Action releases reproducible by running the matching CLI package version with a supported Node.js runtime, automate the floating `v1` action tag, and correct package metadata for the Node.js requirement already introduced by the Astro parser dependency in 1.0.3. The VS Code extension now requires VS Code 1.125 or newer, launches its bundled language server with the supported Node.js executable from the user's environment instead of VS Code's embedded runtime, and includes the cross-platform WASI compiler required by Astro Parser 3. Reduce false positives for explicit inline scripts, JSON-LD structured data, and runtime-populated images, and restore audit mode on ESLint 10.7.
+
+- Updated dependencies [[`e5bb5a7`](https://github.com/santi020k/astro-doctor/commit/e5bb5a7e455b6a00a509502e919212bf51cacd7d), [`d71e1d1`](https://github.com/santi020k/astro-doctor/commit/d71e1d1fb7584685b35aa7c904b244b51db1a7d4)]:
+  - @santi020k/eslint-plugin-astro-doctor@1.1.0
+
 ## 1.0.4
 
 ### Patch Changes

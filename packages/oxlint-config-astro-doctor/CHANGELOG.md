@@ -1,5 +1,11 @@
 # @santi020k/oxlint-config-astro-doctor
 
+## 1.1.0
+
+### Patch Changes
+
+- [#12](https://github.com/santi020k/astro-doctor/pull/12) [`49f6b59`](https://github.com/santi020k/astro-doctor/commit/49f6b59eaaed2be7d6026342f9b4df9f0e1b0d85) Thanks [@santi020k](https://github.com/santi020k)! - Add package installation and usage documentation.
+
 ## 1.0.4
 
 ## 1.0.3
