@@ -1,3 +1,4 @@
+import { RULE_DOCS_BASE_URL } from '../constants.js'
 import { forEachAstroElement, reportAstroNode } from '../utils/astro-ast.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
 
@@ -36,7 +37,7 @@ export default createRule({
         'Disallow render-blocking <script src="..."> tags — add defer, async, or type="module"',
       category: 'performance',
       recommended: true,
-      url: 'https://github.com/santi020k/astro-doctor/blob/main/docs/rules/no-blocking-script.md',
+      url: `${RULE_DOCS_BASE_URL}/no-blocking-script`,
     },
     messages: {
       blockingScript:

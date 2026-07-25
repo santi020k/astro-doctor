@@ -1,5 +1,6 @@
 import type { Rule } from 'eslint'
 
+import { RULE_DOCS_BASE_URL } from '../constants.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
 
 const CONTENT_GLOB_INDICATORS = ['.md', '.mdx', '.mdoc', '{md', ',md', '{mdx', ',mdx']
@@ -37,7 +38,7 @@ export default createRule({
       description: 'Prefer Content Collections over Astro.glob() for Markdown and MDX files',
       category: 'best-practices',
       recommended: true,
-      url: 'https://github.com/santi020k/astro-doctor/blob/main/docs/rules/prefer-content-collections.md',
+      url: `${RULE_DOCS_BASE_URL}/prefer-content-collections`,
     },
     messages: {
       preferContentCollections:
