@@ -119,10 +119,10 @@ const projectAuditRule = PROJECT_AUDITS.find(candidateRule => candidateRule.slug
       <p>Project audits are configured in <code>doctor.config.ts</code>:</p>
       <CodeBlock
         code={`export default {
-  rules: {
-    '${rule.id}': 'error', // or 'warn' or 'off'
-  },
-}`}
+            rules: {
+              '${rule.id}': 'error', // or 'warn' or 'off'
+            },
+          }`}
         label="doctor.config.ts"
         language="typescript"
         theme="auto"

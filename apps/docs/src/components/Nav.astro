@@ -6,8 +6,10 @@ import { ButtonLink, Link, NavigationMenu, ThemeToggle } from '@santi020k/lumen-
 
 import { GITHUB_URL, NPM_URL, SITE_NAME } from '@/site.config'
 
-const currentPath = Astro.url.pathname
-const isDocsActive = currentPath.startsWith('/docs')
+const currentPath = Astro.url.pathname.replace(/\/$/, '')
+const isRulesActive = currentPath === '/docs/rules' || currentPath.startsWith('/docs/rules/')
+const isCliActive = currentPath === '/docs/cli' || currentPath.startsWith('/docs/cli/')
+const isDocsActive = currentPath.startsWith('/docs') && !isRulesActive && !isCliActive
 ---
 
 <header class="
@@ -45,6 +47,7 @@ class="
     >
       <Link
         href="/docs"
+        aria-current={isDocsActive ? 'page' : undefined}
         class:list={[
           'rounded-md px-3 py-1.5 text-sm transition-colors',
           isDocsActive ?
@@ -59,21 +62,31 @@ class="
       </Link>
       <Link
         href="/docs/rules"
-        class="
-          rounded-md px-3 py-1.5 text-sm text-[hsl(var(--ink-soft))]
-          transition-colors
-          hover:bg-[hsl(var(--surface-muted))] hover:text-[hsl(var(--ink))]
-        "
+        aria-current={isRulesActive ? 'page' : undefined}
+        class:list={[
+          'rounded-md px-3 py-1.5 text-sm transition-colors',
+          isRulesActive ?
+            'bg-[hsl(var(--brand-soft))] font-medium text-[hsl(var(--brand))]' :
+            `
+              text-[hsl(var(--ink-soft))]
+              hover:bg-[hsl(var(--surface-muted))] hover:text-[hsl(var(--ink))]
+            `
+        ]}
       >
         Rules
       </Link>
       <Link
         href="/docs/cli"
-        class="
-          rounded-md px-3 py-1.5 text-sm text-[hsl(var(--ink-soft))]
-          transition-colors
-          hover:bg-[hsl(var(--surface-muted))] hover:text-[hsl(var(--ink))]
-        "
+        aria-current={isCliActive ? 'page' : undefined}
+        class:list={[
+          'rounded-md px-3 py-1.5 text-sm transition-colors',
+          isCliActive ?
+            'bg-[hsl(var(--brand-soft))] font-medium text-[hsl(var(--brand))]' :
+            `
+              text-[hsl(var(--ink-soft))]
+              hover:bg-[hsl(var(--surface-muted))] hover:text-[hsl(var(--ink))]
+            `
+        ]}
       >
         CLI
       </Link>
