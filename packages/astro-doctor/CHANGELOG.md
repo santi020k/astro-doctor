@@ -1,5 +1,14 @@
 # @santi020k/astro-doctor
 
+## 1.2.1
+
+### Patch Changes
+
+- [#16](https://github.com/santi020k/astro-doctor/pull/16) [`f7fa4a3`](https://github.com/santi020k/astro-doctor/commit/f7fa4a3395333206d1e97a7d58ae3a29016618fe) Thanks [@santi020k](https://github.com/santi020k)! - Remove the incompatible `eslint-plugin-jsx-a11y` dependency and align the runtime with `eslint-plugin-astro` 3 and `astro-eslint-parser` 3. Astro Doctor's proprietary accessibility diagnostics and official Astro rules remain enabled.
+
+- Updated dependencies [[`f7fa4a3`](https://github.com/santi020k/astro-doctor/commit/f7fa4a3395333206d1e97a7d58ae3a29016618fe)]:
+  - @santi020k/eslint-plugin-astro-doctor@1.2.1
+
 ## 1.2.0
 
 ### Minor Changes
