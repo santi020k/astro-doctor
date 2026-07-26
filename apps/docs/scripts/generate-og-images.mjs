@@ -94,6 +94,12 @@ spec('docs/agent-skills.webp', {
   type: 'AI Skills'
 })
 
+spec('docs/changelog.webp', {
+  title: 'Changelog',
+  description: 'Release history for Astro Doctor packages, editor integrations, and automation.',
+  type: 'Release History'
+})
+
 // Docs — Rules
 spec('docs/rules/index.webp', {
   title: 'Rules Overview',
