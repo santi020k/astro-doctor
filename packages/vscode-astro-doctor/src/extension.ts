@@ -151,7 +151,7 @@ export const getStartFailureMessage = (error: unknown): string => {
   const errorMessage = error instanceof Error ? error.message : String(error)
 
   if (errorMessage.includes('ENOENT') && errorMessage.toLowerCase().includes('node')) {
-    return `${CLIENT_NAME}: Node.js was not found. Install Node.js ^20.19.0 or >=22.18.0, or set astroDoctor.nodePath to its executable.`
+    return `${CLIENT_NAME}: Node.js was not found. Install Node.js ^22.22.3, ^24.16.0, or >=26.3.0, or set astroDoctor.nodePath to its executable.`
   }
 
   return `${CLIENT_NAME}: failed to start. Reinstall the extension, install @santi020k/astro-doctor locally, or set astroDoctor.serverPath.`

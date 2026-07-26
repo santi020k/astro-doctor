@@ -51,10 +51,12 @@ try {
       'exec',
       'npm',
       'install',
+      '--engine-strict',
       '--ignore-scripts',
       '--no-audit',
       '--no-fund',
       '--no-package-lock',
+      '--strict-peer-deps',
       ...tarballs,
     ],
     {

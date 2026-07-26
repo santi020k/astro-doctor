@@ -440,6 +440,7 @@ describe('configuration lifecycle', () => {
     const configuration = {
       get: vi.fn((key: string, defaultValue?: unknown) => {
         if (key === 'enable') return enabled
+        if (key === 'nodePath') return '/resolved/node'
         if (key === 'scanOnType') return scanOnType
         if (key === 'serverPath') return ''
 

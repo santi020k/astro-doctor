@@ -3,4 +3,4 @@
 "@santi020k/eslint-plugin-astro-doctor": patch
 ---
 
-Remove the incompatible `eslint-plugin-jsx-a11y` dependency so clean installs work with ESLint 10 on Node.js 20. Astro Doctor's proprietary accessibility diagnostics and official Astro rules remain enabled.
+Remove the incompatible `eslint-plugin-jsx-a11y` dependency and align the runtime with `eslint-plugin-astro` 3 and `astro-eslint-parser` 3. Astro Doctor's proprietary accessibility diagnostics and official Astro rules remain enabled.
