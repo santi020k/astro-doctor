@@ -41,7 +41,6 @@
     "husky": "catalog:",
     "knip": "catalog:",
     "lint-staged": "catalog:",
-    "npm": "catalog:",
     "tailwindcss": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:",

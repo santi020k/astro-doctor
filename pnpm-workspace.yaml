@@ -36,7 +36,6 @@ catalog:
   jiti: ^2.7.0
   knip: ^6.29.0
   lint-staged: ^17.2.0
-  npm: ^11.6.2
   satori: ^0.29.0
   satori-html: ^0.3.2
   sharp: ^0.35.3
