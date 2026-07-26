@@ -60,11 +60,15 @@ jobs:
 
       - name: Run CI checks (minimum Node.js runtime)
         if: matrix.node-version == '20.19.0'
-        run: pnpm exec turbo run typecheck lint test:coverage --filter='!@santi020k/astro-doctor-docs' //#lint:spell //#lint:knip //#lint:repo
+        run: pnpm exec turbo run typecheck lint test:coverage --filter='!@santi020k/astro-doctor-docs'
 
       - name: Run CI checks
         if: matrix.node-version != '20.19.0'
         run: pnpm exec turbo run typecheck lint test:coverage
+
+      - name: Run repository checks
+        if: matrix.node-version == '22.22.3'
+        run: pnpm exec turbo run //#lint:spell //#lint:knip //#lint:repo
 
       - name: Check exports
         if: matrix.node-version == '20.19.0'
