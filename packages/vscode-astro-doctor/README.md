@@ -20,7 +20,7 @@ This extension contributes the following settings:
 * `astroDoctor.scanOnType`: Re-scan files live as you type from the unsaved buffer (default: `true`).
 * `astroDoctor.trace.server`: Trace communication with the underlying Astro Doctor Language Server (`off`, `messages`, `verbose`).
 
-The extension requires VS Code 1.125 or newer and Node.js `^22.22.3 || ^24.16.0 || >=26.3.0` available as `node` for the bundled language server.
+The extension requires VS Code 1.125 or newer and Node.js `^20.19.0 || >=22.18.0` available as `node` for the bundled language server.
 
 ## Development Environments
 
