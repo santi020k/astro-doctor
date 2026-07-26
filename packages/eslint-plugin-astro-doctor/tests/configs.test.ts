@@ -21,12 +21,11 @@ describe('Astro Doctor configs', () => {
     expect(rules?.['astro/missing-client-only-directive-value']).toBe('error')
   })
 
-  test('strict adds accessibility rules and disables duplicate diagnostics', () => {
+  test('strict adds official Astro rules and disables duplicate diagnostics', () => {
     const rules = astroDoctorPlugin.configs.strict?.rules
 
-    expect(rules?.['astro/jsx-a11y/iframe-has-title']).toBe('error')
     expect(rules?.['astro/no-set-html-directive']).toBe('error')
-    expect(rules?.['astro-doctor/no-missing-alt']).toBe('off')
+    expect(rules?.['astro-doctor/no-missing-alt']).toBe('error')
     expect(rules?.['astro-doctor/no-set-html']).toBe('off')
   })
 
@@ -44,20 +43,20 @@ describe('Astro Doctor configs', () => {
     expect(rules['astro/valid-compile']).toBeUndefined()
   })
 
-  test('strict accessibility rules execute without consumer-installed dependencies', async () => {
+  test('proprietary accessibility rules execute without consumer-installed dependencies', async () => {
     const eslint = new ESLint({
       overrideConfigFile: true,
       overrideConfig: [astroDoctorPlugin.configs.strict],
       ignore: false,
     })
     const results = await eslint.lintText(
-      '---\n---\n<iframe src="https://example.com"></iframe>',
+      '---\n---\n<img src="/hero.png">',
       { filePath: 'index.astro' },
     )
 
     expect(results[0]?.messages).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ ruleId: 'astro/jsx-a11y/iframe-has-title' }),
+        expect.objectContaining({ ruleId: 'astro-doctor/no-missing-alt' }),
       ]),
     )
   })
@@ -72,7 +71,7 @@ describe('Astro Doctor configs', () => {
 
     expect(recommendedRules['astro/missing-client-only-directive-value']).toBe('error')
     expect(deduplicatedRules['astro-doctor/no-missing-alt']).toBe('error')
-    expect(ASTRO_ESLINT_PLUGINS.astro?.rules?.['jsx-a11y/iframe-has-title']).toBeDefined()
+    expect(ASTRO_ESLINT_PLUGINS.astro?.rules?.['missing-client-only-directive-value']).toBeDefined()
     expect(getAstroRuleCategory('not-astro/example')).toBeUndefined()
     expect(getAstroRuleCategory('astro/jsx-a11y/alt-text')).toBe('accessibility')
     expect(getAstroRuleCategory('astro/no-set-html-directive')).toBe('security')

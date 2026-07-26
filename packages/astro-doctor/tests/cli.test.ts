@@ -335,7 +335,7 @@ describe('runCli', () => {
   test('accepts the all preset and runs all-only upstream rules', async () => {
     writeFileSync(
       join(testDirectory, 'index.astro'),
-      '---\n---\n<button aria-hidden="true">Hidden action</button>',
+      '---\n---\n<div id="example" class="example">Content</div>',
     )
 
     const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())
@@ -355,7 +355,7 @@ describe('runCli', () => {
     expect(report.diagnostics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          ruleId: 'astro/jsx-a11y/no-aria-hidden-on-focusable',
+          ruleId: 'astro/sort-attributes',
         }),
       ]),
     )

@@ -12,6 +12,7 @@ import {
   TransportKind,
 } from 'vscode-languageclient/node'
 
+import { resolveNodeCommand } from './utils/resolve-node-command'
 import { AstroDoctorSidebarProvider, type HealthScoreData, type TopIssueData } from './sidebar-provider'
 
 const noop = (): void => {
@@ -146,6 +147,16 @@ const showMissingServer = async (
   await vscode.window.showErrorMessage(message)
 }
 
+export const getStartFailureMessage = (error: unknown): string => {
+  const errorMessage = error instanceof Error ? error.message : String(error)
+
+  if (errorMessage.includes('ENOENT') && errorMessage.toLowerCase().includes('node')) {
+    return `${CLIENT_NAME}: Node.js was not found. Install Node.js ^20.19.0 or >=22.18.0, or set astroDoctor.nodePath to its executable.`
+  }
+
+  return `${CLIENT_NAME}: failed to start. Reinstall the extension, install @santi020k/astro-doctor locally, or set astroDoctor.serverPath.`
+}
+
 const showStartFailure = async (
   outputChannel: vscode.OutputChannel,
   error: unknown,
@@ -154,9 +165,7 @@ const showStartFailure = async (
     `Failed to start the Astro Doctor language server: ${error instanceof Error ? error.message : String(error)}`,
   )
 
-  await vscode.window.showErrorMessage(
-    `${CLIENT_NAME}: failed to start. Reinstall the extension, install @santi020k/astro-doctor locally, or set astroDoctor.serverPath.`,
-  )
+  await vscode.window.showErrorMessage(getStartFailureMessage(error))
 }
 
 const createExecutable = (resolved: ResolvedServer): Executable => {
@@ -185,10 +194,10 @@ const createExecutableServerOptions = (resolved: ResolvedServer): ServerOptions 
   }
 }
 
-const createBundledServerOptions = (serverModule: string): ServerOptions =>
+const createBundledServerOptions = (serverModule: string, nodeCommand: string): ServerOptions =>
   createExecutableServerOptions({
     args: [serverModule, '--stdio'],
-    command: 'node',
+    command: nodeCommand,
     shell: false,
   })
 
@@ -214,7 +223,11 @@ export const createServerOptions = async (
 
   const bundledServer = await resolveBundledServer(extensionPath)
 
-  if (bundledServer) return createBundledServerOptions(bundledServer)
+  if (bundledServer) {
+    const nodeCommand = await resolveNodeCommand(configuration, outputChannel)
+
+    return createBundledServerOptions(bundledServer, nodeCommand)
+  }
 
   if (!runtime.preferWorkspaceServer) {
     const workspaceServer = await resolveWorkspaceServer()

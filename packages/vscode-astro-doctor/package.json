@@ -91,6 +91,12 @@
           "scope": "machine-overridable",
           "description": "Optional path to the astro-doctor executable. When empty, local development uses the workspace install first; production uses the bundled language server first."
         },
+        "astroDoctor.nodePath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine-overridable",
+          "description": "Optional path to the Node.js executable used by the bundled language server. When empty, Astro Doctor resolves Node.js from your shell environment."
+        },
         "astroDoctor.scanOnType": {
           "type": "boolean",
           "default": true,

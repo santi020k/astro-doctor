@@ -19,7 +19,6 @@ catalog:
   "@resvg/resvg-js": ^2.6.2
   "@santi020k/eslint-config-basic": 2.1.1
   "@tailwindcss/vite": ^4.3.3
-  '@types/eslint-plugin-jsx-a11y': ^6.10.1
   "@types/node": ^26.1.1
   "@types/vscode": ^1.125.0
   "@vitest/coverage-v8": ^4.1.10
@@ -32,7 +31,6 @@ catalog:
   esbuild: ^0.28.1
   eslint: 10.8.0
   eslint-plugin-astro: ^1.7.0
-  eslint-plugin-jsx-a11y: ^6.10.2
   glob: ^13.0.6
   husky: ^9.1.7
   jiti: ^2.7.0

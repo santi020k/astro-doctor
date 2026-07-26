@@ -66,13 +66,12 @@ describe('getPresetRules', () => {
     expect(Object.values(rules)).not.toContain('warn')
   })
 
-  test("'strict' includes additional accessibility and strict Astro rules", () => {
+  test("'strict' includes additional strict Astro rules", () => {
     const recommendedKeys = Object.keys(getPresetRules('recommended')).sort()
     const strictKeys = Object.keys(getPresetRules('strict')).sort()
 
     expect(strictKeys.length).toBeGreaterThan(recommendedKeys.length)
     expect(strictKeys).toContain('astro/no-unused-css-selector')
-    expect(strictKeys).toContain('astro/jsx-a11y/anchor-is-valid')
   })
 
   test("'ci' returns same rules as 'recommended'", () => {

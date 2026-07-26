@@ -1,10 +1,9 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -73,6 +72,10 @@ jobs:
       - name: Check exports
         if: matrix.node-version == '20.19.0'
         run: pnpm exec turbo run check:exports --filter='!@santi020k/astro-doctor-docs'
+
+      - name: Check packed npm install
+        if: matrix.node-version == '20.19.0'
+        run: pnpm run check:packed-install
 
   windows-smoke:
     name: Windows smoke

@@ -1,6 +1,5 @@
 import type { Linter } from 'eslint'
 import astroPlugin from 'eslint-plugin-astro'
-import jsxA11yPlugin from 'eslint-plugin-jsx-a11y'
 
 import type { RuleCategory } from './types.js'
 
@@ -31,13 +30,6 @@ const ASTRO_DOCTOR_DUPLICATE_RULES: Record<string, string> = {
   'astro/no-set-html-directive': 'astro-doctor/no-set-html',
   'astro/prefer-class-list-directive': 'astro-doctor/prefer-class-list',
 }
-
-const ASTRO_JSX_A11Y_RULES = Object.fromEntries(
-  Object.entries(jsxA11yPlugin.rules ?? {}).map(([ruleName, rule]) => [
-    `jsx-a11y/${ruleName}`,
-    rule,
-  ]),
-)
 
 const isDeprecatedAstroRuleId = (ruleId: string): boolean => {
   if (!ruleId.startsWith('astro/')) return false
@@ -84,19 +76,8 @@ const getFlatConfigRules = (
 const getRecommendedRules = (): Record<string, RuleSeverity> =>
   getFlatConfigRules('flat/recommended')
 
-const getJsxA11yRecommendedRules = (): Record<string, RuleSeverity> =>
-  Object.fromEntries(
-    Object.entries(jsxA11yPlugin.flatConfigs.recommended.rules ?? {})
-      .map(([ruleId, ruleEntry]) => [
-        `astro/${ruleId}`,
-        normalizeRuleSeverity(ruleEntry),
-      ])
-      .filter((ruleEntry): ruleEntry is [string, RuleSeverity] => ruleEntry[1] !== undefined),
-  )
-
 const getStrictRules = (): Record<string, RuleSeverity> => ({
   ...getRecommendedRules(),
-  ...getJsxA11yRecommendedRules(),
   ...Object.fromEntries(STRICT_ASTRO_RULE_IDS.map((ruleId) => [ruleId, 'error'])),
 })
 
@@ -135,13 +116,7 @@ export const disableDuplicateAstroDoctorRules = (
 }
 
 export const ASTRO_ESLINT_PLUGINS: NonNullable<Linter.Config['plugins']> = {
-  astro: {
-    ...astroPlugin,
-    rules: {
-      ...astroPlugin.rules,
-      ...ASTRO_JSX_A11Y_RULES,
-    },
-  },
+  astro: astroPlugin,
 }
 
 export const getAstroRuleCategory = (ruleId: string): RuleCategory | undefined => {
