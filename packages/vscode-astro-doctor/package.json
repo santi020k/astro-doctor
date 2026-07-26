@@ -133,7 +133,7 @@
     "onLanguage:astro"
   ],
   "engines": {
-    "node": "^22.22.3 || ^24.16.0 || >=26.3.0",
+    "node": "^20.19.0 || >=22.18.0",
     "vscode": "^1.125.0"
   },
   "repository": {
