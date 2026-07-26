@@ -87,7 +87,7 @@ action.yml                      GitHub Action (composite, PR diff mode, sticky c
 - **ESLint config**: `@santi020k/eslint-config-basic` with `Preset.Monorepo`, `Extension.Boundaries`, `Extension.Unicorn`, `Tool.Cspell`, `Runtime.Node` on the CLI package
 - **Versioning**: Changesets with linked packages (both packages version together)
 - **Score formula**: Each file scored independently — errors cost 25 pts, warnings cost 10 pts, clamped to [0, 100]. Per-file scores are averaged across all scanned files. Unresolved errors cap the score at 89; unresolved security errors cap it at 74. Multi-project scans use the lowest project score. Grades: S (100), A (90–99), B (75–89), C (60–74), D (40–59), F (0–39)
-- **GitHub Action**: Composite action (no pre-bundled JS). Uses `npx` + `jq` + `actions/github-script`
+- **GitHub Action**: Composite action (no pre-bundled JS). Uses `npx` + `jq` + `actions/github-script`, supports severity and minimum-score gates, and skips PR comments when GitHub supplies a read-only token
 - **Config files**: `doctor.config.*` (following react-doctor's naming). Supports TS/JS/JSON/JSONC, workspace projects, and glob-based template rule overrides. JSON/JSONC configs support `"$schema": "https://doctor.santi020k.com/schema/config.json"` for IDE autocompletion.
 - **Adoption**: `baseline create|update` writes a versioned persistent baseline; `--baseline` filters recorded findings while preserving newly introduced diagnostics.
 - **Performance**: `--cache` uses content-based ESLint caching and `--verbose` reports discovery, audit, lint, and total durations.

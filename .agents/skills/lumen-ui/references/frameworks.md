@@ -29,7 +29,8 @@ import '@santi020k/lumen-astro/styles.css'
 
 Mount `UIPrimitives` once in the root layout when the app uses enhanced interactions. Do not place
 it beside every primitive. Use public `data-ui-*` attributes documented by the selected component
-for triggers and relationships.
+for triggers and relationships. `CodeTabs` receives its persistence and synchronized keyboard
+behavior from this single runtime instance.
 
 ## React
 
@@ -59,7 +60,8 @@ export function SignInForm() {
 Use Lumen's behavior hooks for interactive contracts instead of mounting Astro's progressive
 enhancement runtime. Available hooks include behavior for dialogs, popovers, dropdown menus, tabs,
 selects, tooltips, toasts, calendars, forms, data views, editors, schedules, resizable panes, and
-other behavior-heavy primitives. Inspect the current package exports before selecting a hook.
+other behavior-heavy primitives. `CodeTabs` owns its React state, copy controls, persistence, and
+cross-instance synchronization. Inspect the current package exports before selecting a hook.
 
 ## Web Components
 

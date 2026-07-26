@@ -1,0 +1,96 @@
+---
+import Docs from '@/layouts/Docs.astro'
+
+import { Link } from '@santi020k/lumen-astro'
+
+import { Content as AstroDoctorChangelog } from '../../../../../packages/astro-doctor/CHANGELOG.md'
+import { Content as EslintPluginChangelog } from '../../../../../packages/eslint-plugin-astro-doctor/CHANGELOG.md'
+import { Content as OxlintConfigChangelog } from '../../../../../packages/oxlint-config-astro-doctor/CHANGELOG.md'
+import { Content as VsCodeExtensionChangelog } from '../../../../../packages/vscode-astro-doctor/CHANGELOG.md'
+---
+
+<Docs
+  title="Changelog"
+  description="Release history for Astro Doctor packages and integrations."
+  editPath="apps/docs/src/pages/docs/changelog.astro"
+>
+  <h1>Changelog</h1>
+
+  <p>
+    Release history for Astro Doctor and its integrations. This page is generated directly from
+    each package changelog and updates on the next documentation build after Changesets publishes a
+    version.
+  </p>
+
+  <nav aria-label="Changelog packages">
+    <ul>
+      <li><a href="#astro-doctor">Astro Doctor CLI and GitHub Action</a></li>
+      <li><a href="#eslint-plugin">ESLint plugin</a></li>
+      <li><a href="#vscode-extension">VS Code extension</a></li>
+      <li><a href="#oxlint-config">Oxlint configuration</a></li>
+    </ul>
+  </nav>
+
+  <section id="astro-doctor" class="changelog-package" aria-labelledby="astro-doctor-title">
+    <h2 id="astro-doctor-title">Astro Doctor CLI and GitHub Action</h2>
+    <p>
+      Package:{' '}
+      <Link href="https://www.npmjs.com/package/@santi020k/astro-doctor" target="_blank" rel="noopener noreferrer">
+        <code>@santi020k/astro-doctor</code>
+      </Link>
+    </p>
+    <div class="changelog-content">
+      <AstroDoctorChangelog />
+    </div>
+  </section>
+
+  <section id="eslint-plugin" class="changelog-package" aria-labelledby="eslint-plugin-title">
+    <h2 id="eslint-plugin-title">ESLint plugin</h2>
+    <p>
+      Package:{' '}
+      <Link href="https://www.npmjs.com/package/@santi020k/eslint-plugin-astro-doctor" target="_blank" rel="noopener noreferrer">
+        <code>@santi020k/eslint-plugin-astro-doctor</code>
+      </Link>
+    </p>
+    <div class="changelog-content">
+      <EslintPluginChangelog />
+    </div>
+  </section>
+
+  <section id="vscode-extension" class="changelog-package" aria-labelledby="vscode-extension-title">
+    <h2 id="vscode-extension-title">VS Code extension</h2>
+    <p>
+      Extension:{' '}
+      <Link href="https://marketplace.visualstudio.com/items?itemName=santi020k.vscode-astro-doctor" target="_blank" rel="noopener noreferrer">
+        <code>santi020k.vscode-astro-doctor</code>
+      </Link>
+    </p>
+    <div class="changelog-content">
+      <VsCodeExtensionChangelog />
+    </div>
+  </section>
+
+  <section id="oxlint-config" class="changelog-package" aria-labelledby="oxlint-config-title">
+    <h2 id="oxlint-config-title">Oxlint configuration</h2>
+    <p>
+      Package:{' '}
+      <Link href="https://www.npmjs.com/package/@santi020k/oxlint-config-astro-doctor" target="_blank" rel="noopener noreferrer">
+        <code>@santi020k/oxlint-config-astro-doctor</code>
+      </Link>
+    </p>
+    <div class="changelog-content">
+      <OxlintConfigChangelog />
+    </div>
+  </section>
+</Docs>
+
+<style>
+  .changelog-package {
+    margin-block-start: 3rem;
+    scroll-margin-top: 5rem;
+  }
+
+  .changelog-content :global(> h1:first-child) {
+    display: none;
+  }
+</style>

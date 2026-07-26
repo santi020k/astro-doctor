@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22.22.3, 24.16.0, 26.3.0]
+        node-version: [20.19.0, 22.22.3, 24.16.0, 26.3.0]
 
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
@@ -51,19 +51,28 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
+        if: matrix.node-version != '20.19.0'
         run: pnpm run build
 
+      - name: Build published packages (minimum Node.js runtime)
+        if: matrix.node-version == '20.19.0'
+        run: pnpm exec turbo run build --filter='!@santi020k/astro-doctor-docs'
+
       - name: Run CI checks (minimum Node.js runtime)
-        if: matrix.node-version == '22.22.3'
-        run: pnpm exec turbo run typecheck lint test:coverage //#lint:spell //#lint:knip //#lint:repo
+        if: matrix.node-version == '20.19.0'
+        run: pnpm exec turbo run typecheck lint test:coverage --filter='!@santi020k/astro-doctor-docs'
 
       - name: Run CI checks
-        if: matrix.node-version != '22.22.3'
+        if: matrix.node-version != '20.19.0'
         run: pnpm exec turbo run typecheck lint test:coverage
 
-      - name: Check exports
+      - name: Run repository checks
         if: matrix.node-version == '22.22.3'
-        run: pnpm run check:exports
+        run: pnpm exec turbo run //#lint:spell //#lint:knip //#lint:repo
+
+      - name: Check exports
+        if: matrix.node-version == '20.19.0'
+        run: pnpm exec turbo run check:exports --filter='!@santi020k/astro-doctor-docs'
 
   windows-smoke:
     name: Windows smoke
