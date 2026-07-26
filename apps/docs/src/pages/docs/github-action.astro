@@ -88,6 +88,11 @@ jobs:
         <td>When to fail: <code>error</code> | <code>warning</code> | <code>off</code></td>
       </tr>
       <tr>
+        <td><code>min-score</code></td>
+        <td><code>0</code></td>
+        <td>Minimum health score required to pass, from <code>0</code> to <code>100</code></td>
+      </tr>
+      <tr>
         <td><code>comment</code></td>
         <td><code>true</code></td>
         <td>Post/update a sticky PR comment with the report</td>
@@ -148,21 +153,13 @@ jobs:
     </tbody>
   </table>
 
-  <h2>Using outputs in downstream steps</h2>
+  <h2>Enforcing a minimum score</h2>
 
   <CodeBlock
-    code={`steps:
-  - uses: santi020k/astro-doctor@v1
-    id: doctor
-    with:
-      fail-on: off   # don't fail here — handle below
-  - name: Check score threshold
-    run: |
-      SCORE=\${{ steps.doctor.outputs.score }}
-      if [ "$SCORE" -lt 80 ]; then
-        echo "Score $SCORE is below threshold (80)"
-        exit 1
-      fi`}
+    code={`- uses: santi020k/astro-doctor@v1
+  with:
+    fail-on: off
+    min-score: 80`}
     language="yaml"
     theme="auto"
     variant="block"
@@ -197,6 +194,8 @@ jobs:
 
   <Callout class="callout callout-tip">
     <strong>Permissions:</strong> The <code>pull-requests: write</code> permission is only required
-    when <code>comment: true</code>. If you disable comments, this permission is not needed.
+    when <code>comment: true</code>. The action automatically skips comments for fork and Dependabot
+    pull requests, where GitHub provides a read-only token. Scanning, annotations, and failure gates
+    still run normally.
   </Callout>
 </Docs>

@@ -30,10 +30,12 @@
   },
   "dependencies": {
     "astro-eslint-parser": "catalog:",
-    "eslint-plugin-astro": "catalog:"
+    "eslint-plugin-astro": "catalog:",
+    "eslint-plugin-jsx-a11y": "catalog:"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
+    "@types/eslint-plugin-jsx-a11y": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
@@ -41,10 +43,10 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "eslint": "catalog:"
+    "eslint": "^10.0.0"
   },
   "engines": {
-    "node": "^22.22.3 || ^24.16.0 || >=26.3.0"
+    "node": "^20.19.0 || >=22.18.0"
   },
   "repository": {
     "type": "git",

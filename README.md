@@ -291,6 +291,7 @@ Or in JSON:
   with:
     working-directory: '.'      # directory to scan
     fail-on: 'error'            # error | warning | off
+    min-score: '0'              # minimum passing health score (0–100)
     comment: 'true'             # post sticky PR summary comment
     diff-only: 'true'           # on PRs, report only newly introduced diagnostics
     json-report: ''             # path to write JSON report (optional)
@@ -299,6 +300,8 @@ Or in JSON:
 ```
 
 Set `security-events: write` in the workflow permissions when `upload-sarif` is enabled.
+PR comments are skipped automatically for fork and Dependabot pull requests because GitHub gives
+those workflows a read-only token. Scanning and failure gates still run.
 
 **Outputs:**
 

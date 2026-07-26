@@ -65,6 +65,7 @@ console.log(formatConsoleReport(result))
 - uses: santi020k/astro-doctor@v1
   with:
     fail-on: error   # error | warning | off
+    min-score: 90    # minimum passing health score (0–100)
 ```
 
 ## See Also

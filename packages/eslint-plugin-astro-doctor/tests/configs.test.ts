@@ -1,7 +1,17 @@
 import { ESLint } from 'eslint'
+import astroPlugin from 'eslint-plugin-astro'
 import { describe, expect, test } from 'vitest'
 
-import astroDoctorPlugin, { getAstroEcosystemRuleCount } from '../src/index.js'
+import astroDoctorPlugin, {
+  ASTRO_ESLINT_PLUGINS,
+  disableDuplicateAstroDoctorRules,
+  getAstroEcosystemRuleCount,
+  getAstroEcosystemRuleDocs,
+  getAstroEcosystemRules,
+  getAstroRuleCategory,
+  getAstroRuleDescription,
+  getAstroRuleDocUrl,
+} from '../src/index.js'
 
 describe('Astro Doctor configs', () => {
   test('recommended composes proprietary and official Astro rules', () => {
@@ -24,9 +34,13 @@ describe('Astro Doctor configs', () => {
     const rules = astroDoctorPlugin.configs.all?.rules ?? {}
     const activeAstroRuleIds = Object.entries(rules)
       .filter(([ruleId, severity]) => ruleId.startsWith('astro/') && severity !== 'off')
+    const nonDeprecatedAstroRuleCount = Object.entries(astroPlugin.rules)
+      .filter(([ruleName, rule]) => ruleName !== 'valid-compile' && !rule.meta?.deprecated)
+      .length
 
-    expect(getAstroEcosystemRuleCount()).toBe(54)
-    expect(activeAstroRuleIds).toHaveLength(54)
+    expect(getAstroEcosystemRuleCount()).toBe(nonDeprecatedAstroRuleCount)
+    expect(activeAstroRuleIds).toHaveLength(nonDeprecatedAstroRuleCount)
+    expect(rules['astro/no-omitted-end-tags']).toBeUndefined()
     expect(rules['astro/valid-compile']).toBeUndefined()
   })
 
@@ -46,5 +60,28 @@ describe('Astro Doctor configs', () => {
         expect.objectContaining({ ruleId: 'astro/jsx-a11y/iframe-has-title' }),
       ]),
     )
+  })
+
+  test('exposes normalized upstream rule metadata', () => {
+    const recommendedRules = getAstroEcosystemRules('ci')
+    const deduplicatedRules = disableDuplicateAstroDoctorRules({
+      'astro-doctor/no-missing-alt': 'error',
+      'astro/jsx-a11y/alt-text': 'off',
+    })
+    const docs = getAstroEcosystemRuleDocs()
+
+    expect(recommendedRules['astro/missing-client-only-directive-value']).toBe('error')
+    expect(deduplicatedRules['astro-doctor/no-missing-alt']).toBe('error')
+    expect(ASTRO_ESLINT_PLUGINS.astro?.rules?.['jsx-a11y/iframe-has-title']).toBeDefined()
+    expect(getAstroRuleCategory('not-astro/example')).toBeUndefined()
+    expect(getAstroRuleCategory('astro/jsx-a11y/alt-text')).toBe('accessibility')
+    expect(getAstroRuleCategory('astro/no-set-html-directive')).toBe('security')
+    expect(getAstroRuleCategory('astro/no-conflict-set-directives')).toBe('best-practices')
+    expect(getAstroRuleDocUrl('not-astro/example')).toBeUndefined()
+    expect(getAstroRuleDocUrl('astro/no-conflict-set-directives')).toContain('eslint-plugin-astro')
+    expect(getAstroRuleDescription('not-astro/example')).toBeUndefined()
+    expect(getAstroRuleDescription('astro/no-conflict-set-directives')).toBeTypeOf('string')
+    expect(docs['astro/no-conflict-set-directives']).toContain('best practices')
+    expect(docs['astro/valid-compile']).toBeUndefined()
   })
 })
