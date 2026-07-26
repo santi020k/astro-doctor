@@ -17,10 +17,11 @@ This extension contributes the following settings:
 
 * `astroDoctor.enable`: Enable or disable Astro Doctor features (default: `true`).
 * `astroDoctor.serverPath`: Optional path to a custom `astro-doctor` executable. This always wins over the environment defaults.
+* `astroDoctor.nodePath`: Optional path to the Node.js executable used by the bundled language server. When empty, the extension resolves Node.js from your shell environment.
 * `astroDoctor.scanOnType`: Re-scan files live as you type from the unsaved buffer (default: `true`).
 * `astroDoctor.trace.server`: Trace communication with the underlying Astro Doctor Language Server (`off`, `messages`, `verbose`).
 
-The extension requires VS Code 1.125 or newer and Node.js `^20.19.0 || >=22.18.0` available as `node` for the bundled language server.
+The extension requires VS Code 1.125 or newer and Node.js `^22.22.3 || ^24.16.0 || >=26.3.0` for the bundled language server. It resolves version-manager installations such as NVM and fnm through your shell, even when VS Code was launched from the Dock or application menu.
 
 ## Development Environments
 

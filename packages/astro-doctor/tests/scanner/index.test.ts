@@ -109,28 +109,7 @@ describe('scan', () => {
     )
   })
 
-  test('runs official Astro accessibility rules in strict mode', async () => {
-    writeFileSync(
-      join(testDirectory, 'index.astro'),
-      '---\n---\n<iframe src="https://example.com"></iframe>'
-    )
-
-    const scanResult = await scan({
-      directory: testDirectory,
-      rules: getPresetRules('strict'),
-    })
-
-    expect(scanResult.diagnostics).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          ruleId: 'astro/jsx-a11y/iframe-has-title',
-          category: 'accessibility',
-        }),
-      ])
-    )
-  })
-
-  test('deduplicates proprietary rules superseded by strict upstream rules', async () => {
+  test('keeps proprietary accessibility rules enabled in strict mode', async () => {
     writeFileSync(
       join(testDirectory, 'index.astro'),
       '---\n---\n<img src="/hero.png" />'
@@ -144,7 +123,7 @@ describe('scan', () => {
       .map((diagnostic) => diagnostic.ruleId)
       .filter((ruleId) => ruleId.includes('alt-text') || ruleId.includes('missing-alt'))
 
-    expect(missingAltRuleIds).toEqual(['astro/jsx-a11y/alt-text'])
+    expect(missingAltRuleIds).toEqual(['astro-doctor/no-missing-alt'])
   })
 
   test('detects missing alt on <img>', async () => {

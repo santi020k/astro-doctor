@@ -10,6 +10,7 @@ import {
   createServerOptions,
   createServerStatusFeature,
   deactivate,
+  getStartFailureMessage,
   renderStatus,
   resolveBundledServer,
   resolveConfiguredServer,
@@ -268,7 +269,7 @@ describe('createServerOptions', () => {
   })
 
   test('uses the bundled server in production when no workspace bin exists', async () => {
-    const config = makeMockConfig({ serverPath: '' })
+    const config = makeMockConfig({ nodePath: '/resolved/node', serverPath: '' })
     const runtime = { environment: ENV_PRODUCTION, preferWorkspaceServer: false }
 
     workspaceFileSystem.stat.mockImplementation((uri) => {
@@ -291,7 +292,7 @@ describe('createServerOptions', () => {
     expect(result).toBeDefined()
     expect((result as { run: { args?: string[], command?: string } }).run).toMatchObject({
       args: [path.join('/ext', 'dist', 'server.mjs'), '--stdio'],
-      command: 'node',
+      command: '/resolved/node',
     })
   })
 
@@ -312,6 +313,23 @@ describe('createServerOptions', () => {
 
     expect(result).toBeUndefined()
     expect(channel.appendLine).toHaveBeenCalledOnce()
+  })
+})
+
+describe('getStartFailureMessage', () => {
+  test('explains how to configure Node.js when its executable is missing', () => {
+    const result = getStartFailureMessage(
+      new Error('Launching server using command node failed. Error: spawn node ENOENT'),
+    )
+
+    expect(result).toContain('Node.js was not found')
+    expect(result).toContain('astroDoctor.nodePath')
+  })
+
+  test('keeps the generic guidance for other startup failures', () => {
+    const result = getStartFailureMessage(new Error('connection closed'))
+
+    expect(result).toContain('astroDoctor.serverPath')
   })
 })
 
@@ -422,6 +440,7 @@ describe('configuration lifecycle', () => {
     const configuration = {
       get: vi.fn((key: string, defaultValue?: unknown) => {
         if (key === 'enable') return enabled
+        if (key === 'nodePath') return '/resolved/node'
         if (key === 'scanOnType') return scanOnType
         if (key === 'serverPath') return ''
 
