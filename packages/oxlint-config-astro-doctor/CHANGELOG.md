@@ -1,5 +1,7 @@
 # @santi020k/oxlint-config-astro-doctor
 
+## 1.2.0
+
 ## 1.1.0
 
 ### Patch Changes

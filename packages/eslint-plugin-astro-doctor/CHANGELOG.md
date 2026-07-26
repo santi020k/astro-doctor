@@ -1,5 +1,11 @@
 # @santi020k/eslint-plugin-astro-doctor
 
+## 1.2.0
+
+### Patch Changes
+
+- [#14](https://github.com/santi020k/astro-doctor/pull/14) [`b2f1dda`](https://github.com/santi020k/astro-doctor/commit/b2f1dda180897f5dd9db22b5f4194dd7c20b6eec) Thanks [@santi020k](https://github.com/santi020k)! - Restore Node.js 20 support with the compatible Astro parser and plugin line. Align the ESLint peer range with `@santi020k/eslint-config-basic` v2, include the accessibility plugin required by the `strict` preset, and derive deprecated upstream rules from plugin metadata so the `all` preset stays current.
+
 ## 1.1.0
 
 ### Minor Changes
