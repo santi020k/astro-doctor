@@ -27,6 +27,7 @@ describe('Astro Doctor configs', () => {
 
     expect(getAstroEcosystemRuleCount()).toBe(54)
     expect(activeAstroRuleIds).toHaveLength(54)
+    expect(rules['astro/no-omitted-end-tags']).toBeUndefined()
     expect(rules['astro/valid-compile']).toBeUndefined()
   })
 

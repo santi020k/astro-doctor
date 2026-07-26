@@ -30,7 +30,8 @@
   },
   "dependencies": {
     "astro-eslint-parser": "catalog:",
-    "eslint-plugin-astro": "catalog:"
+    "eslint-plugin-astro": "catalog:",
+    "eslint-plugin-jsx-a11y": "catalog:"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
@@ -41,7 +42,7 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "eslint": "catalog:"
+    "eslint": "^10.0.0"
   },
   "engines": {
     "node": "^22.22.3 || ^24.16.0 || >=26.3.0"

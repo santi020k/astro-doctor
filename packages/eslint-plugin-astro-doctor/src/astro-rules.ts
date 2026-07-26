@@ -6,10 +6,6 @@ import type { RuleCategory } from './types.js'
 export type AstroRulePreset = 'recommended' | 'strict' | 'ci' | 'all'
 export type RuleSeverity = 'error' | 'warn' | 'off'
 
-const DEPRECATED_ASTRO_RULE_IDS = new Set([
-  'astro/valid-compile',
-])
-
 const STRICT_ASTRO_RULE_IDS = [
   'astro/no-exports-from-components',
   'astro/no-prerender-export-outside-pages',
@@ -29,6 +25,14 @@ const ASTRO_DOCTOR_DUPLICATE_RULES: Record<string, string> = {
   'astro/jsx-a11y/html-has-lang': 'astro-doctor/no-missing-lang',
   'astro/no-set-html-directive': 'astro-doctor/no-set-html',
   'astro/prefer-class-list-directive': 'astro-doctor/prefer-class-list',
+}
+
+const isDeprecatedAstroRuleId = (ruleId: string): boolean => {
+  if (!ruleId.startsWith('astro/')) return false
+
+  const ruleName = ruleId.slice('astro/'.length)
+
+  return Boolean(astroPlugin.rules[ruleName]?.meta?.deprecated)
 }
 
 const normalizeRuleSeverity = (
@@ -52,7 +56,7 @@ const getFlatConfigRules = (
 
   for (const config of astroPlugin.configs[configName]) {
     for (const [ruleId, ruleEntry] of Object.entries(config.rules ?? {})) {
-      if (!ruleId.startsWith('astro/') || DEPRECATED_ASTRO_RULE_IDS.has(ruleId)) continue
+      if (!ruleId.startsWith('astro/') || isDeprecatedAstroRuleId(ruleId)) continue
 
       const severity = normalizeRuleSeverity(ruleEntry)
 
@@ -76,7 +80,7 @@ const getAllRules = (): Record<string, RuleSeverity> =>
   Object.fromEntries(
     Object.keys(astroPlugin.rules)
       .map((ruleName) => `astro/${ruleName}`)
-      .filter((ruleId) => !DEPRECATED_ASTRO_RULE_IDS.has(ruleId))
+      .filter((ruleId) => !isDeprecatedAstroRuleId(ruleId))
       .map((ruleId) => [ruleId, 'error']),
   )
 
@@ -139,7 +143,7 @@ export const getAstroRuleDescription = (ruleId: string): string | undefined => {
 export const getAstroEcosystemRuleDocs = (): Record<string, string> =>
   Object.fromEntries(
     Object.entries(astroPlugin.rules)
-      .filter(([ruleName]) => !DEPRECATED_ASTRO_RULE_IDS.has(`astro/${ruleName}`))
+      .filter(([ruleName]) => !isDeprecatedAstroRuleId(`astro/${ruleName}`))
       .map(([ruleName, rule]) => {
         const ruleId = `astro/${ruleName}`
         const category = getAstroRuleCategory(ruleId)?.replace('-', ' ') ?? 'best practices'

@@ -12,6 +12,10 @@ inputs:
     description: Minimum severity to fail the check (error | warning | off)
     required: false
     default: 'error'
+  min-score:
+    description: Minimum health score required to pass (0–100)
+    required: false
+    default: '0'
   comment:
     description: Post a sticky summary comment on pull requests (true | false)
     required: false
@@ -64,16 +68,11 @@ runs:
       shell: bash
       run: |
         BASE_SHA="${{ github.event.pull_request.base.sha }}"
-        CHANGED_FILES_FILE="${RUNNER_TEMP:-/tmp}/astro-doctor-changed-files.txt"
         WORKING_DIRECTORY="${{ inputs.working-directory }}"
+        CHANGED_FILES=$(git -C "$WORKING_DIRECTORY" diff --name-only --diff-filter=AMR --relative "$BASE_SHA"...HEAD)
 
-        git -C "$WORKING_DIRECTORY" diff --name-only --diff-filter=AMR --relative "$BASE_SHA"...HEAD \
-          | grep -E '(\.astro$|(^|/)astro\.config\.(ts|mjs|js|cjs|mts|cts)$|(^|/)package\.json$|(^|/)(package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|bun\.lock|bun\.lockb)$|(^|/)\.env\.example$|(^|/)src/content\.config\.(ts|mjs|js)$|(^|/)src/content/config\.(ts|mjs|js)$|(^|/)src/content/|(^|/)src/actions/)' \
-          > "$CHANGED_FILES_FILE" || true
-
-        echo "changed_files_from=$CHANGED_FILES_FILE" >> "$GITHUB_OUTPUT"
-        echo "is_pr=true" >> "$GITHUB_OUTPUT"
-        if [ ! -s "$CHANGED_FILES_FILE" ]; then
+        if ! grep -E '(\.astro$|(^|/)astro\.config\.(ts|mjs|js|cjs|mts|cts)$|(^|/)package\.json$|(^|/)(package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|bun\.lock|bun\.lockb)$|(^|/)\.env\.example$|(^|/)src/content\.config\.(ts|mjs|js)$|(^|/)src/content/config\.(ts|mjs|js)$|(^|/)src/content/|(^|/)src/actions/)' \
+          <<< "$CHANGED_FILES" > /dev/null; then
           echo "no_astro_changes=true" >> "$GITHUB_OUTPUT"
         fi
 
@@ -96,7 +95,7 @@ runs:
         DIR_FLAG=(--dir "${{ inputs.working-directory }}")
         CHANGED_FLAG=()
 
-        if [ "${{ steps.diff.outputs.is_pr }}" = "true" ] && [ "${{ inputs.diff-only }}" = "true" ]; then
+        if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ inputs.diff-only }}" = "true" ]; then
           CHANGED_FLAG=(--scope changed --base "${{ github.event.pull_request.base.sha }}")
         fi
 
@@ -173,7 +172,7 @@ runs:
         DIR_FLAG=(--dir "${{ inputs.working-directory }}")
         CHANGED_FLAG=()
 
-        if [ "${{ steps.diff.outputs.is_pr }}" = "true" ] && [ "${{ inputs.diff-only }}" = "true" ]; then
+        if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ inputs.diff-only }}" = "true" ]; then
           CHANGED_FLAG=(--scope changed --base "${{ github.event.pull_request.base.sha }}")
         fi
 
@@ -227,6 +226,8 @@ runs:
     - name: Post PR summary comment
       if: |
         github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        github.actor != 'dependabot[bot]' &&
         inputs.comment == 'true' &&
         steps.diff.outputs.no_astro_changes != 'true' &&
         steps.report.outputs.scan_failed != 'true'
@@ -237,7 +238,7 @@ runs:
           const report = JSON.parse(fs.readFileSync('/tmp/astro-doctor-report.json', 'utf8'))
 
           const scoreEmoji = { S: '🌟', A: '✅', B: '🟢', C: '🟡', D: '🟠', F: '🔴' }[report.scoreLabel] ?? '🟡'
-          const diffMode = '${{ steps.diff.outputs.is_pr }}' === 'true' && '${{ inputs.diff-only }}' === 'true'
+          const diffMode = '${{ github.event_name }}' === 'pull_request' && '${{ inputs.diff-only }}' === 'true'
           const scopeNote = diffMode ? ' _(introduced issues only)_' : ''
           const escapeCell = value => String(value)
             .replaceAll('|', '\\|')
@@ -301,11 +302,23 @@ runs:
         SCAN_STATUS="${{ steps.scan.outputs.exit_code || 1 }}"
         ERRORS=${{ steps.report.outputs.errors || 0 }}
         WARNINGS=${{ steps.report.outputs.warnings || 0 }}
+        SCORE=${{ steps.report.outputs.score || 100 }}
         FAIL_ON="${{ inputs.fail-on }}"
+        MIN_SCORE="${{ inputs.min-score }}"
 
         if [ "$SCAN_FAILED" = "true" ]; then
           echo "::error::Astro Doctor scan failed before writing a report."
           exit "$SCAN_STATUS"
+        fi
+
+        if ! [[ "$MIN_SCORE" =~ ^([0-9]|[1-9][0-9]|100)$ ]]; then
+          echo "::error::Invalid min-score '$MIN_SCORE'. Use an integer from 0 to 100."
+          exit 1
+        fi
+
+        if [ "$SCORE" -lt "$MIN_SCORE" ]; then
+          echo "::error::Astro Doctor score $SCORE/100 is below the minimum of $MIN_SCORE."
+          exit 1
         fi
 
         if [ "$FAIL_ON" = "error" ] && [ "$ERRORS" -gt 0 ]; then
