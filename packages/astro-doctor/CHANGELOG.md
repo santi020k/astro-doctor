@@ -1,5 +1,16 @@
 # @santi020k/astro-doctor
 
+## 1.2.0
+
+### Minor Changes
+
+- [#14](https://github.com/santi020k/astro-doctor/pull/14) [`b2f1dda`](https://github.com/santi020k/astro-doctor/commit/b2f1dda180897f5dd9db22b5f4194dd7c20b6eec) Thanks [@santi020k](https://github.com/santi020k)! - Make the GitHub Action skip comments for fork and Dependabot pull requests, add a native `min-score` quality gate, and remove its unused changed-files manifest.
+
+### Patch Changes
+
+- Updated dependencies [[`b2f1dda`](https://github.com/santi020k/astro-doctor/commit/b2f1dda180897f5dd9db22b5f4194dd7c20b6eec)]:
+  - @santi020k/eslint-plugin-astro-doctor@1.2.0
+
 ## 1.1.0
 
 ### Minor Changes
