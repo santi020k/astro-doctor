@@ -9,10 +9,12 @@
   "workspaces": {
 
     "packages/eslint-plugin-astro-doctor": {
+      "ignoreDependencies": ["@arethetypeswrong/cli"],
       "project": ["src/**/*.ts"]
     },
     "packages/astro-doctor": {
       "entry": ["bin/**/*.ts", "src/cli.ts"],
+      "ignoreDependencies": ["@arethetypeswrong/cli"],
       "project": ["src/**/*.ts", "bin/**/*.ts"]
     },
     "packages/vscode-astro-doctor": {

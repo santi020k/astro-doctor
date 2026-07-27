@@ -14,6 +14,11 @@ import { fileURLToPath } from 'node:url'
 const rootDirectory = dirname(dirname(fileURLToPath(import.meta.url)))
 const temporaryDirectory = mkdtempSync(join(tmpdir(), 'astro-doctor-packed-install-'))
 const tarballDirectory = join(temporaryDirectory, 'tarballs')
+const packageManagerExecutable = process.env.npm_execpath
+
+if (!packageManagerExecutable) {
+  throw new Error('This check must be run through pnpm')
+}
 
 const packageDirectories = [
   join(rootDirectory, 'packages/eslint-plugin-astro-doctor'),
@@ -23,17 +28,58 @@ const packageDirectories = [
 try {
   mkdirSync(tarballDirectory, { recursive: true })
 
+  const tarballsByPackage = new Map()
+
   for (const packageDirectory of packageDirectories) {
-    execFileSync('pnpm', ['pack', '--pack-destination', tarballDirectory], {
-      cwd: packageDirectory,
-      stdio: 'pipe',
-    })
+    const packageManifest = JSON.parse(
+      readFileSync(join(packageDirectory, 'package.json'), 'utf8'),
+    )
+
+    const existingTarballs = new Set(readdirSync(tarballDirectory))
+
+    execFileSync(
+      process.execPath,
+      [
+        packageManagerExecutable,
+        'pack',
+        '--pack-destination',
+        tarballDirectory,
+      ],
+      {
+        cwd: packageDirectory,
+        stdio: 'pipe',
+      },
+    )
+
+    const tarballName = readdirSync(tarballDirectory)
+      .find(fileName => !existingTarballs.has(fileName))
+
+    if (!tarballName) {
+      throw new Error(`pnpm pack did not create a tarball for ${packageManifest.name}`)
+    }
+
+    tarballsByPackage.set(
+      packageManifest.name,
+      join(tarballDirectory, tarballName),
+    )
   }
 
-  const tarballs = readdirSync(tarballDirectory)
-    .map((tarballName) => join(tarballDirectory, tarballName))
-
   const manifest = {
+    dependencies: Object.fromEntries(
+      [
+        ...[...tarballsByPackage]
+          .map(([packageName, tarball]) => [packageName, `file:${tarball}`]),
+        [
+          'eslint',
+          JSON.parse(
+            readFileSync(
+              join(rootDirectory, 'node_modules/eslint/package.json'),
+              'utf8',
+            ),
+          ).version,
+        ],
+      ],
+    ),
     name: 'astro-doctor-packed-install',
     private: true,
     type: 'module',
@@ -46,22 +92,18 @@ try {
   )
 
   execFileSync(
-    'pnpm',
+    process.execPath,
     [
-      'exec',
-      'npm',
+      packageManagerExecutable,
       'install',
-      '--engine-strict',
+      '--config.engine-strict=true',
       '--ignore-scripts',
-      '--no-audit',
-      '--no-fund',
-      '--no-package-lock',
-      '--strict-peer-deps',
-      ...tarballs,
+      '--no-lockfile',
+      '--strict-peer-dependencies',
     ],
     {
       cwd: temporaryDirectory,
-      stdio: 'pipe',
+      stdio: 'inherit',
     },
   )
 
