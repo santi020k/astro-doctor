@@ -64,23 +64,25 @@ try {
     )
   }
 
+  const tarballDependencies = Object.fromEntries(
+    [...tarballsByPackage]
+      .map(([packageName, tarball]) => [packageName, `file:${tarball}`]),
+  )
+
   const manifest = {
-    dependencies: Object.fromEntries(
-      [
-        ...[...tarballsByPackage]
-          .map(([packageName, tarball]) => [packageName, `file:${tarball}`]),
-        [
-          'eslint',
-          JSON.parse(
-            readFileSync(
-              join(rootDirectory, 'node_modules/eslint/package.json'),
-              'utf8',
-            ),
-          ).version,
-        ],
-      ],
-    ),
+    dependencies: {
+      ...tarballDependencies,
+      eslint: JSON.parse(
+        readFileSync(
+          join(rootDirectory, 'node_modules/eslint/package.json'),
+          'utf8',
+        ),
+      ).version,
+    },
     name: 'astro-doctor-packed-install',
+    pnpm: {
+      overrides: tarballDependencies,
+    },
     private: true,
     type: 'module',
     version: '0.0.0',
