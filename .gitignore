@@ -6,7 +6,7 @@ coverage
 .eslintcache
 .cspellcache
 .astro-doctor/cache
-apps/docs/.astro-doctor/cache
+apps/docs/.astro-doctor/*
 apps/docs/.astro/
 .env
 .env.local
