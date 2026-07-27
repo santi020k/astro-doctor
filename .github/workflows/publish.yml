@@ -17,6 +17,7 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: write
+      pull-requests: write
       id-token: write
 
     steps:
@@ -35,51 +36,21 @@ jobs:
           registry-url: https://registry.npmjs.org
           cache: pnpm
 
-      - name: Check release state
-        id: release_state
-        run: |
-          if find .changeset -maxdepth 1 -type f -name '*.md' ! -name 'README.md' -print -quit | grep -q .; then
-            echo "should_publish=true" >> "$GITHUB_OUTPUT"
-          elif [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
-            echo "should_publish=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "should_publish=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Install dependencies
-        if: steps.release_state.outputs.should_publish == 'true'
         run: pnpm install --frozen-lockfile
 
-      - name: Version packages
-        if: steps.release_state.outputs.should_publish == 'true'
-        run: pnpm run version-packages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Commit release artifacts
-        if: steps.release_state.outputs.should_publish == 'true'
-        run: |
-          if git diff --quiet; then
-            echo "No release artifacts to commit."
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add --all
-          git commit -m "chore(release): version packages"
-          git push origin HEAD:main
-
-      - name: Publish packages
-        if: steps.release_state.outputs.should_publish == 'true'
+      - name: Create release pull request or publish
         id: changesets
         uses: changesets/action@v1
         with:
           publish: pnpm run release
+          version: pnpm run version-packages
+          commit: "chore(release): version packages"
+          title: "chore(release): version packages"
           createGithubReleases: true
         env:
           HUSKY: 0
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PA_TOKEN || github.token }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
