@@ -30,7 +30,7 @@ jobs:
         uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22.x
           registry-url: https://registry.npmjs.org
@@ -41,7 +41,7 @@ jobs:
 
       - name: Create release pull request or publish
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@v2
         with:
           publish: pnpm run release
           version: pnpm run version-packages
