@@ -1,5 +1,11 @@
 # Astro Doctor for VS Code
 
+## 1.3.2
+
+### Patch Changes
+
+- [#32](https://github.com/santi020k/astro-doctor/pull/32) [`bc4a9f3`](https://github.com/santi020k/astro-doctor/commit/bc4a9f39857ee1b082dde382d2c6332319acd7e4) Thanks [@santi020k](https://github.com/santi020k)! - Match uppercase and mixed-case script tags when auditing ClientRouter lifecycle handlers.
+
 ## 1.3.1
 
 ### Patch Changes
