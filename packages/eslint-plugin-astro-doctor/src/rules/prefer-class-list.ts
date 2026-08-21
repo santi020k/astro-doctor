@@ -26,28 +26,28 @@ export default createRule({
         'Enforce class:list over template literals or string concatenation for dynamic class names',
       category: 'best-practices',
       recommended: true,
-      url: `${RULE_DOCS_BASE_URL}/prefer-class-list`,
+      url: `${RULE_DOCS_BASE_URL}/prefer-class-list`
     },
     messages: {
       preferClassList:
         'Use class:list={[...]} instead of template literals or string concatenation for dynamic class names. ' +
-        'class:list is more readable, supports objects for conditional classes, and is the Astro-idiomatic approach.',
+        'class:list is more readable, supports objects for conditional classes, and is the Astro-idiomatic approach.'
     },
-    schema: [],
+    schema: []
   },
   create(context) {
     if (!isAstroFile(context.filename)) return {}
 
     return {
       Program() {
-        forEachAstroAttribute(context, (attributeNode) => {
+        forEachAstroAttribute(context, attributeNode => {
           if (attributeNode.name !== CLASS_ATTRIBUTE_NAME) return
 
           if (!isDynamicClassExpression(attributeNode)) return
 
           reportAstroNode(context, attributeNode, 'preferClassList')
         })
-      },
+      }
     }
-  },
+  }
 })

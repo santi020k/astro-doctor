@@ -26,13 +26,13 @@ describe('runInit', () => {
     expect(result.created).toContain('doctor.config.ts')
     expect(result.created).toContain('eslint.config.js')
     expect(result.created).toContain('.github/workflows/astro-doctor.yml')
-    expect(readFileSync(join(testDirectory, 'doctor.config.ts'), 'utf8')).toContain("preset: 'ci'")
+    expect(readFileSync(join(testDirectory, 'doctor.config.ts'), 'utf8')).toContain('preset: \'ci\'')
   })
 
   test('accepts the all preset', () => {
     runInit(['--preset', 'all'], testDirectory)
 
-    expect(readFileSync(join(testDirectory, 'doctor.config.ts'), 'utf8')).toContain("preset: 'all'")
+    expect(readFileSync(join(testDirectory, 'doctor.config.ts'), 'utf8')).toContain('preset: \'all\'')
   })
 
   test('does not overwrite existing files', () => {

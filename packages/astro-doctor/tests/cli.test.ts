@@ -16,10 +16,10 @@ describe('runCli', () => {
     mkdirSync(testDirectory, { recursive: true })
     execFileSync('git', ['init'], { cwd: testDirectory })
     execFileSync('git', ['config', 'user.email', 'astro-doctor@example.com'], {
-      cwd: testDirectory,
+      cwd: testDirectory
     })
     execFileSync('git', ['config', 'user.name', 'Astro Doctor'], {
-      cwd: testDirectory,
+      cwd: testDirectory
     })
     process.exitCode = undefined
   })
@@ -38,7 +38,7 @@ describe('runCli', () => {
     execFileSync('git', ['commit', '-m', 'baseline'], { cwd: testDirectory })
     const baseRevision = execFileSync('git', ['rev-parse', 'HEAD'], {
       cwd: testDirectory,
-      encoding: 'utf8',
+      encoding: 'utf8'
     }).trim()
 
     writeFileSync(astroFilePath, '---\n---\n<img src="/hero.png" />')
@@ -56,7 +56,7 @@ describe('runCli', () => {
       baseRevision,
       '--json',
       '--fail-on',
-      'off',
+      'off'
     ])
 
     const report = JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0])) as JsonReport
@@ -71,10 +71,9 @@ describe('runCli', () => {
     const astroFilePath = join(projectDirectory, 'index.astro')
 
     mkdirSync(projectDirectory, { recursive: true })
-    writeFileSync(join(testDirectory, 'pnpm-workspace.yaml'), "packages:\n  - 'apps/*'\n")
+    writeFileSync(join(testDirectory, 'pnpm-workspace.yaml'), 'packages:\n  - \'apps/*\'\n')
     writeFileSync(
-      join(projectDirectory, 'package.json'),
-      JSON.stringify({ name: 'site', dependencies: { astro: '^7.0.0' } }),
+      join(projectDirectory, 'package.json'), JSON.stringify({ name: 'site', dependencies: { astro: '^7.0.0' } })
     )
     writeFileSync(astroFilePath, '---\n---\n<img src="/hero.png" alt="Hero" />')
     execFileSync('git', ['add', '.'], { cwd: testDirectory })
@@ -82,7 +81,7 @@ describe('runCli', () => {
 
     const baseRevision = execFileSync('git', ['rev-parse', 'HEAD'], {
       cwd: testDirectory,
-      encoding: 'utf8',
+      encoding: 'utf8'
     }).trim()
 
     writeFileSync(astroFilePath, '---\n---\n<img src="/hero.png" />')
@@ -100,7 +99,7 @@ describe('runCli', () => {
       baseRevision,
       '--json',
       '--fail-on',
-      'off',
+      'off'
     ])
 
     const report = JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0])) as JsonReport
@@ -114,15 +113,14 @@ describe('runCli', () => {
     const astroFilePath = join(testDirectory, 'index.astro')
 
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({
         overrides: [{
           files: ['index.astro'],
           rules: {
-            'astro-doctor/no-missing-alt': 'error',
-          },
-        }],
-      }),
+            'astro-doctor/no-missing-alt': 'error'
+          }
+        }]
+      })
     )
     writeFileSync(astroFilePath, '---\n---\n<img src="/hero.png" />')
     execFileSync('git', ['add', '.'], { cwd: testDirectory })
@@ -130,7 +128,7 @@ describe('runCli', () => {
 
     const baseRevision = execFileSync('git', ['rev-parse', 'HEAD'], {
       cwd: testDirectory,
-      encoding: 'utf8',
+      encoding: 'utf8'
     }).trim()
 
     writeFileSync(astroFilePath, '---\n---\n<img src="/hero.png" />\n')
@@ -148,7 +146,7 @@ describe('runCli', () => {
       baseRevision,
       '--json',
       '--fail-on',
-      'off',
+      'off'
     ])
 
     const report = JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0])) as JsonReport
@@ -161,21 +159,19 @@ describe('runCli', () => {
     const astroFilePath = join(projectDirectory, 'index.astro')
 
     mkdirSync(projectDirectory, { recursive: true })
-    writeFileSync(join(testDirectory, 'pnpm-workspace.yaml'), "packages:\n  - 'apps/*'\n")
+    writeFileSync(join(testDirectory, 'pnpm-workspace.yaml'), 'packages:\n  - \'apps/*\'\n')
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({
         overrides: [{
           files: ['index.astro'],
           rules: {
-            'astro-doctor/no-missing-alt': 'error',
-          },
-        }],
-      }),
+            'astro-doctor/no-missing-alt': 'error'
+          }
+        }]
+      })
     )
     writeFileSync(
-      join(projectDirectory, 'package.json'),
-      JSON.stringify({ name: 'site', dependencies: { astro: '^7.0.0' } }),
+      join(projectDirectory, 'package.json'), JSON.stringify({ name: 'site', dependencies: { astro: '^7.0.0' } })
     )
     writeFileSync(astroFilePath, '---\n---\n<img src="/hero.png" />')
     execFileSync('git', ['add', '.'], { cwd: testDirectory })
@@ -183,7 +179,7 @@ describe('runCli', () => {
 
     const baseRevision = execFileSync('git', ['rev-parse', 'HEAD'], {
       cwd: testDirectory,
-      encoding: 'utf8',
+      encoding: 'utf8'
     }).trim()
 
     writeFileSync(astroFilePath, '---\n---\n<img src="/hero.png" />\n')
@@ -201,7 +197,7 @@ describe('runCli', () => {
       baseRevision,
       '--json',
       '--fail-on',
-      'off',
+      'off'
     ])
 
     const report = JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0])) as JsonReport
@@ -227,7 +223,7 @@ describe('runCli', () => {
       changedFilesPath,
       '--json',
       '--fail-on',
-      'off',
+      'off'
     ])
 
     const report = JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0])) as JsonReport
@@ -236,16 +232,16 @@ describe('runCli', () => {
       expect.arrayContaining([
         expect.objectContaining({
           filePath: selectedFilePath,
-          ruleId: 'astro-doctor/no-missing-alt',
-        }),
-      ]),
+          ruleId: 'astro-doctor/no-missing-alt'
+        })
+      ])
     )
     expect(report.diagnostics).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          filePath: ignoredFilePath,
-        }),
-      ]),
+          filePath: ignoredFilePath
+        })
+      ])
     )
   })
 
@@ -256,7 +252,7 @@ describe('runCli', () => {
     [['--unknown'], 'Unknown option'],
     [['--dir'], 'requires a value'],
     [['init', '--unknown'], 'Unknown option'],
-    [['install', '--unknown'], 'Unknown option'],
+    [['install', '--unknown'], 'Unknown option']
   ])('rejects invalid arguments: %j', async (argumentsList, expectedMessage) => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(vi.fn())
 
@@ -280,11 +276,11 @@ describe('runCli', () => {
       '--dir',
       testDirectory,
       '--output',
-      baselineFilePath,
+      baselineFilePath
     ])
 
     expect(consoleLog).toHaveBeenCalledWith(
-      expect.stringContaining('Baseline written'),
+      expect.stringContaining('Baseline written')
     )
 
     consoleLog.mockClear()
@@ -296,7 +292,7 @@ describe('runCli', () => {
       baselineFilePath,
       '--json',
       '--fail-on',
-      'off',
+      'off'
     ])
 
     const report = JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0])) as JsonReport
@@ -306,8 +302,7 @@ describe('runCli', () => {
 
   test('emits clean SARIF to stdout', async () => {
     writeFileSync(
-      join(testDirectory, 'index.astro'),
-      '---\n---\n<img src="/hero.png" />',
+      join(testDirectory, 'index.astro'), '---\n---\n<img src="/hero.png" />'
     )
 
     const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())
@@ -318,7 +313,7 @@ describe('runCli', () => {
       '--format',
       'sarif',
       '--fail-on',
-      'off',
+      'off'
     ])
 
     expect(consoleLog).toHaveBeenCalledTimes(1)
@@ -334,8 +329,7 @@ describe('runCli', () => {
 
   test('accepts the all preset and runs all-only upstream rules', async () => {
     writeFileSync(
-      join(testDirectory, 'index.astro'),
-      '---\n---\n<div id="example" class="example">Content</div>',
+      join(testDirectory, 'index.astro'), '---\n---\n<div id="example" class="example">Content</div>'
     )
 
     const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())
@@ -347,7 +341,7 @@ describe('runCli', () => {
       'all',
       '--json',
       '--fail-on',
-      'off',
+      'off'
     ])
 
     const report = JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0])) as JsonReport
@@ -355,9 +349,9 @@ describe('runCli', () => {
     expect(report.diagnostics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          ruleId: 'astro/sort-attributes',
-        }),
-      ]),
+          ruleId: 'astro/sort-attributes'
+        })
+      ])
     )
   })
 })

@@ -5,7 +5,7 @@ import type { AstroDoctorRule } from '@santi020k/eslint-plugin-astro-doctor'
 import astroDoctorPlugin, {
   getAstroRuleCategory,
   getAstroRuleDescription,
-  getAstroRuleDocUrl,
+  getAstroRuleDocUrl
 } from '@santi020k/eslint-plugin-astro-doctor'
 
 import type { Diagnostic, ScanResult } from '../types.js'
@@ -71,14 +71,13 @@ export interface SarifReport {
 
 const normalizePath = (filePath: string): string => filePath.replaceAll('\\', '/')
 
-const createFingerprint = (diagnostic: Diagnostic, rootDirectory: string): string =>
-  createHash('sha256')
-    .update([
-      normalizePath(relative(rootDirectory, diagnostic.filePath)),
-      diagnostic.ruleId,
-      diagnostic.message,
-    ].join('\0'))
-    .digest('hex')
+const createFingerprint = (diagnostic: Diagnostic, rootDirectory: string): string => createHash('sha256')
+  .update([
+    normalizePath(relative(rootDirectory, diagnostic.filePath)),
+    diagnostic.ruleId,
+    diagnostic.message
+  ].join('\0'))
+  .digest('hex')
 
 const formatRule = (ruleId: string): SarifRule => {
   const ecosystemCategory = getAstroRuleCategory(ruleId)
@@ -92,45 +91,45 @@ const formatRule = (ruleId: string): SarifRule => {
     id: ruleId,
     name: shortName,
     shortDescription: {
-      text: ecosystemDescription ?? rule?.meta.docs.description ?? shortName,
+      text: ecosystemDescription ?? rule?.meta.docs.description ?? shortName
     },
     properties: {
-      category: ecosystemCategory ?? rule?.meta.docs.category ?? 'best-practices',
-    },
+      category: ecosystemCategory ?? rule?.meta.docs.category ?? 'best-practices'
+    }
   }
 
-  return helpUri === undefined
-    ? formattedRule
-    : { ...formattedRule, helpUri }
+  return helpUri === undefined ?
+    formattedRule :
+    { ...formattedRule, helpUri }
 }
 
 const formatResult = (diagnostic: Diagnostic, rootDirectory: string): SarifResult => ({
   ruleId: diagnostic.ruleId,
   level: diagnostic.severity,
   message: {
-    text: diagnostic.message,
+    text: diagnostic.message
   },
   locations: [{
     physicalLocation: {
       artifactLocation: {
-        uri: normalizePath(relative(rootDirectory, diagnostic.filePath)),
+        uri: normalizePath(relative(rootDirectory, diagnostic.filePath))
       },
       region: {
         startLine: diagnostic.line,
-        startColumn: diagnostic.column,
-      },
-    },
+        startColumn: diagnostic.column
+      }
+    }
   }],
   partialFingerprints: {
-    astroDoctorFingerprint: createFingerprint(diagnostic, rootDirectory),
-  },
+    astroDoctorFingerprint: createFingerprint(diagnostic, rootDirectory)
+  }
 })
 
 export const formatSarifReport = (
   result: ScanResult,
-  rootDirectory: string,
+  rootDirectory: string
 ): SarifReport => {
-  const ruleIds = [...new Set(result.diagnostics.map((diagnostic) => diagnostic.ruleId))].sort()
+  const ruleIds = [...new Set(result.diagnostics.map(diagnostic => diagnostic.ruleId))].sort()
 
   return {
     $schema: SARIF_SCHEMA_URL,
@@ -141,18 +140,19 @@ export const formatSarifReport = (
           name: 'Astro Doctor',
           version: getPackageVersion(),
           informationUri: 'https://doctor.santi020k.com',
-          rules: ruleIds.map(formatRule),
-        },
+          rules: ruleIds.map(formatRule)
+        }
       },
-      results: result.diagnostics.map((diagnostic) => formatResult(diagnostic, rootDirectory)),
+      results: result.diagnostics.map(diagnostic => formatResult(diagnostic, rootDirectory)),
       properties: {
         score: result.score,
         scoreLabel: result.scoreLabel,
-        fileCount: result.fileCount,
-      },
-    }],
+        fileCount: result.fileCount
+      }
+    }]
   }
 }
 
-export const serializeSarifReport = (report: SarifReport, compact: boolean): string =>
-  compact ? JSON.stringify(report) : JSON.stringify(report, null, 2)
+export const serializeSarifReport = (
+  report: SarifReport, compact: boolean
+): string => compact ? JSON.stringify(report) : JSON.stringify(report, null, 2)

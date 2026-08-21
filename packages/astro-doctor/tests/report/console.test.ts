@@ -1,4 +1,4 @@
-import {describe, expect, test } from 'vitest'
+import { describe, expect, test } from 'vitest'
 
 import { formatConsoleReport, formatProjectScoreTable, formatScoreOnly } from '../../src/report/console.js'
 import type { Diagnostic, ProjectScanResult, ScanResult } from '../../src/types.js'
@@ -11,7 +11,7 @@ const makeDiagnostic = (overrides: Partial<Diagnostic> = {}): Diagnostic => ({
   line: 5,
   column: 1,
   category: 'performance',
-  ...overrides,
+  ...overrides
 })
 
 const makeScanResult = (overrides: Partial<ScanResult> = {}): ScanResult => ({
@@ -25,9 +25,9 @@ const makeScanResult = (overrides: Partial<ScanResult> = {}): ScanResult => ({
     performance: 100,
     accessibility: 100,
     security: 100,
-    'best-practices': 100,
+    'best-practices': 100
   },
-  ...overrides,
+  ...overrides
 })
 
 describe('formatConsoleReport', () => {
@@ -64,7 +64,7 @@ describe('formatConsoleReport', () => {
   test('shows a summary with total counts', () => {
     const diagnostics: Diagnostic[] = [
       makeDiagnostic({ severity: 'error' }),
-      makeDiagnostic({ severity: 'warning' }),
+      makeDiagnostic({ severity: 'warning' })
     ]
     const output = formatConsoleReport(
       makeScanResult({ diagnostics, errorCount: 1, warningCount: 1, fileCount: 2 })
@@ -100,7 +100,7 @@ const makeProject = (overrides: Partial<ProjectScanResult> = {}): ProjectScanRes
   score: 100,
   scoreLabel: 'S',
   scoreBreakdown: { performance: 100, accessibility: 100, security: 100, 'best-practices': 100 },
-  ...overrides,
+  ...overrides
 })
 
 describe('formatScoreOnly', () => {
@@ -109,12 +109,12 @@ describe('formatScoreOnly', () => {
     expect(result).toBe('95')
   })
 
-  test("returns '0' for score 0", () => {
+  test('returns \'0\' for score 0', () => {
     const result = formatScoreOnly(makeScanResult({ score: 0 }))
     expect(result).toBe('0')
   })
 
-  test("returns '100' for score 100", () => {
+  test('returns \'100\' for score 100', () => {
     const result = formatScoreOnly(makeScanResult({ score: 100 }))
     expect(result).toBe('100')
   })
@@ -124,10 +124,7 @@ describe('formatConsoleReport with verbose mode', () => {
   test('includes "Rule summary" in output when verbose=true with diagnostics', () => {
     const diagnostic = makeDiagnostic()
     const output = formatConsoleReport(
-      makeScanResult({ diagnostics: [diagnostic], warningCount: 1 }),
-      process.cwd(),
-      true,
-      true,
+      makeScanResult({ diagnostics: [diagnostic], warningCount: 1 }), process.cwd(), true, true
     )
     expect(output).toContain('Rule summary')
   })
@@ -135,10 +132,7 @@ describe('formatConsoleReport with verbose mode', () => {
   test('marks rules with issues with ✖ count', () => {
     const diagnostic = makeDiagnostic({ ruleId: 'astro-doctor/use-astro-image' })
     const output = formatConsoleReport(
-      makeScanResult({ diagnostics: [diagnostic], warningCount: 1 }),
-      process.cwd(),
-      true,
-      true,
+      makeScanResult({ diagnostics: [diagnostic], warningCount: 1 }), process.cwd(), true, true
     )
     expect(output).toContain('✖')
   })
@@ -146,20 +140,14 @@ describe('formatConsoleReport with verbose mode', () => {
   test('marks rules with no issues with ✔', () => {
     const diagnostic = makeDiagnostic({ ruleId: 'astro-doctor/use-astro-image' })
     const output = formatConsoleReport(
-      makeScanResult({ diagnostics: [diagnostic], warningCount: 1 }),
-      process.cwd(),
-      true,
-      true,
+      makeScanResult({ diagnostics: [diagnostic], warningCount: 1 }), process.cwd(), true, true
     )
     expect(output).toContain('✔')
   })
 
   test('verbose mode works when there are no diagnostics (shows all rules as ✔)', () => {
     const output = formatConsoleReport(
-      makeScanResult({ diagnostics: [] }),
-      process.cwd(),
-      true,
-      true,
+      makeScanResult({ diagnostics: [] }), process.cwd(), true, true
     )
     expect(output).toContain('Rule summary')
     expect(output).toContain('✔')
@@ -185,25 +173,25 @@ describe('formatProjectScoreTable', () => {
     expect(result).toContain('90/100')
   })
 
-  test("includes 'aggregate' line", () => {
+  test('includes \'aggregate\' line', () => {
     const project = makeProject({ name: 'my-app' })
     const result = formatProjectScoreTable([project], makeScanResult(), true)
     expect(result).toContain('aggregate')
   })
 
-  test("shows 'no issues' for project with 0 errors and warnings", () => {
+  test('shows \'no issues\' for project with 0 errors and warnings', () => {
     const project = makeProject({ errorCount: 0, warningCount: 0 })
     const result = formatProjectScoreTable([project], makeScanResult(), true)
     expect(result).toContain('no issues')
   })
 
-  test("shows issue count for project with issues ('5 issues' when errorCount=3+warningCount=2)", () => {
+  test('shows issue count for project with issues (\'5 issues\' when errorCount=3+warningCount=2)', () => {
     const project = makeProject({ errorCount: 3, warningCount: 2, score: 70, scoreLabel: 'C' })
     const result = formatProjectScoreTable([project], makeScanResult({ score: 70, scoreLabel: 'C' }), true)
     expect(result).toContain('5 issues')
   })
 
-  test("handles single issue ('1 issue') for singular form", () => {
+  test('handles single issue (\'1 issue\') for singular form', () => {
     const project = makeProject({ errorCount: 1, warningCount: 0, score: 80, scoreLabel: 'B' })
     const result = formatProjectScoreTable([project], makeScanResult({ score: 80, scoreLabel: 'B' }), true)
     expect(result).toContain('1 issue')

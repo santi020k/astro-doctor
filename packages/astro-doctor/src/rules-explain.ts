@@ -14,7 +14,7 @@ const RULE_DETAILS: Record<string, {
     why: 'A <script src="..."> without defer, async, or type="module" blocks the HTML parser. The browser stops building the DOM until the script is downloaded, parsed, and executed — directly harming Time to Interactive.',
     bad: '<script src="/analytics.js"></script>',
     good: '<script src="/analytics.js" defer></script>\n<!-- or -->\n<script src="/analytics.js" type="module"></script>',
-    docs: 'https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script#defer',
+    docs: 'https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script#defer'
   },
   'no-client-load-overuse': {
     category: 'performance',
@@ -22,7 +22,7 @@ const RULE_DETAILS: Record<string, {
     why: 'client:load hydrates every matching component immediately at page load, sending JavaScript to the browser even for components the user may never interact with. Overuse defeats Astro\'s islands architecture.',
     bad: '<HeavyWidget client:load />\n<Sidebar client:load />\n<Footer client:load />',
     good: '<HeavyWidget client:idle />\n<Sidebar client:visible />\n<!-- Only truly critical UI should use client:load -->',
-    docs: 'https://docs.astro.build/en/reference/directives-reference/#client-directives',
+    docs: 'https://docs.astro.build/en/reference/directives-reference/#client-directives'
   },
   'use-astro-image': {
     category: 'performance',
@@ -30,7 +30,7 @@ const RULE_DETAILS: Record<string, {
     why: 'Raw <img> tags bypass Astro\'s image optimization. astro:assets generates modern formats (WebP/AVIF), compresses images, infers dimensions to prevent layout shift, and lazy-loads by default.',
     bad: '<img src="/hero.png" alt="Hero" />',
     good: 'import heroImage from \'../assets/hero.png\'\n---\n<Image src={heroImage} alt="Hero" />',
-    docs: 'https://docs.astro.build/en/guides/images/',
+    docs: 'https://docs.astro.build/en/guides/images/'
   },
   'require-image-dimensions': {
     category: 'performance',
@@ -38,7 +38,7 @@ const RULE_DETAILS: Record<string, {
     why: 'Astro can infer dimensions for imported src/ images, but public and remote string sources need width and height or inferSize. Without dimensions, the page can shift when images load.',
     bad: '<Image src="/hero.png" alt="Hero" />',
     good: '<Image src="/hero.png" alt="Hero" width="1200" height="630" />\n<Image src="https://cdn.example.com/hero.png" alt="Hero" inferSize />',
-    docs: 'https://docs.astro.build/en/reference/modules/astro-assets/#width-and-height-required-for-images-in-public',
+    docs: 'https://docs.astro.build/en/reference/modules/astro-assets/#width-and-height-required-for-images-in-public'
   },
   'no-unprocessed-script-surprises': {
     category: 'performance',
@@ -46,7 +46,7 @@ const RULE_DETAILS: Record<string, {
     why: 'Astro processes scripts with no attributes other than src. Extra attributes or is:inline opt out of bundling, TypeScript processing, deduplication, and optimization.',
     bad: '<script type="module">console.log("raw")</script>',
     good: '<script>console.log("processed by Astro")</script>',
-    docs: 'https://docs.astro.build/en/guides/client-side-scripts/#script-processing',
+    docs: 'https://docs.astro.build/en/guides/client-side-scripts/#script-processing'
   },
   'no-missing-alt': {
     category: 'accessibility',
@@ -54,7 +54,7 @@ const RULE_DETAILS: Record<string, {
     why: 'Images without alt text are invisible to screen readers. This violates WCAG 2.1 Success Criterion 1.1.1 (Level A) and breaks accessibility for blind users. Search engines also rely on alt text to understand image content.',
     bad: '<img src="/logo.png" />',
     good: '<img src="/logo.png" alt="Company logo" />\n<!-- Decorative images: -->\n<img src="/divider.png" alt="" role="presentation" />',
-    docs: 'https://www.w3.org/WAI/tutorials/images/',
+    docs: 'https://www.w3.org/WAI/tutorials/images/'
   },
   'no-missing-lang': {
     category: 'accessibility',
@@ -62,7 +62,7 @@ const RULE_DETAILS: Record<string, {
     why: 'Without a lang attribute on <html>, screen readers pick a language at random, often reading content in the wrong accent or voice. It also confuses browser translation features and search engine language detection.',
     bad: '<html>\n  <head>...</head>\n</html>',
     good: '<html lang="en">\n  <head>...</head>\n</html>',
-    docs: 'https://www.w3.org/International/questions/qa-html-language-declarations',
+    docs: 'https://www.w3.org/International/questions/qa-html-language-declarations'
   },
   'require-island-fallback': {
     category: 'accessibility',
@@ -70,7 +70,7 @@ const RULE_DETAILS: Record<string, {
     why: 'client:only skips SSR and server:defer renders later on demand. Fallback content gives users useful initial UI instead of an empty region.',
     bad: '<Chart client:only="react" />',
     good: '<Chart client:only="react">\n  <div slot="fallback">Loading chart...</div>\n</Chart>',
-    docs: 'https://docs.astro.build/en/reference/directives-reference/#clientonly',
+    docs: 'https://docs.astro.build/en/reference/directives-reference/#clientonly'
   },
   'no-set-html': {
     category: 'security',
@@ -78,7 +78,7 @@ const RULE_DETAILS: Record<string, {
     why: 'set:html injects raw HTML without escaping. If any part of that HTML comes from user input or an external API, it becomes a Cross-Site Scripting (XSS) vector. Attackers can steal session tokens, redirect users, or execute arbitrary code.',
     bad: '<div set:html={userProvidedContent} />',
     good: '<!-- Option 1: Sanitize with DOMPurify before use -->\n<div set:html={DOMPurify.sanitize(userContent)} />\n<!-- Option 2: Render as text instead -->\n<div>{userContent}</div>',
-    docs: 'https://docs.astro.build/en/reference/directives-reference/#sethtml',
+    docs: 'https://docs.astro.build/en/reference/directives-reference/#sethtml'
   },
   'no-public-secret-env': {
     category: 'security',
@@ -86,7 +86,7 @@ const RULE_DETAILS: Record<string, {
     why: 'Astro exposes PUBLIC_ variables to browser code. Secret-looking names such as PUBLIC_TOKEN, PUBLIC_SECRET, PUBLIC_PASSWORD, or PUBLIC_API_KEY usually indicate accidental exposure.',
     bad: 'const apiKey = import.meta.env.PUBLIC_API_KEY',
     good: 'const apiKey = import.meta.env.API_KEY\nconst apiUrl = import.meta.env.PUBLIC_API_URL',
-    docs: 'https://docs.astro.build/en/guides/environment-variables/',
+    docs: 'https://docs.astro.build/en/guides/environment-variables/'
   },
   'no-insecure-session-cookie': {
     category: 'security',
@@ -94,7 +94,7 @@ const RULE_DETAILS: Record<string, {
     why: 'Astro session cookies are secure, HTTP-only, and same-site by default. Explicitly disabling those protections can expose session identifiers to scripts, insecure transport, or cross-site requests.',
     bad: 'session: { cookie: { secure: false, httpOnly: false, sameSite: false } }',
     good: 'session: { cookie: { secure: true, httpOnly: true, sameSite: "lax" } }',
-    docs: 'https://docs.astro.build/en/reference/configuration-reference/#sessioncookie',
+    docs: 'https://docs.astro.build/en/reference/configuration-reference/#sessioncookie'
   },
   'require-action-input-schema': {
     category: 'security',
@@ -102,15 +102,15 @@ const RULE_DETAILS: Record<string, {
     why: 'Astro Actions are public endpoints. An input schema validates untrusted request data before it reaches the action handler and provides typed handler input.',
     bad: 'defineAction({ handler: async (input) => save(input) })',
     good: 'defineAction({ input: z.object({ name: z.string() }), handler: async ({ name }) => save(name) })',
-    docs: 'https://docs.astro.build/en/guides/actions/#define-actions',
+    docs: 'https://docs.astro.build/en/guides/actions/#define-actions'
   },
   'require-client-router-script-lifecycle': {
     category: 'best-practices',
     severity: 'warning',
     why: 'ClientRouter navigation does not reload the document, so DOMContentLoaded only initializes the first page. Astro provides astro:page-load for initialization after every navigation.',
-    bad: "document.addEventListener('DOMContentLoaded', initialize)",
-    good: "document.addEventListener('astro:page-load', initialize)",
-    docs: 'https://docs.astro.build/en/guides/view-transitions/#script-behavior-with-view-transitions',
+    bad: 'document.addEventListener(\'DOMContentLoaded\', initialize)',
+    good: 'document.addEventListener(\'astro:page-load\', initialize)',
+    docs: 'https://docs.astro.build/en/guides/view-transitions/#script-behavior-with-view-transitions'
   },
   'no-process-env': {
     category: 'best-practices',
@@ -118,7 +118,7 @@ const RULE_DETAILS: Record<string, {
     why: 'process.env is a Node.js-only API. In Astro, components may run in edge runtimes, Deno, or client-side contexts where process is undefined. It also bypasses Astro\'s type-safe env validation.',
     bad: 'const apiKey = process.env.MY_API_KEY',
     good: 'const apiKey = import.meta.env.MY_API_KEY\n// Or with the env schema in astro.config.*:  \nimport { MY_API_KEY } from "astro:env/server"',
-    docs: 'https://docs.astro.build/en/guides/environment-variables/',
+    docs: 'https://docs.astro.build/en/guides/environment-variables/'
   },
   'prefer-class-list': {
     category: 'best-practices',
@@ -126,7 +126,7 @@ const RULE_DETAILS: Record<string, {
     why: 'String concatenation for class names is fragile — extra spaces, missing conditionals, and undefined values cause bugs. class:list handles arrays, objects, and conditional class names cleanly and is the Astro idiom.',
     bad: '<div class={`btn ${isActive ? "active" : ""} ${variant}`} />',
     good: '<div class:list={["btn", { active: isActive }, variant]} />',
-    docs: 'https://docs.astro.build/en/reference/directives-reference/#classlist',
+    docs: 'https://docs.astro.build/en/reference/directives-reference/#classlist'
   },
   'prefer-content-collections': {
     category: 'best-practices',
@@ -134,8 +134,8 @@ const RULE_DETAILS: Record<string, {
     why: 'Astro.glob() and content-focused import.meta.glob() return untyped content data. Content Collections are fully type-safe with schemas, validated at build time, and faster.',
     bad: 'const posts = await Astro.glob("../content/posts/*.md")\nconst pages = import.meta.glob("../content/pages/*.md")',
     good: 'import { getCollection } from "astro:content"\nconst posts = await getCollection("posts")',
-    docs: 'https://docs.astro.build/en/guides/content-collections/',
-  },
+    docs: 'https://docs.astro.build/en/guides/content-collections/'
+  }
 }
 
 const listAllRules = (): void => {
@@ -196,9 +196,9 @@ const explainRule = (ruleId: string): void => {
 
   console.log(`Why this matters:\n  ${detail.why}\n`)
 
-  console.log(`Bad:\n${detail.bad.split('\n').map((l) => `  ${l}`).join('\n')}\n`)
+  console.log(`Bad:\n${detail.bad.split('\n').map(l => `  ${l}`).join('\n')}\n`)
 
-  console.log(`Good:\n${detail.good.split('\n').map((l) => `  ${l}`).join('\n')}\n`)
+  console.log(`Good:\n${detail.good.split('\n').map(l => `  ${l}`).join('\n')}\n`)
 
   if (detail.docs) {
     console.log(`Docs: ${detail.docs}\n`)

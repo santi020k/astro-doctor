@@ -11,9 +11,9 @@ const ruleTester = new RuleTester({
   languageOptions: {
     parser: astroParser,
     parserOptions: {
-      sourceType: 'module',
-    },
-  },
+      sourceType: 'module'
+    }
+  }
 })
 
 ruleTester.run('prefer-class-list', rule, {
@@ -24,25 +24,25 @@ ruleTester.run('prefer-class-list', rule, {
         '---',
         'const isActive = true',
         '---',
-        '<div class:list={["btn", { active: isActive }]} />',
+        '<div class:list={["btn", { active: isActive }]} />'
       ].join('\n'),
-      filename: 'test.astro',
+      filename: 'test.astro'
     },
     // Static class string is fine
     {
-      code: `---\n---\n<div class="container mx-auto" />`,
-      filename: 'test.astro',
+      code: '---\n---\n<div class="container mx-auto" />',
+      filename: 'test.astro'
     },
     // Class expression with a single variable is fine (simple dynamic class)
     {
-      code: `---\nconst cls = 'active'\n---\n<div class={cls} />`,
-      filename: 'test.astro',
+      code: '---\nconst cls = \'active\'\n---\n<div class={cls} />',
+      filename: 'test.astro'
     },
     // Non-astro files are ignored
     {
       code: 'const cls = `btn ${isActive ? "active" : ""}`',
-      filename: 'test.ts',
-    },
+      filename: 'test.ts'
+    }
   ],
   invalid: [
     // Template literal with conditional in class — use class:list instead
@@ -51,10 +51,10 @@ ruleTester.run('prefer-class-list', rule, {
         '---',
         'const isActive = true',
         '---',
-        '<div class={`btn ${isActive ? "active" : ""}`} />',
+        '<div class={`btn ${isActive ? "active" : ""}`} />'
       ].join('\n'),
       filename: 'test.astro',
-      errors: [{ messageId: 'preferClassList' }],
+      errors: [{ messageId: 'preferClassList' }]
     },
     // String concatenation for class — use class:list instead
     {
@@ -62,10 +62,10 @@ ruleTester.run('prefer-class-list', rule, {
         '---',
         'const isActive = true',
         '---',
-        '<div class={"btn " + (isActive ? "active" : "")} />',
+        '<div class={"btn " + (isActive ? "active" : "")} />'
       ].join('\n'),
       filename: 'test.astro',
-      errors: [{ messageId: 'preferClassList' }],
+      errors: [{ messageId: 'preferClassList' }]
     },
     // Multiple elements with dynamic class strings
     {
@@ -75,10 +75,10 @@ ruleTester.run('prefer-class-list', rule, {
         'const isActive = true',
         '---',
         '<nav class={`nav ${isOpen ? "open" : ""}`} />',
-        '<button class={`btn ${isActive ? "active" : ""}`} />',
+        '<button class={`btn ${isActive ? "active" : ""}`} />'
       ].join('\n'),
       filename: 'test.astro',
-      errors: [{ messageId: 'preferClassList' }, { messageId: 'preferClassList' }],
-    },
-  ],
+      errors: [{ messageId: 'preferClassList' }, { messageId: 'preferClassList' }]
+    }
+  ]
 })

@@ -11,74 +11,74 @@ const ruleTester = new RuleTester({
   languageOptions: {
     parser: astroParser,
     parserOptions: {
-      sourceType: 'module',
-    },
-  },
+      sourceType: 'module'
+    }
+  }
 })
 
 ruleTester.run('no-set-html', rule, {
   valid: [
     // No set:html — safe
     {
-      code: `---\nconst message = '<b>Hello</b>'\n---\n<p>{message}</p>`,
-      filename: 'test.astro',
+      code: '---\nconst message = \'<b>Hello</b>\'\n---\n<p>{message}</p>',
+      filename: 'test.astro'
     },
     // set:text is safe
     {
-      code: `---\nconst text = 'Hello World'\n---\n<p set:text={text} />`,
-      filename: 'test.astro',
+      code: '---\nconst text = \'Hello World\'\n---\n<p set:text={text} />',
+      filename: 'test.astro'
     },
     // Static string content is safe
     {
-      code: `---\n---\n<p>Static content</p>`,
-      filename: 'test.astro',
+      code: '---\n---\n<p>Static content</p>',
+      filename: 'test.astro'
     },
     {
-      code: `---\nconst structuredData = JSON.stringify({ '@context': 'https://schema.org' })\n---\n<script type="application/ld+json" set:html={structuredData}></script>`,
-      filename: 'test.astro',
+      code: '---\nconst structuredData = JSON.stringify({ \'@context\': \'https://schema.org\' })\n---\n<script type="application/ld+json" set:html={structuredData}></script>',
+      filename: 'test.astro'
     },
     // Non-astro files are ignored
     {
-      code: `element.innerHTML = userInput`,
-      filename: 'test.ts',
-    },
+      code: 'element.innerHTML = userInput',
+      filename: 'test.ts'
+    }
   ],
   invalid: [
     // set:html with a dynamic expression — XSS risk
     {
-      code: `---\nconst html = await fetchContent()\n---\n<div set:html={html} />`,
+      code: '---\nconst html = await fetchContent()\n---\n<div set:html={html} />',
       filename: 'test.astro',
-      errors: [{ messageId: 'dangerousHtml' }],
+      errors: [{ messageId: 'dangerousHtml' }]
     },
     // set:html with a static string literal is still flagged (educate the user)
     {
-      code: `---\n---\n<p set:html="<b>Bold</b>" />`,
+      code: '---\n---\n<p set:html="<b>Bold</b>" />',
       filename: 'test.astro',
-      errors: [{ messageId: 'dangerousHtml' }],
+      errors: [{ messageId: 'dangerousHtml' }]
     },
     // set:html on any element
     {
-      code: `---\nconst body = '<p>content</p>'\n---\n<article set:html={body} />`,
+      code: '---\nconst body = \'<p>content</p>\'\n---\n<article set:html={body} />',
       filename: 'test.astro',
-      errors: [{ messageId: 'dangerousHtml' }],
+      errors: [{ messageId: 'dangerousHtml' }]
     },
     {
-      code: `---\nconst body = '<p>content</p>'\n---\n<script type="text/html" set:html={body}></script>`,
+      code: '---\nconst body = \'<p>content</p>\'\n---\n<script type="text/html" set:html={body}></script>',
       filename: 'test.astro',
-      errors: [{ messageId: 'dangerousHtml' }],
+      errors: [{ messageId: 'dangerousHtml' }]
     },
     // Multiple set:html usages
     {
       code: [
         '---',
-        "const a = '<b>A</b>'",
-        "const b = '<i>B</i>'",
+        'const a = \'<b>A</b>\'',
+        'const b = \'<i>B</i>\'',
         '---',
         '<div set:html={a} />',
-        '<span set:html={b} />',
+        '<span set:html={b} />'
       ].join('\n'),
       filename: 'test.astro',
-      errors: [{ messageId: 'dangerousHtml' }, { messageId: 'dangerousHtml' }],
-    },
-  ],
+      errors: [{ messageId: 'dangerousHtml' }, { messageId: 'dangerousHtml' }]
+    }
+  ]
 })

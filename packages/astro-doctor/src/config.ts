@@ -13,32 +13,25 @@ const CONFIG_FILE_NAMES = [
   'doctor.config.mjs',
   'doctor.config.cjs',
   'doctor.config.json',
-  'doctor.config.jsonc',
+  'doctor.config.jsonc'
 ] as const
 
 const jiti = createJiti(import.meta.url)
-
-const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value)
-
+const isPlainObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
 const VALID_FAIL_ON = new Set(['error', 'warning', 'off'])
 const VALID_RULE_VALUES = new Set(['error', 'warn', 'off'])
-
-const isFailOnValue = (value: unknown): value is NonNullable<AstroDoctorConfig['failOn']> =>
-  typeof value === 'string' && VALID_FAIL_ON.has(value)
+const isFailOnValue = (value: unknown): value is NonNullable<AstroDoctorConfig['failOn']> => typeof value === 'string' && VALID_FAIL_ON.has(value)
 
 const isRuleSeverity = (
-  value: unknown,
-): value is NonNullable<AstroDoctorConfig['rules']>[string] =>
-  typeof value === 'string' && VALID_RULE_VALUES.has(value)
+  value: unknown
+): value is NonNullable<AstroDoctorConfig['rules']>[string] => typeof value === 'string' && VALID_RULE_VALUES.has(value)
 
-const isStringArray = (value: unknown): value is string[] =>
-  Array.isArray(value) && value.every((item) => typeof item === 'string')
+const isStringArray = (value: unknown): value is string[] => Array.isArray(value) && value.every(item => typeof item === 'string')
 
 const isRulesConfig = (value: unknown): value is NonNullable<AstroDoctorConfig['rules']> => {
   if (!isPlainObject(value)) return false
 
-  return Object.values(value).every((ruleValue) => isRuleSeverity(ruleValue))
+  return Object.values(value).every(ruleValue => isRuleSeverity(ruleValue))
 }
 
 const describeConfigValue = (value: unknown): string => {
@@ -59,7 +52,7 @@ const validateFailOn = (failOn: unknown): AstroDoctorConfig['failOn'] => {
   if (isFailOnValue(failOn)) return failOn
 
   throw new Error(
-    `Invalid failOn value "${describeConfigValue(failOn)}". Expected "error", "warning", or "off".`,
+    `Invalid failOn value "${describeConfigValue(failOn)}". Expected "error", "warning", or "off".`
   )
 }
 
@@ -69,7 +62,7 @@ const validatePreset = (preset: unknown): AstroDoctorConfig['preset'] => {
   if (isPresetName(preset)) return preset
 
   throw new Error(
-    `Invalid preset value "${describeConfigValue(preset)}". Expected "recommended", "strict", "ci", or "all".`,
+    `Invalid preset value "${describeConfigValue(preset)}". Expected "recommended", "strict", "ci", or "all".`
   )
 }
 
@@ -78,7 +71,7 @@ const validateThreshold = (threshold: unknown): AstroDoctorConfig['threshold'] =
 
   if (typeof threshold !== 'number' || !Number.isFinite(threshold)) {
     throw new TypeError(
-      `Invalid threshold: expected a number 0–100, got "${describeConfigValue(threshold)}".`,
+      `Invalid threshold: expected a number 0–100, got "${describeConfigValue(threshold)}".`
     )
   }
 
@@ -115,7 +108,7 @@ const validateRules = (rules: unknown): AstroDoctorConfig['rules'] => {
   for (const [ruleId, ruleValue] of Object.entries(rules)) {
     if (!isRuleSeverity(ruleValue)) {
       throw new Error(
-        `Invalid rule value for "${ruleId}": "${describeConfigValue(ruleValue)}". Expected "error", "warn", or "off".`,
+        `Invalid rule value for "${ruleId}": "${describeConfigValue(ruleValue)}". Expected "error", "warn", or "off".`
       )
     }
   }
@@ -147,7 +140,7 @@ const validateOverrides = (overrides: unknown): AstroDoctorConfig['overrides'] =
 
     return {
       files: override.files,
-      rules,
+      rules
     }
   })
 }
@@ -168,7 +161,7 @@ const validateConfig = (config: Record<string, unknown>): AstroDoctorConfig => {
     ...(ignore === undefined ? {} : { ignore }),
     ...(rules === undefined || !isRulesConfig(rules) ? {} : { rules }),
     ...(overrides === undefined ? {} : { overrides }),
-    ...(projects === undefined ? {} : { projects }),
+    ...(projects === undefined ? {} : { projects })
   }
 }
 

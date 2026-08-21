@@ -67,7 +67,7 @@ describe('multi-project', () => {
         warningCount: 0,
         score: 100,
         scoreLabel: 'S',
-        scoreBreakdown: { performance: 100, accessibility: 100, security: 100, 'best-practices': 100 },
+        scoreBreakdown: { performance: 100, accessibility: 100, security: 100, 'best-practices': 100 }
       }
       const unhealthyProject: ProjectScanResult = {
         name: 'unhealthy',
@@ -78,7 +78,7 @@ describe('multi-project', () => {
         warningCount: 5,
         score: 50,
         scoreLabel: 'D',
-        scoreBreakdown: { performance: 50, accessibility: 100, security: 100, 'best-practices': 80 },
+        scoreBreakdown: { performance: 50, accessibility: 100, security: 100, 'best-practices': 80 }
       }
 
       const aggregate = aggregateResults([healthyProject, unhealthyProject])
@@ -116,51 +116,45 @@ describe('discoverWorkspacePackages', () => {
 
   test('discovers packages from pnpm-workspace.yaml with quoted globs', async () => {
     writeFileSync(
-      join(testDirectory, 'pnpm-workspace.yaml'),
-      `packages:\n  - 'apps/*'\n`,
+      join(testDirectory, 'pnpm-workspace.yaml'), 'packages:\n  - \'apps/*\'\n'
     )
     const appsDir = join(testDirectory, 'apps', 'web')
     mkdirSync(appsDir, { recursive: true })
     writeFileSync(
-      join(appsDir, 'package.json'),
-      JSON.stringify({ name: 'web-app' }),
+      join(appsDir, 'package.json'), JSON.stringify({ name: 'web-app' })
     )
 
     const result = await discoverWorkspacePackages(testDirectory)
     expect(result.length).toBeGreaterThan(0)
-    expect(result.some((pkg) => pkg.name === 'web-app')).toBe(true)
+    expect(result.some(pkg => pkg.name === 'web-app')).toBe(true)
   })
 
   test('discovers packages from package.json workspaces array', async () => {
     writeFileSync(
-      join(testDirectory, 'package.json'),
-      JSON.stringify({ name: 'root', workspaces: ['packages/*'] }),
+      join(testDirectory, 'package.json'), JSON.stringify({ name: 'root', workspaces: ['packages/*'] })
     )
     const pkgDir = join(testDirectory, 'packages', 'ui')
     mkdirSync(pkgDir, { recursive: true })
     writeFileSync(
-      join(pkgDir, 'package.json'),
-      JSON.stringify({ name: 'ui-package' }),
+      join(pkgDir, 'package.json'), JSON.stringify({ name: 'ui-package' })
     )
 
     const result = await discoverWorkspacePackages(testDirectory)
-    expect(result.some((pkg) => pkg.name === 'ui-package')).toBe(true)
+    expect(result.some(pkg => pkg.name === 'ui-package')).toBe(true)
   })
 
   test('discovers packages from package.json workspaces object { packages: [...] }', async () => {
     writeFileSync(
-      join(testDirectory, 'package.json'),
-      JSON.stringify({ name: 'root', workspaces: { packages: ['packages/*'] } }),
+      join(testDirectory, 'package.json'), JSON.stringify({ name: 'root', workspaces: { packages: ['packages/*'] } })
     )
     const pkgDir = join(testDirectory, 'packages', 'core')
     mkdirSync(pkgDir, { recursive: true })
     writeFileSync(
-      join(pkgDir, 'package.json'),
-      JSON.stringify({ name: 'core-package' }),
+      join(pkgDir, 'package.json'), JSON.stringify({ name: 'core-package' })
     )
 
     const result = await discoverWorkspacePackages(testDirectory)
-    expect(result.some((pkg) => pkg.name === 'core-package')).toBe(true)
+    expect(result.some(pkg => pkg.name === 'core-package')).toBe(true)
   })
 })
 
@@ -181,35 +175,32 @@ describe('isAstroProject', () => {
   })
 
   test('returns true when astro.config.mjs exists', () => {
-    writeFileSync(join(testDirectory, 'astro.config.mjs'), "export default {}")
+    writeFileSync(join(testDirectory, 'astro.config.mjs'), 'export default {}')
     expect(isAstroProject(testDirectory)).toBe(true)
   })
 
   test('returns true when astro.config.ts exists', () => {
-    writeFileSync(join(testDirectory, 'astro.config.ts'), "export default {}")
+    writeFileSync(join(testDirectory, 'astro.config.ts'), 'export default {}')
     expect(isAstroProject(testDirectory)).toBe(true)
   })
 
   test('returns true when package.json has astro in dependencies', () => {
     writeFileSync(
-      join(testDirectory, 'package.json'),
-      JSON.stringify({ dependencies: { astro: '^4.0.0' } }),
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^4.0.0' } })
     )
     expect(isAstroProject(testDirectory)).toBe(true)
   })
 
   test('returns true when package.json has astro in devDependencies', () => {
     writeFileSync(
-      join(testDirectory, 'package.json'),
-      JSON.stringify({ devDependencies: { astro: '^4.0.0' } }),
+      join(testDirectory, 'package.json'), JSON.stringify({ devDependencies: { astro: '^4.0.0' } })
     )
     expect(isAstroProject(testDirectory)).toBe(true)
   })
 
   test('returns false when package.json has no astro dep and no astro config', () => {
     writeFileSync(
-      join(testDirectory, 'package.json'),
-      JSON.stringify({ dependencies: { react: '^18.0.0' } }),
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { react: '^18.0.0' } })
     )
     expect(isAstroProject(testDirectory)).toBe(false)
   })
@@ -234,15 +225,14 @@ describe('autoDiscoverAstroProjects', () => {
   test('returns only Astro projects from workspace packages', async () => {
     // Set up pnpm workspace with two packages: one Astro, one not
     writeFileSync(
-      join(testDirectory, 'pnpm-workspace.yaml'),
-      `packages:\n  - 'apps/*'\n`,
+      join(testDirectory, 'pnpm-workspace.yaml'), 'packages:\n  - \'apps/*\'\n'
     )
 
     // Astro project
     const astroDir = join(testDirectory, 'apps', 'site')
     mkdirSync(astroDir, { recursive: true })
     writeFileSync(join(astroDir, 'package.json'), JSON.stringify({ name: 'site' }))
-    writeFileSync(join(astroDir, 'astro.config.mjs'), "export default {}")
+    writeFileSync(join(astroDir, 'astro.config.mjs'), 'export default {}')
 
     // Non-Astro project
     const otherDir = join(testDirectory, 'apps', 'api')
@@ -250,7 +240,7 @@ describe('autoDiscoverAstroProjects', () => {
     writeFileSync(join(otherDir, 'package.json'), JSON.stringify({ name: 'api', dependencies: { express: '^4.0.0' } }))
 
     const result = await autoDiscoverAstroProjects(testDirectory)
-    expect(result.some((pkg) => pkg.name === 'site')).toBe(true)
-    expect(result.some((pkg) => pkg.name === 'api')).toBe(false)
+    expect(result.some(pkg => pkg.name === 'site')).toBe(true)
+    expect(result.some(pkg => pkg.name === 'api')).toBe(false)
   })
 })

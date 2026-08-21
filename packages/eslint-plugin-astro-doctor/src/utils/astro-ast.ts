@@ -34,11 +34,9 @@ export interface AstroElementNode extends AstroNodeBase {
   readonly children?: readonly unknown[]
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
 
-export const isAstroElementNode = (node: unknown): node is AstroElementNode =>
-  isRecord(node) && (node.type === 'element' || node.type === 'component')
+export const isAstroElementNode = (node: unknown): node is AstroElementNode => isRecord(node) && (node.type === 'element' || node.type === 'component')
 
 const getNodeName = (node: unknown): string | undefined => {
   if (!isRecord(node)) return undefined
@@ -46,12 +44,11 @@ const getNodeName = (node: unknown): string | undefined => {
   return typeof node.name === 'string' ? node.name : undefined
 }
 
-const getNodeStart = (node: Record<string, unknown>): number | undefined =>
-  typeof node.start === 'number' ? node.start : undefined
+const getNodeStart = (node: Record<string, unknown>): number | undefined => typeof node.start === 'number' ? node.start : undefined
 
 const getNodePosition = (
   context: Rule.RuleContext,
-  node: Record<string, unknown>,
+  node: Record<string, unknown>
 ): AstroPosition | undefined => {
   const start = getNodeStart(node)
 
@@ -62,14 +59,14 @@ const getNodePosition = (
   return {
     start: {
       line: location.line,
-      column: location.column + 1,
-    },
+      column: location.column + 1
+    }
   }
 }
 
 const getJsxExpressionValue = (
   context: Rule.RuleContext,
-  valueNode: Record<string, unknown>,
+  valueNode: Record<string, unknown>
 ): string | undefined => {
   if (valueNode.type !== 'JSXExpressionContainer' || !isRecord(valueNode.expression)) {
     return undefined
@@ -84,7 +81,7 @@ const getJsxExpressionValue = (
 }
 
 const getJsxLiteralValue = (
-  valueNode: Record<string, unknown>,
+  valueNode: Record<string, unknown>
 ): string | boolean | number | null | undefined => {
   if (!('value' in valueNode)) return undefined
 
@@ -104,7 +101,7 @@ const getJsxLiteralValue = (
 
 const normalizeJsxAttribute = (
   context: Rule.RuleContext,
-  node: unknown,
+  node: unknown
 ): AstroAttributeNode | undefined => {
   if (!isRecord(node) || node.type !== 'JSXAttribute') return undefined
 
@@ -136,13 +133,13 @@ const normalizeJsxAttribute = (
     name,
     kind,
     value,
-    position: getNodePosition(context, node),
+    position: getNodePosition(context, node)
   }
 }
 
 const normalizeJsxElement = (
   context: Rule.RuleContext,
-  node: Record<string, unknown>,
+  node: Record<string, unknown>
 ): AstroElementNode | undefined => {
   if (node.type !== 'JSXElement' || !isRecord(node.openingElement)) return undefined
 
@@ -150,28 +147,26 @@ const normalizeJsxElement = (
 
   if (!name) return undefined
 
-  const rawAttributes = Array.isArray(node.openingElement.attributes)
-    ? node.openingElement.attributes
-    : []
+  const rawAttributes = Array.isArray(node.openingElement.attributes) ?
+    node.openingElement.attributes :
+    []
 
   const attributes = rawAttributes
-    .map((attributeNode) => normalizeJsxAttribute(context, attributeNode))
-    .filter((attributeNode) => attributeNode !== undefined)
+    .map(attributeNode => normalizeJsxAttribute(context, attributeNode))
+    .filter(attributeNode => attributeNode !== undefined)
 
   const rawChildren = Array.isArray(node.children) ? node.children : []
 
   const children = rawChildren
-    .map((childNode) =>
-      isRecord(childNode) ? normalizeJsxElement(context, childNode) : undefined,
-    )
-    .filter((childNode) => childNode !== undefined)
+    .map(childNode => isRecord(childNode) ? normalizeJsxElement(context, childNode) : undefined)
+    .filter(childNode => childNode !== undefined)
 
   return {
     type: 'element',
     name,
     attributes,
     children,
-    position: getNodePosition(context, node),
+    position: getNodePosition(context, node)
   }
 }
 
@@ -186,8 +181,7 @@ interface AstroReportDescriptor {
   readonly suggest?: Rule.SuggestionReportDescriptor[]
 }
 
-const getParserServiceSourceCode = (context: Rule.RuleContext): ParserServiceSourceCode =>
-  context.sourceCode
+const getParserServiceSourceCode = (context: Rule.RuleContext): ParserServiceSourceCode => context.sourceCode
 
 const getAstroAst = (context: Rule.RuleContext): unknown => {
   const parserServices = getParserServiceSourceCode(context).parserServices
@@ -205,7 +199,7 @@ const getReportLocation = (node: AstroNodeBase): ReportLocation => {
 const visitElements = (
   context: Rule.RuleContext,
   node: unknown,
-  visitor: (elementNode: AstroElementNode) => void,
+  visitor: (elementNode: AstroElementNode) => void
 ): void => {
   if (!isRecord(node)) return
 
@@ -240,16 +234,16 @@ const visitElements = (
 
 export const forEachAstroElement = (
   context: Rule.RuleContext,
-  visitor: (elementNode: AstroElementNode) => void,
+  visitor: (elementNode: AstroElementNode) => void
 ): void => {
   visitElements(context, getAstroAst(context), visitor)
 }
 
 export const forEachAstroAttribute = (
   context: Rule.RuleContext,
-  visitor: (attributeNode: AstroAttributeNode, elementNode: AstroElementNode) => void,
+  visitor: (attributeNode: AstroAttributeNode, elementNode: AstroElementNode) => void
 ): void => {
-  forEachAstroElement(context, (elementNode) => {
+  forEachAstroElement(context, elementNode => {
     for (const attributeNode of elementNode.attributes ?? []) {
       visitor(attributeNode, elementNode)
     }
@@ -260,12 +254,12 @@ export const reportAstroNode = (
   context: Rule.RuleContext,
   node: AstroNodeBase,
   messageId: string,
-  suggest?: Rule.SuggestionReportDescriptor[],
+  suggest?: Rule.SuggestionReportDescriptor[]
 ): void => {
   const descriptor: AstroReportDescriptor = {
     loc: getReportLocation(node),
     messageId,
-    ...(suggest === undefined ? {} : { suggest }),
+    ...(suggest === undefined ? {} : { suggest })
   }
 
   context.report(descriptor)

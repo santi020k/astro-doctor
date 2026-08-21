@@ -1,12 +1,11 @@
 import type { Rule } from 'eslint'
 
 export type RuleCategory =
-  | 'performance'
-  | 'accessibility'
-  | 'security'
-  | 'best-practices'
-  | 'architecture'
-
+  | 'performance' |
+  'accessibility' |
+  'security' |
+  'best-practices' |
+  'architecture'
 
 export interface AstroDoctorRule extends Rule.RuleModule {
   readonly meta: Omit<Rule.RuleMetaData, 'docs'> & {

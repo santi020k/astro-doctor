@@ -1,6 +1,6 @@
 import * as path from 'node:path'
 
-import type { Mock } from 'vitest';
+import type { Mock } from 'vitest'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import * as vscode from 'vscode'
 import { LanguageClient } from 'vscode-languageclient/node'

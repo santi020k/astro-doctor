@@ -11,9 +11,9 @@ const ruleTester = new RuleTester({
   languageOptions: {
     parser: astroParser,
     parserOptions: {
-      sourceType: 'module',
-    },
-  },
+      sourceType: 'module'
+    }
+  }
 })
 
 ruleTester.run('require-image-dimensions', rule, {
@@ -21,31 +21,31 @@ ruleTester.run('require-image-dimensions', rule, {
     {
       code: [
         '---',
-        "import { Image } from 'astro:assets'",
-        "import hero from '../assets/hero.png'",
+        'import { Image } from \'astro:assets\'',
+        'import hero from \'../assets/hero.png\'',
         '---',
-        '<Image src={hero} alt="Hero" />',
+        '<Image src={hero} alt="Hero" />'
       ].join('\n'),
-      filename: 'test.astro',
+      filename: 'test.astro'
     },
     {
       code: `---
 import { Image } from 'astro:assets'
 ---
 <Image src="/hero.png" alt="Hero" width="800" height="400" />`,
-      filename: 'test.astro',
+      filename: 'test.astro'
     },
     {
       code: `---
 import { Image } from 'astro:assets'
 ---
 <Image src="https://cdn.example.com/hero.png" alt="Hero" inferSize />`,
-      filename: 'test.astro',
+      filename: 'test.astro'
     },
     {
-      code: `<Image src="/hero.png" alt="Hero" />`,
-      filename: 'test.tsx',
-    },
+      code: '<Image src="/hero.png" alt="Hero" />',
+      filename: 'test.tsx'
+    }
   ],
   invalid: [
     {
@@ -54,7 +54,7 @@ import { Image } from 'astro:assets'
 ---
 <Image src="/hero.png" alt="Hero" />`,
       filename: 'test.astro',
-      errors: [{ messageId: 'publicImageDimensions' }],
+      errors: [{ messageId: 'publicImageDimensions' }]
     },
     {
       code: `---
@@ -62,7 +62,7 @@ import { Picture } from 'astro:assets'
 ---
 <Picture src="https://cdn.example.com/hero.png" alt="Hero" />`,
       filename: 'test.astro',
-      errors: [{ messageId: 'remoteImageDimensions' }],
-    },
-  ],
+      errors: [{ messageId: 'remoteImageDimensions' }]
+    }
+  ]
 })

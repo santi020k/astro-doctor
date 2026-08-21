@@ -1,5 +1,5 @@
 ---
-import type { ComponentProps } from 'astro/types'
+import type { CodeLanguage } from 'astro'
 
 import { Code as HighlightedCode } from 'astro:components'
 
@@ -10,7 +10,7 @@ interface Props {
   code: string
   copy?: boolean
   label?: string
-  language?: ComponentProps<typeof HighlightedCode>['lang']
+  language?: CodeLanguage
   theme?: 'auto'
   variant?: 'block'
   wrap?: boolean
@@ -29,10 +29,10 @@ const {
 
 const languageLabel = typeof language === 'string' ? language : language.name
 
-const themes = {
+const themes: Record<'dark' | 'light', 'catppuccin-latte' | 'catppuccin-mocha'> = {
   dark: 'catppuccin-mocha',
   light: 'catppuccin-latte'
-} satisfies NonNullable<ComponentProps<typeof HighlightedCode>['themes']>
+}
 ---
 
 <Code

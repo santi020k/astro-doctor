@@ -24,8 +24,8 @@ const SKILL_TARGETS: SkillTarget[] = [
     sourceFile: resolve(SKILLS_SOURCE_DIR, 'skills/SKILL.md'),
     destDir: 'skills',
     destFile: 'astro-doctor.md',
-    label: 'Astro Doctor rules (skills/astro-doctor.md)',
-  },
+    label: 'Astro Doctor rules (skills/astro-doctor.md)'
+  }
 ]
 
 // Agent hook directories that support a skills/ convention
@@ -34,14 +34,14 @@ const AGENT_HOOK_TARGETS: SkillTarget[] = [
     sourceFile: resolve(SKILLS_SOURCE_DIR, 'skills/SKILL.md'),
     destDir: '.claude/skills',
     destFile: 'astro-doctor.md',
-    label: 'Claude Code hook (.claude/skills/astro-doctor.md)',
+    label: 'Claude Code hook (.claude/skills/astro-doctor.md)'
   },
   {
     sourceFile: resolve(SKILLS_SOURCE_DIR, 'skills/SKILL.md'),
     destDir: '.cursor/rules',
     destFile: 'astro-doctor.mdc',
-    label: 'Cursor rule (.cursor/rules/astro-doctor.mdc)',
-  },
+    label: 'Cursor rule (.cursor/rules/astro-doctor.mdc)'
+  }
 ]
 
 const GITHUB_ACTIONS_WORKFLOW = `name: Astro Doctor
@@ -64,16 +64,15 @@ jobs:
           github-token: \${{ secrets.GITHUB_TOKEN }}
 `
 
-const prompt = (question: string): Promise<string> =>
-  new Promise((resolve) => {
-    const rl = createInterface({ input: process.stdin, output: process.stdout })
+const prompt = (question: string): Promise<string> => new Promise(resolve => {
+  const rl = createInterface({ input: process.stdin, output: process.stdout })
 
-    rl.question(question, (answer) => {
-      rl.close()
+  rl.question(question, answer => {
+    rl.close()
 
-      resolve(answer.trim().toLowerCase())
-    })
+    resolve(answer.trim().toLowerCase())
   })
+})
 
 const confirm = async (question: string, yes: boolean): Promise<boolean> => {
   if (yes) return true
@@ -126,7 +125,7 @@ const installGitHubAction = (projectRoot: string, dryRun: boolean): void => {
 
   writeFileSync(workflowPath, GITHUB_ACTIONS_WORKFLOW, 'utf8')
 
-  console.log(`  ✓ Created .github/workflows/astro-doctor.yml`)
+  console.log('  ✓ Created .github/workflows/astro-doctor.yml')
 }
 
 const tryInstallTarget = (target: SkillTarget, projectRoot: string, dryRun: boolean): void => {
@@ -142,7 +141,7 @@ const tryInstallTarget = (target: SkillTarget, projectRoot: string, dryRun: bool
 const installAllTargets = (
   targets: readonly SkillTarget[],
   projectRoot: string,
-  dryRun: boolean,
+  dryRun: boolean
 ): void => {
   for (const target of targets) {
     tryInstallTarget(target, projectRoot, dryRun)
@@ -165,7 +164,7 @@ const detectAgents = (projectRoot: string): string[] => {
 
 export const runInstall = async (
   argv: string[] = [],
-  projectRoot = process.cwd(),
+  projectRoot = process.cwd()
 ): Promise<void> => {
   const yes = argv.includes('-y') || argv.includes('--yes')
   const dryRun = argv.includes('--dry-run')
@@ -186,8 +185,7 @@ export const runInstall = async (
 
   // 1. GitHub Actions
   const addGitHubActions = await confirm(
-    'Add GitHub Actions workflow to review every pull request?',
-    yes,
+    'Add GitHub Actions workflow to review every pull request?', yes
   )
 
   if (addGitHubActions) {
@@ -206,8 +204,7 @@ export const runInstall = async (
     options.agentHooks ||
     (detectedAgents.length > 0 &&
       (await confirm(
-        `Detected ${detectedAgents.join(', ')} — install native agent hooks?`,
-        yes,
+        `Detected ${detectedAgents.join(', ')} — install native agent hooks?`, yes
       )))
 
   if (shouldInstallHooks) {

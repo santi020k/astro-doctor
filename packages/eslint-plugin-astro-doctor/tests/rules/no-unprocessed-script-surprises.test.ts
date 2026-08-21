@@ -11,9 +11,9 @@ const ruleTester = new RuleTester({
   languageOptions: {
     parser: astroParser,
     parserOptions: {
-      sourceType: 'module',
-    },
-  },
+      sourceType: 'module'
+    }
+  }
 })
 
 ruleTester.run('no-unprocessed-script-surprises', rule, {
@@ -22,31 +22,31 @@ ruleTester.run('no-unprocessed-script-surprises', rule, {
       code: `---
 ---
 <script>console.log('bundled')</script>`,
-      filename: 'test.astro',
+      filename: 'test.astro'
     },
     {
       code: `---
 ---
 <script src="../scripts/local.ts"></script>`,
-      filename: 'test.astro',
+      filename: 'test.astro'
     },
     {
       code: `---
 ---
 <script is:inline>document.documentElement.dataset.theme = 'dark'</script>`,
-      filename: 'test.astro',
+      filename: 'test.astro'
     },
     {
       code: `---
 const structuredData = JSON.stringify({ '@context': 'https://schema.org' })
 ---
 <script type="application/ld+json" set:html={structuredData}></script>`,
-      filename: 'test.astro',
+      filename: 'test.astro'
     },
     {
-      code: `<script is:inline>console.log('ignored')</script>`,
-      filename: 'test.html',
-    },
+      code: '<script is:inline>console.log(\'ignored\')</script>',
+      filename: 'test.html'
+    }
   ],
   invalid: [
     {
@@ -54,14 +54,14 @@ const structuredData = JSON.stringify({ '@context': 'https://schema.org' })
 ---
 <script type="module">console.log('raw')</script>`,
       filename: 'test.astro',
-      errors: [{ messageId: 'unprocessedScript' }],
+      errors: [{ messageId: 'unprocessedScript' }]
     },
     {
       code: `---
 ---
 <script src="../scripts/local.ts" defer></script>`,
       filename: 'test.astro',
-      errors: [{ messageId: 'unprocessedScript' }],
-    },
-  ],
+      errors: [{ messageId: 'unprocessedScript' }]
+    }
+  ]
 })

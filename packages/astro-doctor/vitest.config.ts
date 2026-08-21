@@ -12,14 +12,14 @@ export default defineConfig({
         'src/install.ts',
         'src/lsp.ts',
         'src/why.ts',
-        'src/rules-explain.ts',
+        'src/rules-explain.ts'
       ],
       thresholds: {
         statements: 70,
         branches: 55,
         functions: 70,
-        lines: 70,
-      },
-    },
-  },
+        lines: 70
+      }
+    }
+  }
 })

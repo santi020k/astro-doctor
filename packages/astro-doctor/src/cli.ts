@@ -17,16 +17,16 @@ import {
   filterPersistentBaselineDiagnostics,
   readPersistentBaseline,
   scanBaseline,
-  writePersistentBaseline,
+  writePersistentBaseline
 } from './baseline.js'
 import { loadConfig } from './config.js'
 import {
   DEFAULT_BASELINE_FILE_NAME,
   DISABLED_THRESHOLD_SCORE,
   MAXIMUM_THRESHOLD_SCORE,
-  MINIMUM_THRESHOLD_SCORE,
+  MINIMUM_THRESHOLD_SCORE
 } from './constants.js'
-import { getDiffAstroFiles,getStagedAstroFiles, resolveBaseRevision } from './git.js'
+import { getDiffAstroFiles, getStagedAstroFiles, resolveBaseRevision } from './git.js'
 import { runInit } from './init.js'
 import { runInstall } from './install.js'
 import { runLsp } from './lsp.js'
@@ -34,14 +34,14 @@ import {
   aggregateResults,
   autoDiscoverAstroProjects,
   mergeConfigs,
-  scanProjects,
+  scanProjects
 } from './multi-project.js'
 import type { PresetName } from './presets.js'
 import {
   getPresetFailOn,
   getPresetRules,
   getPresetThreshold,
-  isPresetName,
+  isPresetName
 } from './presets.js'
 import { runRulesExplain } from './rules-explain.js'
 import { trackRun } from './telemetry.js'
@@ -87,7 +87,7 @@ const VALID_CATEGORIES: RuleCategory[] = [
   'performance',
   'accessibility',
   'security',
-  'best-practices',
+  'best-practices'
 ]
 
 const BOOLEAN_OPTIONS = new Set([
@@ -105,7 +105,7 @@ const BOOLEAN_OPTIONS = new Set([
   '--verbose',
   '--version',
   '-v',
-  '--cache',
+  '--cache'
 ])
 
 const VALUE_OPTIONS = new Set([
@@ -121,14 +121,14 @@ const VALUE_OPTIONS = new Set([
   '--preset',
   '--project',
   '--scope',
-  '--threshold',
+  '--threshold'
 ])
 
 const OPTIONAL_VALUE_OPTIONS = new Set(['--diff', '--json'])
 
 const validateBooleanArgument = (
   argument: string,
-  optionName: string,
+  optionName: string
 ): boolean => {
   if (!BOOLEAN_OPTIONS.has(optionName)) return false
 
@@ -143,7 +143,7 @@ const validateValueArgument = (
   argv: readonly string[],
   argumentIndex: number,
   argument: string,
-  optionName: string,
+  optionName: string
 ): number | undefined => {
   if (!VALUE_OPTIONS.has(optionName)) return undefined
 
@@ -168,7 +168,7 @@ const validateOptionalValueArgument = (
   argv: readonly string[],
   argumentIndex: number,
   argument: string,
-  optionName: string,
+  optionName: string
 ): number | undefined => {
   if (!OPTIONAL_VALUE_OPTIONS.has(optionName)) return undefined
 
@@ -192,10 +192,7 @@ const validateArguments = (argv: readonly string[]): void => {
     if (validateBooleanArgument(argument, optionName)) continue
 
     const validatedValueIndex = validateValueArgument(
-      argv,
-      argumentIndex,
-      argument,
-      optionName,
+      argv, argumentIndex, argument, optionName
     )
 
     if (validatedValueIndex !== undefined) {
@@ -205,10 +202,7 @@ const validateArguments = (argv: readonly string[]): void => {
     }
 
     const validatedOptionalIndex = validateOptionalValueArgument(
-      argv,
-      argumentIndex,
-      argument,
-      optionName,
+      argv, argumentIndex, argument, optionName
     )
 
     if (validatedOptionalIndex !== undefined) {
@@ -224,7 +218,7 @@ const validateArguments = (argv: readonly string[]): void => {
 const validateSimpleArguments = (
   argv: readonly string[],
   booleanOptions: ReadonlySet<string>,
-  valueOptions: ReadonlySet<string>,
+  valueOptions: ReadonlySet<string>
 ): void => {
   for (let argumentIndex = 0; argumentIndex < argv.length; argumentIndex++) {
     const argument = argv[argumentIndex]
@@ -258,15 +252,15 @@ const validateSimpleArguments = (
 const getOptionValue = (
   argv: readonly string[],
   optionName: string,
-  alias?: string,
+  alias?: string
 ): string | undefined => {
   const inlinePrefix = `${optionName}=`
-  const inlineArgument = argv.find((argument) => argument.startsWith(inlinePrefix))
+  const inlineArgument = argv.find(argument => argument.startsWith(inlinePrefix))
 
   if (inlineArgument) return inlineArgument.slice(inlinePrefix.length)
 
   const optionIndex = argv.findIndex(
-    (argument) => argument === optionName || (alias !== undefined && argument === alias),
+    argument => argument === optionName || (alias !== undefined && argument === alias)
   )
 
   if (optionIndex === -1) return undefined
@@ -334,11 +328,10 @@ const parseScope = (argv: readonly string[]): ScanScope => {
   throw new Error(`Unknown scope "${scope}". Valid values: full, files, changed.`)
 }
 
-const readChangedFiles = (filePath: string): string[] =>
-  readFileSync(filePath, 'utf8')
-    .split(/\r?\n/u)
-    .map((changedFilePath) => changedFilePath.trim())
-    .filter(Boolean)
+const readChangedFiles = (filePath: string): string[] => readFileSync(filePath, 'utf8')
+  .split(/\r?\n/u)
+  .map(changedFilePath => changedFilePath.trim())
+  .filter(Boolean)
 
 const parseCategories = (argv: readonly string[]): RuleCategory[] => {
   const values = getAllOptionValues(argv, '--category')
@@ -371,10 +364,10 @@ const getProjectsOption = (argv: readonly string[]): string[] => {
   if (!raw) return []
 
   // Support both comma-separated and repeated flags
-  const fromComma = raw.split(',').map((s) => s.trim()).filter(Boolean)
+  const fromComma = raw.split(',').map(s => s.trim()).filter(Boolean)
 
   const fromRepeat = getAllOptionValues(argv, '--project')
-    .flatMap((v) => v.split(',').map((s) => s.trim()).filter(Boolean))
+    .flatMap(v => v.split(',').map(s => s.trim()).filter(Boolean))
 
   return [...new Set([...fromComma, ...fromRepeat])]
 }
@@ -453,7 +446,7 @@ const parseArguments = (argv: string[]): CliOptions => {
     projects: getProjectsOption(argv),
     noTelemetry: argv.includes('--no-telemetry') || process.env.ASTRO_DOCTOR_NO_TELEMETRY === '1',
     baseline: getOptionValue(argv, '--baseline'),
-    cache: argv.includes('--cache'),
+    cache: argv.includes('--cache')
   }
 }
 
@@ -539,7 +532,7 @@ Rules checked:
 const handleJsonOutput = (
   scanResult: ScanResult,
   options: CliOptions,
-  projects?: readonly ProjectScanResult[],
+  projects?: readonly ProjectScanResult[]
 ): boolean => {
   const report = formatJsonReport(scanResult, options.directory, projects, options.scope)
   const reportJson = serializeJsonReport(report, options.jsonCompact)
@@ -560,7 +553,7 @@ const handleJsonOutput = (
 const printReport = (
   scanResult: ScanResult,
   options: CliOptions,
-  projects?: readonly ProjectScanResult[],
+  projects?: readonly ProjectScanResult[]
 ): boolean => {
   if (options.scoreOnly) {
     console.log(formatScoreOnly(scanResult))
@@ -576,14 +569,13 @@ const printReport = (
     if (githubOutput) console.log(githubOutput)
   } else if (options.format === 'sarif') {
     console.log(serializeSarifReport(
-      formatSarifReport(scanResult, options.directory),
-      options.jsonCompact,
+      formatSarifReport(scanResult, options.directory), options.jsonCompact
     ))
   } else {
     const displayResult =
-      options.quiet
-        ? { ...scanResult, diagnostics: scanResult.diagnostics.filter((d) => d.severity === 'error') }
-        : scanResult
+      options.quiet ?
+        { ...scanResult, diagnostics: scanResult.diagnostics.filter(d => d.severity === 'error') } :
+        scanResult
 
     const report = formatConsoleReport(displayResult, options.directory, !options.noScore, options.verbose)
 
@@ -600,7 +592,7 @@ const printReport = (
 const checkThresholds = (
   scanResult: ScanResult,
   effectiveFailOn: string,
-  effectiveThreshold: number,
+  effectiveThreshold: number
 ): void => {
   const shouldFailOnSeverity =
     (effectiveFailOn === 'error' && scanResult.errorCount > 0) ||
@@ -617,13 +609,12 @@ const checkThresholds = (
   }
 }
 
-const getEffectivePreset = (options: CliOptions, config: AstroDoctorConfig | null): PresetName =>
-  options.preset ?? config?.preset ?? 'recommended'
+const getEffectivePreset = (options: CliOptions, config: AstroDoctorConfig | null): PresetName => options.preset ?? config?.preset ?? 'recommended'
 
 const getEffectiveFailOn = (
   options: CliOptions,
   config: AstroDoctorConfig | null,
-  preset: PresetName,
+  preset: PresetName
 ): CliOptions['failOn'] => {
   if (options.failOnProvided) return options.failOn
 
@@ -633,7 +624,7 @@ const getEffectiveFailOn = (
 const getEffectiveThreshold = (
   options: CliOptions,
   config: AstroDoctorConfig | null,
-  preset: PresetName,
+  preset: PresetName
 ): number => {
   if (options.thresholdProvided) return options.threshold
 
@@ -642,17 +633,14 @@ const getEffectiveThreshold = (
 
 const getEffectiveRules = (
   config: AstroDoctorConfig | null,
-  preset: PresetName | undefined,
+  preset: PresetName | undefined
 ): Record<string, 'error' | 'warn' | 'off'> => ({
   ...getPresetRules(preset ?? 'recommended'),
-  ...config?.rules,
+  ...config?.rules
 })
 
-const isScanRelevantPath = (filePath: string): boolean =>
-  filePath.endsWith('.astro') || isProjectAuditRelevantPath(filePath)
-
-const getBaseOption = (options: CliOptions): string | undefined =>
-  options.base ?? (typeof options.diff === 'string' ? options.diff : undefined)
+const isScanRelevantPath = (filePath: string): boolean => filePath.endsWith('.astro') || isProjectAuditRelevantPath(filePath)
+const getBaseOption = (options: CliOptions): string | undefined => options.base ?? (typeof options.diff === 'string' ? options.diff : undefined)
 
 const resolveFilesToScan = (options: CliOptions): string[] | undefined => {
   if (options.staged) {
@@ -690,7 +678,7 @@ const resolveEffectiveProjects = (options: CliOptions, config: AstroDoctorConfig
   return []
 }
 
-const tryResolveFilesToScan = (options: CliOptions): { files: string[] | undefined; failed: boolean } => {
+const tryResolveFilesToScan = (options: CliOptions): { files: string[] | undefined, failed: boolean } => {
   try {
     return { files: resolveFilesToScan(options), failed: false }
   } catch (error) {
@@ -704,17 +692,17 @@ const tryResolveFilesToScan = (options: CliOptions): { files: string[] | undefin
   }
 }
 
-const hasOnlyIrrelevantChangedFiles = (files: string[] | undefined): boolean =>
-  files !== undefined && files.length > 0 && !files.some(isScanRelevantPath)
+const hasOnlyIrrelevantChangedFiles = (
+  files: string[] | undefined
+): boolean => files !== undefined && files.length > 0 && !files.some(isScanRelevantPath)
 
-const shouldPrintProgress = (options: CliOptions): boolean =>
-  options.json !== true &&
+const shouldPrintProgress = (options: CliOptions): boolean => options.json !== true &&
   options.format === 'console' &&
   !options.scoreOnly
 
 const shouldSkipIrrelevantFiles = (
   options: CliOptions,
-  files: string[] | undefined,
+  files: string[] | undefined
 ): boolean => {
   if (!hasOnlyIrrelevantChangedFiles(files)) return false
 
@@ -741,13 +729,13 @@ const tryScan = async (scanOptions: ScanOptions): Promise<ScanResult | null> => 
 
 const applyPersistentBaseline = (
   result: ScanResult,
-  options: CliOptions,
+  options: CliOptions
 ): ScanResult => {
   if (options.baseline === undefined) return result
 
-  const baselinePath = isAbsolute(options.baseline)
-    ? options.baseline
-    : resolve(options.directory, options.baseline)
+  const baselinePath = isAbsolute(options.baseline) ?
+    options.baseline :
+    resolve(options.directory, options.baseline)
 
   const baseline = readPersistentBaseline(baselinePath)
 
@@ -764,7 +752,7 @@ const reportOperationFailure = (operation: string, error: unknown): void => {
 
 const tryApplyPersistentBaseline = (
   result: ScanResult,
-  options: CliOptions,
+  options: CliOptions
 ): ScanResult | null => {
   try {
     return applyPersistentBaseline(result, options)
@@ -780,16 +768,13 @@ const filterIntroducedProjectResults = async (
   config: AstroDoctorConfig | null,
   projectResults: readonly ProjectScanResult[],
   filesToScan: readonly string[],
-  baseScanOptions: BaseScanOptions,
+  baseScanOptions: BaseScanOptions
 ): Promise<ProjectScanResult[]> => {
   const baseRevision = resolveBaseRevision(options.directory, getBaseOption(options))
   const introducedResults: ProjectScanResult[] = []
 
   for (const projectResult of projectResults) {
-    const projectFiles = filesToScan.filter((filePath) =>
-      isFileInDirectory(filePath, projectResult.directory)
-    )
-
+    const projectFiles = filesToScan.filter(filePath => isFileInDirectory(filePath, projectResult.directory))
     const projectConfig = await loadConfig(projectResult.directory)
     const mergedConfig = mergeConfigs(config, projectConfig)
 
@@ -802,21 +787,18 @@ const filterIntroducedProjectResults = async (
         ...baseScanOptions,
         ignore: mergedConfig.ignore,
         rules: mergedConfig.rules,
-        overrides: mergedConfig.overrides,
-      },
+        overrides: mergedConfig.overrides
+      }
     })
 
     const introducedResult = filterIntroducedDiagnostics(
-      projectResult,
-      baseline.result,
-      projectResult.directory,
-      baseline.rootDirectory,
+      projectResult, baseline.result, projectResult.directory, baseline.rootDirectory
     )
 
     introducedResults.push({
       ...introducedResult,
       name: projectResult.name,
-      directory: projectResult.directory,
+      directory: projectResult.directory
     })
   }
 
@@ -824,7 +806,7 @@ const filterIntroducedProjectResults = async (
 }
 
 const tryScanProjects = async (
-  options: Parameters<typeof scanProjects>[0],
+  options: Parameters<typeof scanProjects>[0]
 ): Promise<ProjectScanResult[] | null> => {
   try {
     return await scanProjects(options)
@@ -840,15 +822,11 @@ const tryFilterIntroducedProjectResults = async (
   config: AstroDoctorConfig,
   projectResults: readonly ProjectScanResult[],
   filesToScan: readonly string[],
-  baseScanOptions: BaseScanOptions,
+  baseScanOptions: BaseScanOptions
 ): Promise<ProjectScanResult[] | null> => {
   try {
     return await filterIntroducedProjectResults(
-      options,
-      config,
-      projectResults,
-      filesToScan,
-      baseScanOptions,
+      options, config, projectResults, filesToScan, baseScanOptions
     )
   } catch (error) {
     reportOperationFailure('compare baseline', error)
@@ -864,14 +842,14 @@ const executeMultiProjectScan = async (
   effectivePreset: PresetName,
   effectiveFailOn: string,
   effectiveThreshold: number,
-  baseScanOptions: BaseScanOptions,
+  baseScanOptions: BaseScanOptions
 ): Promise<void> => {
   const { files: filesToScan, failed } = tryResolveFilesToScan(options)
 
   const effectiveConfig: AstroDoctorConfig = {
     ...config,
     preset: effectivePreset,
-    rules: getEffectiveRules(config, effectivePreset),
+    rules: getEffectiveRules(config, effectivePreset)
   }
 
   if (failed) return
@@ -886,19 +864,15 @@ const executeMultiProjectScan = async (
     rootConfig: effectiveConfig,
     scanOptions: {
       ...baseScanOptions,
-      files: filesToScan,
-    },
+      files: filesToScan
+    }
   })
 
   if (!projectResults) return
 
   if (options.scope === 'changed' && filesToScan) {
     projectResults = await tryFilterIntroducedProjectResults(
-      options,
-      effectiveConfig,
-      projectResults,
-      filesToScan,
-      baseScanOptions,
+      options, effectiveConfig, projectResults, filesToScan, baseScanOptions
     )
 
     if (!projectResults) return
@@ -906,13 +880,11 @@ const executeMultiProjectScan = async (
 
   if (options.baseline !== undefined) {
     try {
-      projectResults = projectResults.map((projectResult) =>
-        ({
-          ...applyPersistentBaseline(projectResult, options),
-          name: projectResult.name,
-          directory: projectResult.directory,
-        })
-      )
+      projectResults = projectResults.map(projectResult => ({
+        ...applyPersistentBaseline(projectResult, options),
+        name: projectResult.name,
+        directory: projectResult.directory
+      }))
     } catch (error) {
       reportOperationFailure('apply persistent baseline', error)
 
@@ -935,14 +907,16 @@ interface BaseScanOptions {
   cache: boolean
 }
 
-const resolveProjectsWithDiscovery = async (options: CliOptions, config: AstroDoctorConfig | null): Promise<string[]> => {
+const resolveProjectsWithDiscovery = async (
+  options: CliOptions, config: AstroDoctorConfig | null
+): Promise<string[]> => {
   const explicit = resolveEffectiveProjects(options, config)
 
   if (explicit.length > 0) return explicit
 
   const discovered = await autoDiscoverAstroProjects(options.directory)
 
-  return discovered.length > 0 ? discovered.map((pkg) => pkg.directory) : []
+  return discovered.length > 0 ? discovered.map(pkg => pkg.directory) : []
 }
 
 const tryFilterIntroducedScanResult = async (
@@ -951,7 +925,7 @@ const tryFilterIntroducedScanResult = async (
   effectivePreset: PresetName | undefined,
   baseScanOptions: BaseScanOptions,
   filesToScan: readonly string[],
-  scanResult: ScanResult,
+  scanResult: ScanResult
 ): Promise<ScanResult | null> => {
   try {
     const baseRevision = resolveBaseRevision(options.directory, getBaseOption(options))
@@ -965,15 +939,12 @@ const tryFilterIntroducedScanResult = async (
         ...baseScanOptions,
         ignore: config?.ignore,
         rules: getEffectiveRules(config, effectivePreset),
-        overrides: config?.overrides,
-      },
+        overrides: config?.overrides
+      }
     })
 
     return filterIntroducedDiagnostics(
-      scanResult,
-      baseline.result,
-      options.directory,
-      baseline.rootDirectory,
+      scanResult, baseline.result, options.directory, baseline.rootDirectory
     )
   } catch (error) {
     reportOperationFailure('compare baseline', error)
@@ -988,22 +959,17 @@ const resolveReportedScanResult = async (
   effectivePreset: PresetName | undefined,
   baseScanOptions: BaseScanOptions,
   filesToScan: readonly string[] | undefined,
-  scanResult: ScanResult,
+  scanResult: ScanResult
 ): Promise<ScanResult | null> => {
-  const introducedResult = options.scope === 'changed' && filesToScan
-    ? await tryFilterIntroducedScanResult(
-        options,
-        config,
-        effectivePreset,
-        baseScanOptions,
-        filesToScan,
-        scanResult,
-      )
-    : scanResult
+  const introducedResult = options.scope === 'changed' && filesToScan ?
+    await tryFilterIntroducedScanResult(
+      options, config, effectivePreset, baseScanOptions, filesToScan, scanResult
+    ) :
+    scanResult
 
-  return introducedResult === null
-    ? null
-    : tryApplyPersistentBaseline(introducedResult, options)
+  return introducedResult === null ?
+    null :
+    tryApplyPersistentBaseline(introducedResult, options)
 }
 
 const executeSingleDirectoryScan = async (
@@ -1012,7 +978,7 @@ const executeSingleDirectoryScan = async (
   effectivePreset: PresetName | undefined,
   effectiveFailOn: string,
   effectiveThreshold: number,
-  baseScanOptions: BaseScanOptions,
+  baseScanOptions: BaseScanOptions
 ): Promise<void> => {
   const { files: filesToScan, failed } = tryResolveFilesToScan(options)
 
@@ -1026,7 +992,7 @@ const executeSingleDirectoryScan = async (
     files: filesToScan,
     ignore: config?.ignore,
     rules: getEffectiveRules(config, effectivePreset),
-    overrides: config?.overrides,
+    overrides: config?.overrides
   }
 
   if (shouldPrintProgress(options)) {
@@ -1038,12 +1004,7 @@ const executeSingleDirectoryScan = async (
   if (!scanResult) return
 
   const effectiveScanResult = await resolveReportedScanResult(
-    options,
-    config,
-    effectivePreset,
-    baseScanOptions,
-    filesToScan,
-    scanResult,
+    options, config, effectivePreset, baseScanOptions, filesToScan, scanResult
   )
 
   if (!effectiveScanResult) return
@@ -1064,7 +1025,7 @@ const executeScan = async (options: CliOptions): Promise<void> => {
     fix: options.fix,
     noLint: options.noLint,
     noRespectInlineDisables: options.noRespectInlineDisables,
-    cache: options.cache,
+    cache: options.cache
   }
 
   // ── Multi-project mode ──────────────────────────────────────────────────────
@@ -1072,20 +1033,16 @@ const executeScan = async (options: CliOptions): Promise<void> => {
 
   if (effectiveProjects.length > 0) {
     await executeMultiProjectScan(
-      options,
-      config,
-      effectiveProjects,
-      effectivePreset,
-      effectiveFailOn,
-      effectiveThreshold,
-      baseScanOptions,
+      options, config, effectiveProjects, effectivePreset, effectiveFailOn, effectiveThreshold, baseScanOptions
     )
 
     return
   }
 
   // ── Single-directory mode ───────────────────────────────────────────────────
-  await executeSingleDirectoryScan(options, config, effectivePreset, effectiveFailOn, effectiveThreshold, baseScanOptions)
+  await executeSingleDirectoryScan(
+    options, config, effectivePreset, effectiveFailOn, effectiveThreshold, baseScanOptions
+  )
 }
 
 const removeValueOption = (argv: readonly string[], optionName: string): string[] => {
@@ -1109,7 +1066,7 @@ const removeValueOption = (argv: readonly string[], optionName: string): string[
 }
 
 const createBaselineResult = async (
-  options: CliOptions,
+  options: CliOptions
 ): Promise<ScanResult | null> => {
   const config = await loadConfig(options.directory)
   const effectivePreset = getEffectivePreset(options, config)
@@ -1120,7 +1077,7 @@ const createBaselineResult = async (
     fix: false,
     noLint: options.noLint,
     noRespectInlineDisables: options.noRespectInlineDisables,
-    cache: options.cache,
+    cache: options.cache
   }
 
   if (effectiveProjects.length > 0) {
@@ -1130,9 +1087,9 @@ const createBaselineResult = async (
       rootConfig: {
         ...config,
         preset: effectivePreset,
-        rules: getEffectiveRules(config, effectivePreset),
+        rules: getEffectiveRules(config, effectivePreset)
       },
-      scanOptions,
+      scanOptions
     })
 
     return projectResults ? aggregateResults(projectResults) : null
@@ -1143,7 +1100,7 @@ const createBaselineResult = async (
     directory: options.directory,
     ignore: config?.ignore,
     overrides: config?.overrides,
-    rules: getEffectiveRules(config, effectivePreset),
+    rules: getEffectiveRules(config, effectivePreset)
   })
 }
 
@@ -1169,15 +1126,13 @@ const runBaselineCommand = async (argv: string[]): Promise<void> => {
   const outputPath = resolve(options.directory, outputValue ?? DEFAULT_BASELINE_FILE_NAME)
 
   writePersistentBaseline(
-    outputPath,
-    createPersistentBaseline(result, options.directory),
+    outputPath, createPersistentBaseline(result, options.directory)
   )
 
   console.log(
-    `Baseline written to ${outputPath} with ${result.diagnostics.length} finding${result.diagnostics.length === 1 ? '' : 's'}.`,
+    `Baseline written to ${outputPath} with ${result.diagnostics.length} finding${result.diagnostics.length === 1 ? '' : 's'}.`
   )
 }
-
 
 const handleInit = (argv: string[], noTelemetry: boolean) => {
   try {
@@ -1194,9 +1149,7 @@ const handleInit = (argv: string[], noTelemetry: boolean) => {
 const handleInstall = async (argv: string[], noTelemetry: boolean) => {
   try {
     validateSimpleArguments(
-      argv.slice(1),
-      new Set(['-y', '--yes', '--dry-run', '--agent-hooks']),
-      new Set(),
+      argv.slice(1), new Set(['-y', '--yes', '--dry-run', '--agent-hooks']), new Set()
     )
 
     trackRun({ command: 'install', flags: { dryRun: argv.includes('--dry-run') } }, noTelemetry)
@@ -1212,7 +1165,7 @@ const handleWhy = async (argv: string[], noTelemetry: boolean) => {
 
   if (!location) {
     console.error(
-      '\nUsage: astro-doctor why <file>:<line>\nExample: astro-doctor why src/pages/index.astro:42\n',
+      '\nUsage: astro-doctor why <file>:<line>\nExample: astro-doctor why src/pages/index.astro:42\n'
     )
 
     process.exitCode = 1
@@ -1259,7 +1212,7 @@ const commandRunners: Record<string, (argv: string[], noTelemetry: boolean) => P
   why: handleWhy,
   rules: handleRules,
   'experimental-lsp': handleLsp,
-  baseline: handleBaseline,
+  baseline: handleBaseline
 }
 
 export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<void> => {
@@ -1272,7 +1225,6 @@ export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<vo
 
     return
   }
-
 
   let options: CliOptions
 
@@ -1310,9 +1262,8 @@ export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<vo
         verbose: options.verbose,
         quiet: options.quiet,
         json: options.json !== false,
-        categories: options.categories.length > 0,
-      },
-    },
-    options.noTelemetry,
+        categories: options.categories.length > 0
+      }
+    }, options.noTelemetry
   )
 }

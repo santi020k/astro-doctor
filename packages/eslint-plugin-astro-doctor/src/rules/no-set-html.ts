@@ -16,14 +16,14 @@ export default createRule({
         'Warn against the use of set:html to prevent potential XSS vulnerabilities',
       category: 'security',
       recommended: true,
-      url: `${RULE_DOCS_BASE_URL}/no-set-html`,
+      url: `${RULE_DOCS_BASE_URL}/no-set-html`
     },
     messages: {
       dangerousHtml:
         'set:html injects raw HTML and is a potential XSS vector if the value is user-controlled. ' +
-        'Use {expression} interpolation for escaped output, or sanitize the value before using set:html.',
+        'Use {expression} interpolation for escaped output, or sanitize the value before using set:html.'
     },
-    schema: [],
+    schema: []
   },
   create(context) {
     if (!isAstroFile(context.filename)) return {}
@@ -41,7 +41,7 @@ export default createRule({
 
           reportAstroNode(context, attributeNode, 'dangerousHtml')
         })
-      },
+      }
     }
-  },
+  }
 })

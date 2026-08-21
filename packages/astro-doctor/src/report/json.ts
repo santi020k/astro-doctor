@@ -8,7 +8,7 @@ export const formatJsonReport = (
   result: ScanResult,
   directory: string,
   projects?: readonly ProjectScanResult[],
-  scope: JsonReport['scope'] = 'full',
+  scope: JsonReport['scope'] = 'full'
 ): JsonReport => ({
   $schema: SCHEMA_URL,
   schemaVersion: REPORT_SCHEMA_VERSION,
@@ -24,22 +24,23 @@ export const formatJsonReport = (
   scoreLabel: result.scoreLabel,
   scoreBreakdown: result.scoreBreakdown,
   diagnostics: result.diagnostics,
-  ...(projects && projects.length > 0
-    ? {
-        projects: projects.map((p) => ({
-          name: p.name,
-          directory: p.directory,
-          fileCount: p.fileCount,
-          errorCount: p.errorCount,
-          warningCount: p.warningCount,
-          score: p.score,
-          scoreLabel: p.scoreLabel,
-          scoreBreakdown: p.scoreBreakdown,
-          diagnostics: p.diagnostics,
-        })),
-      }
-    : {}),
+  ...(projects && projects.length > 0 ?
+    {
+      projects: projects.map(p => ({
+        name: p.name,
+        directory: p.directory,
+        fileCount: p.fileCount,
+        errorCount: p.errorCount,
+        warningCount: p.warningCount,
+        score: p.score,
+        scoreLabel: p.scoreLabel,
+        scoreBreakdown: p.scoreBreakdown,
+        diagnostics: p.diagnostics
+      }))
+    } :
+    {})
 })
 
-export const serializeJsonReport = (report: JsonReport, compact: boolean): string =>
-  compact ? JSON.stringify(report) : JSON.stringify(report, null, 2)
+export const serializeJsonReport = (
+  report: JsonReport, compact: boolean
+): string => compact ? JSON.stringify(report) : JSON.stringify(report, null, 2)

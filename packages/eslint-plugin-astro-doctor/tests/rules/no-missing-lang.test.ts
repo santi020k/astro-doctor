@@ -11,61 +11,61 @@ const ruleTester = new RuleTester({
   languageOptions: {
     parser: astroParser,
     parserOptions: {
-      sourceType: 'module',
-    },
-  },
+      sourceType: 'module'
+    }
+  }
 })
 
 ruleTester.run('no-missing-lang', rule, {
   valid: [
     // <html> with lang attribute
     {
-      code: `---\n---\n<html lang="en"><head></head><body></body></html>`,
-      filename: 'test.astro',
+      code: '---\n---\n<html lang="en"><head></head><body></body></html>',
+      filename: 'test.astro'
     },
     // <html> with non-English lang
     {
-      code: `---\n---\n<html lang="es"><head></head><body></body></html>`,
-      filename: 'test.astro',
+      code: '---\n---\n<html lang="es"><head></head><body></body></html>',
+      filename: 'test.astro'
     },
     // <html> with a dynamic lang expression
     {
-      code: `---\nconst lang = 'fr'\n---\n<html lang={lang}><head></head><body></body></html>`,
-      filename: 'test.astro',
+      code: '---\nconst lang = \'fr\'\n---\n<html lang={lang}><head></head><body></body></html>',
+      filename: 'test.astro'
     },
     // Component without an <html> element — layout fragments are fine
     {
-      code: `---\n---\n<div><slot /></div>`,
-      filename: 'test.astro',
+      code: '---\n---\n<div><slot /></div>',
+      filename: 'test.astro'
     },
     // lang="" is present (attribute exists) — this rule checks presence not value
     {
-      code: `---\n---\n<html lang=""><head></head><body></body></html>`,
-      filename: 'test.astro',
+      code: '---\n---\n<html lang=""><head></head><body></body></html>',
+      filename: 'test.astro'
     },
     // dynamic lang for i18n (Astro.currentLocale pattern)
     {
-      code: `---\n---\n<html lang={Astro.currentLocale ?? 'en'}><head></head><body></body></html>`,
-      filename: 'test.astro',
+      code: '---\n---\n<html lang={Astro.currentLocale ?? \'en\'}><head></head><body></body></html>',
+      filename: 'test.astro'
     },
     // Non-astro files are ignored
     {
-      code: `<html><head></head><body></body></html>`,
-      filename: 'test.html',
-    },
+      code: '<html><head></head><body></body></html>',
+      filename: 'test.html'
+    }
   ],
   invalid: [
     // <html> without lang
     {
-      code: `---\n---\n<html><head></head><body></body></html>`,
+      code: '---\n---\n<html><head></head><body></body></html>',
       filename: 'test.astro',
-      errors: [{ messageId: 'missingLang' }],
+      errors: [{ messageId: 'missingLang' }]
     },
     // <html> with other attributes but no lang
     {
-      code: `---\n---\n<html class="dark" dir="ltr"><head></head><body></body></html>`,
+      code: '---\n---\n<html class="dark" dir="ltr"><head></head><body></body></html>',
       filename: 'test.astro',
-      errors: [{ messageId: 'missingLang' }],
-    },
-  ],
+      errors: [{ messageId: 'missingLang' }]
+    }
+  ]
 })

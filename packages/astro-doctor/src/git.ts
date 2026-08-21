@@ -5,8 +5,7 @@ import { join } from 'node:path'
 
 import { isProjectAuditRelevantPath } from './scanner/project-audit.js'
 
-const isScanRelevantPath = (filePath: string): boolean =>
-  filePath.endsWith('.astro') || isProjectAuditRelevantPath(filePath)
+const isScanRelevantPath = (filePath: string): boolean => filePath.endsWith('.astro') || isProjectAuditRelevantPath(filePath)
 
 /**
  * Run a git command and return stdout lines, or throw with a clean message on failure.
@@ -17,7 +16,7 @@ const git = (args: string[], cwd: string): string[] => {
 
     return output
       .split(/\r?\n/u)
-      .map((line) => line.trim())
+      .map(line => line.trim())
       .filter(Boolean)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
@@ -30,7 +29,7 @@ const git = (args: string[], cwd: string): string[] => {
 export const extractRevision = (
   cwd: string,
   revision: string,
-  destinationDirectory: string,
+  destinationDirectory: string
 ): void => {
   const archiveDirectory = mkdtempSync(join(tmpdir(), 'astro-doctor-git-archive-'))
   const archivePath = join(archiveDirectory, 'snapshot.tar')
@@ -38,11 +37,11 @@ export const extractRevision = (
   try {
     execFileSync('git', ['archive', '--format=tar', '--output', archivePath, revision], {
       cwd,
-      stdio: ['ignore', 'ignore', 'pipe'],
+      stdio: ['ignore', 'ignore', 'pipe']
     })
 
     execFileSync('tar', ['-xf', archivePath, '-C', destinationDirectory], {
-      stdio: ['ignore', 'ignore', 'pipe'],
+      stdio: ['ignore', 'ignore', 'pipe']
     })
   } finally {
     rmSync(archiveDirectory, { recursive: true, force: true })
@@ -80,8 +79,8 @@ export const getStagedAstroFiles = (cwd: string): string[] => {
   const lines = git(['diff', '--cached', '--name-only', '--diff-filter=ACMR'], cwd)
 
   return lines
-    .filter((line) => isScanRelevantPath(line))
-    .map((line) => `${cwd}/${line}`)
+    .filter(line => isScanRelevantPath(line))
+    .map(line => `${cwd}/${line}`)
 }
 
 /**
@@ -93,6 +92,6 @@ export const getDiffAstroFiles = (cwd: string, base?: string): string[] => {
   const lines = git(['diff', '--name-only', '--diff-filter=ACMR', resolvedBase, 'HEAD'], cwd)
 
   return lines
-    .filter((line) => isScanRelevantPath(line))
-    .map((line) => `${cwd}/${line}`)
+    .filter(line => isScanRelevantPath(line))
+    .map(line => `${cwd}/${line}`)
 }

@@ -5,7 +5,7 @@ import { DiagnosticSeverity } from 'vscode-languageserver/node'
 import {
   buildCodeActionsForDiagnostic,
   getFixedDocumentText,
-  LSP_EXECUTE_COMMANDS,
+  LSP_EXECUTE_COMMANDS
 } from '../src/lsp.js'
 
 describe('LSP commands', () => {
@@ -24,8 +24,8 @@ describe('LSP commands', () => {
           test: {
             rules: {
               'multipass-fix': {
-                create: (context) => ({
-                  Program: (programNode) => {
+                create: context => ({
+                  Program: programNode => {
                     if (nextReplacement === 'done') return
 
                     const replacement = nextReplacement
@@ -33,28 +33,28 @@ describe('LSP commands', () => {
                     nextReplacement = nextReplacement === 'second' ? 'final' : 'done'
 
                     context.report({
-                      fix: (fixer) => fixer.replaceText(programNode, replacement),
+                      fix: fixer => fixer.replaceText(programNode, replacement),
                       messageId: 'replace',
-                      node: programNode,
+                      node: programNode
                     })
-                  },
+                  }
                 }),
                 meta: {
                   fixable: 'code',
                   messages: {
-                    replace: 'Replace content.',
+                    replace: 'Replace content.'
                   },
                   schema: [],
-                  type: 'problem',
-                },
-              },
-            },
-          },
+                  type: 'problem'
+                }
+              }
+            }
+          }
         },
         rules: {
-          'test/multipass-fix': 'error',
-        },
-      }],
+          'test/multipass-fix': 'error'
+        }
+      }]
     })
 
     await expect(getFixedDocumentText(eslint, 'first', `${process.cwd()}/example.js`))
@@ -66,7 +66,7 @@ describe('LSP code actions', () => {
   test('exposes rule suggestions alongside suppression and documentation actions', () => {
     const range = {
       start: { line: 2, character: 0 },
-      end: { line: 2, character: 8 },
+      end: { line: 2, character: 8 }
     }
     const actions = buildCodeActionsForDiagnostic('file:///workspace/index.astro', {
       range,
@@ -78,15 +78,15 @@ describe('LSP code actions', () => {
         suggestions: [{
           title: 'Add defer to preserve document execution order.',
           newText: ' defer',
-          range,
-        }],
-      },
+          range
+        }]
+      }
     })
 
-    expect(actions.map((action) => action.title)).toEqual([
+    expect(actions.map(action => action.title)).toEqual([
       'Add defer to preserve document execution order.',
       'Disable astro-doctor/no-blocking-script for this line',
-      'Open documentation for astro-doctor/no-blocking-script',
+      'Open documentation for astro-doctor/no-blocking-script'
     ])
     expect(actions[0]?.edit?.changes?.['file:///workspace/index.astro']?.[0]?.newText)
       .toBe(' defer')
@@ -95,7 +95,7 @@ describe('LSP code actions', () => {
   test('marks an automatic fix as preferred', () => {
     const range = {
       start: { line: 1, character: 0 },
-      end: { line: 1, character: 11 },
+      end: { line: 1, character: 11 }
     }
     const actions = buildCodeActionsForDiagnostic('file:///workspace/index.astro', {
       range,
@@ -105,16 +105,16 @@ describe('LSP code actions', () => {
       data: {
         fix: {
           newText: 'import.meta.env',
-          range,
-        },
-      },
+          range
+        }
+      }
     })
 
     expect(actions[0]).toEqual(
       expect.objectContaining({
         title: 'Fix astro-doctor/no-process-env',
-        isPreferred: true,
-      }),
+        isPreferred: true
+      })
     )
   })
 
@@ -122,10 +122,10 @@ describe('LSP code actions', () => {
     expect(buildCodeActionsForDiagnostic('file:///workspace/index.astro', {
       range: {
         start: { line: 0, character: 0 },
-        end: { line: 0, character: 1 },
+        end: { line: 0, character: 1 }
       },
       source: 'astro',
-      message: 'Other diagnostic.',
+      message: 'Other diagnostic.'
     })).toEqual([])
   })
 })

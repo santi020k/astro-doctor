@@ -18,11 +18,11 @@ const ESLINT_CONFIG_FILE_NAMES = ['eslint.config.js', 'eslint.config.mjs', 'esli
 
 const getOptionValue = (argv: readonly string[], optionName: string): string | undefined => {
   const inlinePrefix = `${optionName}=`
-  const inlineArgument = argv.find((argument) => argument.startsWith(inlinePrefix))
+  const inlineArgument = argv.find(argument => argument.startsWith(inlinePrefix))
 
   if (inlineArgument) return inlineArgument.slice(inlinePrefix.length)
 
-  const optionIndex = argv.findIndex((argument) => argument === optionName)
+  const optionIndex = argv.findIndex(argument => argument === optionName)
 
   if (optionIndex === -1) return undefined
 
@@ -46,21 +46,21 @@ const getPreset = (argv: readonly string[]): PresetName | undefined => {
 }
 
 const getDoctorConfig = (preset: PresetName): string => [
-  "import type { AstroDoctorConfig } from '@santi020k/astro-doctor'",
+  'import type { AstroDoctorConfig } from \'@santi020k/astro-doctor\'',
   '',
   'export default {',
   `  preset: '${preset}',`,
-  "} satisfies AstroDoctorConfig",
-  '',
+  '} satisfies AstroDoctorConfig',
+  ''
 ].join('\n')
 
 const getEslintConfig = (): string => [
-  "import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'",
+  'import astroDoctorPlugin from \'@santi020k/eslint-plugin-astro-doctor\'',
   '',
   'export default [',
   '  astroDoctorPlugin.configs.recommended,',
   ']',
-  '',
+  ''
 ].join('\n')
 
 const getGithubWorkflow = (): string => [
@@ -87,32 +87,30 @@ const getGithubWorkflow = (): string => [
   '          fetch-depth: 0',
   '      - uses: santi020k/astro-doctor@v1',
   '        with:',
-  "          fail-on: 'error'",
-  '',
+  '          fail-on: \'error\'',
+  ''
 ].join('\n')
 
 const getInitFiles = (preset: PresetName, directory: string): InitFile[] => {
-  const hasEslintConfig = ESLINT_CONFIG_FILE_NAMES.some((fileName) =>
-    existsSync(resolve(directory, fileName)),
-  )
+  const hasEslintConfig = ESLINT_CONFIG_FILE_NAMES.some(fileName => existsSync(resolve(directory, fileName)))
 
   return [
     {
       path: 'doctor.config.ts',
-      content: getDoctorConfig(preset),
+      content: getDoctorConfig(preset)
     },
-    ...(hasEslintConfig
-      ? []
-      : [
-          {
-            path: 'eslint.config.js',
-            content: getEslintConfig(),
-          },
-        ]),
+    ...(hasEslintConfig ?
+      [] :
+      [
+        {
+          path: 'eslint.config.js',
+          content: getEslintConfig()
+        }
+      ]),
     {
       path: '.github/workflows/astro-doctor.yml',
-      content: getGithubWorkflow(),
-    },
+      content: getGithubWorkflow()
+    }
   ]
 }
 

@@ -7,7 +7,7 @@ import { RECOMMENDED_RULES, rules } from './rules/index.js'
 import {
   ASTRO_ESLINT_PLUGINS,
   disableDuplicateAstroDoctorRules,
-  getAstroEcosystemRules,
+  getAstroEcosystemRules
 } from './astro-rules.js'
 
 const require = createRequire(import.meta.url)
@@ -30,47 +30,46 @@ interface AstroDoctorPlugin {
 const plugin: AstroDoctorPlugin = {
   meta: {
     name: '@santi020k/eslint-plugin-astro-doctor',
-    version,
+    version
   },
   rules,
-  configs: {},
+  configs: {}
 }
 
 plugin.configs.recommended = {
   files: ['**/*.astro'],
   plugins: {
     'astro-doctor': plugin,
-    ...ASTRO_ESLINT_PLUGINS,
+    ...ASTRO_ESLINT_PLUGINS
   },
   languageOptions: {
     parser: astroParser,
     parserOptions: {
-      sourceType: 'module',
-    },
+      sourceType: 'module'
+    }
   },
   rules: disableDuplicateAstroDoctorRules({
     ...RECOMMENDED_RULES,
-    ...getAstroEcosystemRules('recommended'),
-  }),
+    ...getAstroEcosystemRules('recommended')
+  })
 }
 
-const getStrictAstroDoctorRules = (): Record<string, 'error'> =>
-  Object.fromEntries(Object.keys(RECOMMENDED_RULES).map((ruleId) => [ruleId, 'error']))
+const getStrictAstroDoctorRules = (): Record<string, 'error'> => Object.fromEntries(Object.keys(RECOMMENDED_RULES).map(ruleId => [ruleId, 'error']))
 
 plugin.configs.strict = {
   ...plugin.configs.recommended,
   rules: disableDuplicateAstroDoctorRules({
     ...getStrictAstroDoctorRules(),
-    ...getAstroEcosystemRules('strict'),
-  }),
+    ...getAstroEcosystemRules('strict')
+  })
 }
 
 plugin.configs.all = {
   ...plugin.configs.recommended,
   rules: disableDuplicateAstroDoctorRules({
     ...getStrictAstroDoctorRules(),
-    ...getAstroEcosystemRules('all'),
-  }),
+    ...getAstroEcosystemRules('all')
+  })
 }
 
 export default plugin
@@ -84,6 +83,6 @@ export {
   getAstroEcosystemRules,
   getAstroRuleCategory,
   getAstroRuleDescription,
-  getAstroRuleDocUrl,
+  getAstroRuleDocUrl
 } from './astro-rules.js'
 export type { AstroDoctorRule, RuleCategory } from './types.js'

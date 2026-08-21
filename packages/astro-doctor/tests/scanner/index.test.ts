@@ -32,13 +32,12 @@ describe('scan', () => {
 
   test('returns a ScanResult with zero diagnostics for a clean Astro file', async () => {
     writeFileSync(
-      join(testDirectory, 'index.astro'),
-      [
+      join(testDirectory, 'index.astro'), [
         '---',
-        "import { Image } from 'astro:assets'",
-        "import hero from '../assets/hero.png'",
+        'import { Image } from \'astro:assets\'',
+        'import hero from \'../assets/hero.png\'',
         '---',
-        '<Image src={hero} alt="Hero" />',
+        '<Image src={hero} alt="Hero" />'
       ].join('\n')
     )
 
@@ -50,8 +49,7 @@ describe('scan', () => {
 
   test('detects a raw <img> tag and returns a diagnostic', async () => {
     writeFileSync(
-      join(testDirectory, 'index.astro'),
-      '---\n---\n<img src="/hero.png" alt="hero" />'
+      join(testDirectory, 'index.astro'), '---\n---\n<img src="/hero.png" alt="hero" />'
     )
 
     const scanResult = await scan({ directory: testDirectory })
@@ -59,28 +57,27 @@ describe('scan', () => {
     expect(scanResult.diagnostics.length).toBeGreaterThan(0)
 
     const useAstroImageDiagnostic = scanResult.diagnostics.find(
-      (diagnostic) => diagnostic.ruleId === 'astro-doctor/use-astro-image'
+      diagnostic => diagnostic.ruleId === 'astro-doctor/use-astro-image'
     )
     expect(useAstroImageDiagnostic).toBeDefined()
   })
 
   test('detects client:load overuse when more than one per file is used', async () => {
     writeFileSync(
-      join(testDirectory, 'index.astro'),
-      [
+      join(testDirectory, 'index.astro'), [
         '---',
-        "import Counter from './Counter.tsx'",
-        "import Nav from './Nav.tsx'",
+        'import Counter from \'./Counter.tsx\'',
+        'import Nav from \'./Nav.tsx\'',
         '---',
         '<Counter client:load />',
-        '<Nav client:load />',
+        '<Nav client:load />'
       ].join('\n')
     )
 
     const scanResult = await scan({ directory: testDirectory })
 
     const overuseDiagnostic = scanResult.diagnostics.find(
-      (diagnostic) => diagnostic.ruleId === 'astro-doctor/no-client-load-overuse'
+      diagnostic => diagnostic.ruleId === 'astro-doctor/no-client-load-overuse'
     )
     expect(overuseDiagnostic).toBeDefined()
     expect(overuseDiagnostic?.severity).toBe('warning')
@@ -88,12 +85,11 @@ describe('scan', () => {
 
   test('runs the official recommended Astro rules by default', async () => {
     writeFileSync(
-      join(testDirectory, 'index.astro'),
-      [
+      join(testDirectory, 'index.astro'), [
         '---',
-        "import Counter from './Counter.tsx'",
+        'import Counter from \'./Counter.tsx\'',
         '---',
-        '<Counter client:only />',
+        '<Counter client:only />'
       ].join('\n')
     )
 
@@ -103,39 +99,37 @@ describe('scan', () => {
       expect.arrayContaining([
         expect.objectContaining({
           ruleId: 'astro/missing-client-only-directive-value',
-          category: 'best-practices',
-        }),
+          category: 'best-practices'
+        })
       ])
     )
   })
 
   test('keeps proprietary accessibility rules enabled in strict mode', async () => {
     writeFileSync(
-      join(testDirectory, 'index.astro'),
-      '---\n---\n<img src="/hero.png" />'
+      join(testDirectory, 'index.astro'), '---\n---\n<img src="/hero.png" />'
     )
 
     const scanResult = await scan({
       directory: testDirectory,
-      rules: getPresetRules('strict'),
+      rules: getPresetRules('strict')
     })
     const missingAltRuleIds = scanResult.diagnostics
-      .map((diagnostic) => diagnostic.ruleId)
-      .filter((ruleId) => ruleId.includes('alt-text') || ruleId.includes('missing-alt'))
+      .map(diagnostic => diagnostic.ruleId)
+      .filter(ruleId => ruleId.includes('alt-text') || ruleId.includes('missing-alt'))
 
     expect(missingAltRuleIds).toEqual(['astro-doctor/no-missing-alt'])
   })
 
   test('detects missing alt on <img>', async () => {
     writeFileSync(
-      join(testDirectory, 'index.astro'),
-      '---\n---\n<img src="/hero.png" />'
+      join(testDirectory, 'index.astro'), '---\n---\n<img src="/hero.png" />'
     )
 
     const scanResult = await scan({ directory: testDirectory })
 
     const altDiagnostic = scanResult.diagnostics.find(
-      (diagnostic) => diagnostic.ruleId === 'astro-doctor/no-missing-alt'
+      diagnostic => diagnostic.ruleId === 'astro-doctor/no-missing-alt'
     )
     expect(altDiagnostic).toBeDefined()
     expect(altDiagnostic?.severity).toBe('error')
@@ -143,32 +137,30 @@ describe('scan', () => {
 
   test('detects set:html usage', async () => {
     writeFileSync(
-      join(testDirectory, 'index.astro'),
-      [
+      join(testDirectory, 'index.astro'), [
         '---',
-        "const content = '<p>Hello</p>'",
+        'const content = \'<p>Hello</p>\'',
         '---',
-        '<div set:html={content} />',
+        '<div set:html={content} />'
       ].join('\n')
     )
 
     const scanResult = await scan({ directory: testDirectory })
 
     const setHtmlDiagnostic = scanResult.diagnostics.find(
-      (diagnostic) => diagnostic.ruleId === 'astro-doctor/no-set-html'
+      diagnostic => diagnostic.ruleId === 'astro-doctor/no-set-html'
     )
     expect(setHtmlDiagnostic).toBeDefined()
   })
 
   test('calculates counts and score from selected categories only', async () => {
     writeFileSync(
-      join(testDirectory, 'index.astro'),
-      '---\n---\n<img src="/hero.png" alt="Hero" />'
+      join(testDirectory, 'index.astro'), '---\n---\n<img src="/hero.png" alt="Hero" />'
     )
 
     const scanResult = await scan({
       directory: testDirectory,
-      categories: ['security'],
+      categories: ['security']
     })
 
     expect(scanResult.diagnostics).toEqual([])
@@ -182,19 +174,18 @@ describe('scan', () => {
     const astroFilePath = join(testDirectory, 'index.astro')
 
     writeFileSync(
-      astroFilePath,
-      '---\nconst title = process.env.SITE_TITLE\n---\n<h1>{title}</h1>'
+      astroFilePath, '---\nconst title = process.env.SITE_TITLE\n---\n<h1>{title}</h1>'
     )
 
     const scanResult = await scan({
       directory: testDirectory,
-      fix: true,
+      fix: true
     })
 
     expect(readFileSync(astroFilePath, 'utf8')).toContain('import.meta.env.SITE_TITLE')
     expect(
       scanResult.diagnostics.some(
-        (diagnostic) => diagnostic.ruleId === 'astro-doctor/no-process-env'
+        diagnostic => diagnostic.ruleId === 'astro-doctor/no-process-env'
       )
     ).toBe(false)
   })
@@ -203,29 +194,27 @@ describe('scan', () => {
     const astroFilePath = join(testDirectory, 'index.astro')
 
     writeFileSync(
-      astroFilePath,
-      '---\nconst message = "Hello"\n---\n<p set:text={message} />',
+      astroFilePath, '---\nconst message = "Hello"\n---\n<p set:text={message} />'
     )
 
     const scanResult = await scan({
       directory: testDirectory,
       fix: true,
-      rules: getPresetRules('strict'),
+      rules: getPresetRules('strict')
     })
 
     expect(readFileSync(astroFilePath, 'utf8')).toContain('{message}</p>')
     expect(
       scanResult.diagnostics.some(
-        (diagnostic) => diagnostic.ruleId === 'astro/no-set-text-directive',
-      ),
+        diagnostic => diagnostic.ruleId === 'astro/no-set-text-directive'
+      )
     ).toBe(false)
   })
 
   test('applies glob-based rule overrides', async () => {
     mkdirSync(join(testDirectory, 'src', 'legacy'), { recursive: true })
     writeFileSync(
-      join(testDirectory, 'src', 'legacy', 'index.astro'),
-      '---\n---\n<img src="/hero.png" />',
+      join(testDirectory, 'src', 'legacy', 'index.astro'), '---\n---\n<img src="/hero.png" />'
     )
 
     const scanResult = await scan({
@@ -234,28 +223,25 @@ describe('scan', () => {
         files: ['src/legacy/**'],
         rules: {
           'astro-doctor/no-missing-alt': 'off',
-          'astro/jsx-a11y/alt-text': 'off',
-        },
-      }],
+          'astro/jsx-a11y/alt-text': 'off'
+        }
+      }]
     })
 
     expect(
-      scanResult.diagnostics.some((diagnostic) =>
-        diagnostic.ruleId === 'astro-doctor/no-missing-alt' ||
-        diagnostic.ruleId === 'astro/jsx-a11y/alt-text'
-      ),
+      scanResult.diagnostics.some(diagnostic => diagnostic.ruleId === 'astro-doctor/no-missing-alt' ||
+        diagnostic.ruleId === 'astro/jsx-a11y/alt-text')
     ).toBe(false)
   })
 
   test('reports phase timings and enables content caching', async () => {
     writeFileSync(
-      join(testDirectory, 'index.astro'),
-      '---\n---\n<p>Hello</p>',
+      join(testDirectory, 'index.astro'), '---\n---\n<p>Hello</p>'
     )
 
     const scanResult = await scan({
       directory: testDirectory,
-      cache: true,
+      cache: true
     })
 
     expect(scanResult.timings?.cacheEnabled).toBe(true)
@@ -281,7 +267,7 @@ describe('scan', () => {
 
     const scanResult = await scan({
       directory: testDirectory,
-      files: ['changed.astro'],
+      files: ['changed.astro']
     })
 
     expect(scanResult.fileCount).toBe(1)
@@ -290,37 +276,35 @@ describe('scan', () => {
 
   test('ignores inline disable directives in audit mode', async () => {
     writeFileSync(
-      join(testDirectory, 'index.astro'),
-      [
+      join(testDirectory, 'index.astro'), [
         '---',
         '/* eslint-disable astro-doctor/use-astro-image */',
         '---',
-        '<img src="/hero.png" alt="Hero" />',
+        '<img src="/hero.png" alt="Hero" />'
       ].join('\n')
     )
 
     const regularResult = await scan({ directory: testDirectory })
     const auditResult = await scan({
       directory: testDirectory,
-      noRespectInlineDisables: true,
+      noRespectInlineDisables: true
     })
 
     expect(regularResult.diagnostics).toEqual([])
     expect(auditResult.diagnostics).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ ruleId: 'astro-doctor/use-astro-image' }),
+        expect.objectContaining({ ruleId: 'astro-doctor/use-astro-image' })
       ])
     )
   })
 
   test('ignores foreign inline directives while reporting configured rules', async () => {
     writeFileSync(
-      join(testDirectory, 'index.astro'),
-      [
+      join(testDirectory, 'index.astro'), [
         '---',
         '/* eslint-disable better-tailwindcss/no-unknown-classes */',
         '---',
-        '<img class="project-component" src="/hero.png" alt="Hero" />',
+        '<img class="project-component" src="/hero.png" alt="Hero" />'
       ].join('\n')
     )
 
@@ -328,44 +312,42 @@ describe('scan', () => {
 
     expect(scanResult.diagnostics).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ ruleId: 'astro-doctor/use-astro-image' }),
-      ]),
+        expect.objectContaining({ ruleId: 'astro-doctor/use-astro-image' })
+      ])
     )
     expect(scanResult.diagnostics).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ ruleId: 'better-tailwindcss/no-unknown-classes' }),
-      ]),
+        expect.objectContaining({ ruleId: 'better-tailwindcss/no-unknown-classes' })
+      ])
     )
   })
 
   test('exposes the file path on each diagnostic', async () => {
     writeFileSync(
-      join(testDirectory, 'index.astro'),
-      '---\n---\n<img src="/hero.png" />'
+      join(testDirectory, 'index.astro'), '---\n---\n<img src="/hero.png" />'
     )
 
     const scanResult = await scan({ directory: testDirectory })
 
-    expect(scanResult.diagnostics.every((diagnostic) => Boolean(diagnostic.filePath))).toBe(true)
+    expect(scanResult.diagnostics.every(diagnostic => Boolean(diagnostic.filePath))).toBe(true)
     expect(scanResult.diagnostics[0]?.filePath).toMatch(/index\.astro$/)
   })
 
   test('detects project package manager issues without Astro files', async () => {
     writeFileSync(
-      join(testDirectory, 'package.json'),
-      JSON.stringify({ name: 'test-project', packageManager: 'npm@10.0.0' })
+      join(testDirectory, 'package.json'), JSON.stringify({ name: 'test-project', packageManager: 'npm@10.0.0' })
     )
 
     const scanResult = await scan({
       directory: testDirectory,
       files: ['package.json'],
       rules: {
-        'astro-doctor/prefer-pnpm': 'warn',
-      },
+        'astro-doctor/prefer-pnpm': 'warn'
+      }
     })
 
     const packageManagerDiagnostic = scanResult.diagnostics.find(
-      (diagnostic) => diagnostic.ruleId === 'astro-doctor/prefer-pnpm'
+      diagnostic => diagnostic.ruleId === 'astro-doctor/prefer-pnpm'
     )
 
     expect(scanResult.fileCount).toBe(1)
@@ -374,21 +356,20 @@ describe('scan', () => {
 
   test('detects unsafe Astro security config', async () => {
     writeFileSync(
-      join(testDirectory, 'astro.config.mjs'),
-      [
-        "import { defineConfig } from 'astro/config'",
+      join(testDirectory, 'astro.config.mjs'), [
+        'import { defineConfig } from \'astro/config\'',
         'export default defineConfig({',
-        "  output: 'server',",
+        '  output: \'server\',',
         '  security: {',
         '    checkOrigin: false,',
         '    allowedDomains: [{}],',
         '  },',
-        '})',
+        '})'
       ].join('\n')
     )
 
     const scanResult = await scan({ directory: testDirectory, files: ['astro.config.mjs'] })
-    const ruleIds = scanResult.diagnostics.map((diagnostic) => diagnostic.ruleId)
+    const ruleIds = scanResult.diagnostics.map(diagnostic => diagnostic.ruleId)
 
     expect(ruleIds).toContain('astro-doctor/no-disabled-origin-check')
     expect(ruleIds).toContain('astro-doctor/no-open-allowed-domains')
@@ -396,12 +377,11 @@ describe('scan', () => {
 
   test('detects public secret env names and missing env schema', async () => {
     writeFileSync(
-      join(testDirectory, '.env.example'),
-      ['PUBLIC_API_URL=https://example.com', 'PUBLIC_API_KEY=replace-me'].join('\n')
+      join(testDirectory, '.env.example'), ['PUBLIC_API_URL=https://example.com', 'PUBLIC_API_KEY=replace-me'].join('\n')
     )
 
     const scanResult = await scan({ directory: testDirectory, files: ['.env.example'] })
-    const ruleIds = scanResult.diagnostics.map((diagnostic) => diagnostic.ruleId)
+    const ruleIds = scanResult.diagnostics.map(diagnostic => diagnostic.ruleId)
 
     expect(ruleIds).toContain('astro-doctor/no-public-secret-env')
     expect(ruleIds).toContain('astro-doctor/prefer-env-schema')
@@ -415,11 +395,11 @@ describe('scan', () => {
 
     const scanResult = await scan({
       directory: testDirectory,
-      files: ['src/content/blog/hello.md'],
+      files: ['src/content/blog/hello.md']
     })
 
     const contentConfigDiagnostic = scanResult.diagnostics.find(
-      (diagnostic) => diagnostic.ruleId === 'astro-doctor/require-content-config'
+      diagnostic => diagnostic.ruleId === 'astro-doctor/require-content-config'
     )
 
     expect(contentConfigDiagnostic).toBeDefined()

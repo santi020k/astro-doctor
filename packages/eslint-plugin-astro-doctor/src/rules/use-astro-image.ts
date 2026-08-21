@@ -14,28 +14,28 @@ export default createRule({
         'Enforce the use of <Image> or <Picture> from astro:assets instead of raw <img> elements',
       category: 'performance',
       recommended: true,
-      url: `${RULE_DOCS_BASE_URL}/use-astro-image`,
+      url: `${RULE_DOCS_BASE_URL}/use-astro-image`
     },
     messages: {
       useAstroImage:
         'Use <Image> or <Picture> from astro:assets instead of <img>. ' +
-        'Astro\'s image components enforce alt text, run build-time optimization, and output modern formats.',
+        'Astro\'s image components enforce alt text, run build-time optimization, and output modern formats.'
     },
-    schema: [],
+    schema: []
   },
   create(context) {
     if (!isAstroFile(context.filename)) return {}
 
     return {
       Program() {
-        forEachAstroElement(context, (elementNode) => {
+        forEachAstroElement(context, elementNode => {
           if (elementNode.name !== IMAGE_ELEMENT_NAME) return
 
           if (!hasAstroAttribute(elementNode.attributes ?? [], SOURCE_ATTRIBUTE_NAME)) return
 
           reportAstroNode(context, elementNode, 'useAstroImage')
         })
-      },
+      }
     }
-  },
+  }
 })

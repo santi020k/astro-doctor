@@ -17,22 +17,21 @@ interface AstroElementRecord {
   readonly children?: readonly unknown[]
 }
 
-const isAstroElementRecord = (node: unknown): node is AstroElementRecord =>
-  typeof node === 'object' && node !== null
+const isAstroElementRecord = (node: unknown): node is AstroElementRecord => typeof node === 'object' && node !== null
 
-const isFallbackSlotAttribute = (node: unknown): boolean =>
-  isAstroElementRecord(node) &&
+const isFallbackSlotAttribute = (node: unknown): boolean => isAstroElementRecord(node) &&
   node.name === SLOT_ATTRIBUTE_NAME &&
   node.value === FALLBACK_SLOT_VALUE
 
 const isFallbackElement = (node: unknown): boolean => {
   if (!isAstroElementRecord(node)) return false
 
-  return (node.attributes ?? []).some((attributeNode) => isFallbackSlotAttribute(attributeNode))
+  return (node.attributes ?? []).some(attributeNode => isFallbackSlotAttribute(attributeNode))
 }
 
-const hasFallbackSlot = (elementNode: AstroElementNode): boolean =>
-  (elementNode.children ?? []).some((childNode) => isFallbackElement(childNode))
+const hasFallbackSlot = (
+  elementNode: AstroElementNode
+): boolean => (elementNode.children ?? []).some(childNode => isFallbackElement(childNode))
 
 export default createRule({
   meta: {
@@ -42,22 +41,22 @@ export default createRule({
         'Require fallback content for client-only and deferred server islands',
       category: 'accessibility',
       recommended: true,
-      url: `${RULE_DOCS_BASE_URL}/require-island-fallback`,
+      url: `${RULE_DOCS_BASE_URL}/require-island-fallback`
     },
     messages: {
       clientOnlyFallback:
         'client:only skips server rendering. Add an element with slot="fallback" so users are not left with empty UI while the island loads.',
       serverDeferFallback:
-        'server:defer renders later on demand. Add an element with slot="fallback" to preserve useful initial UI.',
+        'server:defer renders later on demand. Add an element with slot="fallback" to preserve useful initial UI.'
     },
-    schema: [],
+    schema: []
   },
   create(context) {
     if (!isAstroFile(context.filename)) return {}
 
     return {
       Program() {
-        forEachAstroElement(context, (elementNode) => {
+        forEachAstroElement(context, elementNode => {
           if (hasFallbackSlot(elementNode)) return
 
           const attributes = elementNode.attributes ?? []
@@ -72,7 +71,7 @@ export default createRule({
 
           reportAstroNode(context, elementNode, 'serverDeferFallback')
         })
-      },
+      }
     }
-  },
+  }
 })

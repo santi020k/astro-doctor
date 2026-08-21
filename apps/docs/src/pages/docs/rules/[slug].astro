@@ -21,6 +21,11 @@ export const getStaticPaths = (() => ALL_RULES.map(rule => ({
 }))) satisfies GetStaticPaths
 
 const { slug } = Astro.params
+
+if (!slug) {
+  return Astro.redirect('/docs/rules')
+}
+
 const rule = RULE_BY_SLUG[slug]
 
 if (!rule) {

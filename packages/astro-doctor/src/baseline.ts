@@ -63,7 +63,7 @@ const createBaselineSnapshot = (options: BaselineScanOptions): BaselineSnapshot 
   return {
     directory: snapshotDirectory,
     projectDirectory: snapshotProjectDirectory,
-    files: snapshotFiles,
+    files: snapshotFiles
   }
 }
 
@@ -75,12 +75,12 @@ export const scanBaseline = async (options: BaselineScanOptions): Promise<Baseli
       ...options.scanOptions,
       directory: snapshot.projectDirectory,
       files: snapshot.files,
-      fix: false,
+      fix: false
     })
 
     return {
       result,
-      rootDirectory: snapshot.projectDirectory,
+      rootDirectory: snapshot.projectDirectory
     }
   } finally {
     rmSync(snapshot.directory, { recursive: true, force: true })
@@ -89,17 +89,17 @@ export const scanBaseline = async (options: BaselineScanOptions): Promise<Baseli
 
 const getDiagnosticFingerprint = (
   diagnostic: Diagnostic,
-  rootDirectory: string,
+  rootDirectory: string
 ): string => [
   relative(rootDirectory, diagnostic.filePath).replaceAll('\\', '/'),
   diagnostic.ruleId,
   diagnostic.severity,
-  diagnostic.message,
+  diagnostic.message
 ].join('\0')
 
 const createFingerprintCounts = (
   diagnostics: readonly Diagnostic[],
-  rootDirectory: string,
+  rootDirectory: string
 ): Map<string, number> => {
   const fingerprintCounts = new Map<string, number>()
 
@@ -114,21 +114,19 @@ const createFingerprintCounts = (
 
 export const createPersistentBaseline = (
   result: ScanResult,
-  rootDirectory: string,
+  rootDirectory: string
 ): PersistentBaseline => ({
   $schema: PERSISTENT_BASELINE_SCHEMA_URL,
   version: PERSISTENT_BASELINE_VERSION,
   generatedAt: new Date().toISOString(),
   entries: [...createFingerprintCounts(result.diagnostics, rootDirectory)]
-    .sort(([firstFingerprint], [secondFingerprint]) =>
-      firstFingerprint.localeCompare(secondFingerprint)
-    )
-    .map(([fingerprint, count]) => ({ fingerprint, count })),
+    .sort(([firstFingerprint], [secondFingerprint]) => firstFingerprint.localeCompare(secondFingerprint))
+    .map(([fingerprint, count]) => ({ fingerprint, count }))
 })
 
 export const writePersistentBaseline = (
   filePath: string,
-  baseline: PersistentBaseline,
+  baseline: PersistentBaseline
 ): void => {
   mkdirSync(dirname(filePath), { recursive: true })
 
@@ -157,7 +155,7 @@ export const readPersistentBaseline = (filePath: string): PersistentBaseline => 
 
   if (baseline.version !== PERSISTENT_BASELINE_VERSION) {
     throw new Error(
-      `Unsupported baseline version "${String(baseline.version)}". Expected ${PERSISTENT_BASELINE_VERSION}.`,
+      `Unsupported baseline version "${String(baseline.version)}". Expected ${PERSISTENT_BASELINE_VERSION}.`
     )
   }
 
@@ -170,25 +168,25 @@ export const readPersistentBaseline = (filePath: string): PersistentBaseline => 
   }
 
   return {
-    $schema: typeof baseline.$schema === 'string'
-      ? baseline.$schema
-      : PERSISTENT_BASELINE_SCHEMA_URL,
+    $schema: typeof baseline.$schema === 'string' ?
+      baseline.$schema :
+      PERSISTENT_BASELINE_SCHEMA_URL,
     version: PERSISTENT_BASELINE_VERSION,
     generatedAt: baseline.generatedAt,
-    entries: baseline.entries,
+    entries: baseline.entries
   }
 }
 
 export const filterPersistentBaselineDiagnostics = (
   result: ScanResult,
   baseline: PersistentBaseline,
-  rootDirectory: string,
+  rootDirectory: string
 ): ScanResult => {
   const baselineCounts = new Map(
-    baseline.entries.map((entry) => [entry.fingerprint, entry.count]),
+    baseline.entries.map(entry => [entry.fingerprint, entry.count])
   )
 
-  const diagnostics = result.diagnostics.filter((diagnostic) => {
+  const diagnostics = result.diagnostics.filter(diagnostic => {
     const fingerprint = getDiagnosticFingerprint(diagnostic, rootDirectory)
     const count = baselineCounts.get(fingerprint) ?? 0
 
@@ -201,7 +199,7 @@ export const filterPersistentBaselineDiagnostics = (
 
   return {
     ...createScanResult(diagnostics, result.fileCount),
-    timings: result.timings,
+    timings: result.timings
   }
 }
 
@@ -209,14 +207,13 @@ export const filterIntroducedDiagnostics = (
   currentResult: ScanResult,
   baselineResult: ScanResult,
   currentRootDirectory: string,
-  baselineRootDirectory: string,
+  baselineRootDirectory: string
 ): ScanResult => {
   const baselineCounts = createFingerprintCounts(
-    baselineResult.diagnostics,
-    baselineRootDirectory,
+    baselineResult.diagnostics, baselineRootDirectory
   )
 
-  const introducedDiagnostics = currentResult.diagnostics.filter((diagnostic) => {
+  const introducedDiagnostics = currentResult.diagnostics.filter(diagnostic => {
     const fingerprint = getDiagnosticFingerprint(diagnostic, currentRootDirectory)
     const baselineCount = baselineCounts.get(fingerprint) ?? 0
 

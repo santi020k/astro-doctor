@@ -2,7 +2,7 @@ import { relative } from 'node:path'
 
 import type { AstroDoctorRule } from '@santi020k/eslint-plugin-astro-doctor'
 import astroDoctorPlugin, {
-  getAstroEcosystemRuleDocs,
+  getAstroEcosystemRuleDocs
 } from '@santi020k/eslint-plugin-astro-doctor'
 
 import type { Diagnostic, ProjectScanResult, ScanResult } from '../types.js'
@@ -24,7 +24,7 @@ const SCORE_EMOJI: Record<string, string> = {
   B: '🟢',
   C: '🟡',
   D: '🟠',
-  F: '🔴',
+  F: '🔴'
 }
 
 const colorScore = (score: number, label: string): string => {
@@ -45,9 +45,9 @@ const formatDiagnosticRow = (diagnostic: Diagnostic): string => {
   const location = dim(`${diagnostic.line}:${diagnostic.column}`.padEnd(PAD_LOCATION))
 
   const severityText =
-    diagnostic.severity === 'error'
-      ? red('error  ')
-      : yellow('warning')
+    diagnostic.severity === 'error' ?
+      red('error  ') :
+      yellow('warning')
 
   const ruleShortName = dim(`  (${diagnostic.ruleId.replace('astro-doctor/', '')})`)
 
@@ -73,7 +73,7 @@ const groupByFile = (diagnostics: readonly Diagnostic[]): Map<string, Diagnostic
 const formatFileGroup = (filePath: string, diagnostics: Diagnostic[], rootDirectory: string): string => {
   const relPath = relative(rootDirectory, filePath)
   const header = bold(underline(relPath))
-  const rows = diagnostics.map((diagnostic) => formatDiagnosticRow(diagnostic)).join('\n')
+  const rows = diagnostics.map(diagnostic => formatDiagnosticRow(diagnostic)).join('\n')
 
   return `${header}\n${rows}`
 }
@@ -95,7 +95,7 @@ const formatBreakdownLine = (result: ScanResult): string => {
     ['perf', scoreBreakdown.performance],
     ['a11y', scoreBreakdown.accessibility],
     ['sec', scoreBreakdown.security],
-    ['practices', scoreBreakdown['best-practices']],
+    ['practices', scoreBreakdown['best-practices']]
   ]
 
   const parts = categories.map(([label, score]) => `${label}: ${colorScore(score, '')}`.replace(' ()', ''))
@@ -113,18 +113,17 @@ const formatScoreLine = (result: ScanResult, showScore: boolean): string => {
   return `\nAstro Doctor Score: ${score} ${emoji}\n${breakdown}`
 }
 
-const getRuleDocs = (): Record<string, string> =>
-  ({
-    ...Object.fromEntries(
-      Object.entries(astroDoctorPlugin.rules).map(([ruleId, rule]) => {
-        const ruleMetadata = (rule as AstroDoctorRule).meta
-        const category = ruleMetadata.docs.category.replace('-', ' ')
+const getRuleDocs = (): Record<string, string> => ({
+  ...Object.fromEntries(
+    Object.entries(astroDoctorPlugin.rules).map(([ruleId, rule]) => {
+      const ruleMetadata = (rule as AstroDoctorRule).meta
+      const category = ruleMetadata.docs.category.replace('-', ' ')
 
-        return [ruleId, `${category} · ${ruleMetadata.docs.description}`]
-      }),
-    ),
-    ...getAstroEcosystemRuleDocs(),
-  })
+      return [ruleId, `${category} · ${ruleMetadata.docs.description}`]
+    })
+  ),
+  ...getAstroEcosystemRuleDocs()
+})
 
 const formatVerboseRuleSummary = (diagnostics: readonly Diagnostic[]): string => {
   const countByRule = new Map<string, number>()
@@ -151,8 +150,9 @@ const formatTimings = (result: ScanResult): string => {
   if (timings === undefined) return ''
 
   const cacheStatus = timings.cacheEnabled ? 'enabled' : 'disabled'
+  const phases = `discovery ${timings.discoveryMs}ms · audit ${timings.auditMs}ms · lint ${timings.lintMs}ms`
 
-  return `\nTimings: discovery ${timings.discoveryMs}ms · audit ${timings.auditMs}ms · lint ${timings.lintMs}ms · total ${timings.totalMs}ms · cache ${cacheStatus}`
+  return `\nTimings: ${phases} · total ${timings.totalMs}ms · cache ${cacheStatus}`
 }
 
 export const formatScoreOnly = (result: ScanResult): string => String(result.score)
@@ -164,13 +164,13 @@ export const formatScoreOnly = (result: ScanResult): string => String(result.sco
 export const formatProjectScoreTable = (
   projects: readonly ProjectScanResult[],
   aggregate: ScanResult,
-  showScore: boolean,
+  showScore: boolean
 ): string => {
   if (!showScore || projects.length === 0) return ''
 
-  const PAD_NAME = Math.max(...projects.map((p) => p.name.length), 12)
+  const PAD_NAME = Math.max(...projects.map(p => p.name.length), 12)
 
-  const lines = projects.map((p) => {
+  const lines = projects.map(p => {
     const emoji = SCORE_EMOJI[p.scoreLabel] ?? '🟡'
     const nameCol = p.name.padEnd(PAD_NAME)
     const issueCount = p.errorCount + p.warningCount
@@ -189,7 +189,7 @@ export const formatConsoleReport = (
   result: ScanResult,
   rootDirectory = process.cwd(),
   showScore = true,
-  verbose = false,
+  verbose = false
 ): string => {
   const scoreLine = formatScoreLine(result, showScore)
   const verboseSummary = verbose ? formatVerboseRuleSummary(result.diagnostics) : ''

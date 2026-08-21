@@ -11,9 +11,9 @@
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
     "lint": "pnpm run lint:repo && turbo run lint",
-    "lint:repo": "eslint . --cache --no-warn-ignored",
+    "lint:repo": "eslint . --cache --no-warn-ignored --max-warnings=0",
     "lint:fix": "pnpm run lint:repo:fix && turbo run lint:fix",
-    "lint:repo:fix": "eslint . --cache --fix --no-warn-ignored",
+    "lint:repo:fix": "eslint . --cache --fix --no-warn-ignored --max-warnings=0",
     "lint:spell": "cspell \"**\" --gitignore --cache --show-suggestions --show-context",
     "lint:knip": "knip",
     "check:packed-install": "node scripts/check-packed-install.mjs",
@@ -24,19 +24,22 @@
     "check:exports": "turbo run check:exports",
     "prepare": "husky",
     "pre-commit": "lint-staged && pnpm run typecheck && pnpm run lint:spell",
-    "pre-push": "pnpm install --frozen-lockfile && pnpm run build && pnpm run test:coverage && pnpm run lint:knip && pnpm run check:exports",
-    "commit": "cz"
+    "pre-push": "pnpm install --frozen-lockfile && pnpm run typecheck && pnpm run lint && pnpm run build && pnpm run test:coverage && pnpm run lint:knip && pnpm run check:exports",
+    "commit": "commitprompt"
   },
   "devDependencies": {
     "@changesets/changelog-github": "catalog:",
     "@changesets/cli": "catalog:",
-    "@commitlint/cli": "catalog:",
-    "@commitlint/config-conventional": "catalog:",
+    "@santi020k/commitprompt": "catalog:",
+    "@santi020k/eslint-config-astro": "catalog:",
     "@santi020k/eslint-config-basic": "catalog:",
+    "@santi020k/eslint-config-extensions": "catalog:",
+    "@santi020k/eslint-config-formats": "catalog:",
+    "@santi020k/eslint-config-libraries": "catalog:",
+    "@santi020k/eslint-config-testing": "catalog:",
+    "@santi020k/eslint-config-tools": "catalog:",
     "@types/node": "catalog:",
-    "commitizen": "catalog:",
     "cspell": "catalog:",
-    "cz-conventional-changelog": "catalog:",
     "eslint": "catalog:",
     "husky": "catalog:",
     "knip": "catalog:",
@@ -44,18 +47,12 @@
     "tailwindcss": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:",
-    "typescript-eslint": "catalog:",
     "wrangler": "catalog:"
   },
   "lint-staged": {
     "*.{js,ts,mjs,mts,astro}": [
-      "eslint --fix --no-warn-ignored"
+      "eslint --fix --no-warn-ignored --max-warnings=0"
     ]
-  },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
   },
   "engines": {
     "node": "^22.22.3 || ^24.16.0 || >=26.3.0"

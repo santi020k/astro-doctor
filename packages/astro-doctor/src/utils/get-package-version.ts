@@ -10,8 +10,7 @@ interface PackageMetadata {
   readonly version?: string
 }
 
-const isPackageMetadata = (value: unknown): value is PackageMetadata =>
-  typeof value === 'object' && value !== null
+const isPackageMetadata = (value: unknown): value is PackageMetadata => typeof value === 'object' && value !== null
 
 export const getPackageVersion = (): string => {
   let currentDirectory = dirname(fileURLToPath(import.meta.url))

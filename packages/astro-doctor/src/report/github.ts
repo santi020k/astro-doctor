@@ -13,12 +13,13 @@ const formatAnnotation = (diagnostic: Diagnostic): string => {
   const ruleShortName = diagnostic.ruleId.replace('astro-doctor/', '')
   // GitHub Actions annotation properties must not contain commas or newlines
   const escapedMessage = diagnostic.message.replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A')
+  const location = `file=${diagnostic.filePath},line=${diagnostic.line},col=${diagnostic.column}`
 
-  return `::${level} file=${diagnostic.filePath},line=${diagnostic.line},col=${diagnostic.column},title=${ruleShortName}::${escapedMessage}`
+  return `::${level} ${location},title=${ruleShortName}::${escapedMessage}`
 }
 
 export const formatGithubReport = (result: ScanResult): string => {
   if (result.diagnostics.length === 0) return ''
 
-  return result.diagnostics.map((d) => formatAnnotation(d)).join('\n')
+  return result.diagnostics.map(d => formatAnnotation(d)).join('\n')
 }

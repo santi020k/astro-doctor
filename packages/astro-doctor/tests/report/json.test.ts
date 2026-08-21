@@ -16,13 +16,13 @@ const CLEAN_RESULT: ScanResult = {
     performance: 100,
     accessibility: 100,
     security: 100,
-    'best-practices': 100,
-  },
+    'best-practices': 100
+  }
 }
 
 const getExpectedPackageVersion = (): string => {
   const packageMetadata: unknown = JSON.parse(
-    readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
+    readFileSync(new URL('../../package.json', import.meta.url), 'utf8')
   )
 
   if (
