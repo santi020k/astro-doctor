@@ -1,10 +1,7 @@
 name: Infisical Connection Check
 
 on:
-  workflow_dispatch:
-  pull_request:
-    paths:
-      - .github/workflows/infisical-connection.yml
+  workflow_dispatch: {}
 
 permissions:
   contents: read
