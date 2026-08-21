@@ -255,7 +255,7 @@ describe('project audits', () => {
     ).toBe(false)
   })
 
-  test('reports DOMContentLoaded usage across a ClientRouter project in strict mode', async () => {
+  test('reports DOMContentLoaded usage in script tags case-insensitively across a ClientRouter project', async () => {
     mkdirSync(join(testDirectory, 'src', 'components'), { recursive: true })
     mkdirSync(join(testDirectory, 'src', 'layouts'), { recursive: true })
     writeFileSync(
@@ -270,9 +270,9 @@ describe('project audits', () => {
     writeFileSync(
       join(testDirectory, 'src', 'components', 'menu.astro'), [
         '<button id="menu">Menu</button>',
-        '<script>',
+        '<SCRIPT>',
         '  document.addEventListener(\'DOMContentLoaded\', () => {})',
-        '</script>'
+        '</SCRIPT>'
       ].join('\n')
     )
 

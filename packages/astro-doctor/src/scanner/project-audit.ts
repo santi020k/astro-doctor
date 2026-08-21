@@ -729,7 +729,7 @@ const auditClientRouterScriptLifecycle = (
 
   for (const astroFilePath of options.astroFiles ?? []) {
     const astroFileContent = readFileSync(astroFilePath, 'utf8')
-    const scriptPattern = /<script\b[^>]*>[\s\S]*?<\/script>/gu
+    const scriptPattern = /<script\b[^>]*>[\s\S]*?<\/script>/giu
 
     const domContentLoadedPattern =
       /\b(?:document|window)\s*\.\s*addEventListener\s*\(\s*(['"])DOMContentLoaded\1/u
