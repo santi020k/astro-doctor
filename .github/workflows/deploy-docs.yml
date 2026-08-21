@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - "apps/docs/**"
-      - "packages/**"
+      - "packages/*/CHANGELOG.md"
       - ".github/workflows/deploy-docs.yml"
   workflow_dispatch: {}
 
