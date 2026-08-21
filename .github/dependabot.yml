@@ -16,11 +16,15 @@ updates:
     groups:
       production-dependencies:
         dependency-type: production
+        exclude-patterns:
+          - "turbo"
         update-types:
           - minor
           - patch
       development-dependencies:
         dependency-type: development
+        exclude-patterns:
+          - "turbo"
         update-types:
           - minor
           - patch
