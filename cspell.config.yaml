@@ -31,6 +31,7 @@ words:
   - turbo
   - turborepo
   - tsconfig
+  - undici
   - vite
   - vitest
   - vsce

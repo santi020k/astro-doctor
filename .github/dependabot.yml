@@ -1,19 +1,41 @@
 version: 2
 
 updates:
-  # Keep GitHub Actions up to date
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - "dependencies"
+      - "skip-changelog"
+    groups:
+      production-dependencies:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      development-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
       time: "09:00"
       timezone: "UTC"
     commit-message:
       prefix: "chore(deps)"
     labels:
-      - "type: chore"
       - "type: ci"
+      - "skip-changelog"
     groups:
       actions:
         patterns:
