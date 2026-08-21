@@ -272,7 +272,7 @@ describe('project audits', () => {
         '<button id="menu">Menu</button>',
         '<SCRIPT>',
         '  document.addEventListener(\'DOMContentLoaded\', () => {})',
-        '</SCRIPT >'
+        '</SCRIPT data-ignored>'
       ].join('\n')
     )
 
