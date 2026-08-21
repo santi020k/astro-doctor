@@ -16,11 +16,15 @@ updates:
     groups:
       production-dependencies:
         dependency-type: production
+        exclude-patterns:
+          - "turbo"
         update-types:
           - minor
           - patch
       development-dependencies:
         dependency-type: development
+        exclude-patterns:
+          - "turbo"
         update-types:
           - minor
           - patch
@@ -48,3 +52,8 @@ updates:
       actions:
         patterns:
           - "*"
+    ignore:
+      # v2 requires Changesets CLI v3 and a coordinated release migration.
+      - dependency-name: "changesets/action"
+        update-types:
+          - "version-update:semver-major"
