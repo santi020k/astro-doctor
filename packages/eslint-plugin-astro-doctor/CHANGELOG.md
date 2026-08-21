@@ -1,5 +1,11 @@
 # @santi020k/eslint-plugin-astro-doctor
 
+## 1.3.1
+
+### Patch Changes
+
+- [#25](https://github.com/santi020k/astro-doctor/pull/25) [`29d3a0a`](https://github.com/santi020k/astro-doctor/commit/29d3a0a7ba3f62e1bf220e7bbc2136724f57afac) Thanks [@santi020k](https://github.com/santi020k)! - Pin the composite GitHub Action's runtime dependencies to reviewed commit SHAs and refresh vulnerable transitive build dependencies.
+
 ## 1.3.0
 
 ### Minor Changes
