@@ -6,6 +6,12 @@
 
 - [`0695440`](https://github.com/santi020k/astro-doctor/commit/0695440af4c3ebd7ff29391e16991d51e22653fd) Thanks [@santi020k](https://github.com/santi020k)! - Improve package export and packed-install validation for published artifacts, including the dependencies bundled with the VS Code extension.
 
+## 1.2.2
+
+### Patch Changes
+
+- [`0695440`](https://github.com/santi020k/astro-doctor/commit/0695440af4c3ebd7ff29391e16991d51e22653fd) Thanks [@santi020k](https://github.com/santi020k)! - Improve package export and packed-install validation for published artifacts.
+
 ## 1.2.1
 
 ### Patch Changes
