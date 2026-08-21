@@ -7,7 +7,7 @@ export type AstroRulePreset = 'recommended' | 'strict' | 'ci' | 'all'
 export type RuleSeverity = 'error' | 'warn' | 'off'
 
 const LEGACY_DEPRECATED_ASTRO_RULE_IDS = new Set([
-  'astro/valid-compile',
+  'astro/valid-compile'
 ])
 
 const STRICT_ASTRO_RULE_IDS = [
@@ -16,19 +16,19 @@ const STRICT_ASTRO_RULE_IDS = [
   'astro/no-set-html-directive',
   'astro/no-set-text-directive',
   'astro/no-unsafe-inline-scripts',
-  'astro/no-unused-css-selector',
+  'astro/no-unused-css-selector'
 ]
 
 const SECURITY_ASTRO_RULE_IDS = new Set([
   'astro/no-set-html-directive',
-  'astro/no-unsafe-inline-scripts',
+  'astro/no-unsafe-inline-scripts'
 ])
 
 const ASTRO_DOCTOR_DUPLICATE_RULES: Record<string, string> = {
   'astro/jsx-a11y/alt-text': 'astro-doctor/no-missing-alt',
   'astro/jsx-a11y/html-has-lang': 'astro-doctor/no-missing-lang',
   'astro/no-set-html-directive': 'astro-doctor/no-set-html',
-  'astro/prefer-class-list-directive': 'astro-doctor/prefer-class-list',
+  'astro/prefer-class-list-directive': 'astro-doctor/prefer-class-list'
 }
 
 const isDeprecatedAstroRuleId = (ruleId: string): boolean => {
@@ -42,7 +42,7 @@ const isDeprecatedAstroRuleId = (ruleId: string): boolean => {
 }
 
 const normalizeRuleSeverity = (
-  ruleEntry: Linter.RuleEntry | undefined,
+  ruleEntry: Linter.RuleEntry | undefined
 ): RuleSeverity | undefined => {
   if (ruleEntry === undefined) return undefined
 
@@ -56,7 +56,7 @@ const normalizeRuleSeverity = (
 }
 
 const getFlatConfigRules = (
-  configName: 'flat/recommended' | 'flat/jsx-a11y-recommended',
+  configName: 'flat/recommended' | 'flat/jsx-a11y-recommended'
 ): Record<string, RuleSeverity> => {
   const normalizedRules: Record<string, RuleSeverity> = {}
 
@@ -73,24 +73,22 @@ const getFlatConfigRules = (
   return normalizedRules
 }
 
-const getRecommendedRules = (): Record<string, RuleSeverity> =>
-  getFlatConfigRules('flat/recommended')
+const getRecommendedRules = (): Record<string, RuleSeverity> => getFlatConfigRules('flat/recommended')
 
 const getStrictRules = (): Record<string, RuleSeverity> => ({
   ...getRecommendedRules(),
-  ...Object.fromEntries(STRICT_ASTRO_RULE_IDS.map((ruleId) => [ruleId, 'error'])),
+  ...Object.fromEntries(STRICT_ASTRO_RULE_IDS.map(ruleId => [ruleId, 'error']))
 })
 
-const getAllRules = (): Record<string, RuleSeverity> =>
-  Object.fromEntries(
-    Object.keys(astroPlugin.rules)
-      .map((ruleName) => `astro/${ruleName}`)
-      .filter((ruleId) => !isDeprecatedAstroRuleId(ruleId))
-      .map((ruleId) => [ruleId, 'error']),
-  )
+const getAllRules = (): Record<string, RuleSeverity> => Object.fromEntries(
+  Object.keys(astroPlugin.rules)
+    .map(ruleName => `astro/${ruleName}`)
+    .filter(ruleId => !isDeprecatedAstroRuleId(ruleId))
+    .map(ruleId => [ruleId, 'error'])
+)
 
 export const getAstroEcosystemRules = (
-  preset: AstroRulePreset,
+  preset: AstroRulePreset
 ): Record<string, RuleSeverity> => {
   if (preset === 'all') return getAllRules()
 
@@ -100,7 +98,7 @@ export const getAstroEcosystemRules = (
 }
 
 export const disableDuplicateAstroDoctorRules = (
-  rules: Record<string, RuleSeverity>,
+  rules: Record<string, RuleSeverity>
 ): Record<string, RuleSeverity> => {
   const deduplicatedRules = { ...rules }
 
@@ -116,7 +114,7 @@ export const disableDuplicateAstroDoctorRules = (
 }
 
 export const ASTRO_ESLINT_PLUGINS: NonNullable<Linter.Config['plugins']> = {
-  astro: astroPlugin,
+  astro: astroPlugin
 }
 
 export const getAstroRuleCategory = (ruleId: string): RuleCategory | undefined => {
@@ -145,17 +143,16 @@ export const getAstroRuleDescription = (ruleId: string): string | undefined => {
   return astroPlugin.rules[ruleName]?.meta?.docs?.description
 }
 
-export const getAstroEcosystemRuleDocs = (): Record<string, string> =>
-  Object.fromEntries(
-    Object.entries(astroPlugin.rules)
-      .filter(([ruleName]) => !isDeprecatedAstroRuleId(`astro/${ruleName}`))
-      .map(([ruleName, rule]) => {
-        const ruleId = `astro/${ruleName}`
-        const category = getAstroRuleCategory(ruleId)?.replace('-', ' ') ?? 'best practices'
-        const description = rule.meta?.docs?.description ?? ruleName
+export const getAstroEcosystemRuleDocs = (): Record<string, string> => Object.fromEntries(
+  Object.entries(astroPlugin.rules)
+    .filter(([ruleName]) => !isDeprecatedAstroRuleId(`astro/${ruleName}`))
+    .map(([ruleName, rule]) => {
+      const ruleId = `astro/${ruleName}`
+      const category = getAstroRuleCategory(ruleId)?.replace('-', ' ') ?? 'best practices'
+      const description = rule.meta?.docs?.description ?? ruleName
 
-        return [ruleId, `${category} · ${description}`]
-      }),
-  )
+      return [ruleId, `${category} · ${description}`]
+    })
+)
 
 export const getAstroEcosystemRuleCount = (): number => Object.keys(getAllRules()).length

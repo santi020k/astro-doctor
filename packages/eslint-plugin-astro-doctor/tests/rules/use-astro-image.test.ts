@@ -11,9 +11,9 @@ const ruleTester = new RuleTester({
   languageOptions: {
     parser: astroParser,
     parserOptions: {
-      sourceType: 'module',
-    },
-  },
+      sourceType: 'module'
+    }
+  }
 })
 
 ruleTester.run('use-astro-image', rule, {
@@ -22,57 +22,57 @@ ruleTester.run('use-astro-image', rule, {
     {
       code: [
         '---',
-        "import { Image } from 'astro:assets'",
-        "import myImage from '../assets/hero.png'",
+        'import { Image } from \'astro:assets\'',
+        'import myImage from \'../assets/hero.png\'',
         '---',
-        '<Image src={myImage} alt="hero" />',
+        '<Image src={myImage} alt="hero" />'
       ].join('\n'),
-      filename: 'test.astro',
+      filename: 'test.astro'
     },
     // Using <Picture> from astro:assets — also correct
     {
       code: [
         '---',
-        "import { Picture } from 'astro:assets'",
-        "import myImage from '../assets/hero.png'",
+        'import { Picture } from \'astro:assets\'',
+        'import myImage from \'../assets/hero.png\'',
         '---',
-        '<Picture src={myImage} alt="hero" formats={["avif", "webp"]} />',
+        '<Picture src={myImage} alt="hero" formats={["avif", "webp"]} />'
       ].join('\n'),
-      filename: 'test.astro',
+      filename: 'test.astro'
     },
     // Remote img in a markdown-output context with explicit opt-out comment is fine
     // (this tests that valid code with no img passes silently)
     {
-      code: `---\nconst title = 'Hello'\n---\n<h1>{title}</h1>`,
-      filename: 'test.astro',
+      code: '---\nconst title = \'Hello\'\n---\n<h1>{title}</h1>',
+      filename: 'test.astro'
     },
     {
-      code: `---\n---\n<dialog><img alt="" /></dialog>`,
-      filename: 'test.astro',
+      code: '---\n---\n<dialog><img alt="" /></dialog>',
+      filename: 'test.astro'
     },
     // Non-astro files are ignored
     {
-      code: `<img src="/logo.png" alt="logo" />`,
-      filename: 'test.tsx',
-    },
+      code: '<img src="/logo.png" alt="logo" />',
+      filename: 'test.tsx'
+    }
   ],
   invalid: [
     // Raw <img> tag should trigger the error
     {
-      code: `---\n---\n<img src="/hero.png" alt="hero" />`,
+      code: '---\n---\n<img src="/hero.png" alt="hero" />',
       filename: 'test.astro',
-      errors: [{ messageId: 'useAstroImage' }],
+      errors: [{ messageId: 'useAstroImage' }]
     },
     // <img> without alt also triggers (use-astro-image takes priority here)
     {
-      code: `---\n---\n<img src="/logo.png" />`,
+      code: '---\n---\n<img src="/logo.png" />',
       filename: 'test.astro',
-      errors: [{ messageId: 'useAstroImage' }],
+      errors: [{ messageId: 'useAstroImage' }]
     },
     {
-      code: `---\n---\n<img src="" alt="" />`,
+      code: '---\n---\n<img src="" alt="" />',
       filename: 'test.astro',
-      errors: [{ messageId: 'useAstroImage' }],
+      errors: [{ messageId: 'useAstroImage' }]
     },
     // Multiple raw img tags — one error per tag
     {
@@ -80,23 +80,23 @@ ruleTester.run('use-astro-image', rule, {
         '---',
         '---',
         '<img src="/hero.png" alt="hero" />',
-        '<img src="/logo.png" alt="logo" />',
+        '<img src="/logo.png" alt="logo" />'
       ].join('\n'),
       filename: 'test.astro',
-      errors: [{ messageId: 'useAstroImage' }, { messageId: 'useAstroImage' }],
+      errors: [{ messageId: 'useAstroImage' }, { messageId: 'useAstroImage' }]
     },
     // <img> inside a component template
     {
       code: [
         '---',
-        "import Card from './Card.astro'",
+        'import Card from \'./Card.astro\'',
         '---',
         '<Card>',
         '  <img src="/thumb.jpg" alt="thumbnail" />',
-        '</Card>',
+        '</Card>'
       ].join('\n'),
       filename: 'test.astro',
-      errors: [{ messageId: 'useAstroImage' }],
-    },
-  ],
+      errors: [{ messageId: 'useAstroImage' }]
+    }
+  ]
 })

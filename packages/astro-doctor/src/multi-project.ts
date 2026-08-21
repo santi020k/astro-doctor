@@ -12,7 +12,7 @@ import type {
   AstroDoctorConfig,
   ProjectScanResult,
   ScanOptions,
-  ScanResult,
+  ScanResult
 } from './types.js'
 
 export interface WorkspacePackage {
@@ -90,8 +90,7 @@ export const discoverWorkspacePackages = async (rootDirectory: string): Promise<
   return packages
 }
 
-const hasAstroConfigFile = (directory: string): boolean =>
-  existsSync(join(directory, 'astro.config.mjs')) ||
+const hasAstroConfigFile = (directory: string): boolean => existsSync(join(directory, 'astro.config.mjs')) ||
   existsSync(join(directory, 'astro.config.ts')) ||
   existsSync(join(directory, 'astro.config.js')) ||
   existsSync(join(directory, 'astro.config.cjs'))
@@ -120,7 +119,7 @@ export const isAstroProject = (directory: string): boolean => {
 export const autoDiscoverAstroProjects = async (rootDirectory: string): Promise<WorkspacePackage[]> => {
   const packages = await discoverWorkspacePackages(rootDirectory)
 
-  return packages.filter((pkg) => isAstroProject(pkg.directory))
+  return packages.filter(pkg => isAstroProject(pkg.directory))
 }
 
 /**
@@ -129,7 +128,7 @@ export const autoDiscoverAstroProjects = async (rootDirectory: string): Promise<
  */
 export const resolveProjectDirectories = async (
   projectArgs: readonly string[],
-  rootDirectory: string,
+  rootDirectory: string
 ): Promise<WorkspacePackage[]> => {
   const workspacePackages = await discoverWorkspacePackages(rootDirectory)
   const resolved: WorkspacePackage[] = []
@@ -137,7 +136,7 @@ export const resolveProjectDirectories = async (
 
   for (const arg of projectArgs) {
     // Try exact package name match
-    const byName = workspacePackages.find((p) => p.name === arg)
+    const byName = workspacePackages.find(p => p.name === arg)
 
     if (byName) {
       resolved.push(byName)
@@ -151,9 +150,9 @@ export const resolveProjectDirectories = async (
     if (existsSync(absoluteDir)) {
       const pkgJsonPath = join(absoluteDir, 'package.json')
 
-      const name = existsSync(pkgJsonPath)
-        ? ((JSON.parse(readFileSync(pkgJsonPath, 'utf8')) as { name?: string }).name ?? arg)
-        : arg
+      const name = existsSync(pkgJsonPath) ?
+        ((JSON.parse(readFileSync(pkgJsonPath, 'utf8')) as { name?: string }).name ?? arg) :
+        arg
 
       resolved.push({ name, directory: absoluteDir })
 
@@ -172,26 +171,26 @@ export const resolveProjectDirectories = async (
 
 const mergeRules = (
   root: AstroDoctorConfig | null,
-  project: AstroDoctorConfig | null,
+  project: AstroDoctorConfig | null
 ): AstroDoctorConfig['rules'] => ({
   ...(root?.rules ?? {}),
-  ...(project?.rules ?? {}),
+  ...(project?.rules ?? {})
 })
 
 const mergeIgnore = (
   root: AstroDoctorConfig | null,
-  project: AstroDoctorConfig | null,
+  project: AstroDoctorConfig | null
 ): AstroDoctorConfig['ignore'] => [
   ...(root?.ignore ?? []),
-  ...(project?.ignore ?? []),
+  ...(project?.ignore ?? [])
 ]
 
 const mergeOverrides = (
   root: AstroDoctorConfig | null,
-  project: AstroDoctorConfig | null,
+  project: AstroDoctorConfig | null
 ): AstroDoctorConfig['overrides'] => [
   ...(root?.overrides ?? []),
-  ...(project?.overrides ?? []),
+  ...(project?.overrides ?? [])
 ]
 
 /**
@@ -201,14 +200,14 @@ const mergeOverrides = (
  */
 export const mergeConfigs = (
   root: AstroDoctorConfig | null,
-  project: AstroDoctorConfig | null,
+  project: AstroDoctorConfig | null
 ): AstroDoctorConfig => ({
   rules: mergeRules(root, project),
   ignore: mergeIgnore(root, project),
   overrides: mergeOverrides(root, project),
   preset: project?.preset ?? root?.preset,
   failOn: project?.failOn ?? root?.failOn,
-  threshold: project?.threshold ?? root?.threshold,
+  threshold: project?.threshold ?? root?.threshold
 })
 
 /** Aggregate multiple scan results into a single worst-of result. */
@@ -221,35 +220,35 @@ export const aggregateResults = (results: readonly ProjectScanResult[]): ScanRes
       warningCount: 0,
       score: 100,
       scoreLabel: 'S',
-      scoreBreakdown: { performance: 100, accessibility: 100, security: 100, 'best-practices': 100 },
+      scoreBreakdown: { performance: 100, accessibility: 100, security: 100, 'best-practices': 100 }
     }
   }
 
-  const diagnostics = results.flatMap((r) => [...r.diagnostics])
+  const diagnostics = results.flatMap(r => [...r.diagnostics])
   const fileCount = results.reduce((sum, r) => sum + r.fileCount, 0)
   const errorCount = results.reduce((sum, r) => sum + r.errorCount, 0)
   const warningCount = results.reduce((sum, r) => sum + r.warningCount, 0)
-  const score = Math.min(...results.map((result) => result.score))
+  const score = Math.min(...results.map(result => result.score))
   const scoreLabel = computeScoreLabel(score)
 
   const scoreBreakdown = {
-    performance: Math.min(...results.map((result) => result.scoreBreakdown.performance)),
-    accessibility: Math.min(...results.map((result) => result.scoreBreakdown.accessibility)),
-    security: Math.min(...results.map((result) => result.scoreBreakdown.security)),
+    performance: Math.min(...results.map(result => result.scoreBreakdown.performance)),
+    accessibility: Math.min(...results.map(result => result.scoreBreakdown.accessibility)),
+    security: Math.min(...results.map(result => result.scoreBreakdown.security)),
     'best-practices': Math.min(
-      ...results.map((result) => result.scoreBreakdown['best-practices']),
-    ),
+      ...results.map(result => result.scoreBreakdown['best-practices'])
+    )
   }
 
-  const timings = results.some((result) => result.timings !== undefined)
-    ? {
-        discoveryMs: results.reduce((total, result) => total + (result.timings?.discoveryMs ?? 0), 0),
-        auditMs: results.reduce((total, result) => total + (result.timings?.auditMs ?? 0), 0),
-        lintMs: results.reduce((total, result) => total + (result.timings?.lintMs ?? 0), 0),
-        totalMs: results.reduce((total, result) => total + (result.timings?.totalMs ?? 0), 0),
-        cacheEnabled: results.every((result) => Boolean(result.timings?.cacheEnabled)),
-      }
-    : undefined
+  const timings = results.some(result => result.timings !== undefined) ?
+    {
+      discoveryMs: results.reduce((total, result) => total + (result.timings?.discoveryMs ?? 0), 0),
+      auditMs: results.reduce((total, result) => total + (result.timings?.auditMs ?? 0), 0),
+      lintMs: results.reduce((total, result) => total + (result.timings?.lintMs ?? 0), 0),
+      totalMs: results.reduce((total, result) => total + (result.timings?.totalMs ?? 0), 0),
+      cacheEnabled: results.every(result => Boolean(result.timings?.cacheEnabled))
+    } :
+    undefined
 
   return {
     diagnostics,
@@ -259,7 +258,7 @@ export const aggregateResults = (results: readonly ProjectScanResult[]): ScanRes
     score,
     scoreLabel,
     scoreBreakdown,
-    ...(timings === undefined ? {} : { timings }),
+    ...(timings === undefined ? {} : { timings })
   }
 }
 
@@ -275,10 +274,7 @@ export const scanProjects = async (options: MultiProjectOptions): Promise<Projec
   for (const project of projects) {
     const projectConfig = await loadConfig(project.directory)
     const mergedConfig = mergeConfigs(rootConfig, projectConfig)
-
-    const projectFiles = scanOptions.files?.filter((filePath) =>
-      isFileInDirectory(filePath, project.directory)
-    )
+    const projectFiles = scanOptions.files?.filter(filePath => isFileInDirectory(filePath, project.directory))
 
     const result = await scan({
       ...scanOptions,
@@ -286,7 +282,7 @@ export const scanProjects = async (options: MultiProjectOptions): Promise<Projec
       files: projectFiles,
       ignore: mergedConfig.ignore,
       rules: mergedConfig.rules,
-      overrides: mergedConfig.overrides,
+      overrides: mergedConfig.overrides
     })
 
     results.push({ ...result, name: project.name, directory: project.directory })

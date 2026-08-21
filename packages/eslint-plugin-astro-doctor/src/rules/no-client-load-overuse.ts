@@ -14,13 +14,13 @@ export default createRule({
         'Disallow overuse of client:load — prefer client:idle or client:visible for non-critical components',
       category: 'performance',
       recommended: true,
-      url: `${RULE_DOCS_BASE_URL}/no-client-load-overuse`,
+      url: `${RULE_DOCS_BASE_URL}/no-client-load-overuse`
     },
     messages: {
       preferLazyDirective:
         'Avoid client:load for non-critical components. Prefer client:idle (after page load) or client:visible (on viewport entry) to reduce Time to Interactive.',
       tooManyClientLoad:
-        'This file uses client:load {{count}} times (max: {{max}}). Move non-critical components to client:idle or client:visible to reduce Time to Interactive.',
+        'This file uses client:load {{count}} times (max: {{max}}). Move non-critical components to client:idle or client:visible to reduce Time to Interactive.'
     },
     schema: [
       {
@@ -29,12 +29,12 @@ export default createRule({
           max: {
             type: 'integer',
             minimum: 0,
-            description: 'Maximum number of client:load usages allowed per file (default: 1).',
-          },
+            description: 'Maximum number of client:load usages allowed per file (default: 1).'
+          }
         },
-        additionalProperties: false,
-      },
-    ],
+        additionalProperties: false
+      }
+    ]
   },
   create(context) {
     if (!isAstroFile(context.filename)) return {}
@@ -53,9 +53,12 @@ export default createRule({
 
         if (firstExcess) {
           context.report({
-            loc: { line: firstExcess.position?.start?.line ?? 1, column: Math.max(0, (firstExcess.position?.start?.column ?? 1) - 1) },
+            loc: {
+              column: Math.max(0, (firstExcess.position?.start?.column ?? 1) - 1),
+              line: firstExcess.position?.start?.line ?? 1
+            },
             messageId: 'tooManyClientLoad',
-            data: { count: String(collected.length), max: String(max) },
+            data: { count: String(collected.length), max: String(max) }
           })
         }
       }
@@ -63,7 +66,7 @@ export default createRule({
 
     return {
       Program() {
-        forEachAstroAttribute(context, (attributeNode) => {
+        forEachAstroAttribute(context, attributeNode => {
           if (attributeNode.name === CLIENT_LOAD_ATTRIBUTE_NAME) {
             collected.push(attributeNode)
           }
@@ -73,7 +76,7 @@ export default createRule({
         if (collected.length <= max) return
 
         reportExcessUsages()
-      },
+      }
     }
-  },
+  }
 })

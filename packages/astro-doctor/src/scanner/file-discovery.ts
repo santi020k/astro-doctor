@@ -8,21 +8,22 @@ const ASTRO_FILE_EXTENSION = '.astro'
 const ASTRO_FILE_GLOB = '**/*.astro'
 
 export const buildIgnorePatterns = (extraIgnore: readonly string[] = []): string[] => [
-  ...DEFAULT_IGNORED_DIRECTORIES.map((directory) => `**/${directory}/**`),
-  ...extraIgnore,
+  ...DEFAULT_IGNORED_DIRECTORIES.map(directory => `**/${directory}/**`),
+  ...extraIgnore
 ]
 
-const toAbsolutePath = (rootDirectory: string, filePath: string): string =>
-  isAbsolute(filePath) ? filePath : resolve(rootDirectory, filePath)
+const toAbsolutePath = (
+  rootDirectory: string, filePath: string
+): string => isAbsolute(filePath) ? filePath : resolve(rootDirectory, filePath)
 
 export const discoverAstroFiles = async (
   rootDirectory: string,
-  ignore: readonly string[] = [],
+  ignore: readonly string[] = []
 ): Promise<string[]> => {
   const discoveredFiles = await glob(ASTRO_FILE_GLOB, {
     cwd: rootDirectory,
     absolute: true,
-    ignore: buildIgnorePatterns(ignore),
+    ignore: buildIgnorePatterns(ignore)
   })
 
   return discoveredFiles.sort()
@@ -30,10 +31,9 @@ export const discoverAstroFiles = async (
 
 export const resolveAstroFiles = (
   rootDirectory: string,
-  filePaths: readonly string[],
-): string[] =>
-  filePaths
-    .filter((filePath) => filePath.endsWith(ASTRO_FILE_EXTENSION))
-    .map((filePath) => toAbsolutePath(rootDirectory, filePath))
-    .filter((filePath) => existsSync(filePath))
-    .sort()
+  filePaths: readonly string[]
+): string[] => filePaths
+  .filter(filePath => filePath.endsWith(ASTRO_FILE_EXTENSION))
+  .map(filePath => toAbsolutePath(rootDirectory, filePath))
+  .filter(filePath => existsSync(filePath))
+  .sort()

@@ -17,20 +17,20 @@ export default createRule({
         'Warn when script attributes opt out of Astro script processing, bundling, and deduplication',
       category: 'performance',
       recommended: true,
-      url: `${RULE_DOCS_BASE_URL}/no-unprocessed-script-surprises`,
+      url: `${RULE_DOCS_BASE_URL}/no-unprocessed-script-surprises`
     },
     messages: {
       unprocessedScript:
-        '<script> tags with attributes other than src are not processed by Astro. Move attributes to the loaded script only when this opt-out is intentional.',
+        '<script> tags with attributes other than src are not processed by Astro. Move attributes to the loaded script only when this opt-out is intentional.'
     },
-    schema: [],
+    schema: []
   },
   create(context) {
     if (!isAstroFile(context.filename)) return {}
 
     return {
       Program() {
-        forEachAstroElement(context, (elementNode) => {
+        forEachAstroElement(context, elementNode => {
           if (elementNode.name !== SCRIPT_ELEMENT_NAME) return
 
           const attributes = elementNode.attributes ?? []
@@ -40,14 +40,14 @@ export default createRule({
           if (getAstroAttributeValue(attributes, TYPE_ATTRIBUTE_NAME) === JSON_LD_TYPE) return
 
           const hasProcessingOptOutAttribute = attributes.some(
-            (attributeNode) => attributeNode.name !== SOURCE_ATTRIBUTE_NAME,
+            attributeNode => attributeNode.name !== SOURCE_ATTRIBUTE_NAME
           )
 
           if (!hasProcessingOptOutAttribute) return
 
           reportAstroNode(context, elementNode, 'unprocessedScript')
         })
-      },
+      }
     }
-  },
+  }
 })

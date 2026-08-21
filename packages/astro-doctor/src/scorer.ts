@@ -1,6 +1,6 @@
 import {
   MAXIMUM_SCORE_WITH_ERRORS,
-  MAXIMUM_SCORE_WITH_SECURITY_ERRORS,
+  MAXIMUM_SCORE_WITH_SECURITY_ERRORS
 } from './constants.js'
 import type { Diagnostic, ScoreBreakdown, ScoreLabel } from './types.js'
 
@@ -32,10 +32,10 @@ export const computeScore = (diagnostics: readonly Diagnostic[], fileCount: numb
 
   const rawScore = Math.floor((cleanFileTotal + dirtyFileTotal) / fileCount)
   // Never return a perfect score if there are diagnostics
-  const hasErrors = diagnostics.some((diagnostic) => diagnostic.severity === 'error')
+  const hasErrors = diagnostics.some(diagnostic => diagnostic.severity === 'error')
 
   const hasSecurityErrors = diagnostics.some(
-    (diagnostic) => diagnostic.severity === 'error' && diagnostic.category === 'security',
+    diagnostic => diagnostic.severity === 'error' && diagnostic.category === 'security'
   )
 
   if (hasSecurityErrors) return Math.min(rawScore, MAXIMUM_SCORE_WITH_SECURITY_ERRORS)
@@ -48,21 +48,21 @@ export const computeScore = (diagnostics: readonly Diagnostic[], fileCount: numb
 const computeScoreForCategory = (
   diagnostics: readonly Diagnostic[],
   category: Diagnostic['category'],
-  fileCount: number,
+  fileCount: number
 ): number => {
-  const categoryDiagnostics = diagnostics.filter((diagnostic) => diagnostic.category === category)
+  const categoryDiagnostics = diagnostics.filter(diagnostic => diagnostic.category === category)
 
   return computeScore(categoryDiagnostics, fileCount)
 }
 
 export const computeCategoryBreakdown = (
   diagnostics: readonly Diagnostic[],
-  fileCount: number,
+  fileCount: number
 ): ScoreBreakdown => ({
   performance: computeScoreForCategory(diagnostics, 'performance', fileCount),
   accessibility: computeScoreForCategory(diagnostics, 'accessibility', fileCount),
   security: computeScoreForCategory(diagnostics, 'security', fileCount),
-  'best-practices': computeScoreForCategory(diagnostics, 'best-practices', fileCount),
+  'best-practices': computeScoreForCategory(diagnostics, 'best-practices', fileCount)
 })
 
 export const computeScoreLabel = (score: number): ScoreLabel => {

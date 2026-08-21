@@ -1,30 +1,29 @@
+# Managed by the santi020k PR title standard.
 name: PR Title
 
 on:
   pull_request_target:
-    types:
-      - opened
-      - edited
-      - synchronize
+    types: [opened, reopened, edited, synchronize, labeled, unlabeled]
 
 permissions:
   pull-requests: read
   statuses: write
 
 jobs:
-  lint-pr-title:
-    name: Lint PR title (Conventional Commits)
+  lint:
+    name: Lint PR title
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: amannn/action-semantic-pull-request@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # Allowed types (aligned with Conventional Commits + project conventions)
           types: |
             feat
             fix
             docs
+            style
             chore
             refactor
             perf
@@ -32,28 +31,10 @@ jobs:
             ci
             build
             revert
-          # Allowed scopes — keep in sync with packages and rule categories
-          scopes: |
-            eslint-plugin
-            cli
-            vscode
-            docs
-            action
-            ci
-            deps
-            release
-            rule
-            performance
-            accessibility
-            security
-            best-practices
-          # Require a scope (e.g. feat(eslint-plugin): ...)
           requireScope: false
-          # Allow ! for breaking changes (feat!: ...)
           subjectPattern: ^(?![A-Z]).+$
           subjectPatternError: >
             The subject must start with a lowercase letter.
-            Example: "feat(eslint-plugin): add no-blocking-script rule"
-          # Ignore Changesets release PRs
+            Example: "feat: add repository-aware prompts"
           ignoreLabels: |
             autorelease: pending

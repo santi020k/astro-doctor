@@ -21,7 +21,7 @@ import type { AstroDoctorRule, RuleCategory } from '@santi020k/eslint-plugin-ast
 import astroDoctorPlugin, {
   ASTRO_ESLINT_PLUGINS,
   getAstroRuleCategory,
-  getAstroRuleDocUrl,
+  getAstroRuleDocUrl
 } from '@santi020k/eslint-plugin-astro-doctor'
 
 import * as astroParser from 'astro-eslint-parser'
@@ -30,7 +30,7 @@ import type {
   CodeAction,
   Diagnostic as LspDiagnostic,
   InitializeParams,
-  InitializeResult,
+  InitializeResult
 } from 'vscode-languageserver/node'
 import {
   CodeActionKind,
@@ -38,7 +38,7 @@ import {
   DiagnosticSeverity,
   ProposedFeatures,
   TextDocuments,
-  TextDocumentSyncKind,
+  TextDocumentSyncKind
 } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
@@ -50,7 +50,7 @@ import {
   aggregateResults,
   autoDiscoverAstroProjects,
   mergeConfigs,
-  scanProjects,
+  scanProjects
 } from './multi-project.js'
 import { getPresetRules } from './presets.js'
 import { getProjectRuleMeta } from './project-rules.js'
@@ -59,16 +59,14 @@ import type {
   AstroDoctorConfig,
   Diagnostic as AstroDiagnostic,
   ScanResult,
-  ScoreBreakdown,
+  ScoreBreakdown
 } from './types.js'
 
 const noop = (): void => {
   // intentionally swallows errors from fire-and-forget calls
 }
 
-const toErrorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error)
-
+const toErrorMessage = (error: unknown): string => error instanceof Error ? error.message : String(error)
 const SERVER_STATUS_METHOD = 'experimental/serverStatus'
 const HEALTH_SCORE_METHOD = 'experimental/healthScore'
 const TOP_ISSUES_METHOD = 'experimental/topIssues'
@@ -80,7 +78,7 @@ const COMMAND_SCAN_WORKSPACE = 'astro-doctor.scanWorkspace'
 export const LSP_EXECUTE_COMMANDS = [
   COMMAND_FIX_ALL,
   COMMAND_SCAN_FILE,
-  COMMAND_SCAN_WORKSPACE,
+  COMMAND_SCAN_WORKSPACE
 ]
 
 interface ServerStatusParams {
@@ -110,12 +108,12 @@ interface TopIssueParams {
 
 const eslintSeverityToAstro: Record<number, AstroDiagnostic['severity']> = {
   1: 'warning',
-  2: 'error',
+  2: 'error'
 }
 
 const eslintSeverityToLsp: Record<number, DiagnosticSeverity> = {
   1: DiagnosticSeverity.Warning,
-  2: DiagnosticSeverity.Error,
+  2: DiagnosticSeverity.Error
 }
 
 const getRuleCategory = (ruleId: string): RuleCategory => {
@@ -133,13 +131,13 @@ const buildEslintInstance = (
   root: string,
   customRules?: Record<string, 'error' | 'warn' | 'off'>,
   overrides: AstroDoctorConfig['overrides'] = [],
-  fix = false,
+  fix = false
 ): ESLint => {
-  const pluginRules = customRules
-    ? Object.fromEntries(
-        Object.entries(customRules).filter(([ruleId]) => getProjectRuleMeta(ruleId) === undefined)
-      )
-    : {}
+  const pluginRules = customRules ?
+    Object.fromEntries(
+      Object.entries(customRules).filter(([ruleId]) => getProjectRuleMeta(ruleId) === undefined)
+    ) :
+    {}
 
   return new ESLint({
     cwd: root,
@@ -149,32 +147,32 @@ const buildEslintInstance = (
         files: ['**/*.astro'],
         plugins: {
           'astro-doctor': astroDoctorPlugin,
-          ...ASTRO_ESLINT_PLUGINS,
+          ...ASTRO_ESLINT_PLUGINS
         },
         languageOptions: {
           parser: astroParser,
-          parserOptions: { sourceType: 'module' },
+          parserOptions: { sourceType: 'module' }
         },
         rules: {
           ...astroDoctorPlugin.configs.recommended?.rules,
-          ...pluginRules,
-        },
+          ...pluginRules
+        }
       },
-      ...overrides.map((override) => ({
+      ...overrides.map(override => ({
         files: [...override.files],
-        rules: override.rules,
-      })),
+        rules: override.rules
+      }))
     ],
     fix,
-    ignore: false,
+    ignore: false
   })
 }
 
 const getEffectiveRules = (
-  config: AstroDoctorConfig | null,
+  config: AstroDoctorConfig | null
 ): Record<string, 'error' | 'warn' | 'off'> => ({
   ...getPresetRules(config?.preset ?? 'recommended'),
-  ...config?.rules,
+  ...config?.rules
 })
 
 type EslintLintMessage = ESLint.LintResult['messages'][number]
@@ -228,8 +226,8 @@ const getRuleDocUrl = (ruleId: string): string | undefined => {
 
   const ruleDocs = (
     astroDoctorPlugin.rules[shortName]?.meta as
-      | { docs?: { url?: string } }
-      | undefined
+    | { docs?: { url?: string } } |
+    undefined
   )?.docs
 
   return ruleDocs?.url
@@ -237,27 +235,27 @@ const getRuleDocUrl = (ruleId: string): string | undefined => {
 
 const toDocumentRange = (
   document: TextDocument,
-  range: readonly [number, number],
+  range: readonly [number, number]
 ): LspDiagnostic['range'] => ({
   start: document.positionAt(range[0]),
-  end: document.positionAt(range[1]),
+  end: document.positionAt(range[1])
 })
 
 const buildDiagnosticFixData = (
   message: EslintLintMessage,
-  document: TextDocument,
+  document: TextDocument
 ): DiagnosticFixData | undefined => {
-  const fix = message.fix
-    ? {
-        newText: message.fix.text,
-        range: toDocumentRange(document, message.fix.range),
-      }
-    : undefined
+  const fix = message.fix ?
+    {
+      newText: message.fix.text,
+      range: toDocumentRange(document, message.fix.range)
+    } :
+    undefined
 
-  const suggestions = message.suggestions?.map((suggestion) => ({
+  const suggestions = message.suggestions?.map(suggestion => ({
     title: suggestion.desc,
     newText: suggestion.fix.text,
-    range: toDocumentRange(document, suggestion.fix.range),
+    range: toDocumentRange(document, suggestion.fix.range)
   }))
 
   if (fix === undefined && (suggestions === undefined || suggestions.length === 0)) {
@@ -266,14 +264,14 @@ const buildDiagnosticFixData = (
 
   return {
     ...(fix === undefined ? {} : { fix }),
-    ...(suggestions === undefined || suggestions.length === 0 ? {} : { suggestions }),
+    ...(suggestions === undefined || suggestions.length === 0 ? {} : { suggestions })
   }
 }
 
 const buildMessageDiagnostics = (
   msg: EslintLintMessage,
   filePath: string,
-  document: TextDocument,
+  document: TextDocument
 ): MessageDiagnostics | null => {
   if (!msg.ruleId) return null
 
@@ -288,14 +286,14 @@ const buildMessageDiagnostics = (
     lsp: {
       range: {
         start: { line: startLine, character: startChar },
-        end: { line: endLine, character: endChar },
+        end: { line: endLine, character: endChar }
       },
       severity: eslintSeverityToLsp[msg.severity] ?? DiagnosticSeverity.Warning,
       code: msg.ruleId,
       codeDescription: docUrl ? { href: docUrl } : undefined,
       source: 'astro-doctor',
       message: msg.message,
-      data: fixData,
+      data: fixData
     },
     astro: {
       ruleId: msg.ruleId,
@@ -304,15 +302,15 @@ const buildMessageDiagnostics = (
       filePath,
       line: msg.line,
       column: msg.column,
-      category: getRuleCategory(msg.ruleId),
-    },
+      category: getRuleCategory(msg.ruleId)
+    }
   }
 }
 
 const lintFileContent = async (
   eslint: ESLint,
   content: string,
-  filePath: string,
+  filePath: string
 ): Promise<LintResult> => {
   const results = await eslint.lintText(content, { filePath })
   const result = results[0]
@@ -339,7 +337,7 @@ const lintFileContent = async (
 export const getFixedDocumentText = async (
   eslint: ESLint,
   content: string,
-  filePath: string,
+  filePath: string
 ): Promise<string | undefined> => {
   const results = await eslint.lintText(content, { filePath })
 
@@ -347,7 +345,7 @@ export const getFixedDocumentText = async (
 }
 
 const groupDiagnosticsByFile = (
-  diagnostics: readonly AstroDiagnostic[],
+  diagnostics: readonly AstroDiagnostic[]
 ): Map<string, AstroDiagnostic[]> => {
   const diagnosticsByFile = new Map<string, AstroDiagnostic[]>()
 
@@ -363,7 +361,7 @@ const groupDiagnosticsByFile = (
 const findEslintInstanceForFile = (
   filePath: string,
   fallbackEslint: ESLint | null,
-  projectInstances: ReadonlyMap<string, ESLint>,
+  projectInstances: ReadonlyMap<string, ESLint>
 ): ESLint | null => {
   let closestDirectory = ''
   let closestEslint: ESLint | null = null
@@ -387,7 +385,7 @@ const overlayOpenDocumentDiagnostics = async (
   getCurrentDocument: (uri: string) => TextDocument | undefined,
   fallbackEslint: ESLint,
   projectInstances: ReadonlyMap<string, ESLint>,
-  diagnosticsByFile: Map<string, AstroDiagnostic[]>,
+  diagnosticsByFile: Map<string, AstroDiagnostic[]>
 ): Promise<void> => {
   for (const document of openDocuments) {
     let filePath: string
@@ -401,9 +399,7 @@ const overlayOpenDocumentDiagnostics = async (
     if (!filePath.endsWith('.astro')) continue
 
     const activeEslint = findEslintInstanceForFile(
-      filePath,
-      fallbackEslint,
-      projectInstances,
+      filePath, fallbackEslint, projectInstances
     )
 
     if (activeEslint === null) continue
@@ -425,7 +421,7 @@ interface WorkspaceScanState {
 const scanWorkspaceState = async (
   workspaceRoot: string,
   config: AstroDoctorConfig | null,
-  effectiveRules: Record<string, 'error' | 'warn' | 'off'>,
+  effectiveRules: Record<string, 'error' | 'warn' | 'off'>
 ): Promise<WorkspaceScanState> => {
   const discoveredProjects = await autoDiscoverAstroProjects(workspaceRoot)
   const projectInstances = new Map<string, ESLint>()
@@ -437,13 +433,13 @@ const scanWorkspaceState = async (
       ignore: config?.ignore,
       overrides: config?.overrides,
       rules: effectiveRules,
-      cache: true,
+      cache: true
     })
 
     return {
       result,
       projectEslintInstances: projectInstances,
-      projectFixEslintInstances: projectFixInstances,
+      projectFixEslintInstances: projectFixInstances
     }
   }
 
@@ -453,27 +449,25 @@ const scanWorkspaceState = async (
     const projectRules = getEffectiveRules(mergedConfig)
 
     projectInstances.set(
-      project.directory,
-      buildEslintInstance(project.directory, projectRules, mergedConfig.overrides),
+      project.directory, buildEslintInstance(project.directory, projectRules, mergedConfig.overrides)
     )
 
     projectFixInstances.set(
-      project.directory,
-      buildEslintInstance(project.directory, projectRules, mergedConfig.overrides, true),
+      project.directory, buildEslintInstance(project.directory, projectRules, mergedConfig.overrides, true)
     )
   }
 
   const projectResults = await scanProjects({
     rootDirectory: workspaceRoot,
-    projectArgs: discoveredProjects.map((project) => project.directory),
+    projectArgs: discoveredProjects.map(project => project.directory),
     rootConfig: config,
-    scanOptions: { cache: true, noLint: false, noRespectInlineDisables: false },
+    scanOptions: { cache: true, noLint: false, noRespectInlineDisables: false }
   })
 
   return {
     result: aggregateResults(projectResults),
     projectEslintInstances: projectInstances,
-    projectFixEslintInstances: projectFixInstances,
+    projectFixEslintInstances: projectFixInstances
   }
 }
 
@@ -482,8 +476,9 @@ interface DiagnosticPosition {
   readonly character: number
 }
 
-const isInDiagnosticRange = (diag: LspDiagnostic, position: DiagnosticPosition): boolean =>
-  position.line >= diag.range.start.line &&
+const isInDiagnosticRange = (
+  diag: LspDiagnostic, position: DiagnosticPosition
+): boolean => position.line >= diag.range.start.line &&
   position.line <= diag.range.end.line &&
   position.character >= diag.range.start.character &&
   position.character <= diag.range.end.character
@@ -494,19 +489,19 @@ const buildAstroDiagLspDiagnostic = (d: AstroDiagnostic): LspDiagnostic => {
   return {
     range: {
       start: { line: Math.max(0, d.line - 1), character: Math.max(0, d.column - 1) },
-      end: { line: Math.max(0, d.line - 1), character: Math.max(0, d.column - 1) + 1 },
+      end: { line: Math.max(0, d.line - 1), character: Math.max(0, d.column - 1) + 1 }
     },
     severity: d.severity === 'error' ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning,
     code: d.ruleId,
     codeDescription: docUrl ? { href: docUrl } : undefined,
     source: 'astro-doctor',
-    message: d.message,
+    message: d.message
   }
 }
 
 export const buildCodeActionsForDiagnostic = (
   documentUri: string,
-  diagnostic: LspDiagnostic,
+  diagnostic: LspDiagnostic
 ): CodeAction[] => {
   if (diagnostic.source !== 'astro-doctor' || typeof diagnostic.code !== 'string') return []
 
@@ -526,10 +521,10 @@ export const buildCodeActionsForDiagnostic = (
         changes: {
           [documentUri]: [{
             range: fixData.fix.range,
-            newText: fixData.fix.newText,
-          }],
-        },
-      },
+            newText: fixData.fix.newText
+          }]
+        }
+      }
     })
   }
 
@@ -542,10 +537,10 @@ export const buildCodeActionsForDiagnostic = (
         changes: {
           [documentUri]: [{
             range: suggestion.range,
-            newText: suggestion.newText,
-          }],
-        },
-      },
+            newText: suggestion.newText
+          }]
+        }
+      }
     })
   }
 
@@ -559,10 +554,10 @@ export const buildCodeActionsForDiagnostic = (
       changes: {
         [documentUri]: [{
           range: { start: { line, character: 0 }, end: { line, character: 0 } },
-          newText: `// eslint-disable-next-line ${ruleId}\n`,
-        }],
-      },
-    },
+          newText: `// eslint-disable-next-line ${ruleId}\n`
+        }]
+      }
+    }
   })
 
   if (docUrl !== undefined) {
@@ -572,8 +567,8 @@ export const buildCodeActionsForDiagnostic = (
       command: {
         title: `Open documentation for ${ruleId}`,
         command: 'astro-doctor.openDocs',
-        arguments: [docUrl],
-      },
+        arguments: [docUrl]
+      }
     })
   }
 
@@ -604,8 +599,8 @@ export const runLsp = (): void => {
 
   const computeHealthScore = (): HealthScoreParams => {
     const allDiags = [...fileAstroDiagnostics.values()].flat()
-    const errorCount = allDiags.filter((d) => d.severity === 'error').length
-    const warningCount = allDiags.filter((d) => d.severity === 'warning').length
+    const errorCount = allDiags.filter(d => d.severity === 'error').length
+    const warningCount = allDiags.filter(d => d.severity === 'warning').length
     const score = computeScore(allDiags, workspaceFileCount)
 
     return {
@@ -614,7 +609,7 @@ export const runLsp = (): void => {
       scoreBreakdown: computeCategoryBreakdown(allDiags, workspaceFileCount),
       fileCount: workspaceFileCount,
       errorCount,
-      warningCount,
+      warningCount
     }
   }
 
@@ -631,14 +626,14 @@ export const runLsp = (): void => {
       return severityOrder[firstDiag.severity] - severityOrder[secondDiag.severity]
     })
 
-    const topIssues: TopIssueParams[] = sorted.slice(0, TOP_ISSUES_COUNT).map((diagnostic) => ({
+    const topIssues: TopIssueParams[] = sorted.slice(0, TOP_ISSUES_COUNT).map(diagnostic => ({
       ruleId: diagnostic.ruleId,
       severity: diagnostic.severity,
       message: diagnostic.message,
       filePath: diagnostic.filePath,
       line: diagnostic.line,
       column: diagnostic.column,
-      category: diagnostic.category,
+      category: diagnostic.category
     }))
 
     connection.sendNotification(TOP_ISSUES_METHOD, topIssues).catch(noop)
@@ -646,7 +641,7 @@ export const runLsp = (): void => {
 
   const replaceEslintInstances = (
     targetInstances: Map<string, ESLint>,
-    nextInstances: ReadonlyMap<string, ESLint>,
+    nextInstances: ReadonlyMap<string, ESLint>
   ): void => {
     targetInstances.clear()
 
@@ -665,16 +660,11 @@ export const runLsp = (): void => {
       const effectiveRules = getEffectiveRules(nextConfig)
 
       const nextEslintInstance = buildEslintInstance(
-        workspaceRoot,
-        effectiveRules,
-        nextConfig?.overrides,
+        workspaceRoot, effectiveRules, nextConfig?.overrides
       )
 
       const nextFixEslintInstance = buildEslintInstance(
-        workspaceRoot,
-        effectiveRules,
-        nextConfig?.overrides,
-        true,
+        workspaceRoot, effectiveRules, nextConfig?.overrides, true
       )
 
       if (!hasWorkspaceFolder) {
@@ -698,17 +688,15 @@ export const runLsp = (): void => {
       const {
         result,
         projectEslintInstances: nextProjectEslintInstances,
-        projectFixEslintInstances: nextProjectFixEslintInstances,
+        projectFixEslintInstances: nextProjectFixEslintInstances
       } = await scanWorkspaceState(workspaceRoot, nextConfig, effectiveRules)
 
       const nextFileAstroDiagnostics = groupDiagnosticsByFile(result.diagnostics)
+      const openDocuments = documents.all()
+      const getCurrentDocument = (documentUri: string): TextDocument | undefined => documents.get(documentUri)
 
       await overlayOpenDocumentDiagnostics(
-        documents.all(),
-        (documentUri) => documents.get(documentUri),
-        nextEslintInstance,
-        nextProjectEslintInstances,
-        nextFileAstroDiagnostics,
+        openDocuments, getCurrentDocument, nextEslintInstance, nextProjectEslintInstances, nextFileAstroDiagnostics
       )
 
       if (scanGeneration !== workspaceScanGeneration) return
@@ -760,19 +748,13 @@ export const runLsp = (): void => {
     }
   }
 
-  const getEslintInstanceForFile = (filePath: string): ESLint | null =>
-    findEslintInstanceForFile(
-      filePath,
-      eslintInstance,
-      projectEslintInstances,
-    )
+  const getEslintInstanceForFile = (filePath: string): ESLint | null => findEslintInstanceForFile(
+    filePath, eslintInstance, projectEslintInstances
+  )
 
-  const getFixEslintInstanceForFile = (filePath: string): ESLint | null =>
-    findEslintInstanceForFile(
-      filePath,
-      fixEslintInstance,
-      projectFixEslintInstances,
-    )
+  const getFixEslintInstanceForFile = (filePath: string): ESLint | null => findEslintInstanceForFile(
+    filePath, fixEslintInstance, projectFixEslintInstances
+  )
 
   const applyAllFixes = async (uri: string): Promise<void> => {
     const document = documents.get(uri)
@@ -801,10 +783,10 @@ export const runLsp = (): void => {
           newText: fixedText,
           range: {
             start: document.positionAt(0),
-            end: document.positionAt(document.getText().length),
-          },
-        }],
-      },
+            end: document.positionAt(document.getText().length)
+          }
+        }]
+      }
     })
   }
 
@@ -827,9 +809,7 @@ export const runLsp = (): void => {
 
     try {
       const { lsp, astro } = await lintFileContent(
-        activeEslint,
-        document.getText(),
-        filePath,
+        activeEslint, document.getText(), filePath
       )
 
       if (documents.get(document.uri)?.version !== document.version) return
@@ -863,12 +843,11 @@ export const runLsp = (): void => {
     if (pendingScan !== undefined) clearTimeout(pendingScan)
 
     pendingDocumentScans.set(
-      document.uri,
-      setTimeout(() => {
+      document.uri, setTimeout(() => {
         pendingDocumentScans.delete(document.uri)
 
         lintDocument(document).catch(noop)
-      }, LSP_SCAN_DEBOUNCE_MS),
+      }, LSP_SCAN_DEBOUNCE_MS)
     )
   }
 
@@ -892,12 +871,12 @@ export const runLsp = (): void => {
         textDocumentSync: TextDocumentSyncKind.Incremental,
         hoverProvider: true,
         executeCommandProvider: {
-          commands: LSP_EXECUTE_COMMANDS,
+          commands: LSP_EXECUTE_COMMANDS
         },
         codeActionProvider: {
-          codeActionKinds: [CodeActionKind.QuickFix],
-        },
-      },
+          codeActionKinds: [CodeActionKind.QuickFix]
+        }
+      }
     }
   })
 
@@ -961,15 +940,15 @@ export const runLsp = (): void => {
 
   connection.onHover(({ textDocument, position }) => {
     const diags = fileLspDiagnostics.get(textDocument.uri) ?? []
-    const diag = diags.find((d) => isInDiagnosticRange(d, position))
+    const diag = diags.find(d => isInDiagnosticRange(d, position))
 
     if (!diag || typeof diag.code !== 'string') return null
 
     const shortName = diag.code.replace('astro-doctor/', '')
 
     const ruleMeta = astroDoctorPlugin.rules[shortName]?.meta as
-      | { docs?: { description?: string; url?: string }; messages?: Record<string, string> }
-      | undefined
+      | { docs?: { description?: string, url?: string }, messages?: Record<string, string> } |
+      undefined
 
     const category = getRuleCategory(diag.code)
     const description = ruleMeta?.docs?.description ?? diag.message
@@ -978,20 +957,20 @@ export const runLsp = (): void => {
     const lines = [
       `**\`${diag.code}\`** _(${category})_`,
       '',
-      description,
+      description
     ]
 
     if (docsUrl) lines.push('', `[View documentation →](${docsUrl})`)
 
     return {
       contents: { kind: 'markdown', value: lines.map(String).join('\n') },
-      range: diag.range,
+      range: diag.range
     }
   })
 
-  connection.onCodeAction(({ textDocument, context }) => context.diagnostics.flatMap((diagnostic) =>
-      buildCodeActionsForDiagnostic(textDocument.uri, diagnostic)
-    ))
+  connection.onCodeAction(({ textDocument, context }) => context.diagnostics.flatMap(
+    diagnostic => buildCodeActionsForDiagnostic(textDocument.uri, diagnostic)
+  ))
 
   documents.listen(connection)
 

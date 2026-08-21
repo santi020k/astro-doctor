@@ -5,65 +5,65 @@ import { loadConfig } from './config.js'
 import { getPresetRules } from './presets.js'
 import type { Diagnostic } from './types.js'
 
-const RULE_EXPLANATIONS: Record<string, { why: string; fix: string }> = {
+const RULE_EXPLANATIONS: Record<string, { why: string, fix: string }> = {
   'no-blocking-script': {
     why: 'A <script src="..."> without defer, async, or type="module" blocks HTML parsing and delays page render. Browsers stop building the DOM until the script downloads and executes.',
-    fix: 'Add defer, async, or type="module" to the script tag. For Astro-managed scripts, use <script> without src and let Astro handle bundling.',
+    fix: 'Add defer, async, or type="module" to the script tag. For Astro-managed scripts, use <script> without src and let Astro handle bundling.'
   },
   'no-client-load-overuse': {
     why: 'client:load hydrates the component immediately on page load, even if the user never interacts with it. Overusing it ships unnecessary JavaScript to the browser.',
-    fix: 'Use client:idle to hydrate when the browser is idle, or client:visible to hydrate only when the component enters the viewport.',
+    fix: 'Use client:idle to hydrate when the browser is idle, or client:visible to hydrate only when the component enters the viewport.'
   },
   'use-astro-image': {
     why: 'Raw <img> tags skip Astro\'s image optimization pipeline. astro:assets automatically generates modern formats (WebP/AVIF), resizes images, and adds width/height to prevent layout shift.',
-    fix: 'Replace <img src="..."> with <Image src={...} alt="..." /> from "astro:assets".',
+    fix: 'Replace <img src="..."> with <Image src={...} alt="..." /> from "astro:assets".'
   },
   'require-image-dimensions': {
     why: 'Astro can infer dimensions for imported images from src/, but public and remote string sources need dimensions or inferSize. Without them, images can cause layout shift while loading.',
-    fix: 'Add width and height for public image paths, or add inferSize for remote Image/Picture sources when appropriate.',
+    fix: 'Add width and height for public image paths, or add inferSize for remote Image/Picture sources when appropriate.'
   },
   'no-unprocessed-script-surprises': {
     why: 'Astro only processes scripts with no attributes other than src. Extra attributes or is:inline skip bundling, TypeScript processing, deduplication, and optimization.',
-    fix: 'Use a plain <script> for Astro-processed code, or keep is:inline only for public/CDN scripts that must bypass Astro processing.',
+    fix: 'Use a plain <script> for Astro-processed code, or keep is:inline only for public/CDN scripts that must bypass Astro processing.'
   },
   'no-missing-alt': {
     why: 'Images without alt text are inaccessible to screen reader users and fail WCAG 2.1 criterion 1.1.1. Search engines also cannot index image content without alt text.',
-    fix: 'Add a descriptive alt attribute: <img alt="Description of the image">. For decorative images use alt="".',
+    fix: 'Add a descriptive alt attribute: <img alt="Description of the image">. For decorative images use alt="".'
   },
   'no-missing-lang': {
     why: 'The lang attribute on <html> tells browsers and assistive technologies what language the page is in. Without it, screen readers may use the wrong voice and search engines may index the page in the wrong language.',
-    fix: 'Add a lang attribute: <html lang="en"> (or the appropriate BCP 47 language tag).',
+    fix: 'Add a lang attribute: <html lang="en"> (or the appropriate BCP 47 language tag).'
   },
   'require-island-fallback': {
     why: 'client:only skips server rendering and server:defer renders later on demand. Without fallback content, users may see an empty region while the island loads.',
-    fix: 'Add a child element with slot="fallback" that gives useful loading or placeholder content.',
+    fix: 'Add a child element with slot="fallback" that gives useful loading or placeholder content.'
   },
   'no-set-html': {
     why: 'set:html inserts raw HTML directly into the DOM without sanitization. If the content includes user input, this is an XSS vulnerability.',
-    fix: 'Avoid set:html with untrusted content. If you must use it, sanitize the input with a library like DOMPurify first, and add a comment explaining why it is safe.',
+    fix: 'Avoid set:html with untrusted content. If you must use it, sanitize the input with a library like DOMPurify first, and add a comment explaining why it is safe.'
   },
   'no-public-secret-env': {
     why: 'Astro exposes PUBLIC_ environment variables to client-side code. Secret-looking names such as PUBLIC_TOKEN or PUBLIC_API_KEY often indicate accidental credential exposure.',
-    fix: 'Rename secrets without the PUBLIC_ prefix and access them only in server-side code. Keep only non-secret values public.',
+    fix: 'Rename secrets without the PUBLIC_ prefix and access them only in server-side code. Keep only non-secret values public.'
   },
   'no-process-env': {
     why: 'process.env is a Node.js API that is not available in all Astro rendering environments (SSR adapters, edge runtimes). It also bypasses Astro\'s type-safe env schema.',
-    fix: 'Use import.meta.env.YOUR_VARIABLE instead, and define the variable in your .env file with the ASTRO_ prefix or via the env schema in astro.config.*.',
+    fix: 'Use import.meta.env.YOUR_VARIABLE instead, and define the variable in your .env file with the ASTRO_ prefix or via the env schema in astro.config.*.'
   },
   'prefer-class-list': {
     why: 'String concatenation for dynamic class names (`class={isActive ? "a b" : "a"}`) is error-prone and hard to read. class:list understands arrays, objects, and conditional values.',
-    fix: 'Use <div class:list={["base", { active: isActive }]} /> instead of manual string concatenation.',
+    fix: 'Use <div class:list={["base", { active: isActive }]} /> instead of manual string concatenation.'
   },
   'prefer-content-collections': {
     why: 'Astro.glob() and content-focused import.meta.glob() return untyped content data. Content Collections are type-safe, support schema validation, and are optimized at build time.',
-    fix: 'Replace content glob calls with getCollection("your-collection") from "astro:content".',
-  },
+    fix: 'Replace content glob calls with getCollection("your-collection") from "astro:content".'
+  }
 }
 
 /**
  * Parse a file:line location string like "src/pages/index.astro:42"
  */
-const parseLocation = (location: string): { filePath: string; line: number } | null => {
+const parseLocation = (location: string): { filePath: string, line: number } | null => {
   const match = /^(.+):(\d+)$/u.exec(location)
 
   if (!match) return null
@@ -79,7 +79,7 @@ const parseLocation = (location: string): { filePath: string; line: number } | n
 const reportNoIssues = (
   filePath: string,
   line: number,
-  allDiagnostics: readonly Diagnostic[],
+  allDiagnostics: readonly Diagnostic[]
 ): void => {
   console.log(`\nNo Astro Doctor issues found at ${filePath}:${line}.\n`)
 
@@ -100,7 +100,7 @@ const reportFindings = (
   relevant: readonly Diagnostic[],
   filePath: string,
   line: number,
-  qualifier: string,
+  qualifier: string
 ): void => {
   console.log(`\nAstro Doctor findings at ${filePath}:${line}${qualifier}:\n`)
 
@@ -122,7 +122,7 @@ export const runWhy = async (location: string, cwd = process.cwd()): Promise<voi
   const parsed = parseLocation(location)
 
   if (!parsed) {
-    console.error(`\nUsage: astro-doctor why <file>:<line>\nExample: astro-doctor why src/pages/index.astro:42\n`)
+    console.error('\nUsage: astro-doctor why <file>:<line>\nExample: astro-doctor why src/pages/index.astro:42\n')
 
     process.exitCode = 1
 
@@ -134,19 +134,19 @@ export const runWhy = async (location: string, cwd = process.cwd()): Promise<voi
 
   const rules = {
     ...getPresetRules(config?.preset ?? 'recommended'),
-    ...config?.rules,
+    ...config?.rules
   }
 
   const result = await scan({
     directory: cwd,
     files: [absolutePath],
-    rules,
+    rules
   })
 
-  const atLine = result.diagnostics.filter((d) => d.line === parsed.line)
+  const atLine = result.diagnostics.filter(d => d.line === parsed.line)
 
   const nearLine = result.diagnostics.filter(
-    (d) => d.line !== parsed.line && Math.abs(d.line - parsed.line) <= 3,
+    d => d.line !== parsed.line && Math.abs(d.line - parsed.line) <= 3
   )
 
   if (atLine.length === 0 && nearLine.length === 0) {

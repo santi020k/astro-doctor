@@ -10,7 +10,7 @@ import astroDoctorPlugin, {
   getAstroEcosystemRules,
   getAstroRuleCategory,
   getAstroRuleDescription,
-  getAstroRuleDocUrl,
+  getAstroRuleDocUrl
 } from '../src/index.js'
 
 describe('Astro Doctor configs', () => {
@@ -47,17 +47,16 @@ describe('Astro Doctor configs', () => {
     const eslint = new ESLint({
       overrideConfigFile: true,
       overrideConfig: [astroDoctorPlugin.configs.strict],
-      ignore: false,
+      ignore: false
     })
     const results = await eslint.lintText(
-      '---\n---\n<img src="/hero.png">',
-      { filePath: 'index.astro' },
+      '---\n---\n<img src="/hero.png">', { filePath: 'index.astro' }
     )
 
     expect(results[0]?.messages).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ ruleId: 'astro-doctor/no-missing-alt' }),
-      ]),
+        expect.objectContaining({ ruleId: 'astro-doctor/no-missing-alt' })
+      ])
     )
   })
 
@@ -65,7 +64,7 @@ describe('Astro Doctor configs', () => {
     const recommendedRules = getAstroEcosystemRules('ci')
     const deduplicatedRules = disableDuplicateAstroDoctorRules({
       'astro-doctor/no-missing-alt': 'error',
-      'astro/jsx-a11y/alt-text': 'off',
+      'astro/jsx-a11y/alt-text': 'off'
     })
     const docs = getAstroEcosystemRuleDocs()
 

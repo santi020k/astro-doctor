@@ -12,6 +12,7 @@ words:
   - cspell
   - commitizen
   - commitlint
+  - commitprompt
   - eslint
   - gitignore
   - jsonc

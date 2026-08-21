@@ -14,8 +14,8 @@ describe('SARIF report', () => {
         filePath: '/workspace/src/pages/index.astro',
         line: 4,
         column: 8,
-        category: 'security',
-      },
+        category: 'security'
+      }
     ], 1)
 
     const report = formatSarifReport(result, rootDirectory)
@@ -38,8 +38,8 @@ describe('SARIF report', () => {
         filePath: '/workspace/index.astro',
         line: 1,
         column: 1,
-        category: 'accessibility',
-      },
+        category: 'accessibility'
+      }
     ], 1)
 
     const report = formatSarifReport(result, '/workspace')

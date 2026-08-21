@@ -4,8 +4,7 @@ import { resolve } from 'node:path'
 import { describe, expect, test } from 'vitest'
 
 const actionFileContent = readFileSync(
-  resolve(import.meta.dirname, '../../../action.yml'),
-  'utf8',
+  resolve(import.meta.dirname, '../../../action.yml'), 'utf8'
 )
 
 describe('GitHub Action', () => {
@@ -15,9 +14,9 @@ describe('GitHub Action', () => {
 
   test('skips PR comments when GitHub provides a read-only token', () => {
     expect(actionFileContent).toContain(
-      "github.event.pull_request.head.repo.full_name == github.repository",
+      'github.event.pull_request.head.repo.full_name == github.repository'
     )
-    expect(actionFileContent).toContain("github.actor != 'dependabot[bot]'")
+    expect(actionFileContent).toContain('github.actor != \'dependabot[bot]\'')
   })
 
   test('supports a minimum health score gate', () => {

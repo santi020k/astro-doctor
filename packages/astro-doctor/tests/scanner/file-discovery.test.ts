@@ -30,8 +30,8 @@ describe('discoverAstroFiles', () => {
     const discoveredFiles = await discoverAstroFiles(testDirectory)
 
     expect(discoveredFiles).toHaveLength(2)
-    expect(discoveredFiles.some((filePath) => filePath.endsWith('index.astro'))).toBe(true)
-    expect(discoveredFiles.some((filePath) => filePath.endsWith('about.astro'))).toBe(true)
+    expect(discoveredFiles.some(filePath => filePath.endsWith('index.astro'))).toBe(true)
+    expect(discoveredFiles.some(filePath => filePath.endsWith('about.astro'))).toBe(true)
   })
 
   test('discovers .astro files recursively in subdirectories', async () => {
@@ -60,15 +60,14 @@ describe('discoverAstroFiles', () => {
   test('ignores node_modules directory', async () => {
     mkdirSync(join(testDirectory, 'node_modules', 'some-pkg'), { recursive: true })
     writeFileSync(
-      join(testDirectory, 'node_modules', 'some-pkg', 'component.astro'),
-      '---\n---\n<div />'
+      join(testDirectory, 'node_modules', 'some-pkg', 'component.astro'), '---\n---\n<div />'
     )
     writeFileSync(join(testDirectory, 'index.astro'), '---\n---\n<h1>Hello</h1>')
 
     const discoveredFiles = await discoverAstroFiles(testDirectory)
 
     expect(discoveredFiles).toHaveLength(1)
-    expect(discoveredFiles.some((filePath) => filePath.includes('node_modules'))).toBe(false)
+    expect(discoveredFiles.some(filePath => filePath.includes('node_modules'))).toBe(false)
   })
 
   test('ignores dist directory', async () => {
@@ -79,7 +78,7 @@ describe('discoverAstroFiles', () => {
     const discoveredFiles = await discoverAstroFiles(testDirectory)
 
     expect(discoveredFiles).toHaveLength(1)
-    expect(discoveredFiles.some((filePath) => filePath.includes(`${sep}dist${sep}`))).toBe(false)
+    expect(discoveredFiles.some(filePath => filePath.includes(`${sep}dist${sep}`))).toBe(false)
   })
 
   test('returns absolute paths', async () => {
@@ -87,7 +86,7 @@ describe('discoverAstroFiles', () => {
 
     const discoveredFiles = await discoverAstroFiles(testDirectory)
 
-    expect(discoveredFiles.every((filePath) => isAbsolute(filePath))).toBe(true)
+    expect(discoveredFiles.every(filePath => isAbsolute(filePath))).toBe(true)
   })
 
   test('resolves existing changed Astro files', () => {
@@ -97,7 +96,7 @@ describe('discoverAstroFiles', () => {
     const resolvedFiles = resolveAstroFiles(testDirectory, [
       'index.astro',
       'utils.ts',
-      'missing.astro',
+      'missing.astro'
     ])
 
     expect(resolvedFiles).toEqual([join(testDirectory, 'index.astro')])

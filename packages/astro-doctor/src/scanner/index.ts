@@ -4,7 +4,7 @@ import { performance } from 'node:perf_hooks'
 import type { AstroDoctorRule, RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
 import astroDoctorPlugin, {
   ASTRO_ESLINT_PLUGINS,
-  getAstroRuleCategory,
+  getAstroRuleCategory
 } from '@santi020k/eslint-plugin-astro-doctor'
 
 import * as astroParser from 'astro-eslint-parser'
@@ -20,7 +20,7 @@ import { auditProject } from './project-audit.js'
 
 const SEVERITY_MAP: Record<number, Severity> = {
   1: 'warning',
-  2: 'error',
+  2: 'error'
 }
 
 const getRuleCategory = (ruleId: string): RuleCategory => {
@@ -41,7 +41,7 @@ const EMPTY_RESULT = (fileCount = 0): ScanResult => ({
   warningCount: 0,
   score: 100,
   scoreLabel: 'S',
-  scoreBreakdown: { performance: 100, accessibility: 100, security: 100, 'best-practices': 100 },
+  scoreBreakdown: { performance: 100, accessibility: 100, security: 100, 'best-practices': 100 }
 })
 
 const isConfiguredRule = (ruleId: string): boolean => {
@@ -69,7 +69,7 @@ const collectEslintDiagnostics = (results: ESLint.LintResult[]): Diagnostic[] =>
         filePath: fileResult.filePath,
         line: message.line,
         column: message.column,
-        category,
+        category
       })
     }
   }
@@ -78,15 +78,15 @@ const collectEslintDiagnostics = (results: ESLint.LintResult[]): Diagnostic[] =>
 }
 
 const buildEslintConfig = (options: ScanOptions): ESLint.Options => {
-  const pluginRules = options.rules
-    ? Object.fromEntries(
-        Object.entries(options.rules).filter(([ruleId]) => getProjectRuleMeta(ruleId) === undefined)
-      )
-    : {}
+  const pluginRules = options.rules ?
+    Object.fromEntries(
+      Object.entries(options.rules).filter(([ruleId]) => getProjectRuleMeta(ruleId) === undefined)
+    ) :
+    {}
 
-  const overrideConfigs = options.overrides?.map((override) => ({
+  const overrideConfigs = options.overrides?.map(override => ({
     files: [...override.files],
-    rules: override.rules,
+    rules: override.rules
   })) ?? []
 
   return {
@@ -97,40 +97,39 @@ const buildEslintConfig = (options: ScanOptions): ESLint.Options => {
         files: ['**/*.astro'],
         plugins: {
           'astro-doctor': astroDoctorPlugin,
-          ...ASTRO_ESLINT_PLUGINS,
+          ...ASTRO_ESLINT_PLUGINS
         },
         languageOptions: {
           parser: astroParser,
           parserOptions: {
-            sourceType: 'module',
-          },
+            sourceType: 'module'
+          }
         },
         rules: {
           ...astroDoctorPlugin.configs.recommended?.rules,
-          ...pluginRules,
-        },
+          ...pluginRules
+        }
       },
-      ...overrideConfigs,
+      ...overrideConfigs
     ],
     ignore: false,
     fix: options.fix,
     cache: options.cache,
     cacheLocation: join(options.directory, DEFAULT_CACHE_DIRECTORY_NAME),
     cacheStrategy: 'content',
-    ...(options.noRespectInlineDisables ? { allowInlineConfig: false } : {}),
+    ...(options.noRespectInlineDisables ? { allowInlineConfig: false } : {})
   }
 }
 
-const roundDuration = (durationMs: number): number =>
-  Number(durationMs.toFixed(SCAN_DURATION_PRECISION_DIGITS))
+const roundDuration = (durationMs: number): number => Number(durationMs.toFixed(SCAN_DURATION_PRECISION_DIGITS))
 
 export const scan = async (options: ScanOptions): Promise<ScanResult> => {
   const scanStartedAt = performance.now()
   const discoveryStartedAt = performance.now()
 
-  const astroFiles = options.files
-    ? resolveAstroFiles(options.directory, options.files)
-    : await discoverAstroFiles(options.directory, options.ignore)
+  const astroFiles = options.files ?
+    resolveAstroFiles(options.directory, options.files) :
+    await discoverAstroFiles(options.directory, options.ignore)
 
   const discoveryFinishedAt = performance.now()
 
@@ -143,7 +142,7 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
     files: options.files,
     rules: options.rules,
     astroFiles,
-    ignore: options.ignore,
+    ignore: options.ignore
   })
 
   const auditFinishedAt = performance.now()
@@ -169,13 +168,13 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
   const { cache, categories } = options
 
   const diagnostics =
-    categories && categories.length > 0
-      ? allDiagnostics.filter((diagnostic) => categories.includes(diagnostic.category))
-      : allDiagnostics
+    categories && categories.length > 0 ?
+      allDiagnostics.filter(diagnostic => categories.includes(diagnostic.category)) :
+      allDiagnostics
 
   const fileCount = new Set([
     ...astroFiles,
-    ...diagnostics.map((diagnostic) => diagnostic.filePath),
+    ...diagnostics.map(diagnostic => diagnostic.filePath)
   ]).size
 
   const timings: ScanTimings = {
@@ -183,11 +182,11 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
     auditMs: roundDuration(auditFinishedAt - auditStartedAt),
     lintMs: roundDuration(lintFinishedAt - lintStartedAt),
     totalMs: roundDuration(performance.now() - scanStartedAt),
-    cacheEnabled: Boolean(cache),
+    cacheEnabled: Boolean(cache)
   }
 
   return {
     ...createScanResult(diagnostics, fileCount),
-    timings,
+    timings
   }
 }

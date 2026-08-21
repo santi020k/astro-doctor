@@ -13,13 +13,13 @@ describe('GitHub report', () => {
         filePath: '/workspace/index.astro',
         line: 3,
         column: 5,
-        category: 'security',
-      },
+        category: 'security'
+      }
     ], 1)
 
     expect(formatGithubReport(result)).toBe([
       '::warning file=/workspace/index.astro,line=3,col=5,title=no-set-html::Unsafe 100%25%0A',
-      'HTML',
+      'HTML'
     ].join(''))
   })
 

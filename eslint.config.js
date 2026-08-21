@@ -1,34 +1,9 @@
-import { defineConfig, Extension, Format, Preset, Runtime, Testing, Tool } from '@santi020k/eslint-config-basic'
+import { defineConfig, Extension } from '@santi020k/eslint-config-basic'
 
-import tseslint from 'typescript-eslint'
-
-export default await defineConfig(
+export default defineConfig(
   {
-    autoFrameworks: false,
-    detection: { libraries: false },
-    detectRootDir: import.meta.dirname,
     extensions: [Extension.Boundaries, Extension.Unicorn],
-    formats: [Format.Jsonc, Format.Markdown],
     ignores: ['**/CHANGELOG.md'],
-    preset: Preset.Monorepo,
-    projects: {
-      'packages/eslint-plugin-astro-doctor': {
-        preset: Preset.Library,
-      },
-      'packages/astro-doctor': {
-        preset: Preset.Library,
-        runtime: Runtime.Node,
-      },
-    },
-    testing: [Testing.Vitest],
-    tools: [Tool.Pnpm, Tool.Cspell, Tool.GithubActions],
-    tsconfigRootDir: import.meta.dirname,
-    typescript: {
-      projectService: {
-        allowDefaultProject: ['*.ts', '*.js', '**/*.ts', '**/*.js', '**/*.cjs', '**/*.mjs'],
-        defaultProject: 'tsconfig.eslint.json',
-      }
-    },
     workspacePrefixes: ['@santi020k'],
   },
 
@@ -54,14 +29,17 @@ export default await defineConfig(
       'n/hashbang': 'off',
     },
   },
-
   {
-    files: ['**/*.config.ts', '**/*.config.js'],
-    languageOptions: {
-      parserOptions: {
-        projectService: false,
-      }
+    files: ['packages/vscode-astro-doctor/**/*.{cjs,ts}'],
+    name: 'vscode-extension-established-style',
+    rules: {
+      '@stylistic/arrow-parens': 'off',
+      '@stylistic/comma-dangle': ['warn', 'always-multiline'],
+      '@stylistic/function-call-argument-newline': 'off',
+      '@stylistic/implicit-arrow-linebreak': 'off',
+      '@stylistic/max-len': 'off',
+      '@stylistic/member-delimiter-style': 'off',
+      '@stylistic/operator-linebreak': 'off',
     },
-    ...tseslint.configs.disableTypeChecked,
   }
 )

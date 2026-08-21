@@ -31,8 +31,7 @@ describe('loadConfig', () => {
 
   test('loads full JSON config with all fields', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({
         threshold: 80,
         failOn: 'error',
         preset: 'recommended',
@@ -40,10 +39,10 @@ describe('loadConfig', () => {
         rules: { 'astro-doctor/no-set-html': 'warn' },
         overrides: [{
           files: ['src/legacy/**'],
-          rules: { 'astro-doctor/no-set-html': 'off' },
+          rules: { 'astro-doctor/no-set-html': 'off' }
         }],
-        projects: ['apps/site'],
-      }),
+        projects: ['apps/site']
+      })
     )
     const result = await loadConfig(testDirectory)
 
@@ -55,21 +54,20 @@ describe('loadConfig', () => {
       rules: { 'astro-doctor/no-set-html': 'warn' },
       overrides: [{
         files: ['src/legacy/**'],
-        rules: { 'astro-doctor/no-set-html': 'off' },
+        rules: { 'astro-doctor/no-set-html': 'off' }
       }],
-      projects: ['apps/site'],
+      projects: ['apps/site']
     })
   })
 
   test('rejects overrides without file globs', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({
         overrides: [{
           files: [],
-          rules: { 'astro-doctor/no-set-html': 'off' },
-        }],
-      }),
+          rules: { 'astro-doctor/no-set-html': 'off' }
+        }]
+      })
     )
 
     await expect(loadConfig(testDirectory)).rejects.toThrow(/overrides.*files/i)
@@ -77,13 +75,12 @@ describe('loadConfig', () => {
 
   test('rejects overrides with invalid rules', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({
         overrides: [{
           files: ['src/**'],
-          rules: { 'astro-doctor/no-set-html': 'sometimes' },
-        }],
-      }),
+          rules: { 'astro-doctor/no-set-html': 'sometimes' }
+        }]
+      })
     )
 
     await expect(loadConfig(testDirectory)).rejects.toThrow('sometimes')
@@ -91,12 +88,11 @@ describe('loadConfig', () => {
 
   test('loads JSONC config with comments', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.jsonc'),
-      `{
+      join(testDirectory, 'doctor.config.jsonc'), `{
   // This is a comment
   "threshold": 70,
   "failOn": "warning" /* inline comment */
-}`,
+}`
     )
     const result = await loadConfig(testDirectory)
     expect(result?.threshold).toBe(70)
@@ -105,8 +101,7 @@ describe('loadConfig', () => {
 
   test('unwraps default key from config object', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ default: { threshold: 80 } }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ default: { threshold: 80 } })
     )
     const result = await loadConfig(testDirectory)
     expect(result?.threshold).toBe(80)
@@ -114,96 +109,84 @@ describe('loadConfig', () => {
 
   test('throws with filename in error message on invalid failOn', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ failOn: 'invalid' }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ failOn: 'invalid' })
     )
     await expect(loadConfig(testDirectory)).rejects.toThrow('Failed to load doctor.config.json')
   })
 
   test('throws with "Invalid failOn" message', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ failOn: 'invalid' }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ failOn: 'invalid' })
     )
     await expect(loadConfig(testDirectory)).rejects.toThrow('Invalid failOn')
   })
 
   test('error message mentions valid failOn values', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ failOn: 'bad' }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ failOn: 'bad' })
     )
     await expect(loadConfig(testDirectory)).rejects.toThrow(/error.*warning.*off/i)
   })
 
   test('throws on invalid preset', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ preset: 'invalid-preset' }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ preset: 'invalid-preset' })
     )
     await expect(loadConfig(testDirectory)).rejects.toThrow('Invalid preset')
   })
 
   test('error message mentions valid preset values', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ preset: 'bad' }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ preset: 'bad' })
     )
     await expect(loadConfig(testDirectory)).rejects.toThrow(/recommended.*strict.*ci/i)
   })
 
   test('throws on threshold that is not a number', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ threshold: 'high' }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ threshold: 'high' })
     )
     await expect(loadConfig(testDirectory)).rejects.toThrow('threshold')
   })
 
   test('throws on threshold below 0', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ threshold: -1 }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ threshold: -1 })
     )
     await expect(loadConfig(testDirectory)).rejects.toThrow('threshold')
   })
 
   test('throws on threshold above 100', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ threshold: 101 }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ threshold: 101 })
     )
     await expect(loadConfig(testDirectory)).rejects.toThrow('threshold')
   })
 
   test('throws on ignore that is not an array', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ ignore: 'node_modules/**' }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ ignore: 'node_modules/**' })
     )
     await expect(loadConfig(testDirectory)).rejects.toThrow(/ignore/i)
   })
 
   test('throws on ignore array with non-string items', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ ignore: [42] }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ ignore: [42] })
     )
     await expect(loadConfig(testDirectory)).rejects.toThrow(/ignore/i)
   })
 
   test('throws on rules that is not an object', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ rules: 'all' }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ rules: 'all' })
     )
     await expect(loadConfig(testDirectory)).rejects.toThrow(/rules/i)
   })
 
   test('throws on invalid rule severity with rule ID and value in message', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ rules: { 'astro-doctor/no-set-html': 'invalid-severity' } }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ rules: { 'astro-doctor/no-set-html': 'invalid-severity' } })
     )
     await expect(loadConfig(testDirectory)).rejects.toThrow('astro-doctor/no-set-html')
     await expect(loadConfig(testDirectory)).rejects.toThrow('invalid-severity')
@@ -211,95 +194,84 @@ describe('loadConfig', () => {
 
   test('throws when config JSON is an array, not a plain object', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify([{ threshold: 80 }]),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify([{ threshold: 80 }])
     )
     await expect(loadConfig(testDirectory)).rejects.toThrow('plain object')
   })
 
   test('throws when config default field is not a plain object', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ default: [{ threshold: 80 }] }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ default: [{ threshold: 80 }] })
     )
     await expect(loadConfig(testDirectory)).rejects.toThrow('plain object')
   })
 
   test('describes null value in failOn error message', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ failOn: null }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ failOn: null })
     )
     await expect(loadConfig(testDirectory)).rejects.toThrow('null')
   })
 
   test('describes boolean value in failOn error message', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ failOn: true }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ failOn: true })
     )
     await expect(loadConfig(testDirectory)).rejects.toThrow('true')
   })
 
-  test("loads 'recommended' preset", async () => {
+  test('loads \'recommended\' preset', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ preset: 'recommended' }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ preset: 'recommended' })
     )
     const result = await loadConfig(testDirectory)
     expect(result?.preset).toBe('recommended')
   })
 
-  test("loads 'strict' preset", async () => {
+  test('loads \'strict\' preset', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ preset: 'strict' }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ preset: 'strict' })
     )
     const result = await loadConfig(testDirectory)
     expect(result?.preset).toBe('strict')
   })
 
-  test("loads 'ci' preset", async () => {
+  test('loads \'ci\' preset', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ preset: 'ci' }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ preset: 'ci' })
     )
     const result = await loadConfig(testDirectory)
     expect(result?.preset).toBe('ci')
   })
 
-  test("loads 'all' preset", async () => {
+  test('loads \'all\' preset', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ preset: 'all' }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ preset: 'all' })
     )
     const result = await loadConfig(testDirectory)
 
     expect(result?.preset).toBe('all')
   })
 
-  test("loads 'error' failOn", async () => {
+  test('loads \'error\' failOn', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ failOn: 'error' }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ failOn: 'error' })
     )
     const result = await loadConfig(testDirectory)
     expect(result?.failOn).toBe('error')
   })
 
-  test("loads 'warning' failOn", async () => {
+  test('loads \'warning\' failOn', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ failOn: 'warning' }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ failOn: 'warning' })
     )
     const result = await loadConfig(testDirectory)
     expect(result?.failOn).toBe('warning')
   })
 
-  test("loads 'off' failOn", async () => {
+  test('loads \'off\' failOn', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({ failOn: 'off' }),
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({ failOn: 'off' })
     )
     const result = await loadConfig(testDirectory)
     expect(result?.failOn).toBe('off')
@@ -307,14 +279,13 @@ describe('loadConfig', () => {
 
   test('loads rules with mixed severity values', async () => {
     writeFileSync(
-      join(testDirectory, 'doctor.config.json'),
-      JSON.stringify({
+      join(testDirectory, 'doctor.config.json'), JSON.stringify({
         rules: {
           'astro-doctor/no-set-html': 'error',
           'astro-doctor/use-astro-image': 'warn',
-          'astro-doctor/no-missing-alt': 'off',
-        },
-      }),
+          'astro-doctor/no-missing-alt': 'off'
+        }
+      })
     )
     const result = await loadConfig(testDirectory)
     expect(result?.rules?.['astro-doctor/no-set-html']).toBe('error')

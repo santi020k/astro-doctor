@@ -11,11 +11,13 @@ const INFER_SIZE_ATTRIBUTE_NAME = 'inferSize'
 const REMOTE_SOURCE_PREFIXES = ['https://', 'http://', '//']
 const PUBLIC_SOURCE_PREFIX = '/'
 
-const isRemoteSource = (sourceValue: string): boolean =>
-  REMOTE_SOURCE_PREFIXES.some((sourcePrefix) => sourceValue.startsWith(sourcePrefix))
+const isRemoteSource = (
+  sourceValue: string
+): boolean => REMOTE_SOURCE_PREFIXES.some(sourcePrefix => sourceValue.startsWith(sourcePrefix))
 
-const hasExplicitDimensions = (attributeNames: readonly string[]): boolean =>
-  attributeNames.includes(WIDTH_ATTRIBUTE_NAME) && attributeNames.includes(HEIGHT_ATTRIBUTE_NAME)
+const hasExplicitDimensions = (
+  attributeNames: readonly string[]
+): boolean => attributeNames.includes(WIDTH_ATTRIBUTE_NAME) && attributeNames.includes(HEIGHT_ATTRIBUTE_NAME)
 
 export default createRule({
   meta: {
@@ -25,22 +27,22 @@ export default createRule({
         'Require width and height for public or remote astro:assets images to avoid layout shift',
       category: 'performance',
       recommended: true,
-      url: `${RULE_DOCS_BASE_URL}/require-image-dimensions`,
+      url: `${RULE_DOCS_BASE_URL}/require-image-dimensions`
     },
     messages: {
       publicImageDimensions:
         'Images from public/ cannot be analyzed by Astro. Add width and height to prevent layout shift.',
       remoteImageDimensions:
-        'Remote images need width and height, or inferSize, so Astro can prevent layout shift.',
+        'Remote images need width and height, or inferSize, so Astro can prevent layout shift.'
     },
-    schema: [],
+    schema: []
   },
   create(context) {
     if (!isAstroFile(context.filename)) return {}
 
     return {
       Program() {
-        forEachAstroElement(context, (elementNode) => {
+        forEachAstroElement(context, elementNode => {
           if (!elementNode.name || !IMAGE_COMPONENT_NAMES.has(elementNode.name)) return
 
           const attributes = elementNode.attributes ?? []
@@ -49,7 +51,7 @@ export default createRule({
           if (sourceValue === undefined) return
 
           const attributeNames = attributes
-            .map((attributeNode) => attributeNode.name)
+            .map(attributeNode => attributeNode.name)
             .filter((attributeName): attributeName is string => attributeName !== undefined)
 
           if (hasExplicitDimensions(attributeNames)) return
@@ -66,7 +68,7 @@ export default createRule({
 
           reportAstroNode(context, elementNode, 'publicImageDimensions')
         })
-      },
+      }
     }
-  },
+  }
 })

@@ -5,7 +5,7 @@ import { globSync } from 'glob'
 
 import {
   DEFAULT_DIAGNOSTIC_COLUMN_NUMBER,
-  DEFAULT_DIAGNOSTIC_LINE_NUMBER,
+  DEFAULT_DIAGNOSTIC_LINE_NUMBER
 } from '../constants.js'
 import { getProjectRuleMeta } from '../project-rules.js'
 import type { Diagnostic, ScanOptions, Severity } from '../types.js'
@@ -20,7 +20,7 @@ const ASTRO_CONFIG_FILE_NAMES = [
   'astro.config.js',
   'astro.config.cjs',
   'astro.config.mts',
-  'astro.config.cts',
+  'astro.config.cts'
 ]
 
 const CONTENT_CONFIG_FILE_NAMES = [
@@ -29,7 +29,7 @@ const CONTENT_CONFIG_FILE_NAMES = [
   'src/content.config.js',
   'src/content/config.ts',
   'src/content/config.mjs',
-  'src/content/config.js',
+  'src/content/config.js'
 ]
 
 const PACKAGE_FILE_NAME = 'package.json'
@@ -39,7 +39,7 @@ const COMPETING_LOCK_FILE_NAMES = [
   'npm-shrinkwrap.json',
   'yarn.lock',
   'bun.lock',
-  'bun.lockb',
+  'bun.lockb'
 ]
 
 const ENV_EXAMPLE_FILE_NAME = '.env.example'
@@ -55,7 +55,7 @@ const PROJECT_AUDIT_FILE_NAMES = [
   ...CONTENT_CONFIG_FILE_NAMES,
   PACKAGE_FILE_NAME,
   ...COMPETING_LOCK_FILE_NAMES,
-  ENV_EXAMPLE_FILE_NAME,
+  ENV_EXAMPLE_FILE_NAME
 ]
 
 interface Location {
@@ -81,49 +81,43 @@ interface ProjectAuditOptions {
   readonly ignore?: readonly string[]
 }
 
-const toProjectPath = (rootDirectory: string, filePath: string): string =>
-  (isAbsolute(filePath) ? relative(rootDirectory, filePath) : filePath).replaceAll('\\', '/')
+const toProjectPath = (rootDirectory: string, filePath: string): string => (isAbsolute(filePath) ? relative(rootDirectory, filePath) : filePath).replaceAll('\\', '/')
 
 export const isProjectAuditRelevantPath = (filePath: string): boolean => {
   const normalizedFilePath = filePath.replaceAll('\\', '/')
 
   return PROJECT_AUDIT_FILE_NAMES.some(
-    (projectPath) =>
-      normalizedFilePath === projectPath || normalizedFilePath.endsWith(`/${projectPath}`),
+    projectPath => normalizedFilePath === projectPath || normalizedFilePath.endsWith(`/${projectPath}`)
   ) || normalizedFilePath.startsWith(`${CONTENT_DIRECTORY_NAME}/`) ||
-    normalizedFilePath.includes(`/${CONTENT_DIRECTORY_NAME}/`) ||
-    normalizedFilePath.startsWith(`${ACTIONS_DIRECTORY_NAME}/`) ||
-    normalizedFilePath.includes(`/${ACTIONS_DIRECTORY_NAME}/`)
+  normalizedFilePath.includes(`/${CONTENT_DIRECTORY_NAME}/`) ||
+  normalizedFilePath.startsWith(`${ACTIONS_DIRECTORY_NAME}/`) ||
+  normalizedFilePath.includes(`/${ACTIONS_DIRECTORY_NAME}/`)
 }
 
-const toAbsolutePath = (rootDirectory: string, projectPath: string): string =>
-  resolve(rootDirectory, projectPath)
+const toAbsolutePath = (rootDirectory: string, projectPath: string): string => resolve(rootDirectory, projectPath)
 
 const getSelectedProjectPaths = (
   rootDirectory: string,
-  filePaths: readonly string[] | undefined,
-): Set<string> | undefined =>
-  filePaths === undefined
-    ? undefined
-    : new Set(filePaths.map((filePath) => toProjectPath(rootDirectory, filePath)))
+  filePaths: readonly string[] | undefined
+): Set<string> | undefined => filePaths === undefined ?
+  undefined :
+  new Set(filePaths.map(filePath => toProjectPath(rootDirectory, filePath)))
 
 const isSelected = (
   selectedProjectPaths: Set<string> | undefined,
-  projectPath: string,
+  projectPath: string
 ): boolean => selectedProjectPaths === undefined || selectedProjectPaths.has(projectPath)
 
 const isSelectedByPrefix = (
   selectedProjectPaths: Set<string> | undefined,
-  projectPathPrefix: string,
-): boolean =>
-  selectedProjectPaths === undefined ||
-  [...selectedProjectPaths].some((projectPath) => projectPath.startsWith(projectPathPrefix))
+  projectPathPrefix: string
+): boolean => selectedProjectPaths === undefined ||
+  [...selectedProjectPaths].some(projectPath => projectPath.startsWith(projectPathPrefix))
 
 const findExistingProjectFile = (
   rootDirectory: string,
-  projectPaths: readonly string[],
-): string | undefined =>
-  projectPaths.find((projectPath) => existsSync(toAbsolutePath(rootDirectory, projectPath)))
+  projectPaths: readonly string[]
+): string | undefined => projectPaths.find(projectPath => existsSync(toAbsolutePath(rootDirectory, projectPath)))
 
 const readProjectFile = (rootDirectory: string, projectPath: string): string | undefined => {
   const filePath = toAbsolutePath(rootDirectory, projectPath)
@@ -136,29 +130,32 @@ const readProjectFile = (rootDirectory: string, projectPath: string): string | u
 const matchesWorkspacePattern = (
   workspaceDirectory: string,
   projectDirectory: string,
-  pattern: string,
-): boolean =>
-  globSync(pattern, { cwd: workspaceDirectory, absolute: true })
-    .some((matchedPath) => resolve(matchedPath) === resolve(projectDirectory))
+  pattern: string
+): boolean => globSync(pattern, { cwd: workspaceDirectory, absolute: true })
+  .some(matchedPath => resolve(matchedPath) === resolve(projectDirectory))
 
 const isPnpmWorkspaceProject = (
   workspaceDirectory: string,
-  projectDirectory: string,
+  projectDirectory: string
 ): boolean => {
   if (resolve(workspaceDirectory) === resolve(projectDirectory)) return true
 
   const patterns = readPnpmWorkspacePatterns(workspaceDirectory)
-  const includedPatterns = patterns.filter((pattern) => !pattern.startsWith('!'))
+  const includedPatterns = patterns.filter(pattern => !pattern.startsWith('!'))
 
   const excludedPatterns = patterns
-    .filter((pattern) => pattern.startsWith('!'))
-    .map((pattern) => pattern.slice(1))
+    .filter(pattern => pattern.startsWith('!'))
+    .map(pattern => pattern.slice(1))
 
-  return includedPatterns.some((pattern) =>
-    matchesWorkspacePattern(workspaceDirectory, projectDirectory, pattern)
-  ) && !excludedPatterns.some((pattern) =>
-    matchesWorkspacePattern(workspaceDirectory, projectDirectory, pattern)
+  const isIncluded = includedPatterns.some(
+    pattern => matchesWorkspacePattern(workspaceDirectory, projectDirectory, pattern)
   )
+
+  const isExcluded = excludedPatterns.some(
+    pattern => matchesWorkspacePattern(workspaceDirectory, projectDirectory, pattern)
+  )
+
+  return isIncluded && !isExcluded
 }
 
 const findPnpmWorkspaceDirectory = (projectDirectory: string): string | undefined => {
@@ -179,9 +176,9 @@ const findPnpmWorkspaceDirectory = (projectDirectory: string): string | undefine
   }
 
   return existsSync(resolve(currentDirectory, 'pnpm-workspace.yaml')) &&
-    isPnpmWorkspaceProject(currentDirectory, projectDirectory)
-    ? currentDirectory
-    : undefined
+    isPnpmWorkspaceProject(currentDirectory, projectDirectory) ?
+    currentDirectory :
+    undefined
 }
 
 const getLocation = (content: string, searchText: string): Location => {
@@ -190,7 +187,7 @@ const getLocation = (content: string, searchText: string): Location => {
   if (matchIndex === -1) {
     return {
       line: DEFAULT_DIAGNOSTIC_LINE_NUMBER,
-      column: DEFAULT_DIAGNOSTIC_COLUMN_NUMBER,
+      column: DEFAULT_DIAGNOSTIC_COLUMN_NUMBER
     }
   }
 
@@ -200,7 +197,7 @@ const getLocation = (content: string, searchText: string): Location => {
 
   return {
     line: lines.length,
-    column: lastLine.length + DEFAULT_DIAGNOSTIC_COLUMN_NUMBER,
+    column: lastLine.length + DEFAULT_DIAGNOSTIC_COLUMN_NUMBER
   }
 }
 
@@ -208,7 +205,7 @@ const getLocationAtIndex = (content: string, matchIndex: number): Location => {
   if (matchIndex < 0) {
     return {
       line: DEFAULT_DIAGNOSTIC_LINE_NUMBER,
-      column: DEFAULT_DIAGNOSTIC_COLUMN_NUMBER,
+      column: DEFAULT_DIAGNOSTIC_COLUMN_NUMBER
     }
   }
 
@@ -218,13 +215,13 @@ const getLocationAtIndex = (content: string, matchIndex: number): Location => {
 
   return {
     line: lines.length,
-    column: lastLine.length + DEFAULT_DIAGNOSTIC_COLUMN_NUMBER,
+    column: lastLine.length + DEFAULT_DIAGNOSTIC_COLUMN_NUMBER
   }
 }
 
 const findObjectRange = (
   maskedContent: string,
-  openingIndex: number,
+  openingIndex: number
 ): ObjectRange | undefined => {
   if (maskedContent[openingIndex] !== '{') return undefined
 
@@ -246,7 +243,7 @@ const findObjectRange = (
     if (objectDepth === 0) {
       return {
         openingIndex,
-        closingIndex: characterIndex,
+        closingIndex: characterIndex
       }
     }
   }
@@ -265,7 +262,7 @@ const findNextNonWhitespaceIndex = (content: string, startIndex: number): number
 const findTopLevelPropertyIndex = (
   maskedContent: string,
   objectRange: ObjectRange,
-  propertyName: string,
+  propertyName: string
 ): number | undefined => {
   const propertyPattern = new RegExp(`^${propertyName}\\s*:`, 'u')
   let objectDepth = 1
@@ -307,13 +304,13 @@ const findTopLevelPropertyIndex = (
 const hasTopLevelProperty = (
   maskedContent: string,
   objectRange: ObjectRange,
-  propertyName: string,
+  propertyName: string
 ): boolean => findTopLevelPropertyIndex(maskedContent, objectRange, propertyName) !== undefined
 
 const findTopLevelObjectProperty = (
   maskedContent: string,
   objectRange: ObjectRange,
-  propertyName: string,
+  propertyName: string
 ): ObjectRange | undefined => {
   let objectDepth = 1
 
@@ -355,7 +352,7 @@ const findTopLevelObjectProperty = (
 
 const getEffectiveSeverity = (
   ruleId: string,
-  rules: ScanOptions['rules'],
+  rules: ScanOptions['rules']
 ): Severity | undefined => {
   const ruleOverride = rules?.[ruleId]
 
@@ -378,8 +375,8 @@ const createDiagnostic = (
   message: string,
   location: Location = {
     line: DEFAULT_DIAGNOSTIC_LINE_NUMBER,
-    column: DEFAULT_DIAGNOSTIC_COLUMN_NUMBER,
-  },
+    column: DEFAULT_DIAGNOSTIC_COLUMN_NUMBER
+  }
 ): Diagnostic | undefined => {
   const projectRuleMeta = getProjectRuleMeta(ruleId)
   const severity = getEffectiveSeverity(ruleId, rules)
@@ -393,28 +390,25 @@ const createDiagnostic = (
     filePath: toAbsolutePath(rootDirectory, projectPath),
     line: location.line,
     column: location.column,
-    category: projectRuleMeta.category,
+    category: projectRuleMeta.category
   }
 }
 
 const pushDiagnostic = (
   diagnostics: Diagnostic[],
-  diagnostic: Diagnostic | undefined,
+  diagnostic: Diagnostic | undefined
 ): void => {
   if (diagnostic !== undefined) diagnostics.push(diagnostic)
 }
 
 const isPackageManagerAuditSelected = (
-  selectedProjectPaths: Set<string> | undefined,
-): boolean =>
-  isSelected(selectedProjectPaths, PACKAGE_FILE_NAME) ||
-  COMPETING_LOCK_FILE_NAMES.some((lockFileName) =>
-    isSelected(selectedProjectPaths, lockFileName)
-  )
+  selectedProjectPaths: Set<string> | undefined
+): boolean => isSelected(selectedProjectPaths, PACKAGE_FILE_NAME) ||
+  COMPETING_LOCK_FILE_NAMES.some(lockFileName => isSelected(selectedProjectPaths, lockFileName))
 
 const getPackageManagerContent = (
   packageJsonContent: string,
-  workspaceDirectory: string | undefined,
+  workspaceDirectory: string | undefined
 ): string | undefined => {
   if (packageJsonContent.includes('"packageManager"')) return packageJsonContent
 
@@ -424,18 +418,15 @@ const getPackageManagerContent = (
 }
 
 const hasCompetingLockFile = (
-  directories: ReadonlySet<string>,
-): boolean =>
-  [...directories].some((directory) =>
-    COMPETING_LOCK_FILE_NAMES.some((lockFileName) =>
-      existsSync(toAbsolutePath(directory, lockFileName))
-    )
-  )
+  directories: ReadonlySet<string>
+): boolean => [...directories].some(directory => COMPETING_LOCK_FILE_NAMES.some(
+  lockFileName => existsSync(toAbsolutePath(directory, lockFileName))
+))
 
 const auditPackageManager = (
   options: ProjectAuditOptions,
   selectedProjectPaths: Set<string> | undefined,
-  diagnostics: Diagnostic[],
+  diagnostics: Diagnostic[]
 ): void => {
   if (!isPackageManagerAuditSelected(selectedProjectPaths)) return
 
@@ -446,13 +437,12 @@ const auditPackageManager = (
   const workspaceDirectory = findPnpmWorkspaceDirectory(options.directory)
 
   const packageManagerContent = getPackageManagerContent(
-    packageJsonContent,
-    workspaceDirectory,
+    packageJsonContent, workspaceDirectory
   )
 
   const auditedDirectories = new Set([
     options.directory,
-    ...(workspaceDirectory === undefined ? [] : [workspaceDirectory]),
+    ...(workspaceDirectory === undefined ? [] : [workspaceDirectory])
   ])
 
   const usesPnpm = packageManagerContent?.includes('"packageManager"') === true &&
@@ -461,22 +451,16 @@ const auditPackageManager = (
   if (usesPnpm && !hasCompetingLockFile(auditedDirectories)) return
 
   pushDiagnostic(
-    diagnostics,
-    createDiagnostic(
-      options.directory,
-      options.rules,
-      'astro-doctor/prefer-pnpm',
-      PACKAGE_FILE_NAME,
-      'Use pnpm consistently: declare it in packageManager at the package or workspace root and remove competing npm, Yarn, or Bun lockfiles.',
-      getLocation(packageJsonContent, '"packageManager"'),
-    ),
+    diagnostics, createDiagnostic(
+      options.directory, options.rules, 'astro-doctor/prefer-pnpm', PACKAGE_FILE_NAME, 'Use pnpm consistently: declare it in packageManager at the package or workspace root and remove competing npm, Yarn, or Bun lockfiles.', getLocation(packageJsonContent, '"packageManager"')
+    )
   )
 }
 
 const auditAstroSecurityConfig = (
   options: ProjectAuditOptions,
   selectedProjectPaths: Set<string> | undefined,
-  diagnostics: Diagnostic[],
+  diagnostics: Diagnostic[]
 ): void => {
   const astroConfigProjectPath = findExistingProjectFile(options.directory, ASTRO_CONFIG_FILE_NAMES)
 
@@ -490,36 +474,24 @@ const auditAstroSecurityConfig = (
 
   if (/checkOrigin\s*:\s*false/u.test(astroConfigContent)) {
     pushDiagnostic(
-      diagnostics,
-      createDiagnostic(
-        options.directory,
-        options.rules,
-        'astro-doctor/no-disabled-origin-check',
-        astroConfigProjectPath,
-        'Do not disable Astro security.checkOrigin unless you have a specific CSRF mitigation in place.',
-        getLocation(astroConfigContent, 'checkOrigin'),
-      ),
+      diagnostics, createDiagnostic(
+        options.directory, options.rules, 'astro-doctor/no-disabled-origin-check', astroConfigProjectPath, 'Do not disable Astro security.checkOrigin unless you have a specific CSRF mitigation in place.', getLocation(astroConfigContent, 'checkOrigin')
+      )
     )
   }
 
   if (/allowedDomains\s*:\s*\[\s*\{\s*\}\s*\]/u.test(astroConfigContent)) {
     pushDiagnostic(
-      diagnostics,
-      createDiagnostic(
-        options.directory,
-        options.rules,
-        'astro-doctor/no-open-allowed-domains',
-        astroConfigProjectPath,
-        'Avoid security.allowedDomains: [{}]. Configure explicit trusted host patterns instead.',
-        getLocation(astroConfigContent, 'allowedDomains'),
-      ),
+      diagnostics, createDiagnostic(
+        options.directory, options.rules, 'astro-doctor/no-open-allowed-domains', astroConfigProjectPath, 'Avoid security.allowedDomains: [{}]. Configure explicit trusted host patterns instead.', getLocation(astroConfigContent, 'allowedDomains')
+      )
     )
   }
 }
 
 const findInsecureCookieProperties = (
   maskedContent: string,
-  cookieObjectRange: ObjectRange,
+  cookieObjectRange: ObjectRange
 ): InsecureCookieProperty[] => {
   const insecureProperties: InsecureCookieProperty[] = []
   let objectDepth = 1
@@ -556,7 +528,7 @@ const findInsecureCookieProperties = (
 
     insecureProperties.push({
       propertyName: insecurePropertyMatch[1] ?? '',
-      index: characterIndex,
+      index: characterIndex
     })
 
     characterIndex += insecurePropertyMatch[0].length - 1
@@ -568,7 +540,7 @@ const findInsecureCookieProperties = (
 const auditSessionCookie = (
   options: ProjectAuditOptions,
   selectedProjectPaths: Set<string> | undefined,
-  diagnostics: Diagnostic[],
+  diagnostics: Diagnostic[]
 ): void => {
   const astroConfigProjectPath = findExistingProjectFile(options.directory, ASTRO_CONFIG_FILE_NAMES)
 
@@ -589,8 +561,7 @@ const auditSessionCookie = (
     defineConfigMatch.index + defineConfigMatch[0].lastIndexOf('(')
 
   const rootOpeningIndex = findNextNonWhitespaceIndex(
-    maskedContent,
-    defineConfigOpeningIndex + 1,
+    maskedContent, defineConfigOpeningIndex + 1
   )
 
   const rootObjectRange = findObjectRange(maskedContent, rootOpeningIndex)
@@ -607,26 +578,20 @@ const auditSessionCookie = (
 
   for (const insecureProperty of findInsecureCookieProperties(maskedContent, cookieObjectRange)) {
     pushDiagnostic(
-      diagnostics,
-      createDiagnostic(
-        options.directory,
-        options.rules,
-        'astro-doctor/no-insecure-session-cookie',
-        astroConfigProjectPath,
-        `Do not set session.cookie.${insecureProperty.propertyName} to false. Keep Astro's secure session cookie defaults.`,
-        getLocationAtIndex(astroConfigContent, insecureProperty.index),
-      ),
+      diagnostics, createDiagnostic(
+        options.directory, options.rules, 'astro-doctor/no-insecure-session-cookie', astroConfigProjectPath, `Do not set session.cookie.${insecureProperty.propertyName} to false. Keep Astro's secure session cookie defaults.`, getLocationAtIndex(astroConfigContent, insecureProperty.index)
+      )
     )
   }
 }
 
 const getActionProjectPaths = (
   options: ProjectAuditOptions,
-  selectedProjectPaths: Set<string> | undefined,
+  selectedProjectPaths: Set<string> | undefined
 ): string[] => {
   if (selectedProjectPaths !== undefined) {
     return [...selectedProjectPaths]
-      .filter((projectPath) => (
+      .filter(projectPath => (
         projectPath.startsWith(`${ACTIONS_DIRECTORY_NAME}/`) &&
         /\.(?:[cm]?[jt]s)$/u.test(projectPath) &&
         existsSync(toAbsolutePath(options.directory, projectPath))
@@ -636,7 +601,7 @@ const getActionProjectPaths = (
 
   return globSync(ACTION_FILE_GLOB, {
     cwd: options.directory,
-    ignore: buildIgnorePatterns(options.ignore),
+    ignore: buildIgnorePatterns(options.ignore)
   }).sort()
 }
 
@@ -665,14 +630,12 @@ const getDefineActionIdentifiers = (actionFileContent: string): string[] => {
 const actionConsumesUncheckedInput = (
   actionFileContent: string,
   maskedContent: string,
-  actionObjectRange: ObjectRange,
+  actionObjectRange: ObjectRange
 ): boolean => {
   if (hasTopLevelProperty(maskedContent, actionObjectRange, 'input')) return false
 
   const acceptPropertyIndex = findTopLevelPropertyIndex(
-    maskedContent,
-    actionObjectRange,
-    'accept',
+    maskedContent, actionObjectRange, 'accept'
   )
 
   if (
@@ -683,16 +646,13 @@ const actionConsumesUncheckedInput = (
   }
 
   const handlerPropertyIndex = findTopLevelPropertyIndex(
-    maskedContent,
-    actionObjectRange,
-    'handler',
+    maskedContent, actionObjectRange, 'handler'
   )
 
   if (handlerPropertyIndex === undefined) return false
 
   const handlerContent = actionFileContent.slice(
-    handlerPropertyIndex,
-    actionObjectRange.closingIndex,
+    handlerPropertyIndex, actionObjectRange.closingIndex
   )
 
   const handlerInputMatch =
@@ -712,8 +672,7 @@ const getActionWithoutInputIndices = (actionFileContent: string): number[] => {
   if (defineActionIdentifiers.length === 0) return missingInputIndices
 
   const defineActionPattern = new RegExp(
-    `\\b(?:${defineActionIdentifiers.join('|')})\\s*\\(`,
-    'gu',
+    `\\b(?:${defineActionIdentifiers.join('|')})\\s*\\(`, 'gu'
   )
 
   for (const defineActionMatch of maskedContent.matchAll(defineActionPattern)) {
@@ -735,7 +694,7 @@ const getActionWithoutInputIndices = (actionFileContent: string): number[] => {
 const auditActionInputSchemas = (
   options: ProjectAuditOptions,
   selectedProjectPaths: Set<string> | undefined,
-  diagnostics: Diagnostic[],
+  diagnostics: Diagnostic[]
 ): void => {
   for (const actionProjectPath of getActionProjectPaths(options, selectedProjectPaths)) {
     const actionFileContent = readProjectFile(options.directory, actionProjectPath)
@@ -744,37 +703,27 @@ const auditActionInputSchemas = (
 
     for (const actionIndex of getActionWithoutInputIndices(actionFileContent)) {
       pushDiagnostic(
-        diagnostics,
-        createDiagnostic(
-          options.directory,
-          options.rules,
-          'astro-doctor/require-action-input-schema',
-          actionProjectPath,
-          'Add an input schema to this action so untrusted input is validated before the handler runs.',
-          getLocationAtIndex(actionFileContent, actionIndex),
-        ),
+        diagnostics, createDiagnostic(
+          options.directory, options.rules, 'astro-doctor/require-action-input-schema', actionProjectPath, 'Add an input schema to this action so untrusted input is validated before the handler runs.', getLocationAtIndex(actionFileContent, actionIndex)
+        )
       )
     }
   }
 }
 
-const getProjectAstroFiles = (options: ProjectAuditOptions): string[] =>
-  options.files === undefined
-    ? [...options.astroFiles ?? []]
-    : globSync(ASTRO_FILE_GLOB, {
-        cwd: options.directory,
-        absolute: true,
-        ignore: buildIgnorePatterns(options.ignore),
-      }).sort()
+const getProjectAstroFiles = (options: ProjectAuditOptions): string[] => options.files === undefined ?
+  [...options.astroFiles ?? []] :
+  globSync(ASTRO_FILE_GLOB, {
+    cwd: options.directory,
+    absolute: true,
+    ignore: buildIgnorePatterns(options.ignore)
+  }).sort()
 
-const projectUsesClientRouter = (options: ProjectAuditOptions): boolean =>
-  getProjectAstroFiles(options).some((astroFilePath) =>
-    readFileSync(astroFilePath, 'utf8').includes('<ClientRouter'),
-  )
+const projectUsesClientRouter = (options: ProjectAuditOptions): boolean => getProjectAstroFiles(options).some(astroFilePath => readFileSync(astroFilePath, 'utf8').includes('<ClientRouter'))
 
 const auditClientRouterScriptLifecycle = (
   options: ProjectAuditOptions,
-  diagnostics: Diagnostic[],
+  diagnostics: Diagnostic[]
 ): void => {
   if (!projectUsesClientRouter(options)) return
 
@@ -797,35 +746,29 @@ const auditClientRouterScriptLifecycle = (
       const projectPath = toProjectPath(options.directory, astroFilePath)
 
       pushDiagnostic(
-        diagnostics,
-        createDiagnostic(
-          options.directory,
-          options.rules,
-          'astro-doctor/require-client-router-script-lifecycle',
-          projectPath,
-          "DOMContentLoaded only runs on the initial page load with ClientRouter. Initialize on 'astro:page-load' instead.",
-          getLocationAtIndex(astroFileContent, lifecycleEventIndex),
-        ),
+        diagnostics, createDiagnostic(
+          options.directory, options.rules, 'astro-doctor/require-client-router-script-lifecycle', projectPath, 'DOMContentLoaded only runs on the initial page load with ClientRouter. Initialize on \'astro:page-load\' instead.', getLocationAtIndex(astroFileContent, lifecycleEventIndex)
+        )
       )
     }
   }
 }
 
-const getEnvExampleVariableNames = (envExampleContent: string): string[] =>
-  envExampleContent
-    .split(/\r?\n/u)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0 && !line.startsWith('#'))
-    .map((line) => line.split('=')[0]?.trim())
-    .filter((variableName): variableName is string => Boolean(variableName))
+const getEnvExampleVariableNames = (envExampleContent: string): string[] => envExampleContent
+  .split(/\r?\n/u)
+  .map(line => line.trim())
+  .filter(line => line.length > 0 && !line.startsWith('#'))
+  .map(line => line.split('=')[0]?.trim())
+  .filter((variableName): variableName is string => Boolean(variableName))
 
-const looksLikeSecret = (variableName: string): boolean =>
-  SECRET_ENV_NAME_PARTS.some((secretNamePart) => variableName.includes(secretNamePart))
+const looksLikeSecret = (
+  variableName: string
+): boolean => SECRET_ENV_NAME_PARTS.some(secretNamePart => variableName.includes(secretNamePart))
 
 const auditEnvExample = (
   options: ProjectAuditOptions,
   selectedProjectPaths: Set<string> | undefined,
-  diagnostics: Diagnostic[],
+  diagnostics: Diagnostic[]
 ): void => {
   if (!isSelected(selectedProjectPaths, ENV_EXAMPLE_FILE_NAME)) return
 
@@ -839,15 +782,9 @@ const auditEnvExample = (
     if (!variableName.startsWith(PUBLIC_ENV_PREFIX) || !looksLikeSecret(variableName)) continue
 
     pushDiagnostic(
-      diagnostics,
-      createDiagnostic(
-        options.directory,
-        options.rules,
-        'astro-doctor/no-public-secret-env',
-        ENV_EXAMPLE_FILE_NAME,
-        `${variableName} is declared as public but looks like a secret. PUBLIC_ variables are exposed to client-side code.`,
-        getLocation(envExampleContent, variableName),
-      ),
+      diagnostics, createDiagnostic(
+        options.directory, options.rules, 'astro-doctor/no-public-secret-env', ENV_EXAMPLE_FILE_NAME, `${variableName} is declared as public but looks like a secret. PUBLIC_ variables are exposed to client-side code.`, getLocation(envExampleContent, variableName)
+      )
     )
   }
 }
@@ -855,7 +792,7 @@ const auditEnvExample = (
 const auditEnvSchema = (
   options: ProjectAuditOptions,
   selectedProjectPaths: Set<string> | undefined,
-  diagnostics: Diagnostic[],
+  diagnostics: Diagnostic[]
 ): void => {
   const astroConfigProjectPath = findExistingProjectFile(options.directory, ASTRO_CONFIG_FILE_NAMES)
 
@@ -874,14 +811,9 @@ const auditEnvSchema = (
 
   if (astroConfigProjectPath === undefined) {
     pushDiagnostic(
-      diagnostics,
-      createDiagnostic(
-        options.directory,
-        options.rules,
-        'astro-doctor/prefer-env-schema',
-        ENV_EXAMPLE_FILE_NAME,
-        'Define an Astro env schema for documented environment variables so they are typed and validated.',
-      ),
+      diagnostics, createDiagnostic(
+        options.directory, options.rules, 'astro-doctor/prefer-env-schema', ENV_EXAMPLE_FILE_NAME, 'Define an Astro env schema for documented environment variables so they are typed and validated.'
+      )
     )
 
     return
@@ -892,14 +824,9 @@ const auditEnvSchema = (
   if (astroConfigContent?.includes('envField') && /env\s*:\s*\{/u.test(astroConfigContent)) return
 
   pushDiagnostic(
-    diagnostics,
-    createDiagnostic(
-      options.directory,
-      options.rules,
-      'astro-doctor/prefer-env-schema',
-      ENV_EXAMPLE_FILE_NAME,
-      'Define an Astro env schema for documented environment variables so they are typed and validated.',
-    ),
+    diagnostics, createDiagnostic(
+      options.directory, options.rules, 'astro-doctor/prefer-env-schema', ENV_EXAMPLE_FILE_NAME, 'Define an Astro env schema for documented environment variables so they are typed and validated.'
+    )
   )
 }
 
@@ -908,13 +835,13 @@ const hasContentEntries = (rootDirectory: string): boolean => {
 
   if (!existsSync(contentDirectory) || !statSync(contentDirectory).isDirectory()) return false
 
-  return readdirSync(contentDirectory).some((entryName) => !entryName.startsWith('.'))
+  return readdirSync(contentDirectory).some(entryName => !entryName.startsWith('.'))
 }
 
 const auditContentConfig = (
   options: ProjectAuditOptions,
   selectedProjectPaths: Set<string> | undefined,
-  diagnostics: Diagnostic[],
+  diagnostics: Diagnostic[]
 ): void => {
   if (!isSelectedByPrefix(selectedProjectPaths, `${CONTENT_DIRECTORY_NAME}/`)) return
 
@@ -925,14 +852,9 @@ const auditContentConfig = (
   if (contentConfigProjectPath !== undefined) return
 
   pushDiagnostic(
-    diagnostics,
-    createDiagnostic(
-      options.directory,
-      options.rules,
-      'astro-doctor/require-content-config',
-      CONTENT_DIRECTORY_NAME,
-      'Add a content config with defineCollection() so content entries are typed and validated.',
-    ),
+    diagnostics, createDiagnostic(
+      options.directory, options.rules, 'astro-doctor/require-content-config', CONTENT_DIRECTORY_NAME, 'Add a content config with defineCollection() so content entries are typed and validated.'
+    )
   )
 }
 

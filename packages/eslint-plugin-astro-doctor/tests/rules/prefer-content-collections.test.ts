@@ -10,8 +10,8 @@ RuleTester.it = test
 const tester = new RuleTester({
   languageOptions: {
     parser: astroParser,
-    parserOptions: { sourceType: 'module' },
-  },
+    parserOptions: { sourceType: 'module' }
+  }
 })
 
 tester.run('astro-doctor/prefer-content-collections', rule, {
@@ -22,26 +22,26 @@ import { getCollection } from 'astro:content'
 const posts = await getCollection('blog')
 ---
 <ul>{posts.map(p => <li>{p.data.title}</li>)}</ul>`,
-      filename: 'test.astro',
+      filename: 'test.astro'
     },
     {
       code: `---
 const assets = import.meta.glob('../assets/**/*.png')
 ---
 <div></div>`,
-      filename: 'test.astro',
+      filename: 'test.astro'
     },
     {
-      code: `<div></div>`,
-      filename: 'test.astro',
+      code: '<div></div>',
+      filename: 'test.astro'
     },
     {
       code: `---
 const posts = await Astro.glob('../content/**/*.md')
 ---
 <div></div>`,
-      filename: 'test.js',
-    },
+      filename: 'test.js'
+    }
   ],
   invalid: [
     {
@@ -50,7 +50,7 @@ const posts = await Astro.glob('../content/**/*.md')
 ---
 <ul>{posts.map(p => <li>{p.frontmatter.title}</li>)}</ul>`,
       filename: 'test.astro',
-      errors: [{ messageId: 'preferContentCollections' }],
+      errors: [{ messageId: 'preferContentCollections' }]
     },
     {
       code: `---
@@ -58,7 +58,7 @@ const all = await Astro.glob('./**/*.mdx')
 ---
 <div></div>`,
       filename: 'test.astro',
-      errors: [{ messageId: 'preferContentCollections' }],
+      errors: [{ messageId: 'preferContentCollections' }]
     },
     {
       code: `---
@@ -66,7 +66,7 @@ const posts = import.meta.glob('../content/**/*.md')
 ---
 <div></div>`,
       filename: 'test.astro',
-      errors: [{ messageId: 'preferContentCollections' }],
+      errors: [{ messageId: 'preferContentCollections' }]
     },
     {
       code: `---
@@ -74,7 +74,7 @@ const docs = import.meta.glob('./**/*.{md,mdx}')
 ---
 <div></div>`,
       filename: 'test.astro',
-      errors: [{ messageId: 'preferContentCollections' }],
+      errors: [{ messageId: 'preferContentCollections' }]
     },
     {
       code: `---
@@ -82,7 +82,7 @@ const posts = Astro.glob('../content/**/*.md')
 ---
 <div></div>`,
       filename: 'test.astro',
-      errors: [{ messageId: 'preferContentCollections' }],
-    },
-  ],
+      errors: [{ messageId: 'preferContentCollections' }]
+    }
+  ]
 })

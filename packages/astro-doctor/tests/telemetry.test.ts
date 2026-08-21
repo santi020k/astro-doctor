@@ -11,7 +11,7 @@ const makeScanResult = (overrides: Partial<ScanResult> = {}): ScanResult => ({
   score: 100,
   scoreLabel: 'S',
   scoreBreakdown: { performance: 100, accessibility: 100, security: 100, 'best-practices': 100 },
-  ...overrides,
+  ...overrides
 })
 
 describe('telemetry', () => {
@@ -47,7 +47,7 @@ describe('telemetry', () => {
           filePath: '/test/index.astro',
           line: 1,
           column: 1,
-          category: 'performance',
+          category: 'performance'
         },
         {
           ruleId: 'astro-doctor/use-astro-image',
@@ -56,10 +56,10 @@ describe('telemetry', () => {
           filePath: '/test/page.astro',
           line: 2,
           column: 1,
-          category: 'performance',
-        },
+          category: 'performance'
+        }
       ],
-      warningCount: 2,
+      warningCount: 2
     })
 
     expect(() => {
@@ -81,7 +81,7 @@ describe('telemetry', () => {
     trackRun({ command: 'scan', flags: { verbose: true }, result }, false)
 
     // Let the fire-and-forget settle
-    await new Promise((resolve) => setTimeout(resolve, 50))
+    await new Promise(resolve => setTimeout(resolve, 50))
 
     expect(mockFetch).toHaveBeenCalledOnce()
     const [, options] = mockFetch.mock.calls[0] as [string, RequestInit]

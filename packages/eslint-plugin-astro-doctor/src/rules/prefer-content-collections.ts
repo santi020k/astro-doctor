@@ -4,9 +4,7 @@ import { RULE_DOCS_BASE_URL } from '../constants.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
 
 const CONTENT_GLOB_INDICATORS = ['.md', '.mdx', '.mdoc', '{md', ',md', '{mdx', ',mdx']
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
 
 const getLiteralValue = (node: unknown): string | undefined => {
   if (!isRecord(node) || node.type !== 'Literal') return undefined
@@ -14,8 +12,9 @@ const getLiteralValue = (node: unknown): string | undefined => {
   return typeof node.value === 'string' ? node.value : undefined
 }
 
-const isContentGlobPattern = (globPattern: string): boolean =>
-  CONTENT_GLOB_INDICATORS.some((indicator) => globPattern.includes(indicator))
+const isContentGlobPattern = (
+  globPattern: string
+): boolean => CONTENT_GLOB_INDICATORS.some(indicator => globPattern.includes(indicator))
 
 const getFirstArgumentValue = (node: unknown): string | undefined => {
   if (!isRecord(node) || node.type !== 'CallExpression') return undefined
@@ -38,37 +37,37 @@ export default createRule({
       description: 'Prefer Content Collections over Astro.glob() for Markdown and MDX files',
       category: 'best-practices',
       recommended: true,
-      url: `${RULE_DOCS_BASE_URL}/prefer-content-collections`,
+      url: `${RULE_DOCS_BASE_URL}/prefer-content-collections`
     },
     messages: {
       preferContentCollections:
         'Avoid Astro.glob() for content files. Use getCollection() from "astro:content" instead — ' +
-        'it provides TypeScript types, build-time validation, and better performance through caching.',
+        'it provides TypeScript types, build-time validation, and better performance through caching.'
     },
-    schema: [],
+    schema: []
   },
   create(context) {
     if (!isAstroFile(context.filename)) return {}
 
     return {
       'CallExpression[callee.type="MemberExpression"][callee.object.name="Astro"][callee.property.name="glob"]'(
-        node: Rule.Node,
+        node: Rule.Node
       ) {
         context.report({
           node,
-          messageId: 'preferContentCollections',
+          messageId: 'preferContentCollections'
         })
       },
       'CallExpression[callee.type="MemberExpression"][callee.object.type="MetaProperty"][callee.property.name="glob"]'(
-        node: Rule.Node,
+        node: Rule.Node
       ) {
         if (!isContentGlobCall(node)) return
 
         context.report({
           node,
-          messageId: 'preferContentCollections',
+          messageId: 'preferContentCollections'
         })
-      },
+      }
     }
-  },
+  }
 })

@@ -634,7 +634,9 @@ export const collections = { blog }`
 
 export const ALL_RULES: readonly Rule[] = [...RULES, ...PROJECT_AUDIT_RULES]
 
-export const RULE_BY_SLUG = Object.fromEntries(ALL_RULES.map(rule => [rule.slug, rule]))
+export const RULE_BY_SLUG: Readonly<Partial<Record<string, Rule>>> = Object.fromEntries(
+  ALL_RULES.map(rule => [rule.slug, rule])
+)
 
 const publicSecretEnvRule = RULES.find(rule => rule.id === 'astro-doctor/no-public-secret-env')
 const projectAudits: ProjectAuditRule[] = [...PROJECT_AUDIT_RULES]

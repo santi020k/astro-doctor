@@ -11,9 +11,9 @@ const ruleTester = new RuleTester({
   languageOptions: {
     parser: astroParser,
     parserOptions: {
-      sourceType: 'module',
-    },
-  },
+      sourceType: 'module'
+    }
+  }
 })
 
 ruleTester.run('no-public-secret-env', rule, {
@@ -24,12 +24,12 @@ const apiUrl = import.meta.env.PUBLIC_API_URL
 const secret = import.meta.env.API_SECRET
 ---
 <p>{apiUrl}</p>`,
-      filename: 'test.astro',
+      filename: 'test.astro'
     },
     {
-      code: `const apiKey = import.meta.env.PUBLIC_API_KEY`,
-      filename: 'test.ts',
-    },
+      code: 'const apiKey = import.meta.env.PUBLIC_API_KEY',
+      filename: 'test.ts'
+    }
   ],
   invalid: [
     {
@@ -38,7 +38,7 @@ const token = import.meta.env.PUBLIC_TOKEN
 ---
 <p>{token}</p>`,
       filename: 'test.astro',
-      errors: [{ messageId: 'publicSecretEnv', data: { variableName: 'PUBLIC_TOKEN' } }],
+      errors: [{ messageId: 'publicSecretEnv', data: { variableName: 'PUBLIC_TOKEN' } }]
     },
     {
       code: `---
@@ -46,7 +46,7 @@ const key = import.meta.env.PUBLIC_API_KEY
 ---
 <p>{key}</p>`,
       filename: 'test.astro',
-      errors: [{ messageId: 'publicSecretEnv', data: { variableName: 'PUBLIC_API_KEY' } }],
-    },
-  ],
+      errors: [{ messageId: 'publicSecretEnv', data: { variableName: 'PUBLIC_API_KEY' } }]
+    }
+  ]
 })

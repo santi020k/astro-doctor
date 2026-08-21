@@ -11,7 +11,7 @@ import {
   filterPersistentBaselineDiagnostics,
   readPersistentBaseline,
   scanBaseline,
-  writePersistentBaseline,
+  writePersistentBaseline
 } from '../src/baseline.js'
 import { resolveBaseRevision } from '../src/git.js'
 import { scan } from '../src/scanner/index.js'
@@ -26,10 +26,10 @@ describe('baseline comparison', () => {
     mkdirSync(testDirectory, { recursive: true })
     execFileSync('git', ['init'], { cwd: testDirectory })
     execFileSync('git', ['config', 'user.email', 'astro-doctor@example.com'], {
-      cwd: testDirectory,
+      cwd: testDirectory
     })
     execFileSync('git', ['config', 'user.name', 'Astro Doctor'], {
-      cwd: testDirectory,
+      cwd: testDirectory
     })
   })
 
@@ -50,20 +50,17 @@ describe('baseline comparison', () => {
 
     const currentResult = await scan({
       directory: testDirectory,
-      files: [astroFilePath],
+      files: [astroFilePath]
     })
     const baseline = await scanBaseline({
       repositoryDirectory: testDirectory,
       projectDirectory: testDirectory,
       files: [astroFilePath],
       baseRevision,
-      scanOptions: {},
+      scanOptions: {}
     })
     const introducedResult = filterIntroducedDiagnostics(
-      currentResult,
-      baseline.result,
-      testDirectory,
-      baseline.rootDirectory,
+      currentResult, baseline.result, testDirectory, baseline.rootDirectory
     )
 
     expect(introducedResult.diagnostics).toHaveLength(1)
@@ -74,16 +71,14 @@ describe('baseline comparison', () => {
     const layoutFilePath = join(testDirectory, 'layout.astro')
     const componentFilePath = join(testDirectory, 'component.astro')
     const lifecycleRules: Record<string, 'warn'> = {
-      'astro-doctor/require-client-router-script-lifecycle': 'warn',
+      'astro-doctor/require-client-router-script-lifecycle': 'warn'
     }
 
     writeFileSync(
-      layoutFilePath,
-      "---\nimport { ClientRouter } from 'astro:transitions'\n---\n<ClientRouter />",
+      layoutFilePath, '---\nimport { ClientRouter } from \'astro:transitions\'\n---\n<ClientRouter />'
     )
     writeFileSync(
-      componentFilePath,
-      "<script>document.addEventListener('DOMContentLoaded', () => {})</script>",
+      componentFilePath, '<script>document.addEventListener(\'DOMContentLoaded\', () => {})</script>'
     )
     execFileSync('git', ['add', '.'], { cwd: testDirectory })
     execFileSync('git', ['commit', '-m', 'baseline'], { cwd: testDirectory })
@@ -91,14 +86,13 @@ describe('baseline comparison', () => {
     const baseRevision = resolveBaseRevision(testDirectory, 'HEAD')
 
     writeFileSync(
-      componentFilePath,
-      "<script>document.addEventListener('DOMContentLoaded', () => {})</script>\n",
+      componentFilePath, '<script>document.addEventListener(\'DOMContentLoaded\', () => {})</script>\n'
     )
 
     const currentResult = await scan({
       directory: testDirectory,
       files: [componentFilePath],
-      rules: lifecycleRules,
+      rules: lifecycleRules
     })
     const baseline = await scanBaseline({
       repositoryDirectory: testDirectory,
@@ -106,20 +100,17 @@ describe('baseline comparison', () => {
       files: [componentFilePath],
       baseRevision,
       scanOptions: {
-        rules: lifecycleRules,
-      },
+        rules: lifecycleRules
+      }
     })
     const introducedResult = filterIntroducedDiagnostics(
-      currentResult,
-      baseline.result,
-      testDirectory,
-      baseline.rootDirectory,
+      currentResult, baseline.result, testDirectory, baseline.rootDirectory
     )
 
     expect(currentResult.diagnostics).toEqual([
       expect.objectContaining({
-        ruleId: 'astro-doctor/require-client-router-script-lifecycle',
-      }),
+        ruleId: 'astro-doctor/require-client-router-script-lifecycle'
+      })
     ])
     expect(introducedResult.diagnostics).toEqual([])
   })
@@ -139,7 +130,7 @@ describe('baseline comparison', () => {
       projectDirectory: testDirectory,
       files: [astroFilePath],
       baseRevision,
-      scanOptions: {},
+      scanOptions: {}
     })
 
     expect(baseline.result.fileCount).toBe(1)
@@ -158,9 +149,7 @@ describe('baseline comparison', () => {
 
     const loadedBaseline = readPersistentBaseline(baselineFilePath)
     const filteredResult = filterPersistentBaselineDiagnostics(
-      initialResult,
-      loadedBaseline,
-      testDirectory,
+      initialResult, loadedBaseline, testDirectory
     )
 
     expect(loadedBaseline.version).toBe(1)
@@ -180,15 +169,13 @@ describe('baseline comparison', () => {
 
     const currentResult = await scan({ directory: testDirectory })
     const filteredResult = filterPersistentBaselineDiagnostics(
-      currentResult,
-      baseline,
-      testDirectory,
+      currentResult, baseline, testDirectory
     )
 
     expect(filteredResult.diagnostics).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ ruleId: 'astro-doctor/no-missing-alt' }),
-      ]),
+        expect.objectContaining({ ruleId: 'astro-doctor/no-missing-alt' })
+      ])
     )
   })
 
@@ -198,11 +185,11 @@ describe('baseline comparison', () => {
     writeFileSync(baselineFilePath, JSON.stringify({
       version: 999,
       generatedAt: new Date().toISOString(),
-      entries: [],
+      entries: []
     }))
 
     expect(() => readPersistentBaseline(baselineFilePath)).toThrow(
-      'Unsupported baseline version',
+      'Unsupported baseline version'
     )
   })
 })

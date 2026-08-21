@@ -3,7 +3,7 @@ export {
   formatConsoleReport,
   formatGithubReport,
   formatJsonReport,
-  formatSarifReport,
+  formatSarifReport
 } from './report/index.js'
 export type { SarifReport } from './report/sarif.js'
 export { scan } from './scanner/index.js'
@@ -16,5 +16,5 @@ export type {
   ScanResult,
   ScanTimings,
   ScoreLabel,
-  Severity,
+  Severity
 } from './types.js'

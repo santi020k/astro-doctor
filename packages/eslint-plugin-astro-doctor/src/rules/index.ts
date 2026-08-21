@@ -29,7 +29,7 @@ export const rules: Record<string, Rule.RuleModule> = {
   'prefer-content-collections': preferContentCollections,
   'require-image-dimensions': requireImageDimensions,
   'require-island-fallback': requireIslandFallback,
-  'use-astro-image': useAstroImage,
+  'use-astro-image': useAstroImage
 }
 
 export const RECOMMENDED_RULES: Record<string, RuleSeverity> = {
@@ -45,5 +45,5 @@ export const RECOMMENDED_RULES: Record<string, RuleSeverity> = {
   'astro-doctor/prefer-content-collections': 'warn',
   'astro-doctor/require-image-dimensions': 'warn',
   'astro-doctor/require-island-fallback': 'warn',
-  'astro-doctor/use-astro-image': 'warn',
+  'astro-doctor/use-astro-image': 'warn'
 }

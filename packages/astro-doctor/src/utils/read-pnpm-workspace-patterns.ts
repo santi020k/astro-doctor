@@ -16,7 +16,7 @@ export const readPnpmWorkspacePatterns = (rootDirectory: string): string[] => {
     if (!pattern) continue
 
     if (
-      (pattern.startsWith("'") && pattern.endsWith("'")) ||
+      (pattern.startsWith('\'') && pattern.endsWith('\'')) ||
       (pattern.startsWith('"') && pattern.endsWith('"'))
     ) {
       pattern = pattern.slice(1, -1)

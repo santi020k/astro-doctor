@@ -11,9 +11,9 @@ const ruleTester = new RuleTester({
   languageOptions: {
     parser: astroParser,
     parserOptions: {
-      sourceType: 'module',
-    },
-  },
+      sourceType: 'module'
+    }
+  }
 })
 
 ruleTester.run('require-island-fallback', rule, {
@@ -25,7 +25,7 @@ import Chart from '../components/Chart.tsx'
 <Chart client:only="react">
   <div slot="fallback">Loading chart...</div>
 </Chart>`,
-      filename: 'test.astro',
+      filename: 'test.astro'
     },
     {
       code: `---
@@ -34,12 +34,12 @@ import Avatar from '../components/Avatar.astro'
 <Avatar server:defer>
   <span slot="fallback">Loading...</span>
 </Avatar>`,
-      filename: 'test.astro',
+      filename: 'test.astro'
     },
     {
-      code: `<Chart client:only="react" />`,
-      filename: 'test.tsx',
-    },
+      code: '<Chart client:only="react" />',
+      filename: 'test.tsx'
+    }
   ],
   invalid: [
     {
@@ -48,7 +48,7 @@ import Chart from '../components/Chart.tsx'
 ---
 <Chart client:only="react" />`,
       filename: 'test.astro',
-      errors: [{ messageId: 'clientOnlyFallback' }],
+      errors: [{ messageId: 'clientOnlyFallback' }]
     },
     {
       code: `---
@@ -56,7 +56,7 @@ import Avatar from '../components/Avatar.astro'
 ---
 <Avatar server:defer />`,
       filename: 'test.astro',
-      errors: [{ messageId: 'serverDeferFallback' }],
-    },
-  ],
+      errors: [{ messageId: 'serverDeferFallback' }]
+    }
+  ]
 })

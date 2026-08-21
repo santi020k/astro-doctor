@@ -498,7 +498,9 @@ export const activate = async (context: vscode.ExtensionContext): Promise<void> 
       AstroDoctorSidebarProvider.VIEW_TYPE,
       sidebarProvider,
     ),
-    vscode.commands.registerCommand(COMMAND_SHOW_OUTPUT, () => { outputChannel.show(); }),
+    vscode.commands.registerCommand(COMMAND_SHOW_OUTPUT, () => {
+      outputChannel.show()
+    }),
     vscode.commands.registerCommand(COMMAND_OPEN_DOCS, async (url: string) => {
       await vscode.env.openExternal(vscode.Uri.parse(url))
     }),

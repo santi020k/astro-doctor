@@ -37,14 +37,13 @@ const noop = (): void => {
   // intentionally swallows errors from fire-and-forget calls
 }
 
-const isCI = (): boolean =>
-  Boolean(
-    process.env.CI ||
-    process.env.GITHUB_ACTIONS ||
-    process.env.GITLAB_CI ||
-    process.env.CIRCLECI ||
-    process.env.BUILDKITE,
-  )
+const isCI = (): boolean => Boolean(
+  process.env.CI ||
+  process.env.GITHUB_ACTIONS ||
+  process.env.GITLAB_CI ||
+  process.env.CIRCLECI ||
+  process.env.BUILDKITE
+)
 
 const buildRuleHits = (result: ScanResult): Record<string, number> => {
   const counts: Record<string, number> = {}
@@ -75,7 +74,7 @@ const buildPayload = (options: TelemetryOptions): TelemetryPayload => ({
   warningCount: options.result?.warningCount ?? 0,
   score: options.result?.score ?? 100,
   ruleHits: options.result ? buildRuleHits(options.result) : {},
-  ci: isCI(),
+  ci: isCI()
 })
 
 const sendTelemetry = async (endpoint: string, payload: TelemetryPayload): Promise<void> => {
@@ -90,7 +89,7 @@ const sendTelemetry = async (endpoint: string, payload: TelemetryPayload): Promi
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-      signal: controller.signal,
+      signal: controller.signal
     })
 
     clearTimeout(timeoutId)

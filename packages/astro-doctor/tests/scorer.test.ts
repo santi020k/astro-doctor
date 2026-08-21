@@ -14,7 +14,7 @@ const makeError = (filePath = 'file.astro'): Diagnostic => ({
   filePath,
   line: 1,
   column: 1,
-  category: 'accessibility',
+  category: 'accessibility'
 })
 
 const makeWarning = (filePath = 'file.astro'): Diagnostic => ({
@@ -24,7 +24,7 @@ const makeWarning = (filePath = 'file.astro'): Diagnostic => ({
   filePath,
   line: 1,
   column: 1,
-  category: 'best-practices',
+  category: 'best-practices'
 })
 
 // ---------------------------------------------------------------------------
@@ -51,8 +51,7 @@ describe('computeScore', () => {
     // 1 warning in 1 file vs 1 warning per file across 10 files — identical density
     const small = computeScore([makeWarning('a.astro')], 1)
     const large = computeScore(
-      Array.from({ length: 10 }, (_, i) => makeWarning(`file-${i}.astro`)),
-      10,
+      Array.from({ length: 10 }, (_, i) => makeWarning(`file-${i}.astro`)), 10
     )
 
     expect(small).toBe(large)
@@ -61,15 +60,11 @@ describe('computeScore', () => {
   test('issues concentrated in one file hurt less than the same count spread across all files', () => {
     // 20 errors in a single file out of 10 → only that file is dragged down
     const concentrated = computeScore(
-      Array.from({ length: 20 }, () => makeError('bad.astro')),
-      10,
+      Array.from({ length: 20 }, () => makeError('bad.astro')), 10
     )
     // 2 errors in each of 10 files → every file is dragged down
     const distributed = computeScore(
-      Array.from({ length: 20 }, (_, issueIndex) =>
-        makeError(`file-${Math.floor(issueIndex / 2)}.astro`),
-      ),
-      10,
+      Array.from({ length: 20 }, (_, issueIndex) => makeError(`file-${Math.floor(issueIndex / 2)}.astro`)), 10
     )
 
     expect(concentrated).toBeGreaterThan(distributed)
@@ -93,7 +88,7 @@ describe('computeScore', () => {
     const securityError: Diagnostic = {
       ...makeError(),
       ruleId: 'astro-doctor/no-set-html',
-      category: 'security',
+      category: 'security'
     }
 
     expect(computeScore([securityError], 1000)).toBe(74)

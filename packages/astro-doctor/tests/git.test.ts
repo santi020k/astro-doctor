@@ -1,11 +1,11 @@
 import { execFileSync } from 'node:child_process'
 
-import { afterEach,describe, expect, test, vi } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { getDiffAstroFiles, getStagedAstroFiles } from '../src/git.js'
 
 vi.mock('node:child_process', () => ({
-  execFileSync: vi.fn(),
+  execFileSync: vi.fn()
 }))
 
 const mockExec = execFileSync as ReturnType<typeof vi.fn>
@@ -103,10 +103,18 @@ describe('getDiffAstroFiles', () => {
   test('falls back to HEAD~1 when no known branch exists', () => {
     // All rev-parse calls fail, then git diff succeeds
     mockExec
-      .mockImplementationOnce(() => { throw new Error('no main') })
-      .mockImplementationOnce(() => { throw new Error('no master') })
-      .mockImplementationOnce(() => { throw new Error('no origin/main') })
-      .mockImplementationOnce(() => { throw new Error('no origin/master') })
+      .mockImplementationOnce(() => {
+        throw new Error('no main')
+      })
+      .mockImplementationOnce(() => {
+        throw new Error('no master')
+      })
+      .mockImplementationOnce(() => {
+        throw new Error('no origin/main')
+      })
+      .mockImplementationOnce(() => {
+        throw new Error('no origin/master')
+      })
       .mockReturnValueOnce('src/pages/index.astro\n')
 
     const result = getDiffAstroFiles('/project')
