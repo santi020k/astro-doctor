@@ -3,6 +3,7 @@
 > Your agent writes bad Astro. This catches it.
 
 [![CI](https://github.com/santi020k/astro-doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/santi020k/astro-doctor/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/santi020k/astro-doctor/actions/workflows/codeql.yml/badge.svg)](https://github.com/santi020k/astro-doctor/actions/workflows/codeql.yml)
 [![npm version](https://img.shields.io/npm/v/@santi020k/astro-doctor.svg?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/@santi020k/astro-doctor)
 [![npm downloads](https://img.shields.io/npm/dt/@santi020k/astro-doctor.svg?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/@santi020k/astro-doctor)
 [![license](https://img.shields.io/npm/l/@santi020k/astro-doctor.svg?style=flat&colorA=000000&colorB=000000)](https://github.com/santi020k/astro-doctor/blob/main/LICENSE)
@@ -398,3 +399,5 @@ ESLint configuration powered by [`@santi020k/eslint-config-basic`](https://githu
 ## License
 
 MIT — [santi020k](https://santi020k.com)
+
+For confidential vulnerability reports, see [SECURITY.md](SECURITY.md).

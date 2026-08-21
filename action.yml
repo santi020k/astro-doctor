@@ -58,7 +58,7 @@ runs:
   using: 'composite'
   steps:
     - name: Setup supported Node.js runtime
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
       with:
         node-version: '24.16.0'
 
@@ -189,7 +189,7 @@ runs:
 
     - name: Upload SARIF to GitHub Code Scanning
       if: inputs.upload-sarif == 'true' && steps.sarif.outputs.path != ''
-      uses: github/codeql-action/upload-sarif@v4
+      uses: github/codeql-action/upload-sarif@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4.33.0
       with:
         sarif_file: ${{ steps.sarif.outputs.path }}
 
@@ -231,7 +231,7 @@ runs:
         inputs.comment == 'true' &&
         steps.diff.outputs.no_astro_changes != 'true' &&
         steps.report.outputs.scan_failed != 'true'
-      uses: actions/github-script@v9
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       with:
         script: |
           const fs = require('fs')

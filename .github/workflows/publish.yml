@@ -2,8 +2,13 @@ name: Release
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+    paths:
+      - ".changeset/**"
+      - "packages/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
   workflow_dispatch: {}
 
 concurrency:
@@ -15,6 +20,9 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    environment:
+      name: release
+      url: https://www.npmjs.com/package/@santi020k/astro-doctor
     permissions:
       contents: write
       pull-requests: write
@@ -22,15 +30,17 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
         with:
           fetch-depth: 0
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          run_install: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22.x
           registry-url: https://registry.npmjs.org
@@ -41,7 +51,7 @@ jobs:
 
       - name: Create release pull request or publish
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2
         with:
           publish: pnpm run release
           version: pnpm run version-packages
