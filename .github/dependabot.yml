@@ -24,6 +24,14 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      # Changesets v3 requires a coordinated migration to changesets/action v2.
+      - dependency-name: "@changesets/cli"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "@changesets/changelog-github"
+        update-types:
+          - "version-update:semver-major"
 
   - package-ecosystem: github-actions
     directory: /
