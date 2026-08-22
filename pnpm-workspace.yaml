@@ -51,9 +51,9 @@ catalog:
   wrangler: ^4.114.0
 minimumReleaseAgeExclude:
   - "@santi020k/og"
-  - "@santi020k/lumen-astro@1.2.0"
-  - "@santi020k/lumen-core@1.2.0"
-  - "@santi020k/lumen@1.2.0"
+  - "@santi020k/lumen-astro@1.4.0"
+  - "@santi020k/lumen-core@1.4.0"
+  - "@santi020k/lumen@1.4.0"
   - "@santi020k/eslint-config-typescript"
 supportedArchitectures:
   cpu:

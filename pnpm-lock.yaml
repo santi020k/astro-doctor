@@ -199,19 +199,19 @@ importers:
     dependencies:
       '@astrojs/mdx':
         specifier: 'catalog:'
-        version: 7.0.3(@astrojs/markdown-satteri@0.3.4)(astro@7.1.3(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@types/node@26.1.1)(jiti@2.7.0)(rollup@4.62.2)(yaml@2.9.0))
+        version: 7.0.3(@astrojs/markdown-satteri@0.3.4)(astro@7.1.3(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@26.1.1)(jiti@2.7.0)(rollup@4.62.2)(yaml@2.9.0))
       '@astrojs/sitemap':
         specifier: 'catalog:'
         version: 3.7.3
       '@santi020k/lumen-astro':
-        specifier: ^1.2.0
-        version: 1.2.0(astro@7.1.3(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@types/node@26.1.1)(jiti@2.7.0)(rollup@4.62.2)(yaml@2.9.0))
+        specifier: ^1.4.0
+        version: 1.4.0(astro@7.1.3(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@26.1.1)(jiti@2.7.0)(rollup@4.62.2)(yaml@2.9.0))
       '@tailwindcss/vite':
         specifier: 'catalog:'
         version: 4.3.3(vite@8.1.4(@types/node@26.1.1)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
       astro:
         specifier: 'catalog:'
-        version: 7.1.3(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@types/node@26.1.1)(jiti@2.7.0)(rollup@4.62.2)(yaml@2.9.0)
+        version: 7.1.3(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@26.1.1)(jiti@2.7.0)(rollup@4.62.2)(yaml@2.9.0)
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.3
@@ -3257,18 +3257,18 @@ packages:
     peerDependencies:
       eslint: ^10.0.0
 
-  '@santi020k/lumen-astro@1.2.0':
-    resolution: {integrity: sha512-/TyBM+BjEtNhKvyiy9N5SwzJjai9n5AiZ3Tj66B12kwHCPr4UmSvQz0sXL3g5HLRPr6Bl/OHl9asHYQ/vD9yZw==}
+  '@santi020k/lumen-astro@1.4.0':
+    resolution: {integrity: sha512-bZwHKpemGjSH5cLnc19ODTGwBXW7tWe6B1Y770xMXO76rYcZJUaMeCvgspTiBDHHnKyNGXhM3uRMemmX808K3Q==}
     engines: {node: '>=22.12.0'}
     peerDependencies:
       astro: '>=5'
 
-  '@santi020k/lumen-core@1.2.0':
-    resolution: {integrity: sha512-pl+Zrdi9FILVUp1xY5zlte6+I2DMek7Msb4NTJy4CdH/kAlIwzBiJFjUZ20/sSbGnXulDhRhi5Zd0FurrZlMDQ==}
+  '@santi020k/lumen-core@1.4.0':
+    resolution: {integrity: sha512-46s3CLyCa4LpERMnygExLAGF5Hhei5vjHT8tH1cC38DCedvklrCtOUq2rS/FdflEVvNrsAHjx1vPzugwgH8Heg==}
     engines: {node: '>=22.12.0'}
 
-  '@santi020k/lumen@1.2.0':
-    resolution: {integrity: sha512-wiIBdt3LTadShASWev6Wrj+36YpqqTJ9riuvonQ/6ac0sqnf+xV11vwTgWuXDxLXiWy7JAKoUYYbqPKRKJ1zVQ==}
+  '@santi020k/lumen@1.4.0':
+    resolution: {integrity: sha512-UQloTduJzrJft0MstvYR0ne24XVqKmq+rMHegyZvU6tVHKMrgHzidO1oVOGqqzDexjpd4Qcja0dW6TdnjDypAw==}
     engines: {node: '>=22.12.0'}
     hasBin: true
 
@@ -8398,6 +8398,14 @@ snapshots:
   '@astrojs/compiler-binding-linux-x64-musl@0.3.1':
     optional: true
 
+  '@astrojs/compiler-binding-wasm32-wasi@0.3.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)':
+    dependencies:
+      '@napi-rs/wasm-runtime': 1.2.3(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
+    optional: true
+
   '@astrojs/compiler-binding-wasm32-wasi@0.3.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)':
     dependencies:
       '@napi-rs/wasm-runtime': 1.2.3(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
@@ -8411,6 +8419,21 @@ snapshots:
   '@astrojs/compiler-binding-win32-x64-msvc@0.3.1':
     optional: true
 
+  '@astrojs/compiler-binding@0.3.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)':
+    optionalDependencies:
+      '@astrojs/compiler-binding-darwin-arm64': 0.3.1
+      '@astrojs/compiler-binding-darwin-x64': 0.3.1
+      '@astrojs/compiler-binding-linux-arm64-gnu': 0.3.1
+      '@astrojs/compiler-binding-linux-arm64-musl': 0.3.1
+      '@astrojs/compiler-binding-linux-x64-gnu': 0.3.1
+      '@astrojs/compiler-binding-linux-x64-musl': 0.3.1
+      '@astrojs/compiler-binding-wasm32-wasi': 0.3.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
+      '@astrojs/compiler-binding-win32-arm64-msvc': 0.3.1
+      '@astrojs/compiler-binding-win32-x64-msvc': 0.3.1
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
+
   '@astrojs/compiler-binding@0.3.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)':
     optionalDependencies:
       '@astrojs/compiler-binding-darwin-arm64': 0.3.1
@@ -8422,6 +8445,13 @@ snapshots:
       '@astrojs/compiler-binding-wasm32-wasi': 0.3.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
       '@astrojs/compiler-binding-win32-arm64-msvc': 0.3.1
       '@astrojs/compiler-binding-win32-x64-msvc': 0.3.1
+    transitivePeerDependencies:
+      - '@emnapi/core'
+      - '@emnapi/runtime'
+
+  '@astrojs/compiler-rs@0.3.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)':
+    dependencies:
+      '@astrojs/compiler-binding': 0.3.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
     transitivePeerDependencies:
       - '@emnapi/core'
       - '@emnapi/runtime'
@@ -8501,13 +8531,13 @@ snapshots:
       hast-util-from-html: 2.0.3
       satteri: 0.9.5
 
-  '@astrojs/mdx@7.0.3(@astrojs/markdown-satteri@0.3.4)(astro@7.1.3(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@types/node@26.1.1)(jiti@2.7.0)(rollup@4.62.2)(yaml@2.9.0))':
+  '@astrojs/mdx@7.0.3(@astrojs/markdown-satteri@0.3.4)(astro@7.1.3(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@26.1.1)(jiti@2.7.0)(rollup@4.62.2)(yaml@2.9.0))':
     dependencies:
       '@astrojs/internal-helpers': 0.10.1
       '@astrojs/markdown-remark': 7.2.1
       '@mdx-js/mdx': 3.1.1
       acorn: 8.17.0
-      astro: 7.1.3(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@types/node@26.1.1)(jiti@2.7.0)(rollup@4.62.2)(yaml@2.9.0)
+      astro: 7.1.3(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@26.1.1)(jiti@2.7.0)(rollup@4.62.2)(yaml@2.9.0)
       es-module-lexer: 2.1.0
       estree-util-visit: 2.0.0
       hast-util-to-html: 9.0.5
@@ -11055,20 +11085,20 @@ snapshots:
       - supports-color
     optional: true
 
-  '@santi020k/lumen-astro@1.2.0(astro@7.1.3(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@types/node@26.1.1)(jiti@2.7.0)(rollup@4.62.2)(yaml@2.9.0))':
+  '@santi020k/lumen-astro@1.4.0(astro@7.1.3(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@26.1.1)(jiti@2.7.0)(rollup@4.62.2)(yaml@2.9.0))':
     dependencies:
-      '@santi020k/lumen': 1.2.0
-      '@santi020k/lumen-core': 1.2.0
-      astro: 7.1.3(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@types/node@26.1.1)(jiti@2.7.0)(rollup@4.62.2)(yaml@2.9.0)
+      '@santi020k/lumen': 1.4.0
+      '@santi020k/lumen-core': 1.4.0
+      astro: 7.1.3(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@26.1.1)(jiti@2.7.0)(rollup@4.62.2)(yaml@2.9.0)
       uqr: 0.1.3
 
-  '@santi020k/lumen-core@1.2.0':
+  '@santi020k/lumen-core@1.4.0':
     dependencies:
       '@lucide/icons': 1.33.0
 
-  '@santi020k/lumen@1.2.0':
+  '@santi020k/lumen@1.4.0':
     dependencies:
-      '@santi020k/lumen-core': 1.2.0
+      '@santi020k/lumen-core': 1.4.0
       semver: 7.8.5
 
   '@santi020k/og@0.4.0(@types/node@26.1.1)':
@@ -11948,9 +11978,9 @@ snapshots:
       - '@emnapi/runtime'
       - supports-color
 
-  astro@7.1.3(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@types/node@26.1.1)(jiti@2.7.0)(rollup@4.62.2)(yaml@2.9.0):
+  astro@7.1.3(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@26.1.1)(jiti@2.7.0)(rollup@4.62.2)(yaml@2.9.0):
     dependencies:
-      '@astrojs/compiler-rs': 0.3.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
+      '@astrojs/compiler-rs': 0.3.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
       '@astrojs/internal-helpers': 0.10.1
       '@astrojs/markdown-satteri': 0.3.4
       '@astrojs/telemetry': 3.3.3
