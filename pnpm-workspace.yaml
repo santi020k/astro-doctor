@@ -35,7 +35,6 @@ catalog:
   eslint: 10.8.0
   eslint-plugin-astro: ^3.0.1
   glob: ^13.0.6
-  husky: ^9.1.7
   jiti: ^2.7.0
   knip: ^6.29.0
   lint-staged: ^17.2.0
@@ -51,6 +50,7 @@ catalog:
   vscode-languageserver-textdocument: ^1.0.12
   wrangler: ^4.114.0
 minimumReleaseAgeExclude:
+  - "@santi020k/og"
   - "@santi020k/lumen-astro@1.2.0"
   - "@santi020k/lumen-core@1.2.0"
   - "@santi020k/lumen@1.2.0"

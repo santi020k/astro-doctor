@@ -2,7 +2,8 @@
   "name": "@santi020k/oxlint-config-astro-doctor",
   "version": "1.3.0",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
   "description": "oxlint config for Astro Doctor — enables the built-in oxlint rules that overlap with astro-doctor checks",
   "type": "module",
@@ -16,7 +17,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/santi020k/astro-doctor"
+    "url": "https://github.com/santi020k/astro-doctor.git",
+    "directory": "packages/oxlint-config-astro-doctor"
+  },
+  "homepage": "https://doctor.santi020k.com",
+  "bugs": {
+    "url": "https://github.com/santi020k/astro-doctor/issues"
   },
   "keywords": [
     "astro",

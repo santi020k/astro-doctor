@@ -2,6 +2,12 @@
 
 > Your agent writes bad Astro. This catches it.
 
+[Documentation](https://doctor.santi020k.com) ·
+[CLI on npm](https://www.npmjs.com/package/@santi020k/astro-doctor) ·
+[ESLint plugin](https://www.npmjs.com/package/@santi020k/eslint-plugin-astro-doctor) ·
+[VS Code](https://marketplace.visualstudio.com/items?itemName=santi020k.vscode-astro-doctor) ·
+[Issues](https://github.com/santi020k/astro-doctor/issues)
+
 [![CI](https://github.com/santi020k/astro-doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/santi020k/astro-doctor/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/@santi020k/astro-doctor.svg?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/@santi020k/astro-doctor)
 [![npm downloads](https://img.shields.io/npm/dt/@santi020k/astro-doctor.svg?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/@santi020k/astro-doctor)

@@ -8,22 +8,17 @@
  * Set FORCE_OG=1 to regenerate files that already exist.
  */
 
-import { createHash } from 'node:crypto'
-import fs, { promises as fsp } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { renderOgCard } from './render-og-card.js'
+import { definePresetConfig } from '@santi020k/og/presets'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
-const OUT_DIR = path.join(ROOT, 'public', 'og')
-const CACHE_FILE = path.join(__dirname, 'og-image-manifest.json')
-const FORCE = process.env.FORCE_OG === '1'
 // ─── Page specs ───────────────────────────────────────────────────────────────
 /** @type {Array<{ outFile: string, props: object }>} */
 const SPECS = []
-const spec = (outRelPath, props) => SPECS.push({ outFile: path.join(OUT_DIR, outRelPath), props })
+const spec = (output, props) => SPECS.push({ output, props })
 
 // Homepage
 spec('index.webp', {
@@ -133,72 +128,18 @@ for (const rule of RULES) {
   })
 }
 
-// ─── Generator ────────────────────────────────────────────────────────────────
-
-const getTemplateHash = () => {
-  const sourceFiles = [
-    path.join(__dirname, 'render-og-card.js'),
-    path.join(ROOT, 'public', 'favicon.svg'),
-    path.join(ROOT, 'public', 'fonts', 'Montserrat-Regular.ttf'),
-    path.join(ROOT, 'public', 'fonts', 'Montserrat-ExtraBold.ttf')
-  ]
-
-  const templateHash = createHash('sha256')
-
-  for (const sourceFile of sourceFiles) {
-    templateHash.update(fs.readFileSync(sourceFile))
-  }
-
-  return templateHash.digest('hex')
-}
-
-const getSpecHash = (props, templateHash) => createHash('sha256')
-  .update(templateHash)
-  .update(JSON.stringify(props))
-  .digest('hex')
-
-const readCache = async () => {
-  try {
-    return JSON.parse(await fsp.readFile(CACHE_FILE, 'utf8'))
-  } catch {
-    return {}
-  }
-}
-
-const generateOne = async ({ outFile, props }) => {
-  const buffer = await renderOgCard(props)
-
-  await fsp.mkdir(path.dirname(outFile), { recursive: true })
-
-  await fsp.writeFile(outFile, buffer)
-
-  process.stdout.write(`  write ${path.relative(ROOT, outFile)}\n`)
-}
-
-const start = performance.now()
-const templateHash = getTemplateHash()
-const previousCache = await readCache()
-
-const nextCache = Object.fromEntries(SPECS.map(({ outFile, props }) => {
-  const cacheKey = path.relative(OUT_DIR, outFile)
-
-  return [cacheKey, getSpecHash(props, templateHash)]
-}))
-
-const pending = SPECS.filter(({ outFile }) => {
-  const cacheKey = path.relative(OUT_DIR, outFile)
-
-  return FORCE || !fs.existsSync(outFile) || previousCache[cacheKey] !== nextCache[cacheKey]
+export default definePresetConfig({
+  cards: SPECS.map(({ output, props }) => ({
+    data: { ...props, badge: props.type, variant: 'docs' },
+    output
+  })),
+  clean: true,
+  concurrency: 'auto',
+  outputDirectory: 'public/og',
+  preset: {
+    brand: { domain: 'astro-doctor.santi020k.com', name: 'Astro Doctor' },
+    theme: { accent: '#ff5d01', background: '#0f172a', panel: '#1e293b' },
+    variant: 'docs'
+  },
+  root: ROOT
 })
-
-console.log(`\n🖼  Generating ${pending.length}/${SPECS.length} OG images…\n`)
-
-await Promise.all(pending.map(generateOne))
-
-await fsp.mkdir(path.dirname(CACHE_FILE), { recursive: true })
-
-await fsp.writeFile(CACHE_FILE, `${JSON.stringify(nextCache, null, 2)}\n`)
-
-const elapsed = ((performance.now() - start) / 1000).toFixed(2)
-
-console.log(`\n✅ Done in ${elapsed}s\n`)

@@ -32,3 +32,20 @@ tasks:
     - pre-push
     required: true
     parser: generic
+hooks:
+  commit-msg:
+    steps:
+      - name: Validate commit message
+        command: pnpm
+        args: [exec, commitprompt, validate, --input]
+        pass_hook_args: true
+  pre-commit:
+    steps:
+      - name: Run pre-commit gate
+        command: pnpm
+        args: [run, pre-commit]
+  pre-push:
+    steps:
+      - name: Run pre-push gate
+        command: pnpm
+        args: [run, pre-push]

@@ -2,6 +2,8 @@
   "name": "@santi020k/astro-doctor-root",
   "version": "0.0.0",
   "private": true,
+  "description": "Astro diagnostics for performance, accessibility, security, and best practices.",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "turbo run dev",
@@ -22,7 +24,7 @@
     "version-packages": "changeset version",
     "release": "turbo run build && pnpm run check:packed-install && changeset publish",
     "check:exports": "turbo run check:exports",
-    "prepare": "husky",
+    "hooks:install": "quality hooks install",
     "pre-commit": "lint-staged && pnpm run typecheck && pnpm run lint:spell",
     "pre-push": "pnpm install --frozen-lockfile && pnpm run typecheck && pnpm run lint && pnpm run build && pnpm run test:coverage && pnpm run lint:knip && pnpm run check:exports",
     "commit": "commitprompt"
@@ -41,7 +43,6 @@
     "@types/node": "catalog:",
     "cspell": "catalog:",
     "eslint": "catalog:",
-    "husky": "catalog:",
     "knip": "catalog:",
     "lint-staged": "catalog:",
     "tailwindcss": "catalog:",
