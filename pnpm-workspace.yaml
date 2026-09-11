@@ -45,7 +45,7 @@ catalog:
   tailwindcss: ^4.3.3
   turbo: ^2.10.7
   typescript: ^6.0.3
-  vitest: ^4.1.10
+  vitest: ^4.1.11
   vscode-languageclient: ^10.1.0
   vscode-languageserver: ^10.1.0
   vscode-languageserver-textdocument: ^1.0.12
