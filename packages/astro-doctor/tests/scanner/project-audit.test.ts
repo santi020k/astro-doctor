@@ -255,6 +255,157 @@ describe('project audits', () => {
     ).toBe(false)
   })
 
+  test('reports Astro 7 experimental flags that moved or were removed', async () => {
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), [
+        'import { defineConfig, memoryCache } from \'astro/config\'',
+        '',
+        'export default defineConfig({',
+        '  experimental: {',
+        '    advancedRouting: true,',
+        '    cache: { provider: memoryCache() },',
+        '    logger: { level: \'info\' },',
+        '    queuedRendering: true,',
+        '    routeRules: {},',
+        '    rustCompiler: true,',
+        '  },',
+        '})'
+      ].join('\n')
+    )
+
+    const scanResult = await scan({ directory: testDirectory })
+    const migrationDiagnostics = scanResult.diagnostics.filter(
+      diagnostic => diagnostic.ruleId === 'astro-doctor/no-legacy-astro-7-experimental-flags'
+    )
+
+    expect(migrationDiagnostics).toHaveLength(6)
+    expect(migrationDiagnostics.map(diagnostic => diagnostic.line)).toEqual([5, 6, 7, 8, 9, 10])
+    expect(migrationDiagnostics.map(diagnostic => diagnostic.message)).toEqual([
+      expect.stringContaining('advancedRouting'),
+      expect.stringContaining('top-level cache'),
+      expect.stringContaining('top-level logger'),
+      expect.stringContaining('queuedRendering'),
+      expect.stringContaining('top-level routeRules'),
+      expect.stringContaining('rustCompiler')
+    ])
+  })
+
+  test('accepts stable Astro 7 configuration fields', async () => {
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), [
+        'import { defineConfig, memoryCache } from \'astro/config\'',
+        '',
+        'export default defineConfig({',
+        '  cache: { provider: memoryCache() },',
+        '  fetchFile: \'handler\',',
+        '  logger: { level: \'info\' },',
+        '  routeRules: {},',
+        '})'
+      ].join('\n')
+    )
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(
+      scanResult.diagnostics.some(
+        diagnostic => diagnostic.ruleId === 'astro-doctor/no-legacy-astro-7-experimental-flags'
+      )
+    ).toBe(false)
+  })
+
+  test('reports an Astro 7 fetch entrypoint without a default export', async () => {
+    mkdirSync(join(testDirectory, 'src'), { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+    writeFileSync(
+      join(testDirectory, 'src', 'fetch.ts'), 'export const fetchJson = async (url: string) => fetch(url).then(response => response.json())\n'
+    )
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(scanResult.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: 'astro-doctor/require-fetch-default-export',
+          filePath: join(testDirectory, 'src', 'fetch.ts'),
+          line: 1,
+          category: 'best-practices'
+        })
+      ])
+    )
+  })
+
+  test.each([
+    'export default { async fetch(request: Request) { return new Response(request.url) } }',
+    'const app = { fetch: (request: Request) => new Response(request.url) }\nexport default app',
+    'const app = { fetch: (request: Request) => new Response(request.url) }\nexport { app as default }'
+  ])('accepts an Astro 7 fetch entrypoint with a default export', async fetchFileContent => {
+    mkdirSync(join(testDirectory, 'src'), { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+    writeFileSync(join(testDirectory, 'src', 'fetch.ts'), fetchFileContent)
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(
+      scanResult.diagnostics.some(
+        diagnostic => diagnostic.ruleId === 'astro-doctor/require-fetch-default-export'
+      )
+    ).toBe(false)
+  })
+
+  test('accepts a utility named src/fetch.ts when Astro routing entrypoints are disabled', async () => {
+    mkdirSync(join(testDirectory, 'src'), { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), 'import { defineConfig } from \'astro/config\'\nexport default defineConfig({ fetchFile: null })\n'
+    )
+    writeFileSync(
+      join(testDirectory, 'src', 'fetch.ts'), 'export const fetchJson = async (url: string) => fetch(url).then(response => response.json())\n'
+    )
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(
+      scanResult.diagnostics.some(
+        diagnostic => diagnostic.ruleId === 'astro-doctor/require-fetch-default-export'
+      )
+    ).toBe(false)
+  })
+
+  test('does not apply Astro 7 migration audits to Astro 6 projects', async () => {
+    mkdirSync(join(testDirectory, 'src'), { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^6.4.0' } })
+    )
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), 'export default defineConfig({ experimental: { advancedRouting: true } })'
+    )
+    writeFileSync(join(testDirectory, 'src', 'fetch.ts'), 'export const fetchJson = () => null')
+
+    const scanResult = await scan({ directory: testDirectory })
+    const astro7MigrationRuleIds = [
+      'astro-doctor/no-legacy-astro-7-experimental-flags',
+      'astro-doctor/require-fetch-default-export'
+    ]
+
+    expect(
+      scanResult.diagnostics.some(
+        diagnostic => astro7MigrationRuleIds.includes(diagnostic.ruleId)
+      )
+    ).toBe(false)
+  })
+
   test('reports DOMContentLoaded usage in valid script-tag variants across a ClientRouter project', async () => {
     mkdirSync(join(testDirectory, 'src', 'components'), { recursive: true })
     mkdirSync(join(testDirectory, 'src', 'layouts'), { recursive: true })

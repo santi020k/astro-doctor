@@ -96,6 +96,14 @@ const RULE_DETAILS: Record<string, {
     good: 'session: { cookie: { secure: true, httpOnly: true, sameSite: "lax" } }',
     docs: 'https://docs.astro.build/en/reference/configuration-reference/#sessioncookie'
   },
+  'no-legacy-astro-7-experimental-flags': {
+    category: 'best-practices',
+    severity: 'warning',
+    why: 'Astro 7 stabilized or made default several experimental features. Their Astro 6 configuration keys are no longer valid under experimental.',
+    bad: 'experimental: { advancedRouting: true, rustCompiler: true }',
+    good: '// Use src/fetch.ts for advanced routing. The Rust compiler is always enabled.',
+    docs: 'https://docs.astro.build/en/guides/upgrade-to/v7/#experimental-flags'
+  },
   'require-action-input-schema': {
     category: 'security',
     severity: 'warning',
@@ -135,6 +143,14 @@ const RULE_DETAILS: Record<string, {
     bad: 'const posts = await Astro.glob("../content/posts/*.md")\nconst pages = import.meta.glob("../content/pages/*.md")',
     good: 'import { getCollection } from "astro:content"\nconst posts = await getCollection("posts")',
     docs: 'https://docs.astro.build/en/guides/content-collections/'
+  },
+  'require-fetch-default-export': {
+    category: 'best-practices',
+    severity: 'warning',
+    why: 'Astro 7 reserves src/fetch.* for advanced routing and expects the entrypoint to default-export a Fetchable handler.',
+    bad: 'export const fetchJson = async (url) => fetch(url).then(response => response.json())',
+    good: 'export default { async fetch(request) { return new Response(request.url) } }',
+    docs: 'https://docs.astro.build/en/guides/routing/#advanced-routing'
   }
 }
 
