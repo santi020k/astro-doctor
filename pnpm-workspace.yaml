@@ -25,6 +25,7 @@ catalog:
   "@santi020k/eslint-config-tools": ^3.1.3
   "@tailwindcss/vite": ^4.3.3
   "@types/node": ^26.6.2
+  "@types/semver": ^7.8.0
   "@types/vscode": ^1.138.0
   "@vitest/coverage-v8": ^5.0.2
   astro: ^7.3.5
@@ -42,6 +43,7 @@ catalog:
   oxlint: ^1.85.0
   satori: ^0.33.5
   satori-html: ^0.3.2
+  semver: ^7.8.5
   sharp: ^0.35.4
   tailwindcss: ^4.3.3
   turbo: ^2.11.4

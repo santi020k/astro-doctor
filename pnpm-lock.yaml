@@ -60,6 +60,9 @@ catalogs:
     '@types/node':
       specifier: ^26.6.2
       version: 26.6.2
+    '@types/semver':
+      specifier: ^7.8.0
+      version: 7.8.0
     '@types/vscode':
       specifier: ^1.138.0
       version: 1.138.0
@@ -111,6 +114,9 @@ catalogs:
     satori-html:
       specifier: ^0.3.2
       version: 0.3.2
+    semver:
+      specifier: ^7.8.5
+      version: 7.8.5
     sharp:
       specifier: ^0.35.4
       version: 0.35.4
@@ -303,6 +309,9 @@ importers:
       jiti:
         specifier: 'catalog:'
         version: 2.7.0
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.5
       vscode-languageserver:
         specifier: 'catalog:'
         version: 10.1.2
@@ -316,6 +325,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.2
+      '@types/semver':
+        specifier: 'catalog:'
+        version: 7.8.0
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 5.0.2(vitest@5.0.2)
@@ -3320,6 +3332,9 @@ packages:
 
   '@types/sax@1.2.7':
     resolution: {integrity: sha512-rO73L89PJxeYM3s3pPPjiPgVVcymqU490g0YO5n5By0k2Erzj6tay/4lr1CHAAU4JyOWd1rpQ8bCf6cZfHU96A==}
+
+  '@types/semver@7.8.0':
+    resolution: {integrity: sha512-1mAINjtQCXXeLkJ9ehXkwOcBpqtLxiVtKhpUf83DdRNdQKV0iXZpaHYqRr7nj+wvxuJzoAmAwXI+sCNMv1CzLQ==}
 
   '@types/supports-color@8.1.3':
     resolution: {integrity: sha512-Hy6UMpxhE3j1tLpl27exp1XqHD7n8chAiNPzWfz16LPZoMMoSc4dzLl6w9qijkEb/r5O1ozdu1CWGA2L83ZeZg==}
@@ -10521,6 +10536,8 @@ snapshots:
   '@types/sax@1.2.7':
     dependencies:
       '@types/node': 24.13.6
+
+  '@types/semver@7.8.0': {}
 
   '@types/supports-color@8.1.3': {}
 

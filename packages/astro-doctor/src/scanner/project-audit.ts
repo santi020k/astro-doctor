@@ -3,6 +3,7 @@ import { dirname, extname, isAbsolute, relative, resolve } from 'node:path'
 
 import { parseYAML } from 'confbox/yaml'
 import { globSync } from 'glob'
+import { intersects, major, valid, validRange } from 'semver'
 
 import {
   DEFAULT_DIAGNOSTIC_COLUMN_NUMBER,
@@ -85,6 +86,7 @@ const ACTION_FILE_GLOB = 'src/actions/**/*.{js,mjs,cjs,ts,mts,cts}'
 const ASTRO_FILE_GLOB = '**/*.astro'
 const PUBLIC_ENV_PREFIX = 'PUBLIC_'
 const SECRET_ENV_NAME_PARTS = ['TOKEN', 'SECRET', 'PASSWORD', 'PRIVATE', 'KEY']
+const ASTRO_7_VERSION_RANGE = '>=7.0.0'
 
 const PROJECT_AUDIT_FILE_NAMES = [
   ...ASTRO_CONFIG_FILE_NAMES,
@@ -141,12 +143,6 @@ const readPackageManifest = (filePath: string): AstroPackageManifest | undefined
   } catch {
     return undefined
   }
-}
-
-const getMajorVersion = (version: string | undefined): number | undefined => {
-  const majorVersion = /^[^\d]*(\d+)/u.exec(version ?? '')?.[1]
-
-  return majorVersion === undefined ? undefined : Number.parseInt(majorVersion, 10)
 }
 
 const toProjectPath = (rootDirectory: string, filePath: string): string => (isAbsolute(filePath) ? relative(rootDirectory, filePath) : filePath).replaceAll('\\', '/')
@@ -307,20 +303,32 @@ const getDeclaredAstroVersion = (
     declaredVersion
 }
 
-const getAstroMajorVersion = (rootDirectory: string): number | undefined => {
+const supportsAstro7 = (version: string | undefined): boolean => {
+  if (version === undefined) return false
+
+  const exactVersion = valid(version)
+
+  if (exactVersion !== null) return major(exactVersion) >= 7
+
+  const versionRange = validRange(version)
+
+  return versionRange !== null && intersects(versionRange, ASTRO_7_VERSION_RANGE)
+}
+
+const isAstro7Project = (rootDirectory: string): boolean => {
   const installedManifest = readPackageManifest(
     resolve(rootDirectory, 'node_modules/astro/package.json')
   )
 
-  const installedMajorVersion = getMajorVersion(installedManifest?.version)
-
-  if (installedMajorVersion !== undefined) return installedMajorVersion
+  if (installedManifest?.version !== undefined) {
+    return supportsAstro7(installedManifest.version)
+  }
 
   const projectManifest = readPackageManifest(
     resolve(rootDirectory, PACKAGE_FILE_NAME)
   )
 
-  return getMajorVersion(getDeclaredAstroVersion(rootDirectory, projectManifest))
+  return supportsAstro7(getDeclaredAstroVersion(rootDirectory, projectManifest))
 }
 
 const getLocation = (content: string, searchText: string): Location => {
@@ -401,6 +409,14 @@ const findNextNonWhitespaceIndex = (content: string, startIndex: number): number
   return -1
 }
 
+const findPreviousNonWhitespaceIndex = (content: string, startIndex: number): number => {
+  for (let characterIndex = startIndex; characterIndex >= 0; characterIndex -= 1) {
+    if (!/\s/u.test(content[characterIndex] ?? '')) return characterIndex
+  }
+
+  return -1
+}
+
 const findTopLevelPropertyIndex = (
   maskedContent: string,
   objectRange: ObjectRange,
@@ -408,7 +424,8 @@ const findTopLevelPropertyIndex = (
   sourceContent = maskedContent
 ): number | undefined => {
   const propertyPattern = new RegExp(
-    `^(?:${propertyName}|['"]${propertyName}['"])\\s*:`, 'u'
+    `^(?:(?:${propertyName}|['"]${propertyName}['"])\\s*:|${propertyName}(?=\\s*[,}]))`,
+    'u'
   )
 
   let objectDepth = 1
@@ -434,10 +451,14 @@ const findTopLevelPropertyIndex = (
 
     if (objectDepth !== 1) continue
 
-    const previousCharacter = maskedContent[characterIndex - 1] ?? ''
+    const previousCharacterIndex = findPreviousNonWhitespaceIndex(
+      maskedContent, characterIndex - 1
+    )
+
+    const previousCharacter = maskedContent[previousCharacterIndex] ?? ''
 
     if (
-      !/[A-Za-z0-9_$]/u.test(previousCharacter) &&
+      (previousCharacter === '{' || previousCharacter === ',') &&
       propertyPattern.test(sourceContent.slice(characterIndex))
     ) {
       return characterIndex
@@ -744,7 +765,7 @@ const auditAstro7ExperimentalFlags = (
   selectedProjectPaths: Set<string> | undefined,
   diagnostics: Diagnostic[]
 ): void => {
-  if ((getAstroMajorVersion(options.directory) ?? 0) < 7) return
+  if (!isAstro7Project(options.directory)) return
 
   const astroConfigProjectPath = findExistingProjectFile(options.directory, ASTRO_CONFIG_FILE_NAMES)
 
@@ -855,7 +876,7 @@ const auditFetchEntrypoint = (
   selectedProjectPaths: Set<string> | undefined,
   diagnostics: Diagnostic[]
 ): void => {
-  if ((getAstroMajorVersion(options.directory) ?? 0) < 7) return
+  if (!isAstro7Project(options.directory)) return
 
   const astroConfigProjectPath = findExistingProjectFile(options.directory, ASTRO_CONFIG_FILE_NAMES)
 

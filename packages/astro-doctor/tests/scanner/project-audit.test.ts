@@ -566,6 +566,50 @@ describe('project audits', () => {
     ).toBe(false)
   })
 
+  test('does not assume a default fetch entrypoint for shorthand configuration', async () => {
+    mkdirSync(join(testDirectory, 'src'), { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), [
+        'const fetchFile = null',
+        'export default defineConfig({ fetchFile })'
+      ].join('\n')
+    )
+    writeFileSync(join(testDirectory, 'src', 'fetch.ts'), 'export const fetchJson = () => null')
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(
+      scanResult.diagnostics.some(
+        diagnostic => diagnostic.ruleId === 'astro-doctor/require-fetch-default-export'
+      )
+    ).toBe(false)
+  })
+
+  test('reports shorthand Astro 7 experimental flags', async () => {
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), [
+        'const advancedRouting = true',
+        'export default defineConfig({ experimental: { advancedRouting } })'
+      ].join('\n')
+    )
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(scanResult.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: 'astro-doctor/no-legacy-astro-7-experimental-flags'
+        })
+      ])
+    )
+  })
+
   test('reports a fetch entrypoint whose regex literal contains export syntax', async () => {
     mkdirSync(join(testDirectory, 'src'), { recursive: true })
     writeFileSync(
