@@ -18,8 +18,4 @@ const formatAnnotation = (diagnostic: Diagnostic): string => {
   return `::${level} ${location},title=${ruleShortName}::${escapedMessage}`
 }
 
-export const formatGithubReport = (result: ScanResult): string => {
-  if (result.diagnostics.length === 0) return ''
-
-  return result.diagnostics.map(d => formatAnnotation(d)).join('\n')
-}
+export const formatGithubReport = (result: ScanResult): string => result.diagnostics.length === 0 ? '' : result.diagnostics.map(d => formatAnnotation(d)).join('\n')

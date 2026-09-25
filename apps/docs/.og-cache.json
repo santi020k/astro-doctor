@@ -1,0 +1,223 @@
+{
+  "cacheKey": "preset-v4",
+  "entries": {
+    "index.webp": {
+      "baseDirectory": "public/og",
+      "digest": "22760605a132d51a9925c779d5a87afa5d2d9af6545cc068789f418b36886247",
+      "fingerprint": "d3ea8f4aa46978b74830b951ea8e3034146cec7eab5b1fc94390a260f0e87285",
+      "output": "index.webp"
+    },
+    "docs.webp": {
+      "baseDirectory": "public/og",
+      "digest": "758f9dedb192bdea14f0276a6e4be6100d8123ddfc6855636e03a54a90276199",
+      "fingerprint": "053df4f59d2c73abd6802126a09561817866172e715ac9be048c74ee91c5beb3",
+      "output": "docs.webp"
+    },
+    "docs/installation.webp": {
+      "baseDirectory": "public/og",
+      "digest": "6bc968a7ddd01ae39898b0e315804399f8dc30fd401a31d29c5b1887c39d0244",
+      "fingerprint": "83d77000e7f88223dcbf80978dfde521465321155d6ad714a7604313b044d1d9",
+      "output": "docs/installation.webp"
+    },
+    "docs/quick-start.webp": {
+      "baseDirectory": "public/og",
+      "digest": "be9ebe73aaea7e7f0bd958c1e3bdaa32e7e9ba7e5e43f1510d84602f17f0f3b4",
+      "fingerprint": "38c916c4f75a0e6b2d13ea4cc7ac04c7bcdd578bd5fa79fd17fe70251b50b01b",
+      "output": "docs/quick-start.webp"
+    },
+    "docs/configuration.webp": {
+      "baseDirectory": "public/og",
+      "digest": "d5c5c1073caa1cd4ddabc8a5ce86f00447e85205465fe9f532ed28bd125a7f32",
+      "fingerprint": "3f04bcd9e62592241d4134deaa61cafcbbc392f1446a6f65d9245602b97e4df7",
+      "output": "docs/configuration.webp"
+    },
+    "docs/eslint-plugin.webp": {
+      "baseDirectory": "public/og",
+      "digest": "6e7d8348f02ccd492b1ac07b66218d63e8aa88232e75cc2016af72fed1937ffa",
+      "fingerprint": "ce55e7ac8de622cda4da91135a5a2287aff1e31e7b1cfe3ed543104d7c7f0ec2",
+      "output": "docs/eslint-plugin.webp"
+    },
+    "docs/cli.webp": {
+      "baseDirectory": "public/og",
+      "digest": "6b8e214cfd82c64c4c396342d54b349c7f7a144fee289047aee020777512d037",
+      "fingerprint": "8baea6daf03b42e4c7654ac0a3902c56b3150709435fa164f82b9c7f136575c1",
+      "output": "docs/cli.webp"
+    },
+    "docs/github-action.webp": {
+      "baseDirectory": "public/og",
+      "digest": "668dbae60d080ea460f522e70b44e697c1372e6f066268c67f68615337baaf59",
+      "fingerprint": "504536eb0e854e907917561fa56294b7f4d5abe4a864ffc72622b8cc4e4db917",
+      "output": "docs/github-action.webp"
+    },
+    "docs/vscode-extension.webp": {
+      "baseDirectory": "public/og",
+      "digest": "6deec97aa4aea5bd59e12707be9c21bb64d661067aa01f1054761660b64ebebd",
+      "fingerprint": "405ac98ecb4815ed6faebb7afac3212d1d2cbc907ccc4413b1f8ca8543a48f5d",
+      "output": "docs/vscode-extension.webp"
+    },
+    "docs/editor-integration.webp": {
+      "baseDirectory": "public/og",
+      "digest": "4b39507128f2466406c96ab49e2a6a02ce1fa824096b65b02a54316ec35d1fe7",
+      "fingerprint": "6e916feb5b70e63c302ad2d91dddfb0974eb05a7de43029bdc0564264c6a7642",
+      "output": "docs/editor-integration.webp"
+    },
+    "docs/agent-skills.webp": {
+      "baseDirectory": "public/og",
+      "digest": "c1c4cc1424053fc0f737bbca3b6064e6bdf8dd28ede1fcda710d7ccb9955b835",
+      "fingerprint": "88dc7de8f30fdd27502ddc576d5054dc04bfd1768a8c8438e76bf813d807ba63",
+      "output": "docs/agent-skills.webp"
+    },
+    "docs/changelog.webp": {
+      "baseDirectory": "public/og",
+      "digest": "936c2b2d3dff8d69ed684e5779f2ece5535e92650ae855ebc2d61cc431d8644e",
+      "fingerprint": "621f760fce39d45daa416019f91e48f45b2391d293c6a6aefc9979bae5bcae41",
+      "output": "docs/changelog.webp"
+    },
+    "docs/rules.webp": {
+      "baseDirectory": "public/og",
+      "digest": "5cccd8c167968ac410bfaf72c32ac03706617c5a3d7f950c0802b0622614a429",
+      "fingerprint": "7cc602d181155cbbae7a097c67a7ed9614c5168e6280bbf44f751482ebe84117",
+      "output": "docs/rules.webp"
+    },
+    "docs/rules/no-client-load-overuse.webp": {
+      "baseDirectory": "public/og",
+      "digest": "0f7c46a760c49262fe2783dcfd3941298368595651f44f91d6c2be77ff158d99",
+      "fingerprint": "258a773317629271fa4770c12e8eb8433f847bd88dccb4dd871ab918da433c84",
+      "output": "docs/rules/no-client-load-overuse.webp"
+    },
+    "docs/rules/use-astro-image.webp": {
+      "baseDirectory": "public/og",
+      "digest": "3bdc2ae4d44093e65a9b041274f03829875d5292d715557548682e41855f8ba7",
+      "fingerprint": "2772bdc00f81546bf1063707f0d6afc280ceafc7ac4ab59f2ab73a09bc062260",
+      "output": "docs/rules/use-astro-image.webp"
+    },
+    "docs/rules/require-image-dimensions.webp": {
+      "baseDirectory": "public/og",
+      "digest": "b5048b59091bacdd957a95c9ae8485db16d57874df0dfb8a1467e13ae1169b35",
+      "fingerprint": "c2e54e5ed0d7fad3b765a854d07d8ed9d969030d3adb4065f42848746b266492",
+      "output": "docs/rules/require-image-dimensions.webp"
+    },
+    "docs/rules/no-missing-alt.webp": {
+      "baseDirectory": "public/og",
+      "digest": "c3b70a4378b5a2648e50ae802e428de43a68bbbc439576d2bdd432f08d93e5f6",
+      "fingerprint": "4f06eb1170397396e5412d1cbdcdba958c5cfc4f46bd5a3c8ced79573a320732",
+      "output": "docs/rules/no-missing-alt.webp"
+    },
+    "docs/rules/no-set-html.webp": {
+      "baseDirectory": "public/og",
+      "digest": "5df920f530a61b47d16eb26a80d4157062ee3886778a3ce821362c034f858c63",
+      "fingerprint": "ff2e24e8c4d5aa32f2043d04e8b9e36f717506dc50d33c7b22832ff67bed532c",
+      "output": "docs/rules/no-set-html.webp"
+    },
+    "docs/rules/no-public-secret-env.webp": {
+      "baseDirectory": "public/og",
+      "digest": "d6e3653addad7f58d9b37d2144a7688122d2197fa91dd148eaeaa406bdd60556",
+      "fingerprint": "3616385154e10d492cc2d15c345d94b79395dd74281623c2cf402b65c9938e44",
+      "output": "docs/rules/no-public-secret-env.webp"
+    },
+    "docs/rules/prefer-class-list.webp": {
+      "baseDirectory": "public/og",
+      "digest": "d50a0add8c9a54fcfe0f0a635669a25534fba56873844c1827de9230353d3738",
+      "fingerprint": "995cd0403d47747b6f80b0c4639ce8a5685941b3af723d8ec061ba5015083199",
+      "output": "docs/rules/prefer-class-list.webp"
+    },
+    "docs/rules/no-blocking-script.webp": {
+      "baseDirectory": "public/og",
+      "digest": "e14ba3fe23233d3ad15aaa1dcd2ee712287a4519113da427c6c236c1702b6953",
+      "fingerprint": "bf295b93b792a99121a3404fcbd9f47dae48b6f332bbcb3ca818b1a679182a1a",
+      "output": "docs/rules/no-blocking-script.webp"
+    },
+    "docs/rules/no-unprocessed-script-surprises.webp": {
+      "baseDirectory": "public/og",
+      "digest": "e314d4d1c3809d52733a80bd0eafe6ede1ea69cc7c3a3e3e69a151d1340c2618",
+      "fingerprint": "7c867ee5721abf159cbba735800cb9d7e5f880b53d5e2ecefec4a7abd5c90b88",
+      "output": "docs/rules/no-unprocessed-script-surprises.webp"
+    },
+    "docs/rules/no-missing-lang.webp": {
+      "baseDirectory": "public/og",
+      "digest": "603e9f835ec1df185b456e373e15316f573bd5a8ff7a88ae233b25d2ec660704",
+      "fingerprint": "e0a884bf8cad1a8fa73914ef22d75d0f804431adb557ecb664b8dbe534a93801",
+      "output": "docs/rules/no-missing-lang.webp"
+    },
+    "docs/rules/require-island-fallback.webp": {
+      "baseDirectory": "public/og",
+      "digest": "70ca25c09f4b83a04e443cef0081fc1b33923cfd20c869eee4c1581b12db7401",
+      "fingerprint": "ec2c8e91000dbd2562ee2c65856342fe7f75a13be1948448a531a979867c9511",
+      "output": "docs/rules/require-island-fallback.webp"
+    },
+    "docs/rules/no-process-env.webp": {
+      "baseDirectory": "public/og",
+      "digest": "f76b73c2fe999a39d4d034818ba39f1bb63a527eaa96a23a59ff510512d85fda",
+      "fingerprint": "2ee21b56d3e404d3f833f088888a1d4d1033d2429e9fcbe4575a732d38bd210a",
+      "output": "docs/rules/no-process-env.webp"
+    },
+    "docs/rules/prefer-content-collections.webp": {
+      "baseDirectory": "public/og",
+      "digest": "f9c4813cb5395569c97ef831a9bcff5d2191a16bcf911e2005e7e2100a44806d",
+      "fingerprint": "f544f89bd7f4aa04af4c4af5230177ce068cf90cce1ff1e4b6d8fc41b4c1257c",
+      "output": "docs/rules/prefer-content-collections.webp"
+    },
+    "docs/rules/no-disabled-origin-check.webp": {
+      "baseDirectory": "public/og",
+      "digest": "a108eac097fb7b9a3dcd0ec83e95d7fac3f3b9c135ea3ad78283f704e0b93fbd",
+      "fingerprint": "85345c8ae09889a95a60cf5db6cebd9a09a8237aa6abe68182489c03c6dfa07d",
+      "output": "docs/rules/no-disabled-origin-check.webp"
+    },
+    "docs/rules/no-insecure-session-cookie.webp": {
+      "baseDirectory": "public/og",
+      "digest": "3e45c3ab2ffda2f9bbf032b54a11d5c15b73244265785aa013e593bb9dc1aac6",
+      "fingerprint": "dec1e6d844cd1e43b93fd7762afb524c1784898845d714523c14b90900b1f1e2",
+      "output": "docs/rules/no-insecure-session-cookie.webp"
+    },
+    "docs/rules/no-open-allowed-domains.webp": {
+      "baseDirectory": "public/og",
+      "digest": "d346b22001ba807e16f07cc513b07f0b543a3ebbfec90b132f31c54e5d0e0631",
+      "fingerprint": "2a56b5142a48816706c65457416ee59685500cacfb77c13029ad240583337587",
+      "output": "docs/rules/no-open-allowed-domains.webp"
+    },
+    "docs/rules/no-legacy-astro-7-experimental-flags.webp": {
+      "baseDirectory": "public/og",
+      "digest": "5b317dd3e946b2018245b6f6adbb807e9293d7774cd12eca5eba9299b2c4f2f8",
+      "fingerprint": "b89b167c8716f09ecf45954e86abc90e2fad26bd4247209e06084ddb92a84e69",
+      "output": "docs/rules/no-legacy-astro-7-experimental-flags.webp"
+    },
+    "docs/rules/prefer-env-schema.webp": {
+      "baseDirectory": "public/og",
+      "digest": "eec45c31d8ff2828f145dc43112bdd8417413015fa66aac55572264544490f4f",
+      "fingerprint": "56bd35f005707f6daf443b2505e7ba132538f8754cf7e16b3ff3db8a556d3785",
+      "output": "docs/rules/prefer-env-schema.webp"
+    },
+    "docs/rules/prefer-pnpm.webp": {
+      "baseDirectory": "public/og",
+      "digest": "6396f114cafbc648a258875835046981e0393f49e892d7538a215b78a6caec0a",
+      "fingerprint": "8827ccdcb870f41a216a0d5da175ed527c355f948587afdaec05f47b92808e2b",
+      "output": "docs/rules/prefer-pnpm.webp"
+    },
+    "docs/rules/require-action-input-schema.webp": {
+      "baseDirectory": "public/og",
+      "digest": "4b692047e224406005fac46d4dc4d001525ab0bb645dfd0f114b7b28eb1395ee",
+      "fingerprint": "a578e1184b74fe6bd06128ae883035355f74d1ed27a1d6f3a2619d58e3c8277f",
+      "output": "docs/rules/require-action-input-schema.webp"
+    },
+    "docs/rules/require-client-router-script-lifecycle.webp": {
+      "baseDirectory": "public/og",
+      "digest": "d609a3fef3b37d82454506c5d0dddd793dcef6473af0f5b3a91011f6dbf4b38c",
+      "fingerprint": "5945b8550c8befb33d8d6d5b3ae0060bef7b43185b390926b1d12ffcebf2b5e6",
+      "output": "docs/rules/require-client-router-script-lifecycle.webp"
+    },
+    "docs/rules/require-content-config.webp": {
+      "baseDirectory": "public/og",
+      "digest": "51293a3365468953cdd0978f840677602471af67aef06ad9ac0b46f0a972583e",
+      "fingerprint": "887c9bedec2e788213ab01005ff9be0d11c9f70e3d2855870631c1ca049bd3f8",
+      "output": "docs/rules/require-content-config.webp"
+    },
+    "docs/rules/require-fetch-default-export.webp": {
+      "baseDirectory": "public/og",
+      "digest": "2f9e9228483c9098e9dcae424dfa346f9daf0be50f98e06eb04692a8e3b7853f",
+      "fingerprint": "eec10853811e98308ef8ac52327f89619de8e0cb523d61bb3dda7a08e8c8fdc9",
+      "output": "docs/rules/require-fetch-default-export.webp"
+    }
+  },
+  "generatorVersion": "1.1.1",
+  "version": 3
+}

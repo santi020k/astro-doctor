@@ -27,7 +27,7 @@ export default [
 ```
 
 - `recommended` enables the 13 proprietary rules plus the official Astro recommended rules.
-- `strict` adds official accessibility, security, and best-practice rules.
+- `strict` adds selected official Astro security and best-practice rules.
 - `all` enables every non-deprecated official Astro rule, including stylistic rules.
 
 Overlapping checks are automatically disabled so a problem is reported once. The `all` preset provides 63 unique ESLint checks: 13 proprietary rules plus 54 upstream rules, minus four overlaps.

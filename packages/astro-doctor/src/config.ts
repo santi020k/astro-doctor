@@ -28,11 +28,9 @@ const isRuleSeverity = (
 
 const isStringArray = (value: unknown): value is string[] => Array.isArray(value) && value.every(item => typeof item === 'string')
 
-const isRulesConfig = (value: unknown): value is NonNullable<AstroDoctorConfig['rules']> => {
-  if (!isPlainObject(value)) return false
-
-  return Object.values(value).every(ruleValue => isRuleSeverity(ruleValue))
-}
+const isRulesConfig = (value: unknown): value is NonNullable<AstroDoctorConfig['rules']> => (
+  isPlainObject(value) && Object.values(value).every(ruleValue => isRuleSeverity(ruleValue))
+)
 
 const describeConfigValue = (value: unknown): string => {
   if (typeof value === 'string') return value
@@ -41,9 +39,7 @@ const describeConfigValue = (value: unknown): string => {
 
   if (value === null) return 'null'
 
-  if (value === undefined) return 'undefined'
-
-  return JSON.stringify(value)
+  return value === undefined ? 'undefined' : JSON.stringify(value)
 }
 
 const validateFailOn = (failOn: unknown): AstroDoctorConfig['failOn'] => {
@@ -199,11 +195,7 @@ export const loadConfig = async (directory: string): Promise<AstroDoctorConfig |
     if (!existsSync(filePath)) continue
 
     try {
-      if (fileName.endsWith('.json') || fileName.endsWith('.jsonc')) {
-        return loadJsonConfig(filePath)
-      }
-
-      return await loadModuleConfig(filePath)
+      return fileName.endsWith('.json') || fileName.endsWith('.jsonc') ? loadJsonConfig(filePath) : (await loadModuleConfig(filePath))
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
 

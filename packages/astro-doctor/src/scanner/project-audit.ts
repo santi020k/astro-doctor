@@ -1,7 +1,9 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { dirname, isAbsolute, relative, resolve } from 'node:path'
+import { dirname, extname, isAbsolute, relative, resolve } from 'node:path'
 
+import { parseYAML } from 'confbox/yaml'
 import { globSync } from 'glob'
+import { intersects, major, valid, validRange } from 'semver'
 
 import {
   DEFAULT_DIAGNOSTIC_COLUMN_NUMBER,
@@ -9,7 +11,7 @@ import {
 } from '../constants.js'
 import { getProjectRuleMeta } from '../project-rules.js'
 import type { Diagnostic, ScanOptions, Severity } from '../types.js'
-import { maskCodeLiterals } from '../utils/mask-code-literals.js'
+import { maskCodeComments, maskCodeLiterals } from '../utils/mask-code-literals.js'
 import { readPnpmWorkspacePatterns } from '../utils/read-pnpm-workspace-patterns.js'
 
 import { buildIgnorePatterns } from './file-discovery.js'
@@ -32,6 +34,41 @@ const CONTENT_CONFIG_FILE_NAMES = [
   'src/content/config.js'
 ]
 
+const ASTRO_FETCH_ENTRYPOINT_EXTENSIONS = ['.ts', '.js', '.mjs', '.mts']
+const DEFAULT_ASTRO_SOURCE_DIRECTORY = 'src'
+const DEFAULT_ASTRO_FETCH_FILE_NAME = 'fetch'
+
+const ASTRO_FETCH_ENTRYPOINT_FILE_NAMES = ASTRO_FETCH_ENTRYPOINT_EXTENSIONS.map(
+  extension => `${DEFAULT_ASTRO_SOURCE_DIRECTORY}/${DEFAULT_ASTRO_FETCH_FILE_NAME}${extension}`
+)
+
+const ASTRO_7_EXPERIMENTAL_FLAG_MIGRATIONS = [
+  {
+    propertyName: 'advancedRouting',
+    message: 'Remove experimental.advancedRouting. Advanced routing is stable in Astro 7 and uses src/fetch.* or the top-level fetchFile option.'
+  },
+  {
+    propertyName: 'cache',
+    message: 'Move experimental.cache to the top-level cache field for Astro 7.'
+  },
+  {
+    propertyName: 'logger',
+    message: 'Move experimental.logger to the top-level logger field for Astro 7.'
+  },
+  {
+    propertyName: 'queuedRendering',
+    message: 'Remove experimental.queuedRendering. Queued rendering is always enabled in Astro 7.'
+  },
+  {
+    propertyName: 'routeRules',
+    message: 'Move experimental.routeRules to the top-level routeRules field for Astro 7.'
+  },
+  {
+    propertyName: 'rustCompiler',
+    message: 'Remove experimental.rustCompiler. The Rust compiler is the only compiler in Astro 7.'
+  }
+]
+
 const PACKAGE_FILE_NAME = 'package.json'
 
 const COMPETING_LOCK_FILE_NAMES = [
@@ -49,10 +86,12 @@ const ACTION_FILE_GLOB = 'src/actions/**/*.{js,mjs,cjs,ts,mts,cts}'
 const ASTRO_FILE_GLOB = '**/*.astro'
 const PUBLIC_ENV_PREFIX = 'PUBLIC_'
 const SECRET_ENV_NAME_PARTS = ['TOKEN', 'SECRET', 'PASSWORD', 'PRIVATE', 'KEY']
+const ASTRO_7_VERSION_RANGE = '>=7.0.0'
 
 const PROJECT_AUDIT_FILE_NAMES = [
   ...ASTRO_CONFIG_FILE_NAMES,
   ...CONTENT_CONFIG_FILE_NAMES,
+  ...ASTRO_FETCH_ENTRYPOINT_FILE_NAMES,
   PACKAGE_FILE_NAME,
   ...COMPETING_LOCK_FILE_NAMES,
   ENV_EXAMPLE_FILE_NAME
@@ -73,6 +112,10 @@ interface InsecureCookieProperty {
   readonly index: number
 }
 
+interface StaticConfigProperty {
+  readonly value: string | null
+}
+
 interface ProjectAuditOptions {
   readonly directory: string
   readonly files?: readonly string[]
@@ -81,12 +124,35 @@ interface ProjectAuditOptions {
   readonly ignore?: readonly string[]
 }
 
+interface AstroPackageManifest {
+  readonly dependencies?: Record<string, unknown>
+  readonly devDependencies?: Record<string, unknown>
+  readonly version?: string
+}
+
+const isAstroPackageManifest = (value: unknown): value is AstroPackageManifest => typeof value === 'object' && value !== null
+const isUnknownRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
+
+const readPackageManifest = (filePath: string): AstroPackageManifest | undefined => {
+  if (!existsSync(filePath)) return undefined
+
+  try {
+    const packageManifest: unknown = JSON.parse(readFileSync(filePath, 'utf8'))
+
+    return isAstroPackageManifest(packageManifest) ? packageManifest : undefined
+  } catch {
+    return undefined
+  }
+}
+
 const toProjectPath = (rootDirectory: string, filePath: string): string => (isAbsolute(filePath) ? relative(rootDirectory, filePath) : filePath).replaceAll('\\', '/')
 
 export const isProjectAuditRelevantPath = (filePath: string): boolean => {
   const normalizedFilePath = filePath.replaceAll('\\', '/')
 
-  return PROJECT_AUDIT_FILE_NAMES.some(
+  return ASTRO_FETCH_ENTRYPOINT_EXTENSIONS.some(
+    extension => normalizedFilePath.endsWith(extension)
+  ) || PROJECT_AUDIT_FILE_NAMES.some(
     projectPath => normalizedFilePath === projectPath || normalizedFilePath.endsWith(`/${projectPath}`)
   ) || normalizedFilePath.startsWith(`${CONTENT_DIRECTORY_NAME}/`) ||
   normalizedFilePath.includes(`/${CONTENT_DIRECTORY_NAME}/`) ||
@@ -108,6 +174,11 @@ const isSelected = (
   projectPath: string
 ): boolean => selectedProjectPaths === undefined || selectedProjectPaths.has(projectPath)
 
+const isAnySelected = (
+  selectedProjectPaths: Set<string> | undefined,
+  projectPaths: readonly string[]
+): boolean => projectPaths.some(projectPath => isSelected(selectedProjectPaths, projectPath))
+
 const isSelectedByPrefix = (
   selectedProjectPaths: Set<string> | undefined,
   projectPathPrefix: string
@@ -122,9 +193,7 @@ const findExistingProjectFile = (
 const readProjectFile = (rootDirectory: string, projectPath: string): string | undefined => {
   const filePath = toAbsolutePath(rootDirectory, projectPath)
 
-  if (!existsSync(filePath)) return undefined
-
-  return readFileSync(filePath, 'utf8')
+  return existsSync(filePath) ? readFileSync(filePath, 'utf8') : undefined
 }
 
 const matchesWorkspacePattern = (
@@ -179,6 +248,87 @@ const findPnpmWorkspaceDirectory = (projectDirectory: string): string | undefine
     isPnpmWorkspaceProject(currentDirectory, projectDirectory) ?
     currentDirectory :
     undefined
+}
+
+const getNamedCatalog = (
+  workspaceConfig: Record<string, unknown>,
+  catalogName: string
+): unknown => {
+  if (catalogName.length === 0) return workspaceConfig.catalog
+
+  return isUnknownRecord(workspaceConfig.catalogs) ?
+    workspaceConfig.catalogs[catalogName] :
+    undefined
+}
+
+const getCatalogAstroVersion = (
+  rootDirectory: string,
+  catalogReference: string
+): string | undefined => {
+  const workspaceDirectory = findPnpmWorkspaceDirectory(rootDirectory)
+
+  if (workspaceDirectory === undefined) return undefined
+
+  try {
+    const workspaceConfig: unknown = parseYAML(
+      readFileSync(resolve(workspaceDirectory, 'pnpm-workspace.yaml'), 'utf8')
+    )
+
+    if (!isUnknownRecord(workspaceConfig)) return undefined
+
+    const catalogName = catalogReference.slice('catalog:'.length)
+    const catalog = getNamedCatalog(workspaceConfig, catalogName)
+
+    if (!isUnknownRecord(catalog)) return undefined
+
+    const astroVersion = catalog.astro
+
+    return typeof astroVersion === 'string' ? astroVersion : undefined
+  } catch {
+    return undefined
+  }
+}
+
+const getDeclaredAstroVersion = (
+  rootDirectory: string,
+  projectManifest: AstroPackageManifest | undefined
+): string | undefined => {
+  const declaredVersion = projectManifest?.dependencies?.astro ??
+    projectManifest?.devDependencies?.astro
+
+  if (typeof declaredVersion !== 'string') return undefined
+
+  return declaredVersion.startsWith('catalog:') ?
+    getCatalogAstroVersion(rootDirectory, declaredVersion) :
+    declaredVersion
+}
+
+const supportsAstro7 = (version: string | undefined): boolean => {
+  if (version === undefined) return false
+
+  const exactVersion = valid(version)
+
+  if (exactVersion !== null) return major(exactVersion) >= 7
+
+  const versionRange = validRange(version)
+
+  return versionRange !== null && intersects(versionRange, ASTRO_7_VERSION_RANGE)
+}
+
+const isAstro7Project = (rootDirectory: string): boolean => {
+  const installedManifest = readPackageManifest(
+    resolve(rootDirectory, 'node_modules/astro/package.json')
+  )
+
+  if (installedManifest?.version !== undefined) {
+    return supportsAstro7(installedManifest.version)
+  }
+
+  const projectManifest = readPackageManifest(
+    resolve(rootDirectory, PACKAGE_FILE_NAME)
+  )
+
+  return supportsAstro7(getDeclaredAstroVersion(rootDirectory, projectManifest))
 }
 
 const getLocation = (content: string, searchText: string): Location => {
@@ -259,12 +409,26 @@ const findNextNonWhitespaceIndex = (content: string, startIndex: number): number
   return -1
 }
 
+const findPreviousNonWhitespaceIndex = (content: string, startIndex: number): number => {
+  for (let characterIndex = startIndex; characterIndex >= 0; characterIndex -= 1) {
+    if (!/\s/u.test(content[characterIndex] ?? '')) return characterIndex
+  }
+
+  return -1
+}
+
 const findTopLevelPropertyIndex = (
   maskedContent: string,
   objectRange: ObjectRange,
-  propertyName: string
+  propertyName: string,
+  sourceContent = maskedContent
 ): number | undefined => {
-  const propertyPattern = new RegExp(`^${propertyName}\\s*:`, 'u')
+  const propertyPattern = new RegExp(
+    `^(?:(?:${propertyName}|['"]${propertyName}['"])\\s*:|${propertyName}(?=\\s*[,}]))`,
+    'u'
+  )
+
+  const propertySearchContent = maskCodeComments(sourceContent)
   let objectDepth = 1
 
   for (
@@ -288,11 +452,15 @@ const findTopLevelPropertyIndex = (
 
     if (objectDepth !== 1) continue
 
-    const previousCharacter = maskedContent[characterIndex - 1] ?? ''
+    const previousCharacterIndex = findPreviousNonWhitespaceIndex(
+      maskedContent, characterIndex - 1
+    )
+
+    const previousCharacter = maskedContent[previousCharacterIndex] ?? ''
 
     if (
-      !/[A-Za-z0-9_$]/u.test(previousCharacter) &&
-      propertyPattern.test(maskedContent.slice(characterIndex))
+      (previousCharacter === '{' || previousCharacter === ',') &&
+      propertyPattern.test(propertySearchContent.slice(characterIndex))
     ) {
       return characterIndex
     }
@@ -304,14 +472,52 @@ const findTopLevelPropertyIndex = (
 const hasTopLevelProperty = (
   maskedContent: string,
   objectRange: ObjectRange,
-  propertyName: string
-): boolean => findTopLevelPropertyIndex(maskedContent, objectRange, propertyName) !== undefined
+  propertyName: string,
+  sourceContent = maskedContent
+): boolean => findTopLevelPropertyIndex(
+  maskedContent, objectRange, propertyName, sourceContent
+) !== undefined
+
+const hasTopLevelSpread = (
+  maskedContent: string,
+  objectRange: ObjectRange
+): boolean => {
+  let objectDepth = 1
+
+  for (
+    let characterIndex = objectRange.openingIndex + 1;
+    characterIndex < objectRange.closingIndex;
+    characterIndex += 1
+  ) {
+    const character = maskedContent[characterIndex]
+
+    if (character === '{') {
+      objectDepth += 1
+
+      continue
+    }
+
+    if (character === '}') {
+      objectDepth -= 1
+
+      continue
+    }
+
+    if (objectDepth === 1 && maskedContent.startsWith('...', characterIndex)) {
+      return true
+    }
+  }
+
+  return false
+}
 
 const findTopLevelObjectProperty = (
   maskedContent: string,
   objectRange: ObjectRange,
-  propertyName: string
+  propertyName: string,
+  sourceContent = maskedContent
 ): ObjectRange | undefined => {
+  const propertySearchContent = maskCodeComments(sourceContent)
   let objectDepth = 1
 
   for (
@@ -336,18 +542,124 @@ const findTopLevelObjectProperty = (
     if (objectDepth !== 1) continue
 
     const previousCharacter = maskedContent[characterIndex - 1] ?? ''
-    const propertyPattern = new RegExp(`^${propertyName}\\s*:\\s*\\{`, 'u')
-    const propertyMatch = propertyPattern.exec(maskedContent.slice(characterIndex))
+
+    const propertyPattern = new RegExp(
+      `^(?:${propertyName}|['"]${propertyName}['"])\\s*:\\s*\\{`, 'u'
+    )
+
+    const propertyMatch = propertyPattern.exec(propertySearchContent.slice(characterIndex))
 
     if (/[A-Za-z0-9_$]/u.test(previousCharacter) || propertyMatch === null) continue
 
-    const relativeOpeningIndex = propertyMatch[0].lastIndexOf('{')
-    const propertyOpeningIndex = characterIndex + relativeOpeningIndex
+    const propertyValueStartIndex = characterIndex + propertyMatch[0].lastIndexOf('{')
+    const relativeOpeningIndex = sourceContent.slice(propertyValueStartIndex).indexOf('{')
+    const propertyOpeningIndex = propertyValueStartIndex + relativeOpeningIndex
 
     return findObjectRange(maskedContent, propertyOpeningIndex)
   }
 
   return undefined
+}
+
+const getAstroConfigRootObjectRange = (
+  maskedContent: string
+): ObjectRange | undefined => {
+  const defineConfigMatch = /(?:^|[;\r\n}])\s*export\s+default\s+defineConfig\s*\(/u.exec(maskedContent)
+
+  if (defineConfigMatch?.index !== undefined) {
+    const defineConfigOpeningIndex =
+      defineConfigMatch.index + defineConfigMatch[0].lastIndexOf('(')
+
+    const rootOpeningIndex = findNextNonWhitespaceIndex(
+      maskedContent, defineConfigOpeningIndex + 1
+    )
+
+    return findObjectRange(maskedContent, rootOpeningIndex)
+  }
+
+  const plainObjectMatch = /(?:^|[;\r\n}])\s*export\s+default\s+/u.exec(maskedContent)
+
+  if (plainObjectMatch?.index === undefined) return undefined
+
+  const rootOpeningIndex = findNextNonWhitespaceIndex(
+    maskedContent, plainObjectMatch.index + plainObjectMatch[0].length
+  )
+
+  const directObjectRange = findObjectRange(maskedContent, rootOpeningIndex)
+
+  if (directObjectRange !== undefined) return directObjectRange
+
+  const exportedIdentifier = /^[A-Za-z_$][\w$]*/u.exec(
+    maskedContent.slice(rootOpeningIndex)
+  )?.[0]
+
+  if (exportedIdentifier === undefined) return undefined
+
+  const escapedIdentifier = exportedIdentifier.replace(
+    /[.*+?^${}()|[\]\\]/gu, '\\$&'
+  )
+
+  const bindingPattern = new RegExp(
+    `\\b(?:const|let|var)\\s+${escapedIdentifier}\\s*=\\s*(?:defineConfig\\s*\\(\\s*)?`,
+    'u'
+  )
+
+  const bindingMatch = bindingPattern.exec(maskedContent)
+
+  if (bindingMatch?.index === undefined) return undefined
+
+  const bindingValueIndex = findNextNonWhitespaceIndex(
+    maskedContent, bindingMatch.index + bindingMatch[0].length
+  )
+
+  return findObjectRange(maskedContent, bindingValueIndex)
+}
+
+const getStaticConfigProperty = (
+  configContent: string,
+  maskedContent: string,
+  rootObjectRange: ObjectRange,
+  propertyName: string
+): StaticConfigProperty | undefined => {
+  const propertyIndex = findTopLevelPropertyIndex(
+    maskedContent, rootObjectRange, propertyName, configContent
+  )
+
+  if (propertyIndex === undefined) return undefined
+
+  const propertyContent = configContent.slice(propertyIndex)
+  const propertyPrefix = `(?:${propertyName}|['"]${propertyName}['"])`
+  const nullPropertyPattern = new RegExp(`^${propertyPrefix}\\s*:\\s*null\\b`, 'u')
+
+  if (nullPropertyPattern.test(propertyContent)) return { value: null }
+
+  const stringPropertyPattern = new RegExp(
+    `^${propertyPrefix}\\s*:\\s*(['"])([^'"\\r\\n]*)\\1`, 'u'
+  )
+
+  const stringPropertyMatch = stringPropertyPattern.exec(propertyContent)
+
+  return stringPropertyMatch?.[2] === undefined ?
+    undefined :
+    { value: stringPropertyMatch[2] }
+}
+
+const getEffectiveStaticConfigValue = (
+  configContent: string,
+  maskedContent: string,
+  rootObjectRange: ObjectRange,
+  propertyName: string,
+  defaultValue: string
+): string | null | undefined => {
+  if (hasTopLevelSpread(maskedContent, rootObjectRange)) return undefined
+
+  return hasTopLevelProperty(
+    maskedContent, rootObjectRange, propertyName, configContent
+  ) ?
+    getStaticConfigProperty(
+      configContent, maskedContent, rootObjectRange, propertyName
+    )?.value :
+    defaultValue
 }
 
 const getEffectiveSeverity = (
@@ -412,9 +724,7 @@ const getPackageManagerContent = (
 ): string | undefined => {
   if (packageJsonContent.includes('"packageManager"')) return packageJsonContent
 
-  if (workspaceDirectory === undefined) return undefined
-
-  return readProjectFile(workspaceDirectory, PACKAGE_FILE_NAME)
+  return workspaceDirectory === undefined ? undefined : readProjectFile(workspaceDirectory, PACKAGE_FILE_NAME)
 }
 
 const hasCompetingLockFile = (
@@ -487,6 +797,162 @@ const auditAstroSecurityConfig = (
       )
     )
   }
+}
+
+const auditAstro7ExperimentalFlags = (
+  options: ProjectAuditOptions,
+  selectedProjectPaths: Set<string> | undefined,
+  diagnostics: Diagnostic[]
+): void => {
+  if (!isAstro7Project(options.directory)) return
+
+  const astroConfigProjectPath = findExistingProjectFile(options.directory, ASTRO_CONFIG_FILE_NAMES)
+
+  if (
+    astroConfigProjectPath === undefined ||
+    !isAnySelected(selectedProjectPaths, [PACKAGE_FILE_NAME, astroConfigProjectPath])
+  ) {
+    return
+  }
+
+  const astroConfigContent = readProjectFile(options.directory, astroConfigProjectPath)
+
+  if (astroConfigContent === undefined) return
+
+  const maskedContent = maskCodeLiterals(astroConfigContent)
+  const rootObjectRange = getAstroConfigRootObjectRange(maskedContent)
+
+  if (rootObjectRange === undefined) return
+
+  const experimentalObjectRange = findTopLevelObjectProperty(
+    maskedContent, rootObjectRange, 'experimental', astroConfigContent
+  )
+
+  if (experimentalObjectRange === undefined) return
+
+  for (const migration of ASTRO_7_EXPERIMENTAL_FLAG_MIGRATIONS) {
+    const propertyIndex = findTopLevelPropertyIndex(
+      maskedContent, experimentalObjectRange, migration.propertyName, astroConfigContent
+    )
+
+    if (propertyIndex === undefined) continue
+
+    pushDiagnostic(
+      diagnostics, createDiagnostic(
+        options.directory, options.rules, 'astro-doctor/no-legacy-astro-7-experimental-flags', astroConfigProjectPath, migration.message, getLocationAtIndex(astroConfigContent, propertyIndex)
+      )
+    )
+  }
+}
+
+const hasDefaultExport = (maskedContent: string): boolean => {
+  if (/(?:^|[;\r\n}])\s*export\s+default\s+(?!(?:interface|type|declare)\b)/u.test(maskedContent)) {
+    return true
+  }
+
+  const namedExportPattern = /(?:^|[;\r\n}])\s*export\s*(?!type\b)\{([^}]*)\}/gu
+
+  return [...maskedContent.matchAll(namedExportPattern)].some(namedExportMatch => (namedExportMatch[1] ?? '').split(',').some(exportSpecifier => {
+    const normalizedSpecifier = exportSpecifier.trim()
+
+    const isInlineTypeOnlyExport =
+      /^type\s+[A-Za-z_$][\w$]*\s+as\s+default\b/u.test(normalizedSpecifier)
+
+    return !isInlineTypeOnlyExport &&
+      /^(?:default\b|[A-Za-z_$][\w$]*\s+as\s+default\b)/u.test(normalizedSpecifier)
+  }))
+}
+
+const getFetchEntrypointProjectPaths = (
+  rootDirectory: string,
+  astroConfigProjectPath: string | undefined
+): string[] | undefined => {
+  if (astroConfigProjectPath === undefined) return [...ASTRO_FETCH_ENTRYPOINT_FILE_NAMES]
+
+  const astroConfigContent = readProjectFile(rootDirectory, astroConfigProjectPath)
+
+  if (astroConfigContent === undefined) return [...ASTRO_FETCH_ENTRYPOINT_FILE_NAMES]
+
+  const maskedConfigContent = maskCodeLiterals(astroConfigContent)
+  const rootObjectRange = getAstroConfigRootObjectRange(maskedConfigContent)
+
+  if (rootObjectRange === undefined) return undefined
+
+  const sourceDirectory = getEffectiveStaticConfigValue(
+    astroConfigContent,
+    maskedConfigContent,
+    rootObjectRange,
+    'srcDir',
+    DEFAULT_ASTRO_SOURCE_DIRECTORY
+  )
+
+  if (sourceDirectory === undefined || sourceDirectory === null) return undefined
+
+  const fetchFileName = getEffectiveStaticConfigValue(
+    astroConfigContent,
+    maskedConfigContent,
+    rootObjectRange,
+    'fetchFile',
+    DEFAULT_ASTRO_FETCH_FILE_NAME
+  )
+
+  if (fetchFileName === undefined) return undefined
+
+  if (fetchFileName === null) return []
+
+  const fetchEntrypointPath = resolve(rootDirectory, sourceDirectory, fetchFileName)
+  const fetchEntrypointBaseProjectPath = toProjectPath(rootDirectory, fetchEntrypointPath)
+
+  return extname(fetchFileName).length > 0 ?
+    [fetchEntrypointBaseProjectPath] :
+    ASTRO_FETCH_ENTRYPOINT_EXTENSIONS.map(
+      extension => `${fetchEntrypointBaseProjectPath}${extension}`
+    )
+}
+
+const auditFetchEntrypoint = (
+  options: ProjectAuditOptions,
+  selectedProjectPaths: Set<string> | undefined,
+  diagnostics: Diagnostic[]
+): void => {
+  if (!isAstro7Project(options.directory)) return
+
+  const astroConfigProjectPath = findExistingProjectFile(options.directory, ASTRO_CONFIG_FILE_NAMES)
+
+  const fetchEntrypointProjectPaths = getFetchEntrypointProjectPaths(
+    options.directory, astroConfigProjectPath
+  )
+
+  if (fetchEntrypointProjectPaths === undefined) return
+
+  const fetchEntrypointProjectPath = findExistingProjectFile(
+    options.directory, fetchEntrypointProjectPaths
+  )
+
+  if (fetchEntrypointProjectPath === undefined) return
+
+  const selectableProjectPaths = [PACKAGE_FILE_NAME, fetchEntrypointProjectPath]
+
+  if (astroConfigProjectPath !== undefined) selectableProjectPaths.push(astroConfigProjectPath)
+
+  if (!isAnySelected(selectedProjectPaths, selectableProjectPaths)) return
+
+  const fetchEntrypointContent = readProjectFile(
+    options.directory, fetchEntrypointProjectPath
+  )
+
+  if (
+    fetchEntrypointContent === undefined ||
+    hasDefaultExport(maskCodeLiterals(fetchEntrypointContent))
+  ) {
+    return
+  }
+
+  pushDiagnostic(
+    diagnostics, createDiagnostic(
+      options.directory, options.rules, 'astro-doctor/require-fetch-default-export', fetchEntrypointProjectPath, 'Astro 7 reserves src/fetch.* for advanced routing. Default-export a Fetchable handler, configure a different fetchFile, or set fetchFile to null if this is a utility module.'
+    )
+  )
 }
 
 const findInsecureCookieProperties = (
@@ -833,9 +1299,9 @@ const auditEnvSchema = (
 const hasContentEntries = (rootDirectory: string): boolean => {
   const contentDirectory = toAbsolutePath(rootDirectory, CONTENT_DIRECTORY_NAME)
 
-  if (!existsSync(contentDirectory) || !statSync(contentDirectory).isDirectory()) return false
-
-  return readdirSync(contentDirectory).some(entryName => !entryName.startsWith('.'))
+  return existsSync(contentDirectory) &&
+    statSync(contentDirectory).isDirectory() &&
+    readdirSync(contentDirectory).some(entryName => !entryName.startsWith('.'))
 }
 
 const auditContentConfig = (
@@ -865,6 +1331,10 @@ export const auditProject = (options: ProjectAuditOptions): Diagnostic[] => {
   auditPackageManager(options, selectedProjectPaths, diagnostics)
 
   auditAstroSecurityConfig(options, selectedProjectPaths, diagnostics)
+
+  auditAstro7ExperimentalFlags(options, selectedProjectPaths, diagnostics)
+
+  auditFetchEntrypoint(options, selectedProjectPaths, diagnostics)
 
   auditSessionCookie(options, selectedProjectPaths, diagnostics)
 

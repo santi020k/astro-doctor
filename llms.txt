@@ -10,11 +10,11 @@
 
 ## What This Project Is
 
-Astro Doctor scans `.astro` files and project config files, reporting issues across four categories with 13 proprietary ESLint rules, up to 54 official Astro ecosystem rules, and project audits. The `all` preset provides up to 71 checks:
+Astro Doctor scans `.astro` files and project config files, reporting issues across four categories with 13 proprietary ESLint rules, up to 54 official Astro ecosystem rules, and project audits. The `all` preset provides up to 73 checks:
 - **Performance** — `no-client-load-overuse`, `use-astro-image`, `require-image-dimensions`, `no-blocking-script`, `no-unprocessed-script-surprises`
 - **Accessibility** — `no-missing-alt`, `no-missing-lang`, `require-island-fallback`
 - **Security** — `no-set-html`, `no-public-secret-env`, disabled origin checks, open allowed domains, insecure session cookies, and missing Astro Action input schemas
-- **Best Practices** — `prefer-class-list`, `no-process-env`, `prefer-content-collections`, package/env/content config checks, and ClientRouter script lifecycle checks
+- **Best Practices** — `prefer-class-list`, `no-process-env`, `prefer-content-collections`, package/env/content config checks, ClientRouter script lifecycle checks, Astro 7 experimental-flag migrations, and advanced-routing entrypoint validation
 
 It ships as:
 1. A **CLI** (`@santi020k/astro-doctor`) — `pnpm dlx @santi020k/astro-doctor@latest`

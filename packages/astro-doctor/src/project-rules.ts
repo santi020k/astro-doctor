@@ -40,6 +40,13 @@ export const PROJECT_RULES: readonly ProjectRuleMeta[] = [
     strict: true
   },
   {
+    ruleId: 'astro-doctor/no-legacy-astro-7-experimental-flags',
+    severity: 'warning',
+    category: 'best-practices',
+    recommended: true,
+    strict: true
+  },
+  {
     ruleId: 'astro-doctor/prefer-env-schema',
     severity: 'warning',
     category: 'best-practices',
@@ -69,6 +76,13 @@ export const PROJECT_RULES: readonly ProjectRuleMeta[] = [
   },
   {
     ruleId: 'astro-doctor/require-content-config',
+    severity: 'warning',
+    category: 'best-practices',
+    recommended: true,
+    strict: true
+  },
+  {
+    ruleId: 'astro-doctor/require-fetch-default-export',
     severity: 'warning',
     category: 'best-practices',
     recommended: true,

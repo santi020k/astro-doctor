@@ -115,6 +115,97 @@ describe('baseline comparison', () => {
     expect(introducedResult.diagnostics).toEqual([])
   })
 
+  test('reports migration findings introduced by an Astro 7 dependency-only upgrade', async () => {
+    const packageFilePath = join(testDirectory, 'package.json')
+
+    mkdirSync(join(testDirectory, 'src'), { recursive: true })
+    writeFileSync(
+      packageFilePath, JSON.stringify({ dependencies: { astro: '^6.0.0' } })
+    )
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), 'export default defineConfig({ experimental: { advancedRouting: true } })'
+    )
+    writeFileSync(join(testDirectory, 'src', 'fetch.ts'), 'export const fetchJson = () => null')
+    execFileSync('git', ['add', '.'], { cwd: testDirectory })
+    execFileSync('git', ['commit', '-m', 'baseline'], { cwd: testDirectory })
+
+    const baseRevision = resolveBaseRevision(testDirectory, 'HEAD')
+
+    writeFileSync(
+      packageFilePath, JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+
+    const currentResult = await scan({
+      directory: testDirectory,
+      files: [packageFilePath]
+    })
+    const baseline = await scanBaseline({
+      repositoryDirectory: testDirectory,
+      projectDirectory: testDirectory,
+      files: [packageFilePath],
+      baseRevision,
+      scanOptions: {}
+    })
+    const introducedResult = filterIntroducedDiagnostics(
+      currentResult, baseline.result, testDirectory, baseline.rootDirectory
+    )
+
+    expect(introducedResult.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: 'astro-doctor/no-legacy-astro-7-experimental-flags'
+        }),
+        expect.objectContaining({
+          ruleId: 'astro-doctor/require-fetch-default-export'
+        })
+      ])
+    )
+  })
+
+  test('preserves Astro 7 range context when the baseline has no installed dependencies', async () => {
+    const configFilePath = join(testDirectory, 'astro.config.ts')
+
+    mkdirSync(join(testDirectory, 'src'), { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '>=6' } })
+    )
+    writeFileSync(configFilePath, 'export default defineConfig({})\n')
+    writeFileSync(join(testDirectory, 'src', 'fetch.ts'), 'export const fetchJson = () => null')
+    execFileSync('git', ['add', '.'], { cwd: testDirectory })
+    execFileSync('git', ['commit', '-m', 'baseline'], { cwd: testDirectory })
+
+    mkdirSync(join(testDirectory, 'node_modules', 'astro'), { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'node_modules', 'astro', 'package.json'), JSON.stringify({ version: '7.3.5' })
+    )
+    writeFileSync(configFilePath, 'export default defineConfig({})\n\n')
+
+    const baseRevision = resolveBaseRevision(testDirectory, 'HEAD')
+    const currentResult = await scan({
+      directory: testDirectory,
+      files: [configFilePath]
+    })
+    const baseline = await scanBaseline({
+      repositoryDirectory: testDirectory,
+      projectDirectory: testDirectory,
+      files: [configFilePath],
+      baseRevision,
+      scanOptions: {}
+    })
+    const introducedResult = filterIntroducedDiagnostics(
+      currentResult, baseline.result, testDirectory, baseline.rootDirectory
+    )
+
+    expect(currentResult.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: 'astro-doctor/require-fetch-default-export'
+        })
+      ])
+    )
+    expect(introducedResult.diagnostics).toEqual([])
+  })
+
   test('scans a baseline when the repository archive exceeds the child process buffer', async () => {
     const astroFilePath = join(testDirectory, 'index.astro')
     const largeFilePath = join(testDirectory, 'large.bin')

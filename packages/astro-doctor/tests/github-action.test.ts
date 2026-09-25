@@ -12,6 +12,10 @@ describe('GitHub Action', () => {
     expect(actionFileContent).toContain('(^|/)src/actions/')
   })
 
+  test('includes configured Astro 7 fetch entrypoint candidates in the PR relevance filter', () => {
+    expect(actionFileContent).toContain('\\.(ts|js|mjs|mts)$')
+  })
+
   test('skips PR comments when GitHub provides a read-only token', () => {
     expect(actionFileContent).toContain(
       'github.event.pull_request.head.repo.full_name == github.repository'

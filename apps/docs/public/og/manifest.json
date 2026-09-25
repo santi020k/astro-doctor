@@ -1,0 +1,690 @@
+{
+  "generatorVersion": "1.1.1",
+  "routes": {
+    "/": {
+      "alt": "Your agent writes bad Astro. This catches it. — Astro Doctor",
+      "description": "ESLint rules, CLI, GitHub Action, and AI agent skills for diagnosing and fixing common Astro mistakes before they reach production.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "index.webp",
+          "primary": true,
+          "url": "/og/index.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/",
+      "schemaTypes": [
+        "SoftwareApplication"
+      ],
+      "title": "Your agent writes bad Astro. This catches it."
+    },
+    "/docs/": {
+      "alt": "Introduction — Astro Doctor",
+      "description": "What astro-doctor is, what it checks, and how it fits alongside eslint-plugin-astro in your Astro project.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs.webp",
+          "primary": true,
+          "url": "/og/docs.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "Introduction"
+    },
+    "/docs/installation/": {
+      "alt": "Installation — Astro Doctor",
+      "description": "Step-by-step setup for the CLI, ESLint plugin, VS Code extension, and GitHub Action. Zero config required.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/installation.webp",
+          "primary": true,
+          "url": "/og/docs/installation.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/installation/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "Installation"
+    },
+    "/docs/quick-start/": {
+      "alt": "Quick Start — Astro Doctor",
+      "description": "Get astro-doctor running in your project in 5 minutes — scan, score, and integrate with CI.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/quick-start.webp",
+          "primary": true,
+          "url": "/og/docs/quick-start.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/quick-start/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "Quick Start"
+    },
+    "/docs/configuration/": {
+      "alt": "Configuration — Astro Doctor",
+      "description": "Full reference for doctor.config.ts — custom rules, severity overrides, ignored paths, and per-project settings.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/configuration.webp",
+          "primary": true,
+          "url": "/og/docs/configuration.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/configuration/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "Configuration"
+    },
+    "/docs/eslint-plugin/": {
+      "alt": "ESLint Plugin — Astro Doctor",
+      "description": "The core engine behind Astro Doctor, available as a standalone ESLint plugin for any flat-config setup.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/eslint-plugin.webp",
+          "primary": true,
+          "url": "/og/docs/eslint-plugin.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/eslint-plugin/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "ESLint Plugin"
+    },
+    "/docs/cli/": {
+      "alt": "CLI Reference — Astro Doctor",
+      "description": "All astro-doctor CLI commands, flags, and examples — scan, score, JSON reports, and CI integration.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/cli.webp",
+          "primary": true,
+          "url": "/og/docs/cli.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/cli/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "CLI Reference"
+    },
+    "/docs/github-action/": {
+      "alt": "GitHub Action — Astro Doctor",
+      "description": "Drop astro-doctor into your CI pipeline with PR diff mode, sticky PR comments, and configurable failure thresholds.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/github-action.webp",
+          "primary": true,
+          "url": "/og/docs/github-action.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/github-action/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "GitHub Action"
+    },
+    "/docs/vscode-extension/": {
+      "alt": "VS Code Extension — Astro Doctor",
+      "description": "Inline diagnostics, hovers, quick fixes, status bar score, and a health sidebar — all inside VS Code and Cursor.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/vscode-extension.webp",
+          "primary": true,
+          "url": "/og/docs/vscode-extension.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/vscode-extension/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "VS Code Extension"
+    },
+    "/docs/editor-integration/": {
+      "alt": "Editor Integration — Astro Doctor",
+      "description": "LSP-based diagnostics, hovers, and quick fixes for VS Code, Cursor, Neovim, WebStorm, and any LSP-capable editor.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/editor-integration.webp",
+          "primary": true,
+          "url": "/og/docs/editor-integration.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/editor-integration/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "Editor Integration"
+    },
+    "/docs/agent-skills/": {
+      "alt": "Agent Skills — Astro Doctor",
+      "description": "Teach Claude, Cursor, and Copilot Workspace the astro-doctor rule set so AI-generated Astro code follows best practices.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/agent-skills.webp",
+          "primary": true,
+          "url": "/og/docs/agent-skills.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/agent-skills/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "Agent Skills"
+    },
+    "/docs/changelog/": {
+      "alt": "Changelog — Astro Doctor",
+      "description": "Release history for Astro Doctor packages, editor integrations, and automation.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/changelog.webp",
+          "primary": true,
+          "url": "/og/docs/changelog.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/changelog/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "Changelog"
+    },
+    "/docs/rules/": {
+      "alt": "Rules Overview — Astro Doctor",
+      "description": "All astro-doctor ESLint rules organized by category — performance, accessibility, security, and best-practices.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules.webp",
+          "primary": true,
+          "url": "/og/docs/rules.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "Rules Overview"
+    },
+    "/docs/rules/no-client-load-overuse/": {
+      "alt": "no-client-load-overuse — Astro Doctor",
+      "description": "Prefer client:idle or client:visible over client:load for interactive islands.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/no-client-load-overuse.webp",
+          "primary": true,
+          "url": "/og/docs/rules/no-client-load-overuse.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/no-client-load-overuse/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "no-client-load-overuse"
+    },
+    "/docs/rules/use-astro-image/": {
+      "alt": "use-astro-image — Astro Doctor",
+      "description": "Use <Image> from astro:assets instead of raw <img> tags.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/use-astro-image.webp",
+          "primary": true,
+          "url": "/og/docs/rules/use-astro-image.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/use-astro-image/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "use-astro-image"
+    },
+    "/docs/rules/require-image-dimensions/": {
+      "alt": "require-image-dimensions — Astro Doctor",
+      "description": "Require dimensions for public and remote astro:assets images.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/require-image-dimensions.webp",
+          "primary": true,
+          "url": "/og/docs/rules/require-image-dimensions.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/require-image-dimensions/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "require-image-dimensions"
+    },
+    "/docs/rules/no-missing-alt/": {
+      "alt": "no-missing-alt — Astro Doctor",
+      "description": "All <img>, <Image>, and <Picture> elements must include an alt attribute.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/no-missing-alt.webp",
+          "primary": true,
+          "url": "/og/docs/rules/no-missing-alt.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/no-missing-alt/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "no-missing-alt"
+    },
+    "/docs/rules/no-set-html/": {
+      "alt": "no-set-html — Astro Doctor",
+      "description": "Avoid set:html to prevent cross-site scripting (XSS) vulnerabilities.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/no-set-html.webp",
+          "primary": true,
+          "url": "/og/docs/rules/no-set-html.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/no-set-html/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "no-set-html"
+    },
+    "/docs/rules/no-public-secret-env/": {
+      "alt": "no-public-secret-env — Astro Doctor",
+      "description": "Warn when PUBLIC_ environment variables appear to contain secrets.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/no-public-secret-env.webp",
+          "primary": true,
+          "url": "/og/docs/rules/no-public-secret-env.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/no-public-secret-env/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "no-public-secret-env"
+    },
+    "/docs/rules/prefer-class-list/": {
+      "alt": "prefer-class-list — Astro Doctor",
+      "description": "Use class:list directive for conditional or dynamic class names.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/prefer-class-list.webp",
+          "primary": true,
+          "url": "/og/docs/rules/prefer-class-list.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/prefer-class-list/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "prefer-class-list"
+    },
+    "/docs/rules/no-blocking-script/": {
+      "alt": "no-blocking-script — Astro Doctor",
+      "description": "Disallow render-blocking <script src=\"...\"> tags — add defer, async, or type=\"module\".",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/no-blocking-script.webp",
+          "primary": true,
+          "url": "/og/docs/rules/no-blocking-script.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/no-blocking-script/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "no-blocking-script"
+    },
+    "/docs/rules/no-unprocessed-script-surprises/": {
+      "alt": "no-unprocessed-script-surprises — Astro Doctor",
+      "description": "Warn when script attributes opt out of Astro script processing.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/no-unprocessed-script-surprises.webp",
+          "primary": true,
+          "url": "/og/docs/rules/no-unprocessed-script-surprises.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/no-unprocessed-script-surprises/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "no-unprocessed-script-surprises"
+    },
+    "/docs/rules/no-missing-lang/": {
+      "alt": "no-missing-lang — Astro Doctor",
+      "description": "Require a lang attribute on the <html> element.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/no-missing-lang.webp",
+          "primary": true,
+          "url": "/og/docs/rules/no-missing-lang.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/no-missing-lang/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "no-missing-lang"
+    },
+    "/docs/rules/require-island-fallback/": {
+      "alt": "require-island-fallback — Astro Doctor",
+      "description": "Require fallback content for client-only and deferred server islands.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/require-island-fallback.webp",
+          "primary": true,
+          "url": "/og/docs/rules/require-island-fallback.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/require-island-fallback/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "require-island-fallback"
+    },
+    "/docs/rules/no-process-env/": {
+      "alt": "no-process-env — Astro Doctor",
+      "description": "Disallow process.env in Astro files — use import.meta.env instead.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/no-process-env.webp",
+          "primary": true,
+          "url": "/og/docs/rules/no-process-env.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/no-process-env/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "no-process-env"
+    },
+    "/docs/rules/prefer-content-collections/": {
+      "alt": "prefer-content-collections — Astro Doctor",
+      "description": "Prefer Content Collections over Astro.glob() or import.meta.glob() for Markdown and MDX files.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/prefer-content-collections.webp",
+          "primary": true,
+          "url": "/og/docs/rules/prefer-content-collections.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/prefer-content-collections/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "prefer-content-collections"
+    },
+    "/docs/rules/no-disabled-origin-check/": {
+      "alt": "no-disabled-origin-check — Astro Doctor",
+      "description": "Keep Astro's built-in CSRF origin check enabled.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/no-disabled-origin-check.webp",
+          "primary": true,
+          "url": "/og/docs/rules/no-disabled-origin-check.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/no-disabled-origin-check/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "no-disabled-origin-check"
+    },
+    "/docs/rules/no-insecure-session-cookie/": {
+      "alt": "no-insecure-session-cookie — Astro Doctor",
+      "description": "Keep secure, HTTP-only, same-site session cookie protections enabled.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/no-insecure-session-cookie.webp",
+          "primary": true,
+          "url": "/og/docs/rules/no-insecure-session-cookie.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/no-insecure-session-cookie/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "no-insecure-session-cookie"
+    },
+    "/docs/rules/no-open-allowed-domains/": {
+      "alt": "no-open-allowed-domains — Astro Doctor",
+      "description": "Configure explicit trusted host patterns instead of allowing every domain.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/no-open-allowed-domains.webp",
+          "primary": true,
+          "url": "/og/docs/rules/no-open-allowed-domains.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/no-open-allowed-domains/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "no-open-allowed-domains"
+    },
+    "/docs/rules/no-legacy-astro-7-experimental-flags/": {
+      "alt": "no-legacy-astro-7-experimental-flags — Astro Doctor",
+      "description": "Migrate experimental configuration fields removed or stabilized in Astro 7.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/no-legacy-astro-7-experimental-flags.webp",
+          "primary": true,
+          "url": "/og/docs/rules/no-legacy-astro-7-experimental-flags.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/no-legacy-astro-7-experimental-flags/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "no-legacy-astro-7-experimental-flags"
+    },
+    "/docs/rules/prefer-env-schema/": {
+      "alt": "prefer-env-schema — Astro Doctor",
+      "description": "Define an Astro env schema for variables documented in .env.example.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/prefer-env-schema.webp",
+          "primary": true,
+          "url": "/og/docs/rules/prefer-env-schema.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/prefer-env-schema/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "prefer-env-schema"
+    },
+    "/docs/rules/prefer-pnpm/": {
+      "alt": "prefer-pnpm — Astro Doctor",
+      "description": "Use pnpm consistently and remove competing package-manager lockfiles.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/prefer-pnpm.webp",
+          "primary": true,
+          "url": "/og/docs/rules/prefer-pnpm.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/prefer-pnpm/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "prefer-pnpm"
+    },
+    "/docs/rules/require-action-input-schema/": {
+      "alt": "require-action-input-schema — Astro Doctor",
+      "description": "Validate untrusted Astro Action input before the handler runs.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/require-action-input-schema.webp",
+          "primary": true,
+          "url": "/og/docs/rules/require-action-input-schema.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/require-action-input-schema/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "require-action-input-schema"
+    },
+    "/docs/rules/require-client-router-script-lifecycle/": {
+      "alt": "require-client-router-script-lifecycle — Astro Doctor",
+      "description": "Initialize scripts on astro:page-load when using ClientRouter.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/require-client-router-script-lifecycle.webp",
+          "primary": true,
+          "url": "/og/docs/rules/require-client-router-script-lifecycle.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/require-client-router-script-lifecycle/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "require-client-router-script-lifecycle"
+    },
+    "/docs/rules/require-content-config/": {
+      "alt": "require-content-config — Astro Doctor",
+      "description": "Add a content config when src/content contains entries.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/require-content-config.webp",
+          "primary": true,
+          "url": "/og/docs/rules/require-content-config.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/require-content-config/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "require-content-config"
+    },
+    "/docs/rules/require-fetch-default-export/": {
+      "alt": "require-fetch-default-export — Astro Doctor",
+      "description": "Require a default export from Astro 7 advanced-routing entrypoints.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/require-fetch-default-export.webp",
+          "primary": true,
+          "url": "/og/docs/rules/require-fetch-default-export.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/require-fetch-default-export/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "require-fetch-default-export"
+    }
+  },
+  "version": 1
+}

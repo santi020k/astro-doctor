@@ -34,9 +34,7 @@ const colorScore = (score: number, label: string): string => {
 
   if (score >= 75) return cyan(`${score}/100 (${label})`)
 
-  if (score >= 60) return yellow(`${score}/100 (${label})`)
-
-  return red(`${score}/100 (${label})`)
+  return score >= 60 ? yellow(`${score}/100 (${label})`) : red(`${score}/100 (${label})`)
 }
 
 const PAD_LOCATION = 8

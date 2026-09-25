@@ -103,13 +103,13 @@ Pin to a commit SHA for hardened CI:
 
 Astro Doctor owns 13 opinionated Astro rules and composes them with the official
 `eslint-plugin-astro` catalog. Depending on the preset, the CLI provides up to
-**Up to 71 checks**: 63 ESLint checks plus eight project audits in the `all` preset.
+**Up to 73 checks**: 63 ESLint checks plus ten project audits in the `all` preset.
 Overlapping rules are deduplicated automatically.
 
 | Preset | Coverage |
 | ------ | -------- |
 | `recommended` | Astro Doctor rules, project audits, and official Astro recommended rules |
-| `strict` | Recommended plus official accessibility, security, and best-practice rules |
+| `strict` | Recommended plus selected official Astro security and best-practice rules |
 | `all` | Every non-deprecated official Astro rule, including stylistic rules |
 | `ci` | Recommended coverage, failing on warnings with the CI score threshold |
 
@@ -155,11 +155,13 @@ The CLI also checks project files such as `astro.config.*`, `package.json`, `.en
 | `no-disabled-origin-check` | ⚠️ warning | Keep Astro's CSRF origin check enabled |
 | `no-insecure-session-cookie` | ⚠️ warning | Keep secure, HTTP-only, same-site session cookie protections enabled |
 | `no-open-allowed-domains` | ⚠️ warning | Avoid `security.allowedDomains: [{}]` |
+| `no-legacy-astro-7-experimental-flags` | ⚠️ warning | Migrate removed Astro 7 experimental flags |
 | `prefer-env-schema` | ⚠️ warning | Define an Astro env schema for documented env vars |
 | `prefer-pnpm` | opt-in | Use pnpm consistently and avoid npm, Yarn, and Bun lockfiles |
 | `require-action-input-schema` | ⚠️ warning | Validate untrusted Astro Action input before handlers run |
 | `require-client-router-script-lifecycle` | strict | Initialize scripts on `astro:page-load` when using ClientRouter |
 | `require-content-config` | ⚠️ warning | Add a content config when using `src/content/` |
+| `require-fetch-default-export` | ⚠️ warning | Ensure Astro 7 advanced-routing entrypoints have a default export |
 
 ---
 

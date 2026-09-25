@@ -174,11 +174,7 @@ const validateOptionalValueArgument = (
 
   const optionValue = argv[argumentIndex + 1]
 
-  if (!argument.includes('=') && optionValue !== undefined && !optionValue.startsWith('-')) {
-    return argumentIndex + 1
-  }
-
-  return argumentIndex
+  return !argument.includes('=') && optionValue !== undefined && !optionValue.startsWith('-') ? argumentIndex + 1 : argumentIndex
 }
 
 const validateArguments = (argv: readonly string[]): void => {
@@ -615,21 +611,13 @@ const getEffectiveFailOn = (
   options: CliOptions,
   config: AstroDoctorConfig | null,
   preset: PresetName
-): CliOptions['failOn'] => {
-  if (options.failOnProvided) return options.failOn
-
-  return config?.failOn ?? getPresetFailOn(preset)
-}
+): CliOptions['failOn'] => options.failOnProvided ? options.failOn : config?.failOn ?? getPresetFailOn(preset)
 
 const getEffectiveThreshold = (
   options: CliOptions,
   config: AstroDoctorConfig | null,
   preset: PresetName
-): number => {
-  if (options.thresholdProvided) return options.threshold
-
-  return config?.threshold ?? getPresetThreshold(preset)
-}
+): number => options.thresholdProvided ? options.threshold : config?.threshold ?? getPresetThreshold(preset)
 
 const getEffectiveRules = (
   config: AstroDoctorConfig | null,
@@ -673,9 +661,7 @@ const resolveFilesToScan = (options: CliOptions): string[] | undefined => {
 const resolveEffectiveProjects = (options: CliOptions, config: AstroDoctorConfig | null): string[] => {
   if (options.projects.length > 0) return [...options.projects]
 
-  if (config?.projects && config.projects.length > 0) return [...config.projects]
-
-  return []
+  return config?.projects && config.projects.length > 0 ? [...config.projects] : []
 }
 
 const tryResolveFilesToScan = (options: CliOptions): { files: string[] | undefined, failed: boolean } => {
