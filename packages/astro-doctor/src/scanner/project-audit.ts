@@ -11,7 +11,7 @@ import {
 } from '../constants.js'
 import { getProjectRuleMeta } from '../project-rules.js'
 import type { Diagnostic, ScanOptions, Severity } from '../types.js'
-import { maskCodeLiterals } from '../utils/mask-code-literals.js'
+import { maskCodeComments, maskCodeLiterals } from '../utils/mask-code-literals.js'
 import { readPnpmWorkspacePatterns } from '../utils/read-pnpm-workspace-patterns.js'
 
 import { buildIgnorePatterns } from './file-discovery.js'
@@ -428,6 +428,7 @@ const findTopLevelPropertyIndex = (
     'u'
   )
 
+  const propertySearchContent = maskCodeComments(sourceContent)
   let objectDepth = 1
 
   for (
@@ -459,7 +460,7 @@ const findTopLevelPropertyIndex = (
 
     if (
       (previousCharacter === '{' || previousCharacter === ',') &&
-      propertyPattern.test(sourceContent.slice(characterIndex))
+      propertyPattern.test(propertySearchContent.slice(characterIndex))
     ) {
       return characterIndex
     }
@@ -516,6 +517,7 @@ const findTopLevelObjectProperty = (
   propertyName: string,
   sourceContent = maskedContent
 ): ObjectRange | undefined => {
+  const propertySearchContent = maskCodeComments(sourceContent)
   let objectDepth = 1
 
   for (
@@ -545,7 +547,7 @@ const findTopLevelObjectProperty = (
       `^(?:${propertyName}|['"]${propertyName}['"])\\s*:\\s*\\{`, 'u'
     )
 
-    const propertyMatch = propertyPattern.exec(sourceContent.slice(characterIndex))
+    const propertyMatch = propertyPattern.exec(propertySearchContent.slice(characterIndex))
 
     if (/[A-Za-z0-9_$]/u.test(previousCharacter) || propertyMatch === null) continue
 

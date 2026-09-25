@@ -522,6 +522,25 @@ describe('project audits', () => {
     ).toBe(false)
   })
 
+  test('accepts comments between a fetch configuration key and colon', async () => {
+    mkdirSync(join(testDirectory, 'src'), { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), 'export default { fetchFile /* disabled */: null }'
+    )
+    writeFileSync(join(testDirectory, 'src', 'fetch.ts'), 'export const fetchJson = () => null')
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(
+      scanResult.diagnostics.some(
+        diagnostic => diagnostic.ruleId === 'astro-doctor/require-fetch-default-export'
+      )
+    ).toBe(false)
+  })
+
   test('accepts a utility named src/fetch.ts when Astro routing entrypoints are disabled', async () => {
     mkdirSync(join(testDirectory, 'src'), { recursive: true })
     writeFileSync(

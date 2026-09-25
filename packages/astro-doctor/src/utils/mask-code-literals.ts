@@ -1,6 +1,7 @@
 const CODE_LITERAL_PATTERN =
   /'(?:\\[\s\S]|[^'\\])*'|"(?:\\[\s\S]|[^"\\])*"|`(?:\\[\s\S]|[^`\\])*`|\/\/[^\r\n]*|\/\*[\s\S]*?\*\//gu
 
+const CODE_COMMENT_PATTERN = /\/\/[^\r\n]*|\/\*[\s\S]*?\*\//gu
 const REGEX_PREFIX_CHARACTERS = new Set('([{,:;=!?&|+-*%^~<>')
 
 const REGEX_PREFIX_KEYWORDS = new Set([
@@ -21,6 +22,10 @@ const REGEX_PREFIX_KEYWORDS = new Set([
 ])
 
 const maskLiteral = (literal: string): string => literal.replaceAll(/[^\r\n]/gu, character => ' '.repeat(character.length))
+
+export const maskCodeComments = (content: string): string => content.replaceAll(
+  CODE_COMMENT_PATTERN, maskLiteral
+)
 
 const findPreviousNonWhitespaceIndex = (content: string, startIndex: number): number => {
   for (let characterIndex = startIndex; characterIndex >= 0; characterIndex -= 1) {
