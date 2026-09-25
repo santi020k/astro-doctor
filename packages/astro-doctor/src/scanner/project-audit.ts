@@ -477,6 +477,39 @@ const hasTopLevelProperty = (
   maskedContent, objectRange, propertyName, sourceContent
 ) !== undefined
 
+const hasTopLevelSpread = (
+  maskedContent: string,
+  objectRange: ObjectRange
+): boolean => {
+  let objectDepth = 1
+
+  for (
+    let characterIndex = objectRange.openingIndex + 1;
+    characterIndex < objectRange.closingIndex;
+    characterIndex += 1
+  ) {
+    const character = maskedContent[characterIndex]
+
+    if (character === '{') {
+      objectDepth += 1
+
+      continue
+    }
+
+    if (character === '}') {
+      objectDepth -= 1
+
+      continue
+    }
+
+    if (objectDepth === 1 && maskedContent.startsWith('...', characterIndex)) {
+      return true
+    }
+  }
+
+  return false
+}
+
 const findTopLevelObjectProperty = (
   maskedContent: string,
   objectRange: ObjectRange,
@@ -615,13 +648,17 @@ const getEffectiveStaticConfigValue = (
   rootObjectRange: ObjectRange,
   propertyName: string,
   defaultValue: string
-): string | null | undefined => hasTopLevelProperty(
-  maskedContent, rootObjectRange, propertyName, configContent
-) ?
-  getStaticConfigProperty(
-    configContent, maskedContent, rootObjectRange, propertyName
-  )?.value :
-  defaultValue
+): string | null | undefined => {
+  if (hasTopLevelSpread(maskedContent, rootObjectRange)) return undefined
+
+  return hasTopLevelProperty(
+    maskedContent, rootObjectRange, propertyName, configContent
+  ) ?
+    getStaticConfigProperty(
+      configContent, maskedContent, rootObjectRange, propertyName
+    )?.value :
+    defaultValue
+}
 
 const getEffectiveSeverity = (
   ruleId: string,
