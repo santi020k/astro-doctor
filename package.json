@@ -44,6 +44,7 @@
     "husky": "catalog:",
     "knip": "catalog:",
     "lint-staged": "catalog:",
+    "oxlint": "catalog:",
     "tailwindcss": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:",
@@ -57,5 +58,5 @@
   "engines": {
     "node": "^22.22.3 || ^24.16.0 || >=26.3.0"
   },
-  "packageManager": "pnpm@10.34.3"
+  "packageManager": "pnpm@10.34.5"
 }

@@ -50,9 +50,7 @@ const normalizeRuleSeverity = (
 
   if (severity === 'error' || severity === 2) return 'error'
 
-  if (severity === 'warn' || severity === 1) return 'warn'
-
-  return 'off'
+  return severity === 'warn' || severity === 1 ? 'warn' : 'off'
 }
 
 const getFlatConfigRules = (
@@ -92,9 +90,7 @@ export const getAstroEcosystemRules = (
 ): Record<string, RuleSeverity> => {
   if (preset === 'all') return getAllRules()
 
-  if (preset === 'strict') return getStrictRules()
-
-  return getRecommendedRules()
+  return preset === 'strict' ? getStrictRules() : getRecommendedRules()
 }
 
 export const disableDuplicateAstroDoctorRules = (
@@ -122,9 +118,7 @@ export const getAstroRuleCategory = (ruleId: string): RuleCategory | undefined =
 
   if (ruleId.startsWith('astro/jsx-a11y/')) return 'accessibility'
 
-  if (SECURITY_ASTRO_RULE_IDS.has(ruleId)) return 'security'
-
-  return 'best-practices'
+  return SECURITY_ASTRO_RULE_IDS.has(ruleId) ? 'security' : 'best-practices'
 }
 
 export const getAstroRuleDocUrl = (ruleId: string): string | undefined => {

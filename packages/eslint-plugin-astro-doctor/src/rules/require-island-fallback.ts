@@ -23,11 +23,10 @@ const isFallbackSlotAttribute = (node: unknown): boolean => isAstroElementRecord
   node.name === SLOT_ATTRIBUTE_NAME &&
   node.value === FALLBACK_SLOT_VALUE
 
-const isFallbackElement = (node: unknown): boolean => {
-  if (!isAstroElementRecord(node)) return false
-
-  return (node.attributes ?? []).some(attributeNode => isFallbackSlotAttribute(attributeNode))
-}
+const isFallbackElement = (node: unknown): boolean => (
+  isAstroElementRecord(node) &&
+  (node.attributes ?? []).some(attributeNode => isFallbackSlotAttribute(attributeNode))
+)
 
 const hasFallbackSlot = (
   elementNode: AstroElementNode

@@ -65,11 +65,7 @@ export const resolveRuntime = (context: vscode.ExtensionContext): ExtensionRunti
     return { environment: ENV_PRODUCTION, preferWorkspaceServer: false }
   }
 
-  if (context.extensionMode === vscode.ExtensionMode.Development) {
-    return { environment: ENV_LOCAL, preferWorkspaceServer: true }
-  }
-
-  return { environment: ENV_PRODUCTION, preferWorkspaceServer: false }
+  return context.extensionMode === vscode.ExtensionMode.Development ? { environment: ENV_LOCAL, preferWorkspaceServer: true } : { environment: ENV_PRODUCTION, preferWorkspaceServer: false }
 }
 
 export const resolveConfiguredServer = (
@@ -77,11 +73,7 @@ export const resolveConfiguredServer = (
 ): ResolvedServer | undefined => {
   const explicitPath = configuration.get<string>('serverPath', '').trim()
 
-  if (explicitPath.length > 0) {
-    return { args: ['experimental-lsp'], command: explicitPath, shell: false }
-  }
-
-  return undefined
+  return explicitPath.length > 0 ? { args: ['experimental-lsp'], command: explicitPath, shell: false } : undefined
 }
 
 export const resolveDevelopmentServer = async (extensionPath: string): Promise<ResolvedServer | undefined> => {
@@ -150,11 +142,7 @@ const showMissingServer = async (
 export const getStartFailureMessage = (error: unknown): string => {
   const errorMessage = error instanceof Error ? error.message : String(error)
 
-  if (errorMessage.includes('ENOENT') && errorMessage.toLowerCase().includes('node')) {
-    return `${CLIENT_NAME}: Node.js was not found. Install Node.js ^22.22.3, ^24.16.0, or >=26.3.0, or set astroDoctor.nodePath to its executable.`
-  }
-
-  return `${CLIENT_NAME}: failed to start. Reinstall the extension, install @santi020k/astro-doctor locally, or set astroDoctor.serverPath.`
+  return errorMessage.includes('ENOENT') && errorMessage.toLowerCase().includes('node') ? `${CLIENT_NAME}: Node.js was not found. Install Node.js ^22.22.3, ^24.16.0, or >=26.3.0, or set astroDoctor.nodePath to its executable.` : `${CLIENT_NAME}: failed to start. Reinstall the extension, install @santi020k/astro-doctor locally, or set astroDoctor.serverPath.`
 }
 
 const showStartFailure = async (

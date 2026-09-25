@@ -10,12 +10,7 @@ export type PresetName = 'recommended' | 'strict' | 'ci' | 'all'
 export type RuleSeverity = 'error' | 'warn' | 'off'
 
 const PRESET_NAMES = new Set(['recommended', 'strict', 'ci', 'all'])
-
-const normalizeRuleSeverity = (severity: unknown): RuleSeverity | undefined => {
-  if (severity === 'error' || severity === 'warn' || severity === 'off') return severity
-
-  return undefined
-}
+const normalizeRuleSeverity = (severity: unknown): RuleSeverity | undefined => severity === 'error' || severity === 'warn' || severity === 'off' ? severity : undefined
 
 const getRecommendedPluginRules = (): Record<string, RuleSeverity> => {
   const recommendedRules = astroDoctorPlugin.configs.recommended?.rules ?? {}

@@ -272,13 +272,7 @@ describe('createServerOptions', () => {
     const config = makeMockConfig({ nodePath: '/resolved/node', serverPath: '' })
     const runtime = { environment: ENV_PRODUCTION, preferWorkspaceServer: false }
 
-    workspaceFileSystem.stat.mockImplementation((uri) => {
-      if (uri.fsPath.includes('server.mjs')) {
-        return Promise.resolve(createMockFileStat())
-      }
-
-      return Promise.reject(new Error('missing'))
-    })
+    workspaceFileSystem.stat.mockImplementation((uri) => uri.fsPath.includes('server.mjs') ? Promise.resolve(createMockFileStat()) : Promise.reject(new Error('missing')))
 
     const outputChannel = makeMockOutputChannel()
 
@@ -442,9 +436,7 @@ describe('configuration lifecycle', () => {
         if (key === 'enable') return enabled
         if (key === 'nodePath') return '/resolved/node'
         if (key === 'scanOnType') return scanOnType
-        if (key === 'serverPath') return ''
-
-        return defaultValue
+        return key === 'serverPath' ? '' : defaultValue
       }),
     }
 

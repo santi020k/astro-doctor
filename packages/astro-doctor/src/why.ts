@@ -71,9 +71,7 @@ const parseLocation = (location: string): { filePath: string, line: number } | n
   const filePath = match[1]
   const lineStr = match[2]
 
-  if (!filePath || !lineStr) return null
-
-  return { filePath, line: Number.parseInt(lineStr, 10) }
+  return !filePath || !lineStr ? null : { filePath, line: Number.parseInt(lineStr, 10) }
 }
 
 const reportNoIssues = (

@@ -199,11 +199,9 @@ interface DiagnosticFixData {
   }[]
 }
 
-const isDiagnosticFixData = (value: unknown): value is DiagnosticFixData => {
-  if (typeof value !== 'object' || value === null) return false
-
-  return 'fix' in value || 'suggestions' in value
-}
+const isDiagnosticFixData = (value: unknown): value is DiagnosticFixData => (
+  typeof value === 'object' && value !== null && ('fix' in value || 'suggestions' in value)
+)
 
 const getCommandUri = (commandArguments: unknown): string | undefined => {
   if (!Array.isArray(commandArguments)) return undefined

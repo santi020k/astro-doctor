@@ -122,9 +122,7 @@ const findExistingProjectFile = (
 const readProjectFile = (rootDirectory: string, projectPath: string): string | undefined => {
   const filePath = toAbsolutePath(rootDirectory, projectPath)
 
-  if (!existsSync(filePath)) return undefined
-
-  return readFileSync(filePath, 'utf8')
+  return existsSync(filePath) ? readFileSync(filePath, 'utf8') : undefined
 }
 
 const matchesWorkspacePattern = (
@@ -412,9 +410,7 @@ const getPackageManagerContent = (
 ): string | undefined => {
   if (packageJsonContent.includes('"packageManager"')) return packageJsonContent
 
-  if (workspaceDirectory === undefined) return undefined
-
-  return readProjectFile(workspaceDirectory, PACKAGE_FILE_NAME)
+  return workspaceDirectory === undefined ? undefined : readProjectFile(workspaceDirectory, PACKAGE_FILE_NAME)
 }
 
 const hasCompetingLockFile = (
@@ -833,9 +829,9 @@ const auditEnvSchema = (
 const hasContentEntries = (rootDirectory: string): boolean => {
   const contentDirectory = toAbsolutePath(rootDirectory, CONTENT_DIRECTORY_NAME)
 
-  if (!existsSync(contentDirectory) || !statSync(contentDirectory).isDirectory()) return false
-
-  return readdirSync(contentDirectory).some(entryName => !entryName.startsWith('.'))
+  return existsSync(contentDirectory) &&
+    statSync(contentDirectory).isDirectory() &&
+    readdirSync(contentDirectory).some(entryName => !entryName.startsWith('.'))
 }
 
 const auditContentConfig = (

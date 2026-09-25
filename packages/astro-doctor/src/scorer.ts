@@ -40,9 +40,7 @@ export const computeScore = (diagnostics: readonly Diagnostic[], fileCount: numb
 
   if (hasSecurityErrors) return Math.min(rawScore, MAXIMUM_SCORE_WITH_SECURITY_ERRORS)
 
-  if (hasErrors) return Math.min(rawScore, MAXIMUM_SCORE_WITH_ERRORS)
-
-  return rawScore
+  return hasErrors ? Math.min(rawScore, MAXIMUM_SCORE_WITH_ERRORS) : rawScore
 }
 
 const computeScoreForCategory = (
@@ -74,7 +72,5 @@ export const computeScoreLabel = (score: number): ScoreLabel => {
 
   if (score >= 60) return 'C'
 
-  if (score >= 40) return 'D'
-
-  return 'F'
+  return score >= 40 ? 'D' : 'F'
 }

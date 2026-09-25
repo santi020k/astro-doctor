@@ -75,9 +75,7 @@ const getJsxExpressionValue = (
   const expressionStart = getNodeStart(valueNode.expression)
   const expressionEnd = valueNode.expression.end
 
-  if (expressionStart === undefined || typeof expressionEnd !== 'number') return undefined
-
-  return context.sourceCode.text.slice(expressionStart, expressionEnd)
+  return expressionStart === undefined || typeof expressionEnd !== 'number' ? undefined : context.sourceCode.text.slice(expressionStart, expressionEnd)
 }
 
 const getJsxLiteralValue = (
@@ -87,16 +85,12 @@ const getJsxLiteralValue = (
 
   const literalValue = valueNode.value
 
-  if (
-    typeof literalValue === 'string' ||
+  return typeof literalValue === 'string' ||
     typeof literalValue === 'boolean' ||
     typeof literalValue === 'number' ||
-    literalValue === null
-  ) {
-    return literalValue
-  }
-
-  return undefined
+    literalValue === null ?
+    literalValue :
+    undefined
 }
 
 const normalizeJsxAttribute = (

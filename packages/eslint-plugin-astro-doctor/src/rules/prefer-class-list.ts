@@ -13,9 +13,7 @@ const isDynamicClassExpression = (attributeNode: AstroAttributeNode): boolean =>
 
   const expression = attributeNode.value.trim()
 
-  if (expression.startsWith('`') && expression.includes('${')) return true
-
-  return expression.includes('+')
+  return (expression.startsWith('`') && expression.includes('${')) || expression.includes('+')
 }
 
 export default createRule({
