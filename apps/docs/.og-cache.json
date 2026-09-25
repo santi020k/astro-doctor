@@ -175,6 +175,12 @@
       "fingerprint": "fd972581460bb3c1b0f1b6fb8bc3be88a04105bb8065c63f3818c3b22486706d",
       "output": "docs/rules/no-open-allowed-domains.webp"
     },
+    "docs/rules/no-legacy-astro-7-experimental-flags.webp": {
+      "baseDirectory": "public/og",
+      "digest": "579d4ba271bc0963b15c76889247619e0cfd0f1f52b7c5fd0faaa6897da7997b",
+      "fingerprint": "6bfac162867f96af05dd802bf4972dd548e29dfd682ecf9e9b15f937a8a3fcd6",
+      "output": "docs/rules/no-legacy-astro-7-experimental-flags.webp"
+    },
     "docs/rules/prefer-env-schema.webp": {
       "baseDirectory": "public/og",
       "digest": "30247bda4c4246e559a52f5911d3c3472920962577650740ffc116ac40d75344",
@@ -204,6 +210,12 @@
       "digest": "9dfbabb741fdb540e6d0a83d55164130459d82fb0ef1488e0981d012b55d042f",
       "fingerprint": "7ba1a5d3f8f399a620e71ad15d20630336bf73868e057c27dc5555bb3948a5bd",
       "output": "docs/rules/require-content-config.webp"
+    },
+    "docs/rules/require-fetch-default-export.webp": {
+      "baseDirectory": "public/og",
+      "digest": "16554f49b9e145190509c927f73ff17a335cb598119bf889113ea3de2caa2e86",
+      "fingerprint": "f5105efe333fc4f1704a4c804218e0ef26a30e898177c90d19c09647bf026f1a",
+      "output": "docs/rules/require-fetch-default-export.webp"
     }
   },
   "generatorVersion": "1.1.1",

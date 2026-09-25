@@ -552,6 +552,25 @@
       ],
       "title": "no-open-allowed-domains"
     },
+    "/docs/rules/no-legacy-astro-7-experimental-flags/": {
+      "alt": "no-legacy-astro-7-experimental-flags — Astro Doctor",
+      "description": "Migrate experimental configuration fields removed or stabilized in Astro 7.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/no-legacy-astro-7-experimental-flags.webp",
+          "primary": true,
+          "url": "/og/docs/rules/no-legacy-astro-7-experimental-flags.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/no-legacy-astro-7-experimental-flags/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "no-legacy-astro-7-experimental-flags"
+    },
     "/docs/rules/prefer-env-schema/": {
       "alt": "prefer-env-schema — Astro Doctor",
       "description": "Define an Astro env schema for variables documented in .env.example.",
@@ -646,6 +665,25 @@
         "TechArticle"
       ],
       "title": "require-content-config"
+    },
+    "/docs/rules/require-fetch-default-export/": {
+      "alt": "require-fetch-default-export — Astro Doctor",
+      "description": "Require a default export from Astro 7 advanced-routing entrypoints.",
+      "images": [
+        {
+          "format": "webp",
+          "height": 630,
+          "output": "docs/rules/require-fetch-default-export.webp",
+          "primary": true,
+          "url": "/og/docs/rules/require-fetch-default-export.webp",
+          "width": 1200
+        }
+      ],
+      "pathname": "/docs/rules/require-fetch-default-export/",
+      "schemaTypes": [
+        "TechArticle"
+      ],
+      "title": "require-fetch-default-export"
     }
   },
   "version": 1
