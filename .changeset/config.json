@@ -1,5 +1,5 @@
 {
-  "$schema": "https://unpkg.com/@changesets/config@3.0.5/schema.json",
+  "$schema": "https://unpkg.com/@changesets/config@4.0.1/schema.json",
   "changelog": ["@changesets/changelog-github", { "repo": "santi020k/astro-doctor" }],
   "commit": false,
   "fixed": [["@santi020k/astro-doctor", "@santi020k/eslint-plugin-astro-doctor", "@santi020k/oxlint-config-astro-doctor", "vscode-astro-doctor"]],
@@ -7,5 +7,6 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
+  "privatePackages": { "version": true, "tag": false },
   "ignore": []
 }

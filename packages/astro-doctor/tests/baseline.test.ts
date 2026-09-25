@@ -115,6 +115,53 @@ describe('baseline comparison', () => {
     expect(introducedResult.diagnostics).toEqual([])
   })
 
+  test('reports migration findings introduced by an Astro 7 dependency-only upgrade', async () => {
+    const packageFilePath = join(testDirectory, 'package.json')
+
+    mkdirSync(join(testDirectory, 'src'), { recursive: true })
+    writeFileSync(
+      packageFilePath, JSON.stringify({ dependencies: { astro: '^6.0.0' } })
+    )
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), 'export default defineConfig({ experimental: { advancedRouting: true } })'
+    )
+    writeFileSync(join(testDirectory, 'src', 'fetch.ts'), 'export const fetchJson = () => null')
+    execFileSync('git', ['add', '.'], { cwd: testDirectory })
+    execFileSync('git', ['commit', '-m', 'baseline'], { cwd: testDirectory })
+
+    const baseRevision = resolveBaseRevision(testDirectory, 'HEAD')
+
+    writeFileSync(
+      packageFilePath, JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+
+    const currentResult = await scan({
+      directory: testDirectory,
+      files: [packageFilePath]
+    })
+    const baseline = await scanBaseline({
+      repositoryDirectory: testDirectory,
+      projectDirectory: testDirectory,
+      files: [packageFilePath],
+      baseRevision,
+      scanOptions: {}
+    })
+    const introducedResult = filterIntroducedDiagnostics(
+      currentResult, baseline.result, testDirectory, baseline.rootDirectory
+    )
+
+    expect(introducedResult.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: 'astro-doctor/no-legacy-astro-7-experimental-flags'
+        }),
+        expect.objectContaining({
+          ruleId: 'astro-doctor/require-fetch-default-export'
+        })
+      ])
+    )
+  })
+
   test('scans a baseline when the repository archive exceeds the child process buffer', async () => {
     const astroFilePath = join(testDirectory, 'index.astro')
     const largeFilePath = join(testDirectory, 'large.bin')

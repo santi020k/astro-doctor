@@ -293,6 +293,33 @@ describe('project audits', () => {
     ])
   })
 
+  test('audits unchanged migration files when only the Astro 7 dependency is selected', async () => {
+    mkdirSync(join(testDirectory, 'src'), { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), 'export default defineConfig({ experimental: { advancedRouting: true } })'
+    )
+    writeFileSync(join(testDirectory, 'src', 'fetch.ts'), 'export const fetchJson = () => null')
+
+    const scanResult = await scan({
+      directory: testDirectory,
+      files: ['package.json']
+    })
+
+    expect(scanResult.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: 'astro-doctor/no-legacy-astro-7-experimental-flags'
+        }),
+        expect.objectContaining({
+          ruleId: 'astro-doctor/require-fetch-default-export'
+        })
+      ])
+    )
+  })
+
   test('accepts stable Astro 7 configuration fields', async () => {
     writeFileSync(
       join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
@@ -337,6 +364,57 @@ describe('project audits', () => {
           filePath: join(testDirectory, 'src', 'fetch.ts'),
           line: 1,
           category: 'best-practices'
+        })
+      ])
+    )
+  })
+
+  test('reports the explicitly configured default Astro 7 fetch entrypoint', async () => {
+    mkdirSync(join(testDirectory, 'src'), { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), 'export default defineConfig({ fetchFile: \'fetch\' })'
+    )
+    writeFileSync(join(testDirectory, 'src', 'fetch.ts'), 'export const fetchJson = () => null')
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(scanResult.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: 'astro-doctor/require-fetch-default-export',
+          filePath: join(testDirectory, 'src', 'fetch.ts')
+        })
+      ])
+    )
+  })
+
+  test('reports a configured Astro 7 fetch entrypoint inside a custom source directory', async () => {
+    mkdirSync(join(testDirectory, 'source', 'server'), { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), [
+        'export default defineConfig({',
+        '  srcDir: \'./source\',',
+        '  fetchFile: \'server/handler\',',
+        '})'
+      ].join('\n')
+    )
+    writeFileSync(
+      join(testDirectory, 'source', 'server', 'handler.mts'), 'export const fetchJson = () => null'
+    )
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(scanResult.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: 'astro-doctor/require-fetch-default-export',
+          filePath: join(testDirectory, 'source', 'server', 'handler.mts')
         })
       ])
     )

@@ -71,7 +71,7 @@ runs:
         WORKING_DIRECTORY="${{ inputs.working-directory }}"
         CHANGED_FILES=$(git -C "$WORKING_DIRECTORY" diff --name-only --diff-filter=AMR --relative "$BASE_SHA"...HEAD)
 
-        if ! grep -E '(\.astro$|(^|/)astro\.config\.(ts|mjs|js|cjs|mts|cts)$|(^|/)package\.json$|(^|/)(package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|bun\.lock|bun\.lockb)$|(^|/)\.env\.example$|(^|/)src/content\.config\.(ts|mjs|js)$|(^|/)src/content/config\.(ts|mjs|js)$|(^|/)src/content/|(^|/)src/actions/)' \
+        if ! grep -E '(\.astro$|(^|/)astro\.config\.(ts|mjs|js|cjs|mts|cts)$|(^|/)package\.json$|(^|/)(package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|bun\.lock|bun\.lockb)$|(^|/)\.env\.example$|(^|/)src/content\.config\.(ts|mjs|js)$|(^|/)src/content/config\.(ts|mjs|js)$|(^|/)src/content/|(^|/)src/actions/|(^|/)src/fetch\.(ts|js|mjs|mts)$)' \
           <<< "$CHANGED_FILES" > /dev/null; then
           echo "no_astro_changes=true" >> "$GITHUB_OUTPUT"
         fi

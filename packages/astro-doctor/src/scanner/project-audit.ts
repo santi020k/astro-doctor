@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { dirname, isAbsolute, relative, resolve } from 'node:path'
+import { dirname, extname, isAbsolute, relative, resolve } from 'node:path'
 
 import { globSync } from 'glob'
 
@@ -32,12 +32,13 @@ const CONTENT_CONFIG_FILE_NAMES = [
   'src/content/config.js'
 ]
 
-const ASTRO_FETCH_ENTRYPOINT_FILE_NAMES = [
-  'src/fetch.ts',
-  'src/fetch.js',
-  'src/fetch.mjs',
-  'src/fetch.mts'
-]
+const ASTRO_FETCH_ENTRYPOINT_EXTENSIONS = ['.ts', '.js', '.mjs', '.mts']
+const DEFAULT_ASTRO_SOURCE_DIRECTORY = 'src'
+const DEFAULT_ASTRO_FETCH_FILE_NAME = 'fetch'
+
+const ASTRO_FETCH_ENTRYPOINT_FILE_NAMES = ASTRO_FETCH_ENTRYPOINT_EXTENSIONS.map(
+  extension => `${DEFAULT_ASTRO_SOURCE_DIRECTORY}/${DEFAULT_ASTRO_FETCH_FILE_NAME}${extension}`
+)
 
 const ASTRO_7_EXPERIMENTAL_FLAG_MIGRATIONS = [
   {
@@ -106,6 +107,10 @@ interface ObjectRange {
 interface InsecureCookieProperty {
   readonly propertyName: string
   readonly index: number
+}
+
+interface StaticConfigProperty {
+  readonly value: string | null
 }
 
 interface ProjectAuditOptions {
@@ -189,6 +194,11 @@ const isSelected = (
   selectedProjectPaths: Set<string> | undefined,
   projectPath: string
 ): boolean => selectedProjectPaths === undefined || selectedProjectPaths.has(projectPath)
+
+const isAnySelected = (
+  selectedProjectPaths: Set<string> | undefined,
+  projectPaths: readonly string[]
+): boolean => projectPaths.some(projectPath => isSelected(selectedProjectPaths, projectPath))
 
 const isSelectedByPrefix = (
   selectedProjectPaths: Set<string> | undefined,
@@ -447,6 +457,46 @@ const getAstroConfigRootObjectRange = (
   return findObjectRange(maskedContent, rootOpeningIndex)
 }
 
+const getStaticConfigProperty = (
+  configContent: string,
+  maskedContent: string,
+  rootObjectRange: ObjectRange,
+  propertyName: string
+): StaticConfigProperty | undefined => {
+  const propertyIndex = findTopLevelPropertyIndex(
+    maskedContent, rootObjectRange, propertyName
+  )
+
+  if (propertyIndex === undefined) return undefined
+
+  const propertyContent = configContent.slice(propertyIndex)
+  const nullPropertyPattern = new RegExp(`^${propertyName}\\s*:\\s*null\\b`, 'u')
+
+  if (nullPropertyPattern.test(propertyContent)) return { value: null }
+
+  const stringPropertyPattern = new RegExp(
+    `^${propertyName}\\s*:\\s*(['"])([^'"\\r\\n]*)\\1`, 'u'
+  )
+
+  const stringPropertyMatch = stringPropertyPattern.exec(propertyContent)
+
+  return stringPropertyMatch?.[2] === undefined ?
+    undefined :
+    { value: stringPropertyMatch[2] }
+}
+
+const getEffectiveStaticConfigValue = (
+  configContent: string,
+  maskedContent: string,
+  rootObjectRange: ObjectRange,
+  propertyName: string,
+  defaultValue: string
+): string | null | undefined => hasTopLevelProperty(maskedContent, rootObjectRange, propertyName) ?
+  getStaticConfigProperty(
+    configContent, maskedContent, rootObjectRange, propertyName
+  )?.value :
+  defaultValue
+
 const getEffectiveSeverity = (
   ruleId: string,
   rules: ScanOptions['rules']
@@ -593,7 +643,10 @@ const auditAstro7ExperimentalFlags = (
 
   const astroConfigProjectPath = findExistingProjectFile(options.directory, ASTRO_CONFIG_FILE_NAMES)
 
-  if (astroConfigProjectPath === undefined || !isSelected(selectedProjectPaths, astroConfigProjectPath)) {
+  if (
+    astroConfigProjectPath === undefined ||
+    !isAnySelected(selectedProjectPaths, [PACKAGE_FILE_NAME, astroConfigProjectPath])
+  ) {
     return
   }
 
@@ -630,21 +683,51 @@ const auditAstro7ExperimentalFlags = (
 const hasDefaultExport = (maskedContent: string): boolean => /\bexport\s+default\b/u.test(maskedContent) ||
   /\bexport\s*\{[^}]*(?:\bdefault\b|\bas\s+default\b)[^}]*\}/u.test(maskedContent)
 
-const usesDefaultFetchEntrypoint = (
+const getFetchEntrypointProjectPaths = (
   rootDirectory: string,
   astroConfigProjectPath: string | undefined
-): boolean => {
-  if (astroConfigProjectPath === undefined) return true
+): string[] | undefined => {
+  if (astroConfigProjectPath === undefined) return [...ASTRO_FETCH_ENTRYPOINT_FILE_NAMES]
 
   const astroConfigContent = readProjectFile(rootDirectory, astroConfigProjectPath)
 
-  if (astroConfigContent === undefined) return true
+  if (astroConfigContent === undefined) return [...ASTRO_FETCH_ENTRYPOINT_FILE_NAMES]
 
   const maskedConfigContent = maskCodeLiterals(astroConfigContent)
   const rootObjectRange = getAstroConfigRootObjectRange(maskedConfigContent)
 
-  return rootObjectRange === undefined ||
-    !hasTopLevelProperty(maskedConfigContent, rootObjectRange, 'fetchFile')
+  if (rootObjectRange === undefined) return [...ASTRO_FETCH_ENTRYPOINT_FILE_NAMES]
+
+  const sourceDirectory = getEffectiveStaticConfigValue(
+    astroConfigContent,
+    maskedConfigContent,
+    rootObjectRange,
+    'srcDir',
+    DEFAULT_ASTRO_SOURCE_DIRECTORY
+  )
+
+  if (sourceDirectory === undefined || sourceDirectory === null) return undefined
+
+  const fetchFileName = getEffectiveStaticConfigValue(
+    astroConfigContent,
+    maskedConfigContent,
+    rootObjectRange,
+    'fetchFile',
+    DEFAULT_ASTRO_FETCH_FILE_NAME
+  )
+
+  if (fetchFileName === undefined) return undefined
+
+  if (fetchFileName === null) return []
+
+  const fetchEntrypointPath = resolve(rootDirectory, sourceDirectory, fetchFileName)
+  const fetchEntrypointBaseProjectPath = toProjectPath(rootDirectory, fetchEntrypointPath)
+
+  return extname(fetchFileName).length > 0 ?
+    [fetchEntrypointBaseProjectPath] :
+    ASTRO_FETCH_ENTRYPOINT_EXTENSIONS.map(
+      extension => `${fetchEntrypointBaseProjectPath}${extension}`
+    )
 }
 
 const auditFetchEntrypoint = (
@@ -654,20 +737,25 @@ const auditFetchEntrypoint = (
 ): void => {
   if ((getAstroMajorVersion(options.directory) ?? 0) < 7) return
 
+  const astroConfigProjectPath = findExistingProjectFile(options.directory, ASTRO_CONFIG_FILE_NAMES)
+
+  const fetchEntrypointProjectPaths = getFetchEntrypointProjectPaths(
+    options.directory, astroConfigProjectPath
+  )
+
+  if (fetchEntrypointProjectPaths === undefined) return
+
   const fetchEntrypointProjectPath = findExistingProjectFile(
-    options.directory, ASTRO_FETCH_ENTRYPOINT_FILE_NAMES
+    options.directory, fetchEntrypointProjectPaths
   )
 
   if (fetchEntrypointProjectPath === undefined) return
 
-  const astroConfigProjectPath = findExistingProjectFile(options.directory, ASTRO_CONFIG_FILE_NAMES)
+  const selectableProjectPaths = [PACKAGE_FILE_NAME, fetchEntrypointProjectPath]
 
-  const configIsSelected = astroConfigProjectPath !== undefined &&
-    isSelected(selectedProjectPaths, astroConfigProjectPath)
+  if (astroConfigProjectPath !== undefined) selectableProjectPaths.push(astroConfigProjectPath)
 
-  if (!configIsSelected && !isSelected(selectedProjectPaths, fetchEntrypointProjectPath)) return
-
-  if (!usesDefaultFetchEntrypoint(options.directory, astroConfigProjectPath)) return
+  if (!isAnySelected(selectedProjectPaths, selectableProjectPaths)) return
 
   const fetchEntrypointContent = readProjectFile(
     options.directory, fetchEntrypointProjectPath
