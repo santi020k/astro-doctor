@@ -464,7 +464,9 @@ describe('project audits', () => {
 
   test.each([
     'export type { Handler as default }',
-    'export { type Handler as default }'
+    'export { type Handler as default }',
+    'export default interface Handler { fetch(request: Request): Response }',
+    'export default declare class Handler {}'
   ])('reports a type-only default export in an Astro 7 fetch entrypoint', async fetchFileContent => {
     mkdirSync(join(testDirectory, 'src'), { recursive: true })
     writeFileSync(

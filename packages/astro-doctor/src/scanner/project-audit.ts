@@ -693,7 +693,9 @@ const auditAstro7ExperimentalFlags = (
 }
 
 const hasDefaultExport = (maskedContent: string): boolean => {
-  if (/\bexport\s+default\b/u.test(maskedContent)) return true
+  if (/\bexport\s+default\s+(?!(?:interface|type|declare)\b)/u.test(maskedContent)) {
+    return true
+  }
 
   const namedExportPattern = /\bexport\s*(?!type\b)\{([^}]*)\}/gu
 
