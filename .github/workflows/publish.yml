@@ -35,7 +35,6 @@ jobs:
         uses: santi020k/quality/actions/setup-pnpm@eec1701b98bcc0b76d36af288ee78a0369cd84cc # v1
         with:
           node-version: 22.x
-          registry-url: https://registry.npmjs.org
 
       - name: Install OIDC-compatible npm
         run: pnpm add --global npm@11.20.0
@@ -49,13 +48,26 @@ jobs:
           commit: "chore(release): version packages"
           title: "chore(release): version packages"
           createGithubReleases: true
+          commitMode: github-api
         env:
           HUSKY: 0
           GITHUB_TOKEN: ${{ secrets.CHANGESETS_TOKEN || github.token }}
-          NPM_CONFIG_PROVENANCE: "true"
+
+      - name: Determine release readiness
+        id: release-ready
+        run: |
+          VERSION=$(node -p "require('./packages/astro-doctor/package.json').version")
+          TAG="@santi020k/astro-doctor@${VERSION}"
+          TAG_SHA=$(git ls-remote --refs --tags origin "refs/tags/${TAG}" | cut -f1)
+
+          if [ "$TAG_SHA" = "$GITHUB_SHA" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Verify published CLI package
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.release-ready.outputs.ready == 'true'
         run: |
           VERSION=$(node -p "require('./packages/astro-doctor/package.json').version")
           PUBLISHED_VERSION=$(pnpm dlx "@santi020k/astro-doctor@${VERSION}" --version)
@@ -66,7 +78,7 @@ jobs:
           fi
 
       - name: Create umbrella version tag
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.release-ready.outputs.ready == 'true'
         run: |
           VERSION=$(node -p "require('./packages/astro-doctor/package.json').version")
           git config user.name "github-actions[bot]"
@@ -86,7 +98,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish VS Code Extension
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.release-ready.outputs.ready == 'true'
         run: pnpm run publish:ext
         working-directory: packages/vscode-astro-doctor
         env:

@@ -20,7 +20,7 @@
     "ok": "pnpm install --reporter=silent && turbo run build && turbo run test && pnpm run lint:repo && turbo run lint && turbo run typecheck",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo run build && pnpm run check:packed-install && changeset publish",
+    "release": "turbo run build && pnpm run check:packed-install && node scripts/publish-packages.mjs",
     "check:exports": "turbo run check:exports",
     "prepare": "husky",
     "pre-commit": "lint-staged && pnpm run typecheck && pnpm run lint:spell",
