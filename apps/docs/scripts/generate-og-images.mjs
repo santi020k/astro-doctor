@@ -11,14 +11,25 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { createCards } from '@santi020k/og'
+import { definePageMetadata } from '@santi020k/og/metadata'
 import { definePresetConfig } from '@santi020k/og/presets'
+
+import { ALL_RULES } from '../src/data/rules.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 // ─── Page specs ───────────────────────────────────────────────────────────────
-/** @type {Array<{ outFile: string, props: object }>} */
 const SPECS = []
-const spec = (output, props) => SPECS.push({ output, props })
+
+const spec = (output, props) => SPECS.push(definePageMetadata({
+  badge: props.type,
+  category: props.category,
+  description: props.description,
+  image: { alt: `${props.title} — Astro Doctor`, output },
+  pathname: output === 'index.webp' ? '/' : `/${output.replace(/\.webp$/u, '')}/`,
+  title: props.title
+}))
 
 // Homepage
 spec('index.webp', {
@@ -28,7 +39,7 @@ spec('index.webp', {
 })
 
 // Docs — Getting Started
-spec('docs/index.webp', {
+spec('docs.webp', {
   title: 'Introduction',
   description: 'What astro-doctor is, what it checks, and how it fits alongside eslint-plugin-astro in your Astro project.',
   type: 'Docs'
@@ -96,30 +107,13 @@ spec('docs/changelog.webp', {
 })
 
 // Docs — Rules
-spec('docs/rules/index.webp', {
+spec('docs/rules.webp', {
   title: 'Rules Overview',
   description: 'All astro-doctor ESLint rules organized by category — performance, accessibility, security, and best-practices.',
   type: 'Rules'
 })
 
-// Rule pages (slug, description, category mirror src/data/rules.ts)
-const RULES = [
-  { slug: 'no-client-load-overuse',        description: 'Prefer client:idle or client:visible over client:load for interactive islands.',              category: 'performance'     },
-  { slug: 'use-astro-image',               description: 'Use <Image> from astro:assets instead of raw <img> tags.',                                    category: 'performance'     },
-  { slug: 'require-image-dimensions',      description: 'Require explicit dimensions for public and remote astro:assets images.',                       category: 'performance'     },
-  { slug: 'no-blocking-script',            description: 'Disallow render-blocking <script src="..."> tags — add defer, async, or type="module".',       category: 'performance'     },
-  { slug: 'no-unprocessed-script-surprises', description: 'Warn when script attributes opt out of Astro\'s script processing pipeline.',               category: 'performance'     },
-  { slug: 'no-missing-alt',               description: 'All <img>, <Image>, and <Picture> elements must include an alt attribute.',                     category: 'accessibility'   },
-  { slug: 'no-missing-lang',              description: 'Require a lang attribute on the <html> element — a WCAG 2.1 Level A requirement.',              category: 'accessibility'   },
-  { slug: 'require-island-fallback',      description: 'Require fallback content for client-only and deferred server islands.',                         category: 'accessibility'   },
-  { slug: 'no-set-html',                  description: 'Avoid set:html to prevent cross-site scripting (XSS) vulnerabilities.',                        category: 'security'        },
-  { slug: 'no-public-secret-env',         description: 'Warn when PUBLIC_ environment variables appear to contain secrets.',                           category: 'security'        },
-  { slug: 'prefer-class-list',            description: 'Use class:list directive for conditional or dynamic class names.',                              category: 'best-practices'  },
-  { slug: 'no-process-env',              description: 'Disallow process.env in Astro files — use import.meta.env instead.',                            category: 'best-practices'  },
-  { slug: 'prefer-content-collections',  description: 'Prefer Content Collections over Astro.glob() or import.meta.glob() for Markdown and MDX.',      category: 'best-practices'  }
-]
-
-for (const rule of RULES) {
+for (const rule of ALL_RULES) {
   spec(`docs/rules/${rule.slug}.webp`, {
     title: rule.slug,
     description: rule.description,
@@ -129,16 +123,39 @@ for (const rule of RULES) {
 }
 
 export default definePresetConfig({
-  cards: SPECS.map(({ output, props }) => ({
-    data: { ...props, badge: props.type, variant: 'docs' },
-    output
-  })),
+  cards: createCards(SPECS, page => ({
+    badge: page.badge,
+    category: page.category,
+    description: page.description,
+    title: page.title,
+    variant: 'docs'
+  }), {
+    output: page => page.image.output,
+    route: page => ({
+      alt: page.image.alt,
+      description: page.description,
+      pathname: page.pathname,
+      schemaTypes: page.pathname === '/' ? ['SoftwareApplication'] : ['TechArticle'],
+      title: page.title
+    })
+  }),
   clean: true,
   concurrency: 'auto',
   outputDirectory: 'public/og',
+  routeManifest: { file: 'public/og/manifest.json', publicPath: '/og' },
   preset: {
-    brand: { domain: 'astro-doctor.santi020k.com', name: 'Astro Doctor' },
-    theme: { accent: '#ff5d01', background: '#0f172a', panel: '#1e293b' },
+    brand: {
+      domain: 'astro-doctor.santi020k.com',
+      logo: 'public/favicon.svg',
+      name: 'Astro Doctor'
+    },
+    theme: {
+      accent: '#fa832e',
+      background: '#090b10',
+      foreground: '#e9eaed',
+      muted: '#a8abb3',
+      panel: '#101319'
+    },
     variant: 'docs'
   },
   root: ROOT

@@ -2,11 +2,19 @@
 import Footer from '@/components/Footer.astro'
 import Nav from '@/components/Nav.astro'
 
-import { serializeJsonLd } from '@/utils/serialize-json-ld'
-
 import '@/styles/global.css'
 
 import { SkipLink, UIPrimitives } from '@santi020k/lumen-astro'
+import MetadataHead from '@santi020k/og/astro/head'
+import {
+  articleSchema,
+  breadcrumbSchema,
+  personSchema,
+  serializeJsonLd,
+  softwareApplicationSchema,
+  webSiteSchema
+} from '@santi020k/og/schema'
+import { defineSite } from '@santi020k/og/site'
 
 import {
   AUTHOR,
@@ -44,8 +52,28 @@ const resolvedOgImage = ogImage ?
 
 const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE_URL).href
 const fullTitle = title === SITE_NAME ? title : `${title} · ${SITE_NAME}`
+const metadataDescription = description.replace(/<([^>]+)>/gu, '$1')
 const resolvedOgImageAlt = ogImageAlt ?? `${title} — ${SITE_NAME}`
 const imageType = resolvedOgImage.endsWith('.png') ? 'image/png' : 'image/webp'
+
+const site = defineSite({
+  locale: 'en_US',
+  siteName: SITE_NAME,
+  siteUrl: Astro.site ?? SITE_URL,
+  titleTemplate: title === SITE_NAME ? '%s' : `%s · ${SITE_NAME}`
+})
+
+const page = site.page({
+  authors: [AUTHOR],
+  description: metadataDescription,
+  image: { alt: resolvedOgImageAlt, type: imageType, url: resolvedOgImage },
+  pathname: Astro.url.pathname,
+  robots: { follow: !noIndex, index: !noIndex },
+  title,
+  twitter: { creator: TWITTER_HANDLE, site: TWITTER_HANDLE },
+  type: ogType
+})
+
 const pathnameSegments = Astro.url.pathname.split('/').filter(Boolean)
 
 const breadcrumbs = pathnameSegments.length > 0 ?
@@ -66,88 +94,58 @@ const breadcrumbs = pathnameSegments.length > 0 ?
   ] :
   []
 
-const websiteJsonLd = serializeJsonLd({
-  '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  '@id': `${SITE_URL}/#website`,
+const authorSchema = personSchema({ name: AUTHOR, url: AUTHOR_URL })
+
+const websiteJsonLd = serializeJsonLd(webSiteSchema({
+  id: `${SITE_URL}/#website`,
   name: SITE_NAME,
   url: `${SITE_URL}/`,
   description: SITE_DESCRIPTION,
-  inLanguage: 'en-US',
-  author: {
-    '@type': 'Person',
-    name: AUTHOR,
-    url: AUTHOR_URL
-  }
-})
+  inLanguage: 'en-US'
+}, { author: authorSchema }))
 
-const softwareJsonLd = serializeJsonLd({
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  '@id': `${SITE_URL}/#software`,
+const softwareJsonLd = serializeJsonLd(softwareApplicationSchema({
+  id: `${SITE_URL}/#software`,
   name: SITE_NAME,
   applicationCategory: 'DeveloperApplication',
   operatingSystem: 'Any',
   description: 'ESLint plugin, CLI, and GitHub Action for diagnosing Astro codebases.',
   url: `${SITE_URL}/`,
   downloadUrl: NPM_URL,
-  softwareHelp: `${SITE_URL}/docs/`,
-  author: {
-    '@type': 'Person',
-    name: AUTHOR,
-    url: AUTHOR_URL
-  },
-  license: 'https://opensource.org/licenses/MIT',
-  codeRepository: GITHUB_URL,
+  author: authorSchema,
   offers: {
     '@type': 'Offer',
     price: FREE_SOFTWARE_PRICE_USD,
     priceCurrency: 'USD'
   }
-})
+}, {
+  codeRepository: GITHUB_URL,
+  license: 'https://opensource.org/licenses/MIT',
+  softwareHelp: `${SITE_URL}/docs/`
+}))
 
 const articleJsonLd = ogType === 'article' ?
-serializeJsonLd({
-  '@context': 'https://schema.org',
-  '@type': 'TechArticle',
-  '@id': `${canonical}#article`,
-  headline: fullTitle,
-  description,
+serializeJsonLd(articleSchema({
+  id: `${canonical}#article`,
+  name: fullTitle,
+  description: metadataDescription,
   url: canonical,
   image: resolvedOgImage,
   inLanguage: 'en-US',
-  mainEntityOfPage: {
-    '@type': 'WebPage',
-    '@id': canonical
-  },
-  author: {
-    '@type': 'Person',
-    name: AUTHOR,
-    url: AUTHOR_URL
-  },
-  publisher: {
-    '@type': 'Person',
-    name: AUTHOR,
-    url: AUTHOR_URL
-  },
-  isPartOf: {
-    '@type': 'WebSite',
-    '@id': `${SITE_URL}/#website`
-  }
-}) :
+  author: authorSchema,
+  publisher: authorSchema,
+  type: 'TechArticle'
+}, {
+  isPartOf: { '@id': `${SITE_URL}/#website`, '@type': 'WebSite' },
+  mainEntityOfPage: { '@id': canonical, '@type': 'WebPage' }
+})) :
 null
 
 const breadcrumbsJsonLd = breadcrumbs.length > 0 ?
-  serializeJsonLd({
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: breadcrumbs.map((breadcrumb, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      name: breadcrumb.name,
-      item: breadcrumb.url
-    }))
-  }) :
+  serializeJsonLd(breadcrumbSchema(breadcrumbs.map(breadcrumb => ({
+    name: breadcrumb.name,
+    url: breadcrumb.url
+  })))) :
   null
 ---
 
@@ -158,47 +156,12 @@ const breadcrumbsJsonLd = breadcrumbs.length > 0 ?
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
 
-    <title>{fullTitle}</title>
+    <MetadataHead {page} site={site.options} />
     <meta name="title" content={fullTitle} />
-    <meta name="description" content={description} />
-    <meta name="author" content={AUTHOR} />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#7c3aed" />
-    {noIndex ?
-(
-      <meta name="robots" content="noindex, nofollow" />
-    ) :
-(
-      <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-    )}
-
-    <link rel="canonical" href={canonical} />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-
-    <!-- Open Graph -->
-    <meta property="og:type" content={ogType} />
-    <meta property="og:title" content={fullTitle} />
-    <meta property="og:description" content={description} />
-    <meta property="og:image" content={resolvedOgImage} />
-    <meta property="og:image:secure_url" content={resolvedOgImage} />
-    <meta property="og:image:type" content={imageType} />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={resolvedOgImageAlt} />
-    <meta property="og:url" content={canonical} />
-    <meta property="og:site_name" content={SITE_NAME} />
-    <meta property="og:locale" content="en_US" />
-
-    <!-- Twitter / X -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content={TWITTER_HANDLE} />
-    <meta name="twitter:creator" content={TWITTER_HANDLE} />
-    <meta name="twitter:url" content={canonical} />
-    <meta name="twitter:title" content={fullTitle} />
-    <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={resolvedOgImage} />
-    <meta name="twitter:image:alt" content={resolvedOgImageAlt} />
 
     <!-- Theme init (inline to prevent flash) -->
     <script is:inline>
