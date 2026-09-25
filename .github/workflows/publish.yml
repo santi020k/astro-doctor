@@ -106,6 +106,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Build VS Code Extension dependencies
+        if: steps.release-ready.outputs.ready == 'true' || inputs.publish_extension_recovery
+        run: pnpm exec turbo run build --filter=vscode-astro-doctor...
+
       - name: Publish VS Code Extension
         if: steps.release-ready.outputs.ready == 'true' || inputs.publish_extension_recovery
         run: pnpm run publish:ext
