@@ -339,6 +339,25 @@ describe('project audits', () => {
     )
   })
 
+  test('resolves the Astro version from the default pnpm catalog', async () => {
+    mkdirSync(join(testDirectory, 'src'), { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: 'catalog:' } })
+    )
+    writeFileSync(join(testDirectory, 'pnpm-workspace.yaml'), 'catalog:\n  astro: ^7.3.5\n')
+    writeFileSync(join(testDirectory, 'src', 'fetch.ts'), 'export const fetchJson = () => null')
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(scanResult.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: 'astro-doctor/require-fetch-default-export'
+        })
+      ])
+    )
+  })
+
   test('accepts stable Astro 7 configuration fields', async () => {
     writeFileSync(
       join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
@@ -522,6 +541,49 @@ describe('project audits', () => {
         diagnostic => diagnostic.ruleId === 'astro-doctor/require-fetch-default-export'
       )
     ).toBe(false)
+  })
+
+  test('accepts a disabled fetch entrypoint from an identifier-backed config', async () => {
+    mkdirSync(join(testDirectory, 'src'), { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), [
+        'import { defineConfig } from \'astro/config\'',
+        'const config = defineConfig({ fetchFile: null })',
+        'export default config'
+      ].join('\n')
+    )
+    writeFileSync(join(testDirectory, 'src', 'fetch.ts'), 'export const fetchJson = () => null')
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(
+      scanResult.diagnostics.some(
+        diagnostic => diagnostic.ruleId === 'astro-doctor/require-fetch-default-export'
+      )
+    ).toBe(false)
+  })
+
+  test('reports a fetch entrypoint whose regex literal contains export syntax', async () => {
+    mkdirSync(join(testDirectory, 'src'), { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+    writeFileSync(
+      join(testDirectory, 'src', 'fetch.ts'), 'export const exportPattern = /export default /u'
+    )
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(scanResult.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: 'astro-doctor/require-fetch-default-export'
+        })
+      ])
+    )
   })
 
   test('does not apply Astro 7 migration audits to Astro 6 projects', async () => {

@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, extname, isAbsolute, relative, resolve } from 'node:path'
 
+import { parseYAML } from 'confbox/yaml'
 import { globSync } from 'glob'
 
 import {
@@ -128,6 +129,7 @@ interface AstroPackageManifest {
 }
 
 const isAstroPackageManifest = (value: unknown): value is AstroPackageManifest => typeof value === 'object' && value !== null
+const isUnknownRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
 
 const readPackageManifest = (filePath: string): AstroPackageManifest | undefined => {
   if (!existsSync(filePath)) return undefined
@@ -145,31 +147,6 @@ const getMajorVersion = (version: string | undefined): number | undefined => {
   const majorVersion = /^[^\d]*(\d+)/u.exec(version ?? '')?.[1]
 
   return majorVersion === undefined ? undefined : Number.parseInt(majorVersion, 10)
-}
-
-const getAstroMajorVersion = (rootDirectory: string): number | undefined => {
-  const installedManifest = readPackageManifest(
-    resolve(rootDirectory, 'node_modules/astro/package.json')
-  )
-
-  const installedMajorVersion = getMajorVersion(installedManifest?.version)
-
-  if (installedMajorVersion !== undefined) return installedMajorVersion
-
-  const projectManifest = readPackageManifest(
-    resolve(rootDirectory, PACKAGE_FILE_NAME)
-  )
-
-  const declaredVersion = projectManifest?.dependencies?.astro ??
-    projectManifest?.devDependencies?.astro
-
-  if (typeof declaredVersion === 'string') {
-    const declaredMajorVersion = getMajorVersion(declaredVersion)
-
-    if (declaredMajorVersion !== undefined) return declaredMajorVersion
-  }
-
-  return undefined
 }
 
 const toProjectPath = (rootDirectory: string, filePath: string): string => (isAbsolute(filePath) ? relative(rootDirectory, filePath) : filePath).replaceAll('\\', '/')
@@ -275,6 +252,75 @@ const findPnpmWorkspaceDirectory = (projectDirectory: string): string | undefine
     isPnpmWorkspaceProject(currentDirectory, projectDirectory) ?
     currentDirectory :
     undefined
+}
+
+const getNamedCatalog = (
+  workspaceConfig: Record<string, unknown>,
+  catalogName: string
+): unknown => {
+  if (catalogName.length === 0) return workspaceConfig.catalog
+
+  return isUnknownRecord(workspaceConfig.catalogs) ?
+    workspaceConfig.catalogs[catalogName] :
+    undefined
+}
+
+const getCatalogAstroVersion = (
+  rootDirectory: string,
+  catalogReference: string
+): string | undefined => {
+  const workspaceDirectory = findPnpmWorkspaceDirectory(rootDirectory)
+
+  if (workspaceDirectory === undefined) return undefined
+
+  try {
+    const workspaceConfig: unknown = parseYAML(
+      readFileSync(resolve(workspaceDirectory, 'pnpm-workspace.yaml'), 'utf8')
+    )
+
+    if (!isUnknownRecord(workspaceConfig)) return undefined
+
+    const catalogName = catalogReference.slice('catalog:'.length)
+    const catalog = getNamedCatalog(workspaceConfig, catalogName)
+
+    if (!isUnknownRecord(catalog)) return undefined
+
+    const astroVersion = catalog.astro
+
+    return typeof astroVersion === 'string' ? astroVersion : undefined
+  } catch {
+    return undefined
+  }
+}
+
+const getDeclaredAstroVersion = (
+  rootDirectory: string,
+  projectManifest: AstroPackageManifest | undefined
+): string | undefined => {
+  const declaredVersion = projectManifest?.dependencies?.astro ??
+    projectManifest?.devDependencies?.astro
+
+  if (typeof declaredVersion !== 'string') return undefined
+
+  return declaredVersion.startsWith('catalog:') ?
+    getCatalogAstroVersion(rootDirectory, declaredVersion) :
+    declaredVersion
+}
+
+const getAstroMajorVersion = (rootDirectory: string): number | undefined => {
+  const installedManifest = readPackageManifest(
+    resolve(rootDirectory, 'node_modules/astro/package.json')
+  )
+
+  const installedMajorVersion = getMajorVersion(installedManifest?.version)
+
+  if (installedMajorVersion !== undefined) return installedMajorVersion
+
+  const projectManifest = readPackageManifest(
+    resolve(rootDirectory, PACKAGE_FILE_NAME)
+  )
+
+  return getMajorVersion(getDeclaredAstroVersion(rootDirectory, projectManifest))
 }
 
 const getLocation = (content: string, searchText: string): Location => {
@@ -462,7 +508,7 @@ const findTopLevelObjectProperty = (
 const getAstroConfigRootObjectRange = (
   maskedContent: string
 ): ObjectRange | undefined => {
-  const defineConfigMatch = /\bexport\s+default\s+defineConfig\s*\(/u.exec(maskedContent)
+  const defineConfigMatch = /(?:^|[;\r\n}])\s*export\s+default\s+defineConfig\s*\(/u.exec(maskedContent)
 
   if (defineConfigMatch?.index !== undefined) {
     const defineConfigOpeningIndex =
@@ -475,7 +521,7 @@ const getAstroConfigRootObjectRange = (
     return findObjectRange(maskedContent, rootOpeningIndex)
   }
 
-  const plainObjectMatch = /\bexport\s+default\s+/u.exec(maskedContent)
+  const plainObjectMatch = /(?:^|[;\r\n}])\s*export\s+default\s+/u.exec(maskedContent)
 
   if (plainObjectMatch?.index === undefined) return undefined
 
@@ -483,7 +529,34 @@ const getAstroConfigRootObjectRange = (
     maskedContent, plainObjectMatch.index + plainObjectMatch[0].length
   )
 
-  return findObjectRange(maskedContent, rootOpeningIndex)
+  const directObjectRange = findObjectRange(maskedContent, rootOpeningIndex)
+
+  if (directObjectRange !== undefined) return directObjectRange
+
+  const exportedIdentifier = /^[A-Za-z_$][\w$]*/u.exec(
+    maskedContent.slice(rootOpeningIndex)
+  )?.[0]
+
+  if (exportedIdentifier === undefined) return undefined
+
+  const escapedIdentifier = exportedIdentifier.replace(
+    /[.*+?^${}()|[\]\\]/gu, '\\$&'
+  )
+
+  const bindingPattern = new RegExp(
+    `\\b(?:const|let|var)\\s+${escapedIdentifier}\\s*=\\s*(?:defineConfig\\s*\\(\\s*)?`,
+    'u'
+  )
+
+  const bindingMatch = bindingPattern.exec(maskedContent)
+
+  if (bindingMatch?.index === undefined) return undefined
+
+  const bindingValueIndex = findNextNonWhitespaceIndex(
+    maskedContent, bindingMatch.index + bindingMatch[0].length
+  )
+
+  return findObjectRange(maskedContent, bindingValueIndex)
 }
 
 const getStaticConfigProperty = (
@@ -713,11 +786,11 @@ const auditAstro7ExperimentalFlags = (
 }
 
 const hasDefaultExport = (maskedContent: string): boolean => {
-  if (/\bexport\s+default\s+(?!(?:interface|type|declare)\b)/u.test(maskedContent)) {
+  if (/(?:^|[;\r\n}])\s*export\s+default\s+(?!(?:interface|type|declare)\b)/u.test(maskedContent)) {
     return true
   }
 
-  const namedExportPattern = /\bexport\s*(?!type\b)\{([^}]*)\}/gu
+  const namedExportPattern = /(?:^|[;\r\n}])\s*export\s*(?!type\b)\{([^}]*)\}/gu
 
   return [...maskedContent.matchAll(namedExportPattern)].some(namedExportMatch => (namedExportMatch[1] ?? '').split(',').some(exportSpecifier => {
     const normalizedSpecifier = exportSpecifier.trim()
@@ -743,7 +816,7 @@ const getFetchEntrypointProjectPaths = (
   const maskedConfigContent = maskCodeLiterals(astroConfigContent)
   const rootObjectRange = getAstroConfigRootObjectRange(maskedConfigContent)
 
-  if (rootObjectRange === undefined) return [...ASTRO_FETCH_ENTRYPOINT_FILE_NAMES]
+  if (rootObjectRange === undefined) return undefined
 
   const sourceDirectory = getEffectiveStaticConfigValue(
     astroConfigContent,
