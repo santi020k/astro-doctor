@@ -109,7 +109,7 @@ Overlapping rules are deduplicated automatically.
 | Preset | Coverage |
 | ------ | -------- |
 | `recommended` | Astro Doctor rules, project audits, and official Astro recommended rules |
-| `strict` | Recommended plus official accessibility, security, and best-practice rules |
+| `strict` | Recommended plus selected official Astro security and best-practice rules |
 | `all` | Every non-deprecated official Astro rule, including stylistic rules |
 | `ci` | Recommended coverage, failing on warnings with the CI score threshold |
 
