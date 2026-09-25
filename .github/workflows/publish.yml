@@ -6,7 +6,13 @@ on:
     paths:
       - ".changeset/**"
       - "packages/**"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      publish_extension_recovery:
+        description: Publish a missing editor extension for the current package version
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -101,7 +107,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish VS Code Extension
-        if: steps.release-ready.outputs.ready == 'true'
+        if: steps.release-ready.outputs.ready == 'true' || inputs.publish_extension_recovery
         run: pnpm run publish:ext
         working-directory: packages/vscode-astro-doctor
         env:

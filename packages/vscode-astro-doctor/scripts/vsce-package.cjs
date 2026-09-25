@@ -54,6 +54,8 @@ for (const section of ['dependencies', 'devDependencies']) {
   }
 }
 
+pkg.devDependencies['@types/vscode'] = pkg.engines.vscode
+
 try {
   writeFileSync(PKG_PATH, JSON.stringify(pkg, null, 2) + '\n')
 
