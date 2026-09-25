@@ -3,10 +3,26 @@ import Docs from '@/layouts/Docs.astro'
 
 import { Link } from '@santi020k/lumen-astro'
 
-import { Content as AstroDoctorChangelog } from '../../../../../packages/astro-doctor/CHANGELOG.md'
-import { Content as EslintPluginChangelog } from '../../../../../packages/eslint-plugin-astro-doctor/CHANGELOG.md'
-import { Content as OxlintConfigChangelog } from '../../../../../packages/oxlint-config-astro-doctor/CHANGELOG.md'
-import { Content as VsCodeExtensionChangelog } from '../../../../../packages/vscode-astro-doctor/CHANGELOG.md'
+import { compiledContent as compileAstroDoctorChangelog } from '../../../../../packages/astro-doctor/CHANGELOG.md'
+import { compiledContent as compileEslintPluginChangelog } from '../../../../../packages/eslint-plugin-astro-doctor/CHANGELOG.md'
+import { compiledContent as compileOxlintConfigChangelog } from '../../../../../packages/oxlint-config-astro-doctor/CHANGELOG.md'
+import { compiledContent as compileVsCodeExtensionChangelog } from '../../../../../packages/vscode-astro-doctor/CHANGELOG.md'
+
+const demoteDocumentTitle = async (compile: () => Promise<string>): Promise<string> => (
+  await compile()
+).replaceAll('<h1', '<h3').replaceAll('</h1>', '</h3>')
+
+const [
+  astroDoctorChangelog,
+  eslintPluginChangelog,
+  oxlintConfigChangelog,
+  vsCodeExtensionChangelog
+] = await Promise.all([
+  demoteDocumentTitle(compileAstroDoctorChangelog),
+  demoteDocumentTitle(compileEslintPluginChangelog),
+  demoteDocumentTitle(compileOxlintConfigChangelog),
+  demoteDocumentTitle(compileVsCodeExtensionChangelog)
+])
 ---
 
 <Docs
@@ -39,9 +55,7 @@ import { Content as VsCodeExtensionChangelog } from '../../../../../packages/vsc
         <code>@santi020k/astro-doctor</code>
       </Link>
     </p>
-    <div class="changelog-content">
-      <AstroDoctorChangelog />
-    </div>
+    <div class="changelog-content" set:html={astroDoctorChangelog} />
   </section>
 
   <section id="eslint-plugin" class="changelog-package" aria-labelledby="eslint-plugin-title">
@@ -52,9 +66,7 @@ import { Content as VsCodeExtensionChangelog } from '../../../../../packages/vsc
         <code>@santi020k/eslint-plugin-astro-doctor</code>
       </Link>
     </p>
-    <div class="changelog-content">
-      <EslintPluginChangelog />
-    </div>
+    <div class="changelog-content" set:html={eslintPluginChangelog} />
   </section>
 
   <section id="vscode-extension" class="changelog-package" aria-labelledby="vscode-extension-title">
@@ -65,9 +77,7 @@ import { Content as VsCodeExtensionChangelog } from '../../../../../packages/vsc
         <code>santi020k.vscode-astro-doctor</code>
       </Link>
     </p>
-    <div class="changelog-content">
-      <VsCodeExtensionChangelog />
-    </div>
+    <div class="changelog-content" set:html={vsCodeExtensionChangelog} />
   </section>
 
   <section id="oxlint-config" class="changelog-package" aria-labelledby="oxlint-config-title">
@@ -78,9 +88,7 @@ import { Content as VsCodeExtensionChangelog } from '../../../../../packages/vsc
         <code>@santi020k/oxlint-config-astro-doctor</code>
       </Link>
     </p>
-    <div class="changelog-content">
-      <OxlintConfigChangelog />
-    </div>
+    <div class="changelog-content" set:html={oxlintConfigChangelog} />
   </section>
 </Docs>
 
@@ -90,7 +98,4 @@ import { Content as VsCodeExtensionChangelog } from '../../../../../packages/vsc
     scroll-margin-top: 5rem;
   }
 
-  .changelog-content :global(> h1:first-child) {
-    display: none;
-  }
 </style>

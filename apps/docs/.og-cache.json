@@ -1,0 +1,211 @@
+{
+  "cacheKey": "preset-v4",
+  "entries": {
+    "index.webp": {
+      "baseDirectory": "public/og",
+      "digest": "8999ef516748595ad5fd1aba7e646ad07bec83639c2bc336ffbb6d6b06c2562f",
+      "fingerprint": "06d202b832d677ab8962535f58ec7c1281cc7dbf5307360c1e01ad53d037f67f",
+      "output": "index.webp"
+    },
+    "docs.webp": {
+      "baseDirectory": "public/og",
+      "digest": "4168a08e88701bbe4f9ac491665dc8e982af7d92a0d38c5a761444cf76a31df2",
+      "fingerprint": "278ef0c95dbc5bca2b4306280a5bf5c485ba0a57cb097269454c341cf3d25ede",
+      "output": "docs.webp"
+    },
+    "docs/installation.webp": {
+      "baseDirectory": "public/og",
+      "digest": "39a553f6966184b0c5bd29a49965d61c163987c75f5751354f14a0a5e27b949b",
+      "fingerprint": "228dd0a38beb60f990bc870c1043f97ad1cccbe4677e0c92b1402c5c1f0c308d",
+      "output": "docs/installation.webp"
+    },
+    "docs/quick-start.webp": {
+      "baseDirectory": "public/og",
+      "digest": "fbf93d12b8e17f9388f78bcb2d9fc559c3021fe8b776899dcf64d2a92f071726",
+      "fingerprint": "6ce3dd408232367123faf945b7610d72c4cdcd3e4a9496a225bfba152f1d9c78",
+      "output": "docs/quick-start.webp"
+    },
+    "docs/configuration.webp": {
+      "baseDirectory": "public/og",
+      "digest": "ff105638b7ea55b542859121a395e5bd9d33b439cc64789c6af482018bd48256",
+      "fingerprint": "b3064e0692cc6f1ff6e4303768c11540a2140f8096177989683040a95317e8eb",
+      "output": "docs/configuration.webp"
+    },
+    "docs/eslint-plugin.webp": {
+      "baseDirectory": "public/og",
+      "digest": "91402f849fde3923b15756d38c557265a4ff5886c6b4d3e497b951138fc9c4cc",
+      "fingerprint": "2a97c6c11c937c6f991c2ea226801c769ff1cccd0da808bcfaa20dd623b4e17e",
+      "output": "docs/eslint-plugin.webp"
+    },
+    "docs/cli.webp": {
+      "baseDirectory": "public/og",
+      "digest": "dd4e56ff864f4be06ce373e0e82cd8d9939d9a3c9eecd0a5eb00882f4be2ad49",
+      "fingerprint": "52dc66b526875e32645cc88a47902a40e1442d6d602d1787e6a5bd6db171e5cd",
+      "output": "docs/cli.webp"
+    },
+    "docs/github-action.webp": {
+      "baseDirectory": "public/og",
+      "digest": "118a76a0c139a008f3716c5dffad7545189520acded5ffd7659f715191b89523",
+      "fingerprint": "0b748d3ca6c5e9a252dd74b95fb923f3d993aa8dc28cc9449415dd71f2c0fdaf",
+      "output": "docs/github-action.webp"
+    },
+    "docs/vscode-extension.webp": {
+      "baseDirectory": "public/og",
+      "digest": "35d3947d4ce7a63e2869b6ecabab6c20564617598575569aff81a32a5ec5d922",
+      "fingerprint": "a6fa28484e7cdcc1d16fc16608712a538aaa2d3387c4fe75a3c1923492466111",
+      "output": "docs/vscode-extension.webp"
+    },
+    "docs/editor-integration.webp": {
+      "baseDirectory": "public/og",
+      "digest": "9a9ceb535e13e82c875cad11385aa47022aed684c3533e671024a965fa2b9e4d",
+      "fingerprint": "f6db08463770dd61e5a868e0e8047b78b9dc3e6cc265f0d939006331a19e28e9",
+      "output": "docs/editor-integration.webp"
+    },
+    "docs/agent-skills.webp": {
+      "baseDirectory": "public/og",
+      "digest": "79fadb1801284f9c3379035fe221a3e6b5e7b67537bd553591792093487ed5a6",
+      "fingerprint": "6fd2762a9afec9fa05a4b8737a55933a9442314a42167b00e79b8fcd9a3f2c0c",
+      "output": "docs/agent-skills.webp"
+    },
+    "docs/changelog.webp": {
+      "baseDirectory": "public/og",
+      "digest": "7b0171af3222d2f0b949ab8ababea0444e3ce76ece6d99aed43a06baf81e1b34",
+      "fingerprint": "e4c67ecc4191107e0aa9aed18e12481d0fd0e7ec61167a432d40a89cde50b4d6",
+      "output": "docs/changelog.webp"
+    },
+    "docs/rules.webp": {
+      "baseDirectory": "public/og",
+      "digest": "b4c17b9adbebe0facd5f29302dc18f6660f5ba257ddbcb6a9910ff227130aaac",
+      "fingerprint": "63a11d2fe2c05bc68fc49cc9bae80bd5242f3a0a1f35c95bffe58c5edef6642d",
+      "output": "docs/rules.webp"
+    },
+    "docs/rules/no-client-load-overuse.webp": {
+      "baseDirectory": "public/og",
+      "digest": "9b7a72967360e7ebb5266eaf5b33b4b558a398355bd718b3b35ffc54583c2317",
+      "fingerprint": "d6362a6e9549d023039302fe1967cae2fa63dec688aada55abd8a91e616f46f7",
+      "output": "docs/rules/no-client-load-overuse.webp"
+    },
+    "docs/rules/use-astro-image.webp": {
+      "baseDirectory": "public/og",
+      "digest": "71bcb3f8caac92ac082ec62b5303bbf3150f776930acc0ee0bb653691d3334d2",
+      "fingerprint": "ed6a1c7df70d030c0590e7f47147361be135ede0f03872027e2584b635b47c79",
+      "output": "docs/rules/use-astro-image.webp"
+    },
+    "docs/rules/require-image-dimensions.webp": {
+      "baseDirectory": "public/og",
+      "digest": "641b914fff49d05c4daeb3c6e647620e00ec6178e6c9e3e96428dfb5f4655ba2",
+      "fingerprint": "3259bc63556332aba17f3bcb40f93cc6f5c7326e72f93fd4975624fdb4d21b63",
+      "output": "docs/rules/require-image-dimensions.webp"
+    },
+    "docs/rules/no-missing-alt.webp": {
+      "baseDirectory": "public/og",
+      "digest": "2ca28b79b3be2d208ca933dc07290b298fde9a607aa280d7fe86a3f71354220b",
+      "fingerprint": "a9fa93374c79a9d108305a58e626c03a6e4ad9d63445cc82e82c40aa4b2c7f6d",
+      "output": "docs/rules/no-missing-alt.webp"
+    },
+    "docs/rules/no-set-html.webp": {
+      "baseDirectory": "public/og",
+      "digest": "a50d47869a45ba4c7223f3219e3a8e3630c649d65d42da4a0b7c907df442ea1d",
+      "fingerprint": "445a2ae9ca7392bcb4a0ddedd68b7c0b193b61a9c006f5b2d664a81842581fbc",
+      "output": "docs/rules/no-set-html.webp"
+    },
+    "docs/rules/no-public-secret-env.webp": {
+      "baseDirectory": "public/og",
+      "digest": "9211c21615e3d35aad53fde6d754a292ea1115b73bf7cb057e3295c173a5445e",
+      "fingerprint": "47ebf755c5844423f50e26ca85b7342a4376364815f4a58880993e479aad4b2a",
+      "output": "docs/rules/no-public-secret-env.webp"
+    },
+    "docs/rules/prefer-class-list.webp": {
+      "baseDirectory": "public/og",
+      "digest": "ef26e1d243a492c99fcf85e7f2a6b6b5d2ea8736fb98b84a4be2c0601ac9d110",
+      "fingerprint": "0d3516d733fa0705e6f791a74801e673eefcefc409933e1e36746efbe9b3ccfe",
+      "output": "docs/rules/prefer-class-list.webp"
+    },
+    "docs/rules/no-blocking-script.webp": {
+      "baseDirectory": "public/og",
+      "digest": "8751f1eb83292697d8113c8ac52232b46a1a8a40b1f7edb714eddabde130e97a",
+      "fingerprint": "6c615df0e474554fdba28ad0bc2b70fc8feba59dccdddd5b9a41a3cf1aeffe7a",
+      "output": "docs/rules/no-blocking-script.webp"
+    },
+    "docs/rules/no-unprocessed-script-surprises.webp": {
+      "baseDirectory": "public/og",
+      "digest": "d170d3a4b272b257a5574d14363556e2b116809ebeb9e8db588cbd38d6467efa",
+      "fingerprint": "213b0952553956baef2fbff4bd01e1499b2f857fd809f7622ae5b8ffdfa03697",
+      "output": "docs/rules/no-unprocessed-script-surprises.webp"
+    },
+    "docs/rules/no-missing-lang.webp": {
+      "baseDirectory": "public/og",
+      "digest": "dfca78e415d844bd4b08f3dc0e047bfd499ac432ac12792d28be29c9a755a998",
+      "fingerprint": "8fd9d0519a431b6cb295a9e15654f1df07eadd31cf2b1d0372c7f8c96cb4b748",
+      "output": "docs/rules/no-missing-lang.webp"
+    },
+    "docs/rules/require-island-fallback.webp": {
+      "baseDirectory": "public/og",
+      "digest": "a0af381dfea10539e6b9b31896a4e7a02860a08ac92e68ce6ed1c5d903370828",
+      "fingerprint": "30e9d36a1a1941923d0d16424cd47c4f98a01cd9213deb9b661157c33107048d",
+      "output": "docs/rules/require-island-fallback.webp"
+    },
+    "docs/rules/no-process-env.webp": {
+      "baseDirectory": "public/og",
+      "digest": "8563b064ff5eec57588898bf89848323c9719063b0994d2b9591bcc348550d74",
+      "fingerprint": "a1ec2e3d5414d32b7ba3094f343586af4d222138e3b1e22ed51359c5aecbc276",
+      "output": "docs/rules/no-process-env.webp"
+    },
+    "docs/rules/prefer-content-collections.webp": {
+      "baseDirectory": "public/og",
+      "digest": "f828c0a0eecacca67f616fce7c11eae71bceeadb0ad32771b6b339b9e18509f7",
+      "fingerprint": "54a7e87c0d08edc13cd5c2a02cf1c5a3c50560ac9b556b245d4065ce714afb4d",
+      "output": "docs/rules/prefer-content-collections.webp"
+    },
+    "docs/rules/no-disabled-origin-check.webp": {
+      "baseDirectory": "public/og",
+      "digest": "106568e67fea0f79c1e03011011d67c895146a9afe074f949efb78ecaa377146",
+      "fingerprint": "5c2183172c8d2fa563d268cc2020a3c000610e7325de3222991269a2d707cd12",
+      "output": "docs/rules/no-disabled-origin-check.webp"
+    },
+    "docs/rules/no-insecure-session-cookie.webp": {
+      "baseDirectory": "public/og",
+      "digest": "ee64e40fc99a4569a0a66748f3142d4881ea2d169f6326d5ac45979c2420bd64",
+      "fingerprint": "95cb31714eb1793b68a13a5e58885b6e68372c17829bfe3b76608f62478b1421",
+      "output": "docs/rules/no-insecure-session-cookie.webp"
+    },
+    "docs/rules/no-open-allowed-domains.webp": {
+      "baseDirectory": "public/og",
+      "digest": "5fe4690f989d202b27c0d221ece5c587a2da3cd7ddd284e650cec9193f025de9",
+      "fingerprint": "fd972581460bb3c1b0f1b6fb8bc3be88a04105bb8065c63f3818c3b22486706d",
+      "output": "docs/rules/no-open-allowed-domains.webp"
+    },
+    "docs/rules/prefer-env-schema.webp": {
+      "baseDirectory": "public/og",
+      "digest": "30247bda4c4246e559a52f5911d3c3472920962577650740ffc116ac40d75344",
+      "fingerprint": "ab928ab86c8a0e94287398ee6a3229b4c48869cdd872030468913b69c72365f4",
+      "output": "docs/rules/prefer-env-schema.webp"
+    },
+    "docs/rules/prefer-pnpm.webp": {
+      "baseDirectory": "public/og",
+      "digest": "c7a5269a392a9f52d15c219a9b95e21d0e5bd948a68c984c09da0ed6cb40d919",
+      "fingerprint": "a3391672a260da413fb0dd4e73f72d75ed8585e4422365ca8f223514c896e447",
+      "output": "docs/rules/prefer-pnpm.webp"
+    },
+    "docs/rules/require-action-input-schema.webp": {
+      "baseDirectory": "public/og",
+      "digest": "740bf8bfa9e19c0fc9038331d3e2aa765b4cef33028ec5e3154d10586e2f1957",
+      "fingerprint": "705ee5a89966f439ba064a0734302380890a3a71d7a83e3ff88efc8c233ff9c5",
+      "output": "docs/rules/require-action-input-schema.webp"
+    },
+    "docs/rules/require-client-router-script-lifecycle.webp": {
+      "baseDirectory": "public/og",
+      "digest": "3be348b4fd4bc580147778478db702fa63ea5be33676db5abed4e6ce6aaa7cee",
+      "fingerprint": "fc3c97482f37e600f7b01d1b12cca5cb349945caa67303894d6f8b7766254d47",
+      "output": "docs/rules/require-client-router-script-lifecycle.webp"
+    },
+    "docs/rules/require-content-config.webp": {
+      "baseDirectory": "public/og",
+      "digest": "9dfbabb741fdb540e6d0a83d55164130459d82fb0ef1488e0981d012b55d042f",
+      "fingerprint": "7ba1a5d3f8f399a620e71ad15d20630336bf73868e057c27dc5555bb3948a5bd",
+      "output": "docs/rules/require-content-config.webp"
+    }
+  },
+  "generatorVersion": "1.1.1",
+  "version": 3
+}

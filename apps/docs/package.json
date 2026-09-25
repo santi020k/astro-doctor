@@ -7,8 +7,12 @@
   "packageManager": "pnpm@10.34.3",
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/generate-og-images.mjs && astro build",
-    "generate:og": "node scripts/generate-og-images.mjs",
+    "build": "santi-og generate --config scripts/generate-og-images.mjs && astro build",
+    "postbuild": "santi-og audit",
+    "generate:og": "santi-og generate --config scripts/generate-og-images.mjs",
+    "generate:og:force": "santi-og generate --config scripts/generate-og-images.mjs --force",
+    "check:og": "santi-og check --config scripts/generate-og-images.mjs",
+    "audit:seo": "santi-og audit",
     "preview": "astro preview",
     "check": "astro check",
     "typecheck": "astro check",
@@ -19,7 +23,7 @@
   "dependencies": {
     "@astrojs/mdx": "catalog:",
     "@astrojs/sitemap": "catalog:",
-    "@santi020k/lumen-astro": "^1.0.0",
+    "@santi020k/lumen-astro": "^1.4.0",
     "@tailwindcss/vite": "catalog:",
     "astro": "catalog:",
     "tailwindcss": "catalog:"
@@ -28,6 +32,7 @@
     "@astrojs/check": "catalog:",
     "@resvg/resvg-js": "catalog:",
     "@santi020k/eslint-config-basic": "catalog:",
+    "@santi020k/og": "1.1.1",
     "eslint": "catalog:",
     "satori": "catalog:",
     "satori-html": "catalog:",
