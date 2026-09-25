@@ -32,6 +32,40 @@ const CONTENT_CONFIG_FILE_NAMES = [
   'src/content/config.js'
 ]
 
+const ASTRO_FETCH_ENTRYPOINT_FILE_NAMES = [
+  'src/fetch.ts',
+  'src/fetch.js',
+  'src/fetch.mjs',
+  'src/fetch.mts'
+]
+
+const ASTRO_7_EXPERIMENTAL_FLAG_MIGRATIONS = [
+  {
+    propertyName: 'advancedRouting',
+    message: 'Remove experimental.advancedRouting. Advanced routing is stable in Astro 7 and uses src/fetch.* or the top-level fetchFile option.'
+  },
+  {
+    propertyName: 'cache',
+    message: 'Move experimental.cache to the top-level cache field for Astro 7.'
+  },
+  {
+    propertyName: 'logger',
+    message: 'Move experimental.logger to the top-level logger field for Astro 7.'
+  },
+  {
+    propertyName: 'queuedRendering',
+    message: 'Remove experimental.queuedRendering. Queued rendering is always enabled in Astro 7.'
+  },
+  {
+    propertyName: 'routeRules',
+    message: 'Move experimental.routeRules to the top-level routeRules field for Astro 7.'
+  },
+  {
+    propertyName: 'rustCompiler',
+    message: 'Remove experimental.rustCompiler. The Rust compiler is the only compiler in Astro 7.'
+  }
+]
+
 const PACKAGE_FILE_NAME = 'package.json'
 
 const COMPETING_LOCK_FILE_NAMES = [
@@ -53,6 +87,7 @@ const SECRET_ENV_NAME_PARTS = ['TOKEN', 'SECRET', 'PASSWORD', 'PRIVATE', 'KEY']
 const PROJECT_AUDIT_FILE_NAMES = [
   ...ASTRO_CONFIG_FILE_NAMES,
   ...CONTENT_CONFIG_FILE_NAMES,
+  ...ASTRO_FETCH_ENTRYPOINT_FILE_NAMES,
   PACKAGE_FILE_NAME,
   ...COMPETING_LOCK_FILE_NAMES,
   ENV_EXAMPLE_FILE_NAME
@@ -79,6 +114,53 @@ interface ProjectAuditOptions {
   readonly rules?: ScanOptions['rules']
   readonly astroFiles?: readonly string[]
   readonly ignore?: readonly string[]
+}
+
+interface AstroPackageManifest {
+  readonly dependencies?: Record<string, unknown>
+  readonly devDependencies?: Record<string, unknown>
+  readonly version?: string
+}
+
+const isAstroPackageManifest = (value: unknown): value is AstroPackageManifest => typeof value === 'object' && value !== null
+
+const readPackageManifest = (filePath: string): AstroPackageManifest | undefined => {
+  if (!existsSync(filePath)) return undefined
+
+  try {
+    const packageManifest: unknown = JSON.parse(readFileSync(filePath, 'utf8'))
+
+    return isAstroPackageManifest(packageManifest) ? packageManifest : undefined
+  } catch {
+    return undefined
+  }
+}
+
+const getMajorVersion = (version: string | undefined): number | undefined => {
+  const majorVersion = /(?:^|[^\d])(\d+)(?:\.|$)/u.exec(version ?? '')?.[1]
+
+  return majorVersion === undefined ? undefined : Number.parseInt(majorVersion, 10)
+}
+
+const getAstroMajorVersion = (rootDirectory: string): number | undefined => {
+  const projectManifest = readPackageManifest(
+    resolve(rootDirectory, PACKAGE_FILE_NAME)
+  )
+
+  const declaredVersion = projectManifest?.dependencies?.astro ??
+    projectManifest?.devDependencies?.astro
+
+  if (typeof declaredVersion === 'string') {
+    const declaredMajorVersion = getMajorVersion(declaredVersion)
+
+    if (declaredMajorVersion !== undefined) return declaredMajorVersion
+  }
+
+  const installedManifest = readPackageManifest(
+    resolve(rootDirectory, 'node_modules/astro/package.json')
+  )
+
+  return getMajorVersion(installedManifest?.version)
 }
 
 const toProjectPath = (rootDirectory: string, filePath: string): string => (isAbsolute(filePath) ? relative(rootDirectory, filePath) : filePath).replaceAll('\\', '/')
@@ -350,6 +432,23 @@ const findTopLevelObjectProperty = (
   return undefined
 }
 
+const getAstroConfigRootObjectRange = (
+  maskedContent: string
+): ObjectRange | undefined => {
+  const defineConfigMatch = /\bdefineConfig\s*\(/u.exec(maskedContent)
+
+  if (defineConfigMatch?.index === undefined) return undefined
+
+  const defineConfigOpeningIndex =
+    defineConfigMatch.index + defineConfigMatch[0].lastIndexOf('(')
+
+  const rootOpeningIndex = findNextNonWhitespaceIndex(
+    maskedContent, defineConfigOpeningIndex + 1
+  )
+
+  return findObjectRange(maskedContent, rootOpeningIndex)
+}
+
 const getEffectiveSeverity = (
   ruleId: string,
   rules: ScanOptions['rules']
@@ -487,6 +586,109 @@ const auditAstroSecurityConfig = (
       )
     )
   }
+}
+
+const auditAstro7ExperimentalFlags = (
+  options: ProjectAuditOptions,
+  selectedProjectPaths: Set<string> | undefined,
+  diagnostics: Diagnostic[]
+): void => {
+  if ((getAstroMajorVersion(options.directory) ?? 0) < 7) return
+
+  const astroConfigProjectPath = findExistingProjectFile(options.directory, ASTRO_CONFIG_FILE_NAMES)
+
+  if (astroConfigProjectPath === undefined || !isSelected(selectedProjectPaths, astroConfigProjectPath)) {
+    return
+  }
+
+  const astroConfigContent = readProjectFile(options.directory, astroConfigProjectPath)
+
+  if (astroConfigContent === undefined) return
+
+  const maskedContent = maskCodeLiterals(astroConfigContent)
+  const rootObjectRange = getAstroConfigRootObjectRange(maskedContent)
+
+  if (rootObjectRange === undefined) return
+
+  const experimentalObjectRange = findTopLevelObjectProperty(
+    maskedContent, rootObjectRange, 'experimental'
+  )
+
+  if (experimentalObjectRange === undefined) return
+
+  for (const migration of ASTRO_7_EXPERIMENTAL_FLAG_MIGRATIONS) {
+    const propertyIndex = findTopLevelPropertyIndex(
+      maskedContent, experimentalObjectRange, migration.propertyName
+    )
+
+    if (propertyIndex === undefined) continue
+
+    pushDiagnostic(
+      diagnostics, createDiagnostic(
+        options.directory, options.rules, 'astro-doctor/no-legacy-astro-7-experimental-flags', astroConfigProjectPath, migration.message, getLocationAtIndex(astroConfigContent, propertyIndex)
+      )
+    )
+  }
+}
+
+const hasDefaultExport = (maskedContent: string): boolean => /\bexport\s+default\b/u.test(maskedContent) ||
+  /\bexport\s*\{[^}]*(?:\bdefault\b|\bas\s+default\b)[^}]*\}/u.test(maskedContent)
+
+const usesDefaultFetchEntrypoint = (
+  rootDirectory: string,
+  astroConfigProjectPath: string | undefined
+): boolean => {
+  if (astroConfigProjectPath === undefined) return true
+
+  const astroConfigContent = readProjectFile(rootDirectory, astroConfigProjectPath)
+
+  if (astroConfigContent === undefined) return true
+
+  const maskedConfigContent = maskCodeLiterals(astroConfigContent)
+  const rootObjectRange = getAstroConfigRootObjectRange(maskedConfigContent)
+
+  return rootObjectRange === undefined ||
+    !hasTopLevelProperty(maskedConfigContent, rootObjectRange, 'fetchFile')
+}
+
+const auditFetchEntrypoint = (
+  options: ProjectAuditOptions,
+  selectedProjectPaths: Set<string> | undefined,
+  diagnostics: Diagnostic[]
+): void => {
+  if ((getAstroMajorVersion(options.directory) ?? 0) < 7) return
+
+  const fetchEntrypointProjectPath = findExistingProjectFile(
+    options.directory, ASTRO_FETCH_ENTRYPOINT_FILE_NAMES
+  )
+
+  if (fetchEntrypointProjectPath === undefined) return
+
+  const astroConfigProjectPath = findExistingProjectFile(options.directory, ASTRO_CONFIG_FILE_NAMES)
+
+  const configIsSelected = astroConfigProjectPath !== undefined &&
+    isSelected(selectedProjectPaths, astroConfigProjectPath)
+
+  if (!configIsSelected && !isSelected(selectedProjectPaths, fetchEntrypointProjectPath)) return
+
+  if (!usesDefaultFetchEntrypoint(options.directory, astroConfigProjectPath)) return
+
+  const fetchEntrypointContent = readProjectFile(
+    options.directory, fetchEntrypointProjectPath
+  )
+
+  if (
+    fetchEntrypointContent === undefined ||
+    hasDefaultExport(maskCodeLiterals(fetchEntrypointContent))
+  ) {
+    return
+  }
+
+  pushDiagnostic(
+    diagnostics, createDiagnostic(
+      options.directory, options.rules, 'astro-doctor/require-fetch-default-export', fetchEntrypointProjectPath, 'Astro 7 reserves src/fetch.* for advanced routing. Default-export a Fetchable handler, configure a different fetchFile, or set fetchFile to null if this is a utility module.'
+    )
+  )
 }
 
 const findInsecureCookieProperties = (
@@ -865,6 +1067,10 @@ export const auditProject = (options: ProjectAuditOptions): Diagnostic[] => {
   auditPackageManager(options, selectedProjectPaths, diagnostics)
 
   auditAstroSecurityConfig(options, selectedProjectPaths, diagnostics)
+
+  auditAstro7ExperimentalFlags(options, selectedProjectPaths, diagnostics)
+
+  auditFetchEntrypoint(options, selectedProjectPaths, diagnostics)
 
   auditSessionCookie(options, selectedProjectPaths, diagnostics)
 

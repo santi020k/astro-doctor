@@ -485,6 +485,36 @@ export default defineConfig({
     }
   },
   {
+    id: 'astro-doctor/no-legacy-astro-7-experimental-flags',
+    name: 'no-legacy-astro-7-experimental-flags',
+    slug: 'no-legacy-astro-7-experimental-flags',
+    category: 'best-practices',
+    severity: 'warn',
+    preset: 'recommended',
+    description: 'Migrate experimental configuration fields removed or stabilized in Astro 7.',
+    why: 'Astro 7 removed the experimental wrappers for advanced routing, caching, logging, route rules, queued rendering, and the Rust compiler. Leaving these fields under experimental can make an upgrade fail validation or silently miss the intended configuration.',
+    bad: {
+      label: 'Astro 6 experimental configuration',
+      language: 'typescript',
+      code: `export default defineConfig({
+  experimental: {
+    advancedRouting: true,
+    cache: { provider: memoryCache() },
+    routeRules: {},
+    rustCompiler: true,
+  },
+})`
+    },
+    good: {
+      label: 'Astro 7 stable configuration',
+      language: 'typescript',
+      code: `export default defineConfig({
+  cache: { provider: memoryCache() },
+  routeRules: {},
+})`
+    }
+  },
+  {
     id: 'astro-doctor/prefer-env-schema',
     name: 'prefer-env-schema',
     slug: 'prefer-env-schema',
@@ -628,6 +658,38 @@ const blog = defineCollection({
 })
 
 export const collections = { blog }`
+    }
+  },
+  {
+    id: 'astro-doctor/require-fetch-default-export',
+    name: 'require-fetch-default-export',
+    slug: 'require-fetch-default-export',
+    category: 'best-practices',
+    severity: 'warn',
+    preset: 'recommended',
+    description: 'Require a default export from Astro 7 advanced-routing entrypoints.',
+    why: 'Astro 7 reserves src/fetch.ts, src/fetch.js, src/fetch.mjs, and src/fetch.mts for advanced routing. A utility module using one of these names without a default export is loaded as a routing entrypoint and can break development or production startup.',
+    bad: {
+      label: 'Reserved file contains only a named utility export',
+      language: 'typescript',
+      code: `// src/fetch.ts
+export const fetchJson = async (url: string) => {
+  const response = await fetch(url)
+  return response.json()
+}`
+    },
+    good: {
+      label: 'Export an advanced-routing handler',
+      language: 'typescript',
+      code: `// src/fetch.ts
+import type { Fetchable } from 'astro'
+import { astro, FetchState } from 'astro/fetch'
+
+export default {
+  async fetch(request) {
+    return astro(new FetchState(request))
+  },
+} satisfies Fetchable`
     }
   }
 ]

@@ -7,7 +7,7 @@
 
 The CLI for Astro Doctor — scans your Astro project and reports issues across performance, accessibility, security, and best practices.
 
-It combines 13 proprietary Astro rules with the official Astro ESLint catalog and project-level audits, providing up to 71 checks with the `all` preset.
+It combines 13 proprietary Astro rules with the official Astro ESLint catalog and project-level audits, providing up to 73 checks with the `all` preset.
 
 ## Quick Start
 

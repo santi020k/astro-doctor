@@ -46,6 +46,10 @@ const RULE_EXPLANATIONS: Record<string, { why: string, fix: string }> = {
     why: 'Astro exposes PUBLIC_ environment variables to client-side code. Secret-looking names such as PUBLIC_TOKEN or PUBLIC_API_KEY often indicate accidental credential exposure.',
     fix: 'Rename secrets without the PUBLIC_ prefix and access them only in server-side code. Keep only non-secret values public.'
   },
+  'no-legacy-astro-7-experimental-flags': {
+    why: 'Astro 7 stabilized or made default several experimental features, so their Astro 6 configuration keys are no longer valid under experimental.',
+    fix: 'Move cache, logger, and routeRules to the top level. Remove queuedRendering and rustCompiler. Use src/fetch.* or top-level fetchFile for advanced routing.'
+  },
   'no-process-env': {
     why: 'process.env is a Node.js API that is not available in all Astro rendering environments (SSR adapters, edge runtimes). It also bypasses Astro\'s type-safe env schema.',
     fix: 'Use import.meta.env.YOUR_VARIABLE instead, and define the variable in your .env file with the ASTRO_ prefix or via the env schema in astro.config.*.'
@@ -57,6 +61,10 @@ const RULE_EXPLANATIONS: Record<string, { why: string, fix: string }> = {
   'prefer-content-collections': {
     why: 'Astro.glob() and content-focused import.meta.glob() return untyped content data. Content Collections are type-safe, support schema validation, and are optimized at build time.',
     fix: 'Replace content glob calls with getCollection("your-collection") from "astro:content".'
+  },
+  'require-fetch-default-export': {
+    why: 'Astro 7 reserves src/fetch.* for advanced routing and loads it as the request pipeline entrypoint.',
+    fix: 'Default-export a Fetchable handler, configure a different top-level fetchFile, or set fetchFile to null when the file is only a utility module.'
   }
 }
 
