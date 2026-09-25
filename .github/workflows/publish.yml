@@ -35,9 +35,12 @@ jobs:
         uses: santi020k/quality/actions/setup-pnpm@eec1701b98bcc0b76d36af288ee78a0369cd84cc # v1
         with:
           node-version: 22.x
+          registry-url: https://registry.npmjs.org
 
       - name: Install OIDC-compatible npm
-        run: pnpm add --global npm@11.20.0
+        run: |
+          pnpm add --global npm@11.20.0
+          npm --version
 
       - name: Create release pull request or publish
         id: changesets
