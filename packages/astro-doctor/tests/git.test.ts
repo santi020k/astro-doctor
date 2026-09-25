@@ -55,6 +55,13 @@ describe('getStagedAstroFiles', () => {
     expect(result).toContain('/project/package.json')
   })
 
+  test('includes custom Astro 7 fetch entrypoint candidates', () => {
+    mockExec.mockReturnValueOnce('source/server/handler.mts\nsrc/styles/main.css\n')
+    const result = getStagedAstroFiles('/project')
+
+    expect(result).toEqual(['/project/source/server/handler.mts'])
+  })
+
   test('throws a descriptive error when git fails', () => {
     mockExec.mockImplementationOnce(() => {
       throw new Error('not a git repository')

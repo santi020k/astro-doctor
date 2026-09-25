@@ -408,7 +408,10 @@ describe('project audits', () => {
       join(testDirectory, 'source', 'server', 'handler.mts'), 'export const fetchJson = () => null'
     )
 
-    const scanResult = await scan({ directory: testDirectory })
+    const scanResult = await scan({
+      directory: testDirectory,
+      files: ['source/server/handler.mts']
+    })
 
     expect(scanResult.diagnostics).toEqual(
       expect.arrayContaining([

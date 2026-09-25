@@ -173,7 +173,9 @@ const toProjectPath = (rootDirectory: string, filePath: string): string => (isAb
 export const isProjectAuditRelevantPath = (filePath: string): boolean => {
   const normalizedFilePath = filePath.replaceAll('\\', '/')
 
-  return PROJECT_AUDIT_FILE_NAMES.some(
+  return ASTRO_FETCH_ENTRYPOINT_EXTENSIONS.some(
+    extension => normalizedFilePath.endsWith(extension)
+  ) || PROJECT_AUDIT_FILE_NAMES.some(
     projectPath => normalizedFilePath === projectPath || normalizedFilePath.endsWith(`/${projectPath}`)
   ) || normalizedFilePath.startsWith(`${CONTENT_DIRECTORY_NAME}/`) ||
   normalizedFilePath.includes(`/${CONTENT_DIRECTORY_NAME}/`) ||
