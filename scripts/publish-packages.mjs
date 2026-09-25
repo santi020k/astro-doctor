@@ -64,7 +64,7 @@ const getCommandOutput = async (command, argumentsList, workingDirectory) =>
   });
 
 const getPackageVersionUrl = (packageName, version) =>
-  `${NPM_REGISTRY_URL}/${packageName.replace("/", "%2F")}/${version}`;
+  `${NPM_REGISTRY_URL}/${encodeURIComponent(packageName)}/${version}`;
 
 const isPublished = async (packageName, version) => {
   const response = await fetch(getPackageVersionUrl(packageName, version));
