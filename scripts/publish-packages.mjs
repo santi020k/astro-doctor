@@ -3,9 +3,25 @@ import { appendFile, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+import {
+  HTTP_NOT_FOUND_STATUS,
+  HTTP_SERVER_ERROR_MIN_STATUS,
+  HTTP_TOO_MANY_REQUESTS_STATUS,
+  PUBLISH_VERIFY_INTERVAL_MS,
+  PUBLISH_VERIFY_MAX_ATTEMPTS,
+} from "./constants.ts";
+
 const PACKAGES_DIRECTORY = new URL("../packages/", import.meta.url);
 const GITHUB_API_URL = "https://api.github.com";
 const NPM_REGISTRY_URL = "https://registry.npmjs.org";
+
+class NpmRegistryError extends Error {
+  constructor(status, packageName, version) {
+    super(`npm registry returned ${status} for ${packageName}@${version}`);
+
+    this.status = status;
+  }
+}
 
 const runCommand = async (command, argumentsList, workingDirectory) =>
   new Promise((resolve, reject) => {
@@ -73,13 +89,41 @@ const isPublished = async (packageName, version) => {
     return true;
   }
 
-  if (response.status === 404) {
+  if (response.status === HTTP_NOT_FOUND_STATUS) {
     return false;
   }
 
-  throw new Error(
-    `npm registry returned ${response.status} for ${packageName}@${version}`,
-  );
+  throw new NpmRegistryError(response.status, packageName, version);
+};
+
+const isTransientRegistryError = (error) =>
+  error instanceof TypeError ||
+  (error instanceof NpmRegistryError &&
+    (error.status === HTTP_TOO_MANY_REQUESTS_STATUS ||
+      error.status >= HTTP_SERVER_ERROR_MIN_STATUS));
+
+const waitForPublished = async (packageName, version) => {
+  for (
+    let attempt = 1;
+    attempt <= PUBLISH_VERIFY_MAX_ATTEMPTS;
+    attempt += 1
+  ) {
+    try {
+      if (await isPublished(packageName, version)) {
+        return true;
+      }
+    } catch (error) {
+      if (!isTransientRegistryError(error)) {
+        throw error;
+      }
+    }
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, PUBLISH_VERIFY_INTERVAL_MS);
+    });
+  }
+
+  return false;
 };
 
 const writeChangesetsEvent = async (packageName, version) => {
@@ -222,7 +266,7 @@ for (const packageDirectory of packageDirectories) {
   if (!versionIsPublished) {
     await publishPackage(path.resolve(packagePath.pathname));
 
-    if (!(await isPublished(packageName, version))) {
+    if (!(await waitForPublished(packageName, version))) {
       throw new Error(`${packageName}@${version} was not found after publishing`);
     }
   }
