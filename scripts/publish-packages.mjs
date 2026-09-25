@@ -143,6 +143,19 @@ const hasGitHubRelease = async (tag) => {
 const publishPackage = async (packagePath) => {
   const packDirectory = await mkdtemp(path.join(os.tmpdir(), "astro-doctor-pack-"));
 
+  const globalPackagesDirectory = await getCommandOutput(
+    "pnpm",
+    ["root", "--global"],
+    packagePath,
+  );
+
+  const npmCliPath = path.join(
+    globalPackagesDirectory,
+    "npm",
+    "bin",
+    "npm-cli.js",
+  );
+
   try {
     await runCommand(
       "pnpm",
@@ -161,8 +174,9 @@ const publishPackage = async (packagePath) => {
     }
 
     await runCommand(
-      "npm",
+      "node",
       [
+        npmCliPath,
         "publish",
         path.join(packDirectory, packFiles[0]),
         "--access",
