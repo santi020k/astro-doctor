@@ -40,7 +40,7 @@ jobs:
       - name: Install OIDC-compatible npm
         run: |
           pnpm add --global npm@11.20.0
-          npm --version
+          node "$(pnpm root --global)/npm/bin/npm-cli.js" --version
 
       - name: Create release pull request or publish
         id: changesets
