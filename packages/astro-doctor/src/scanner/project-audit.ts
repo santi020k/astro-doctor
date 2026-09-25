@@ -142,12 +142,20 @@ const readPackageManifest = (filePath: string): AstroPackageManifest | undefined
 }
 
 const getMajorVersion = (version: string | undefined): number | undefined => {
-  const majorVersion = /(?:^|[^\d])(\d+)(?:\.|$)/u.exec(version ?? '')?.[1]
+  const majorVersion = /^[^\d]*(\d+)/u.exec(version ?? '')?.[1]
 
   return majorVersion === undefined ? undefined : Number.parseInt(majorVersion, 10)
 }
 
 const getAstroMajorVersion = (rootDirectory: string): number | undefined => {
+  const installedManifest = readPackageManifest(
+    resolve(rootDirectory, 'node_modules/astro/package.json')
+  )
+
+  const installedMajorVersion = getMajorVersion(installedManifest?.version)
+
+  if (installedMajorVersion !== undefined) return installedMajorVersion
+
   const projectManifest = readPackageManifest(
     resolve(rootDirectory, PACKAGE_FILE_NAME)
   )
@@ -161,11 +169,7 @@ const getAstroMajorVersion = (rootDirectory: string): number | undefined => {
     if (declaredMajorVersion !== undefined) return declaredMajorVersion
   }
 
-  const installedManifest = readPackageManifest(
-    resolve(rootDirectory, 'node_modules/astro/package.json')
-  )
-
-  return getMajorVersion(installedManifest?.version)
+  return undefined
 }
 
 const toProjectPath = (rootDirectory: string, filePath: string): string => (isAbsolute(filePath) ? relative(rootDirectory, filePath) : filePath).replaceAll('\\', '/')
@@ -354,9 +358,13 @@ const findNextNonWhitespaceIndex = (content: string, startIndex: number): number
 const findTopLevelPropertyIndex = (
   maskedContent: string,
   objectRange: ObjectRange,
-  propertyName: string
+  propertyName: string,
+  sourceContent = maskedContent
 ): number | undefined => {
-  const propertyPattern = new RegExp(`^${propertyName}\\s*:`, 'u')
+  const propertyPattern = new RegExp(
+    `^(?:${propertyName}|['"]${propertyName}['"])\\s*:`, 'u'
+  )
+
   let objectDepth = 1
 
   for (
@@ -384,7 +392,7 @@ const findTopLevelPropertyIndex = (
 
     if (
       !/[A-Za-z0-9_$]/u.test(previousCharacter) &&
-      propertyPattern.test(maskedContent.slice(characterIndex))
+      propertyPattern.test(sourceContent.slice(characterIndex))
     ) {
       return characterIndex
     }
@@ -396,13 +404,17 @@ const findTopLevelPropertyIndex = (
 const hasTopLevelProperty = (
   maskedContent: string,
   objectRange: ObjectRange,
-  propertyName: string
-): boolean => findTopLevelPropertyIndex(maskedContent, objectRange, propertyName) !== undefined
+  propertyName: string,
+  sourceContent = maskedContent
+): boolean => findTopLevelPropertyIndex(
+  maskedContent, objectRange, propertyName, sourceContent
+) !== undefined
 
 const findTopLevelObjectProperty = (
   maskedContent: string,
   objectRange: ObjectRange,
-  propertyName: string
+  propertyName: string,
+  sourceContent = maskedContent
 ): ObjectRange | undefined => {
   let objectDepth = 1
 
@@ -428,13 +440,18 @@ const findTopLevelObjectProperty = (
     if (objectDepth !== 1) continue
 
     const previousCharacter = maskedContent[characterIndex - 1] ?? ''
-    const propertyPattern = new RegExp(`^${propertyName}\\s*:\\s*\\{`, 'u')
-    const propertyMatch = propertyPattern.exec(maskedContent.slice(characterIndex))
+
+    const propertyPattern = new RegExp(
+      `^(?:${propertyName}|['"]${propertyName}['"])\\s*:\\s*\\{`, 'u'
+    )
+
+    const propertyMatch = propertyPattern.exec(sourceContent.slice(characterIndex))
 
     if (/[A-Za-z0-9_$]/u.test(previousCharacter) || propertyMatch === null) continue
 
-    const relativeOpeningIndex = propertyMatch[0].lastIndexOf('{')
-    const propertyOpeningIndex = characterIndex + relativeOpeningIndex
+    const propertyValueStartIndex = characterIndex + propertyMatch[0].lastIndexOf('{')
+    const relativeOpeningIndex = sourceContent.slice(propertyValueStartIndex).indexOf('{')
+    const propertyOpeningIndex = propertyValueStartIndex + relativeOpeningIndex
 
     return findObjectRange(maskedContent, propertyOpeningIndex)
   }
@@ -476,18 +493,19 @@ const getStaticConfigProperty = (
   propertyName: string
 ): StaticConfigProperty | undefined => {
   const propertyIndex = findTopLevelPropertyIndex(
-    maskedContent, rootObjectRange, propertyName
+    maskedContent, rootObjectRange, propertyName, configContent
   )
 
   if (propertyIndex === undefined) return undefined
 
   const propertyContent = configContent.slice(propertyIndex)
-  const nullPropertyPattern = new RegExp(`^${propertyName}\\s*:\\s*null\\b`, 'u')
+  const propertyPrefix = `(?:${propertyName}|['"]${propertyName}['"])`
+  const nullPropertyPattern = new RegExp(`^${propertyPrefix}\\s*:\\s*null\\b`, 'u')
 
   if (nullPropertyPattern.test(propertyContent)) return { value: null }
 
   const stringPropertyPattern = new RegExp(
-    `^${propertyName}\\s*:\\s*(['"])([^'"\\r\\n]*)\\1`, 'u'
+    `^${propertyPrefix}\\s*:\\s*(['"])([^'"\\r\\n]*)\\1`, 'u'
   )
 
   const stringPropertyMatch = stringPropertyPattern.exec(propertyContent)
@@ -503,7 +521,9 @@ const getEffectiveStaticConfigValue = (
   rootObjectRange: ObjectRange,
   propertyName: string,
   defaultValue: string
-): string | null | undefined => hasTopLevelProperty(maskedContent, rootObjectRange, propertyName) ?
+): string | null | undefined => hasTopLevelProperty(
+  maskedContent, rootObjectRange, propertyName, configContent
+) ?
   getStaticConfigProperty(
     configContent, maskedContent, rootObjectRange, propertyName
   )?.value :
@@ -672,14 +692,14 @@ const auditAstro7ExperimentalFlags = (
   if (rootObjectRange === undefined) return
 
   const experimentalObjectRange = findTopLevelObjectProperty(
-    maskedContent, rootObjectRange, 'experimental'
+    maskedContent, rootObjectRange, 'experimental', astroConfigContent
   )
 
   if (experimentalObjectRange === undefined) return
 
   for (const migration of ASTRO_7_EXPERIMENTAL_FLAG_MIGRATIONS) {
     const propertyIndex = findTopLevelPropertyIndex(
-      maskedContent, experimentalObjectRange, migration.propertyName
+      maskedContent, experimentalObjectRange, migration.propertyName, astroConfigContent
     )
 
     if (propertyIndex === undefined) continue
@@ -702,7 +722,10 @@ const hasDefaultExport = (maskedContent: string): boolean => {
   return [...maskedContent.matchAll(namedExportPattern)].some(namedExportMatch => (namedExportMatch[1] ?? '').split(',').some(exportSpecifier => {
     const normalizedSpecifier = exportSpecifier.trim()
 
-    return !normalizedSpecifier.startsWith('type ') &&
+    const isInlineTypeOnlyExport =
+      /^type\s+[A-Za-z_$][\w$]*\s+as\s+default\b/u.test(normalizedSpecifier)
+
+    return !isInlineTypeOnlyExport &&
       /^(?:default\b|[A-Za-z_$][\w$]*\s+as\s+default\b)/u.test(normalizedSpecifier)
   }))
 }
