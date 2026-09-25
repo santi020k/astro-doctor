@@ -6,6 +6,8 @@ import path from "node:path";
 const PACKAGES_DIRECTORY = new URL("../packages/", import.meta.url);
 const GITHUB_API_URL = "https://api.github.com";
 const NPM_REGISTRY_URL = "https://registry.npmjs.org";
+const PUBLISH_VERIFY_INTERVAL_MS = 2_000;
+const PUBLISH_VERIFY_MAX_ATTEMPTS = 150;
 
 const runCommand = async (command, argumentsList, workingDirectory) =>
   new Promise((resolve, reject) => {
@@ -80,6 +82,24 @@ const isPublished = async (packageName, version) => {
   throw new Error(
     `npm registry returned ${response.status} for ${packageName}@${version}`,
   );
+};
+
+const waitForPublished = async (packageName, version) => {
+  for (
+    let attempt = 1;
+    attempt <= PUBLISH_VERIFY_MAX_ATTEMPTS;
+    attempt += 1
+  ) {
+    if (await isPublished(packageName, version)) {
+      return true;
+    }
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, PUBLISH_VERIFY_INTERVAL_MS);
+    });
+  }
+
+  return false;
 };
 
 const writeChangesetsEvent = async (packageName, version) => {
@@ -222,7 +242,7 @@ for (const packageDirectory of packageDirectories) {
   if (!versionIsPublished) {
     await publishPackage(path.resolve(packagePath.pathname));
 
-    if (!(await isPublished(packageName, version))) {
+    if (!(await waitForPublished(packageName, version))) {
       throw new Error(`${packageName}@${version} was not found after publishing`);
     }
   }
