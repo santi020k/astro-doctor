@@ -16,9 +16,11 @@ import { definePageMetadata } from '@santi020k/og/metadata'
 import { definePresetConfig } from '@santi020k/og/presets'
 
 import { ALL_RULES } from '../src/data/rules.ts'
+import { SITE_URL } from '../src/site.config.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
+const SITE_DOMAIN = new URL(SITE_URL).hostname
 // ─── Page specs ───────────────────────────────────────────────────────────────
 const SPECS = []
 
@@ -145,7 +147,7 @@ export default definePresetConfig({
   routeManifest: { file: 'public/og/manifest.json', publicPath: '/og' },
   preset: {
     brand: {
-      domain: 'astro-doctor.santi020k.com',
+      domain: SITE_DOMAIN,
       logo: 'public/favicon.svg',
       name: 'Astro Doctor'
     },

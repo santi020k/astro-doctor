@@ -445,15 +445,25 @@ const findTopLevelObjectProperty = (
 const getAstroConfigRootObjectRange = (
   maskedContent: string
 ): ObjectRange | undefined => {
-  const defineConfigMatch = /\bdefineConfig\s*\(/u.exec(maskedContent)
+  const defineConfigMatch = /\bexport\s+default\s+defineConfig\s*\(/u.exec(maskedContent)
 
-  if (defineConfigMatch?.index === undefined) return undefined
+  if (defineConfigMatch?.index !== undefined) {
+    const defineConfigOpeningIndex =
+      defineConfigMatch.index + defineConfigMatch[0].lastIndexOf('(')
 
-  const defineConfigOpeningIndex =
-    defineConfigMatch.index + defineConfigMatch[0].lastIndexOf('(')
+    const rootOpeningIndex = findNextNonWhitespaceIndex(
+      maskedContent, defineConfigOpeningIndex + 1
+    )
+
+    return findObjectRange(maskedContent, rootOpeningIndex)
+  }
+
+  const plainObjectMatch = /\bexport\s+default\s+/u.exec(maskedContent)
+
+  if (plainObjectMatch?.index === undefined) return undefined
 
   const rootOpeningIndex = findNextNonWhitespaceIndex(
-    maskedContent, defineConfigOpeningIndex + 1
+    maskedContent, plainObjectMatch.index + plainObjectMatch[0].length
   )
 
   return findObjectRange(maskedContent, rootOpeningIndex)
@@ -682,8 +692,18 @@ const auditAstro7ExperimentalFlags = (
   }
 }
 
-const hasDefaultExport = (maskedContent: string): boolean => /\bexport\s+default\b/u.test(maskedContent) ||
-  /\bexport\s*\{[^}]*(?:\bdefault\b|\bas\s+default\b)[^}]*\}/u.test(maskedContent)
+const hasDefaultExport = (maskedContent: string): boolean => {
+  if (/\bexport\s+default\b/u.test(maskedContent)) return true
+
+  const namedExportPattern = /\bexport\s*(?!type\b)\{([^}]*)\}/gu
+
+  return [...maskedContent.matchAll(namedExportPattern)].some(namedExportMatch => (namedExportMatch[1] ?? '').split(',').some(exportSpecifier => {
+    const normalizedSpecifier = exportSpecifier.trim()
+
+    return !normalizedSpecifier.startsWith('type ') &&
+      /^(?:default\b|[A-Za-z_$][\w$]*\s+as\s+default\b)/u.test(normalizedSpecifier)
+  }))
+}
 
 const getFetchEntrypointProjectPaths = (
   rootDirectory: string,

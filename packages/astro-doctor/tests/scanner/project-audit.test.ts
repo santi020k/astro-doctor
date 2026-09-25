@@ -293,6 +293,25 @@ describe('project audits', () => {
     ])
   })
 
+  test('reports Astro 7 migration flags in a plain object config', async () => {
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), 'export default { experimental: { advancedRouting: true } }'
+    )
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(scanResult.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: 'astro-doctor/no-legacy-astro-7-experimental-flags'
+        })
+      ])
+    )
+  })
+
   test('audits unchanged migration files when only the Astro 7 dependency is selected', async () => {
     mkdirSync(join(testDirectory, 'src'), { recursive: true })
     writeFileSync(
@@ -433,6 +452,44 @@ describe('project audits', () => {
       join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
     )
     writeFileSync(join(testDirectory, 'src', 'fetch.ts'), fetchFileContent)
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(
+      scanResult.diagnostics.some(
+        diagnostic => diagnostic.ruleId === 'astro-doctor/require-fetch-default-export'
+      )
+    ).toBe(false)
+  })
+
+  test.each([
+    'export type { Handler as default }',
+    'export { type Handler as default }'
+  ])('reports a type-only default export in an Astro 7 fetch entrypoint', async fetchFileContent => {
+    mkdirSync(join(testDirectory, 'src'), { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+    writeFileSync(join(testDirectory, 'src', 'fetch.ts'), fetchFileContent)
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(scanResult.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: 'astro-doctor/require-fetch-default-export'
+        })
+      ])
+    )
+  })
+
+  test('accepts a disabled fetch entrypoint in a plain object config', async () => {
+    mkdirSync(join(testDirectory, 'src'), { recursive: true })
+    writeFileSync(
+      join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })
+    )
+    writeFileSync(join(testDirectory, 'astro.config.ts'), 'export default { fetchFile: null }')
+    writeFileSync(join(testDirectory, 'src', 'fetch.ts'), 'export const fetchJson = () => null')
 
     const scanResult = await scan({ directory: testDirectory })
 
