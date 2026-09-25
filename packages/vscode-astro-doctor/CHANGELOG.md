@@ -1,5 +1,11 @@
 # Astro Doctor for VS Code
 
+## 1.4.0
+
+### Minor Changes
+
+- [#45](https://github.com/santi020k/astro-doctor/pull/45) [`4171c72`](https://github.com/santi020k/astro-doctor/commit/4171c72cb2eff3cabb70619fa35ec762b428b41c) Thanks [@santi020k](https://github.com/santi020k)! - Add Astro 7 migration audits for removed experimental flags and invalid advanced-routing entrypoints.
+
 ## 1.3.2
 
 ### Patch Changes
