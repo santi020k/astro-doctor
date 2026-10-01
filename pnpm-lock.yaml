@@ -124,8 +124,8 @@ catalogs:
       specifier: ^4.3.3
       version: 4.3.3
     turbo:
-      specifier: ^2.11.4
-      version: 2.11.4
+      specifier: ^2.11.5
+      version: 2.11.5
     typescript:
       specifier: ^6.0.3
       version: 6.0.3
@@ -187,7 +187,7 @@ importers:
         version: 3.1.4(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint-plugin-jsx-a11y@6.10.2(eslint@10.11.0(jiti@2.7.0)))(eslint@10.11.0(jiti@2.7.0))(typescript-eslint@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(typescript@6.0.3)
       '@santi020k/eslint-config-basic':
         specifier: 'catalog:'
-        version: 3.5.4(8b9fab2224d75f9616554756f58e1765)
+        version: 3.5.4(c2d4727ea5d1925ea2f5b29cf2c31074)
       '@santi020k/eslint-config-extensions':
         specifier: 'catalog:'
         version: 3.1.3(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.11.0(jiti@2.7.0))(globals@17.12.0)(oxlint@1.85.0)(typescript-eslint@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(typescript@6.0.3)
@@ -196,7 +196,7 @@ importers:
         version: 3.1.3(@types/node@26.6.2)(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(crossws@0.3.5)(eslint-import-resolver-node@0.3.10)(eslint@10.11.0(jiti@2.7.0))(graphql@16.14.2)(typescript@6.0.3)
       '@santi020k/eslint-config-libraries':
         specifier: 'catalog:'
-        version: 3.1.3(@eslint/css@2.0.0)(@stencil/core@4.43.5)(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.11.0(jiti@2.7.0))(oxc-resolver@11.24.2)(oxlint@1.85.0)(storybook@10.5.5(prettier@3.9.9)(react@19.2.8))(tailwindcss@4.3.3)(turbo@2.11.4)(typescript@6.0.3)(zod@4.6.5)
+        version: 3.1.3(@eslint/css@2.0.0)(@stencil/core@4.43.5)(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.11.0(jiti@2.7.0))(oxc-resolver@11.24.2)(oxlint@1.85.0)(storybook@10.5.5(prettier@3.9.9)(react@19.2.8))(tailwindcss@4.3.3)(turbo@2.11.5)(typescript@6.0.3)(zod@4.6.5)
       '@santi020k/eslint-config-testing':
         specifier: 'catalog:'
         version: 3.1.3(@testing-library/dom@10.4.2)(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3)(vitest@5.0.2)
@@ -229,7 +229,7 @@ importers:
         version: 4.3.3
       turbo:
         specifier: 'catalog:'
-        version: 2.11.4
+        version: 2.11.5
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -266,7 +266,7 @@ importers:
         version: 2.6.2
       '@santi020k/eslint-config-basic':
         specifier: 'catalog:'
-        version: 3.5.4(8b9fab2224d75f9616554756f58e1765)
+        version: 3.5.4(c2d4727ea5d1925ea2f5b29cf2c31074)
       '@santi020k/og':
         specifier: 1.1.1
         version: 1.1.1(@types/node@26.6.2)
@@ -3240,33 +3240,33 @@ packages:
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
 
-  '@turbo/darwin-64@2.11.4':
-    resolution: {integrity: sha512-fEmcQVa95k79tZjcay5b2A4cpR/VrlNUki4AN7EbA+32vj5C5rBUE1q3i2yOFxsB2n01sOlzIZ+s2p2zADCTig==}
+  '@turbo/darwin-64@2.11.5':
+    resolution: {integrity: sha512-KdY4y7BBjIisl+jAkb3FFaRjClGqHyaeHCcVcCT8LBzFFwUu6thgfxyRZAx0uL4KoxLmH+iOan8UhVf/aDDcaA==}
     cpu: [x64]
     os: [darwin]
 
-  '@turbo/darwin-arm64@2.11.4':
-    resolution: {integrity: sha512-SgXCVgBC1v+bdE6+KQGV6Kob7nBYo75zxzNFFuA4jLdM0J8lYamdTUoZSHLR0dy+kXVEYZqSC98CKqC17NG3Og==}
+  '@turbo/darwin-arm64@2.11.5':
+    resolution: {integrity: sha512-ToZDGi2u410+TfRtC/O1/LpujGgvNJoRBZnwVXob7oO0+3OSlwIO3zofXKUvwQvlba7a8ZXPyCZwufjAXd7f0w==}
     cpu: [arm64]
     os: [darwin]
 
-  '@turbo/linux-64@2.11.4':
-    resolution: {integrity: sha512-MWM7Au6NPJMBmHJAzFzQ/PACYNRpBOqnBkj+7csdR+YhJ+0XBg4Z64wFwLnGFDac0gc+YlasWOZ5t05bGs54aQ==}
+  '@turbo/linux-64@2.11.5':
+    resolution: {integrity: sha512-Ub2d/nAbdWLaSytcEaPp1wm/YuIvHEIqNrCRMI/UgOGyFdOhgxm8VyWPAJilQWRYxYVrqEUoy2K5S5K8SG50rA==}
     cpu: [x64]
     os: [android, linux]
 
-  '@turbo/linux-arm64@2.11.4':
-    resolution: {integrity: sha512-rRVOh0UNlLbKPuf70FokqjahO/hCGgBmgvZcNXUPayn8Wk0zXIsVoNKpr0UQUhhR+KMiibvBKkVAGDViDFQHKA==}
+  '@turbo/linux-arm64@2.11.5':
+    resolution: {integrity: sha512-JQjmGxp724Wuft9FAxPMtmBur1CEdUyxJ+FVoIvKkgj63rXHl9PYCWrsU2tMjVi609XTQ3M8vZD9Yc9qVAVYrw==}
     cpu: [arm64]
     os: [android, linux]
 
-  '@turbo/windows-64@2.11.4':
-    resolution: {integrity: sha512-COr+++1GwDg09XbJdm3sP1gEQApeV43UknYP9h82qet1tAGJrGQAxKVTMrf2JMsMw8MkJRnQj3gAVuQmV1kIyQ==}
+  '@turbo/windows-64@2.11.5':
+    resolution: {integrity: sha512-AFkbPmXNd8XgCi/66YEHR2bVl3gtusXyDihTIVEPAuSB+7ulLmJePvz1unWPVKLHdbCTTIdKq2mpJ1B1e3lJXw==}
     cpu: [x64]
     os: [win32]
 
-  '@turbo/windows-arm64@2.11.4':
-    resolution: {integrity: sha512-gh5lwDA2d4aBdLvTANhFsFEgxbBqKZ4m4dCyChw9GoX8b+Esk8H3p25Q+rlWCUVJ2o6Hne10ZTL0QSFfWD4gIA==}
+  '@turbo/windows-arm64@2.11.5':
+    resolution: {integrity: sha512-52ziXYP3snGOxjv19xA3WL1WDKv9Q6uDAa/7EKIR5j4hocMlYURkrOHbJ2ZZI+VfPU5MwKpcGeRfHxHJu7Y/Pw==}
     cpu: [arm64]
     os: [win32]
 
@@ -7133,8 +7133,8 @@ packages:
     peerDependencies:
       typescript: '>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta'
 
-  turbo@2.11.4:
-    resolution: {integrity: sha512-nedZtJ2hjWpU/JBFq7Aj1GQBxQ56si+kIUmNZBUX35O35TIuhSBR6/u3yHHmk81U+RBdBcVjvLQ3/iOFzMwKsA==}
+  turbo@2.11.5:
+    resolution: {integrity: sha512-qLXheqz3TUvJpHIV6MUBwkNkvwKxMVG/QsimyiKT9DfNWPHJ294G/i5nDaH+fbHJt3UH7orubNNxAqYkbUNGAQ==}
     hasBin: true
 
   type-check@0.4.0:
@@ -9965,7 +9965,7 @@ snapshots:
       - typescript
       - typescript-eslint
 
-  '@santi020k/eslint-config-basic@3.5.4(8b9fab2224d75f9616554756f58e1765)':
+  '@santi020k/eslint-config-basic@3.5.4(c2d4727ea5d1925ea2f5b29cf2c31074)':
     dependencies:
       '@santi020k/eslint-config-core': 3.1.3(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3)
       '@santi020k/eslint-config-typescript': 3.1.5(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3)
@@ -9976,7 +9976,7 @@ snapshots:
       '@santi020k/eslint-config-astro': 3.1.4(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint-plugin-jsx-a11y@6.10.2(eslint@10.11.0(jiti@2.7.0)))(eslint@10.11.0(jiti@2.7.0))(typescript-eslint@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(typescript@6.0.3)
       '@santi020k/eslint-config-extensions': 3.1.3(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.11.0(jiti@2.7.0))(globals@17.12.0)(oxlint@1.85.0)(typescript-eslint@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(typescript@6.0.3)
       '@santi020k/eslint-config-formats': 3.1.3(@types/node@26.6.2)(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(crossws@0.3.5)(eslint-import-resolver-node@0.3.10)(eslint@10.11.0(jiti@2.7.0))(graphql@16.14.2)(typescript@6.0.3)
-      '@santi020k/eslint-config-libraries': 3.1.3(@eslint/css@2.0.0)(@stencil/core@4.43.5)(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.11.0(jiti@2.7.0))(oxc-resolver@11.24.2)(oxlint@1.85.0)(storybook@10.5.5(prettier@3.9.9)(react@19.2.8))(tailwindcss@4.3.3)(turbo@2.11.4)(typescript@6.0.3)(zod@4.6.5)
+      '@santi020k/eslint-config-libraries': 3.1.3(@eslint/css@2.0.0)(@stencil/core@4.43.5)(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.11.0(jiti@2.7.0))(oxc-resolver@11.24.2)(oxlint@1.85.0)(storybook@10.5.5(prettier@3.9.9)(react@19.2.8))(tailwindcss@4.3.3)(turbo@2.11.5)(typescript@6.0.3)(zod@4.6.5)
       '@santi020k/eslint-config-testing': 3.1.3(@testing-library/dom@10.4.2)(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3)(vitest@5.0.2)
       '@santi020k/eslint-config-tools': 3.1.3(@types/node@26.6.2)(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(@typescript-eslint/typescript-estree@8.70.1(typescript@6.0.3))(class-validator@0.15.1)(crossws@0.3.5)(eslint-import-resolver-node@0.3.10)(eslint@10.11.0(jiti@2.7.0))(graphql@16.14.2)(typescript@6.0.3)
       typescript: 6.0.3
@@ -10074,7 +10074,7 @@ snapshots:
       - ts-declaration-location
       - utf-8-validate
 
-  '@santi020k/eslint-config-libraries@3.1.3(@eslint/css@2.0.0)(@stencil/core@4.43.5)(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.11.0(jiti@2.7.0))(oxc-resolver@11.24.2)(oxlint@1.85.0)(storybook@10.5.5(prettier@3.9.9)(react@19.2.8))(tailwindcss@4.3.3)(turbo@2.11.4)(typescript@6.0.3)(zod@4.6.5)':
+  '@santi020k/eslint-config-libraries@3.1.3(@eslint/css@2.0.0)(@stencil/core@4.43.5)(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.11.0(jiti@2.7.0))(oxc-resolver@11.24.2)(oxlint@1.85.0)(storybook@10.5.5(prettier@3.9.9)(react@19.2.8))(tailwindcss@4.3.3)(turbo@2.11.5)(typescript@6.0.3)(zod@4.6.5)':
     dependencies:
       '@santi020k/eslint-config-core': 3.1.3(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3)
       '@stencil/eslint-plugin': 1.4.0(@stencil/core@4.43.5)(@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(@typescript-eslint/parser@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(oxlint@1.85.0)(typescript@6.0.3)
@@ -10085,7 +10085,7 @@ snapshots:
       eslint-plugin-better-tailwindcss: 4.7.0(@eslint/css@2.0.0)(eslint@10.11.0(jiti@2.7.0))(oxlint@1.85.0)(tailwindcss@4.3.3)(typescript@6.0.3)
       eslint-plugin-i18next: 6.1.5
       eslint-plugin-storybook: 10.6.0(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3)
-      eslint-plugin-turbo: 2.11.4(eslint@10.11.0(jiti@2.7.0))(turbo@2.11.4)
+      eslint-plugin-turbo: 2.11.4(eslint@10.11.0(jiti@2.7.0))(turbo@2.11.5)
       eslint-plugin-vercel-ai-security: 2.1.3(@typescript-eslint/utils@8.70.1(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(oxc-resolver@11.24.2)(typescript@6.0.3)
       eslint-plugin-zod: 4.14.2(eslint@10.11.0(jiti@2.7.0))(oxlint@1.85.0)(typescript@6.0.3)(zod@4.6.5)
     optionalDependencies:
@@ -10451,22 +10451,22 @@ snapshots:
       '@testing-library/dom': 10.4.2
     optional: true
 
-  '@turbo/darwin-64@2.11.4':
+  '@turbo/darwin-64@2.11.5':
     optional: true
 
-  '@turbo/darwin-arm64@2.11.4':
+  '@turbo/darwin-arm64@2.11.5':
     optional: true
 
-  '@turbo/linux-64@2.11.4':
+  '@turbo/linux-64@2.11.5':
     optional: true
 
-  '@turbo/linux-arm64@2.11.4':
+  '@turbo/linux-arm64@2.11.5':
     optional: true
 
-  '@turbo/windows-64@2.11.4':
+  '@turbo/windows-64@2.11.5':
     optional: true
 
-  '@turbo/windows-arm64@2.11.4':
+  '@turbo/windows-arm64@2.11.5':
     optional: true
 
   '@tybys/wasm-util@0.10.4':
@@ -12338,11 +12338,11 @@ snapshots:
       - supports-color
       - typescript
 
-  eslint-plugin-turbo@2.11.4(eslint@10.11.0(jiti@2.7.0))(turbo@2.11.4):
+  eslint-plugin-turbo@2.11.4(eslint@10.11.0(jiti@2.7.0))(turbo@2.11.5):
     dependencies:
       dotenv: 16.0.3
       eslint: 10.11.0(jiti@2.7.0)
-      turbo: 2.11.4
+      turbo: 2.11.5
 
   eslint-plugin-unicorn@76.0.0(eslint@10.11.0(jiti@2.7.0)):
     dependencies:
@@ -15105,14 +15105,14 @@ snapshots:
       tslib: 1.14.1
       typescript: 6.0.3
 
-  turbo@2.11.4:
+  turbo@2.11.5:
     optionalDependencies:
-      '@turbo/darwin-64': 2.11.4
-      '@turbo/darwin-arm64': 2.11.4
-      '@turbo/linux-64': 2.11.4
-      '@turbo/linux-arm64': 2.11.4
-      '@turbo/windows-64': 2.11.4
-      '@turbo/windows-arm64': 2.11.4
+      '@turbo/darwin-64': 2.11.5
+      '@turbo/darwin-arm64': 2.11.5
+      '@turbo/linux-64': 2.11.5
+      '@turbo/linux-arm64': 2.11.5
+      '@turbo/windows-64': 2.11.5
+      '@turbo/windows-arm64': 2.11.5
 
   type-check@0.4.0:
     dependencies:
