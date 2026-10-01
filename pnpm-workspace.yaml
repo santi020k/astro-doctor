@@ -9,7 +9,7 @@ allowBuilds:
 catalog:
   "@arethetypeswrong/cli": ^0.18.5
   "@astrojs/check": ^0.9.10
-  "@astrojs/compiler-binding-wasm32-wasi": 0.5.0
+  "@astrojs/compiler-binding-wasm32-wasi": 0.5.1
   "@astrojs/mdx": ^8.0.2
   "@astrojs/sitemap": ^3.7.4
   "@changesets/changelog-github": ^1.0.1
@@ -24,14 +24,14 @@ catalog:
   "@santi020k/eslint-config-testing": ^3.1.3
   "@santi020k/eslint-config-tools": ^3.1.3
   "@tailwindcss/vite": ^4.3.3
-  "@types/node": ^26.6.2
+  "@types/node": ^26.6.3
   "@types/semver": ^7.8.0
   "@types/vscode": ^1.138.0
   "@vitest/coverage-v8": ^5.0.2
   astro: ^7.3.5
   astro-eslint-parser: ^3.2.0
   confbox: ^0.3.1
-  cspell: ^10.3.4
+  cspell: ^10.3.5
   esbuild: ^0.28.2
   eslint: 10.11.0
   eslint-plugin-astro: ^3.2.1
@@ -39,12 +39,12 @@ catalog:
   husky: ^9.1.7
   jiti: ^2.7.0
   knip: ^6.38.0
-  lint-staged: ^17.5.1
+  lint-staged: ^17.6.0
   oxlint: ^1.85.0
   satori: ^0.33.5
   satori-html: ^0.3.2
   semver: ^7.8.5
-  sharp: ^0.35.4
+  sharp: ^0.35.5
   tailwindcss: ^4.3.3
   turbo: ^2.11.4
   typescript: ^6.0.3
@@ -52,7 +52,7 @@ catalog:
   vscode-languageclient: ^10.1.2
   vscode-languageserver: ^10.1.2
   vscode-languageserver-textdocument: ^1.0.15
-  wrangler: ^4.140.0
+  wrangler: ^4.142.0
 minimumReleaseAgeExclude:
   - "@santi020k/eslint-config-typescript"
   - js-yaml@4.3.2
