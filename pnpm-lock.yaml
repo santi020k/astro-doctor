@@ -246,8 +246,8 @@ importers:
         specifier: 'catalog:'
         version: 3.7.4
       '@santi020k/lumen-astro':
-        specifier: ^2.1.0
-        version: 2.1.0(astro@7.3.5(@types/node@26.6.2)(jiti@2.7.0)(yaml@2.8.3))
+        specifier: ^3.0.1
+        version: 3.0.1(astro@7.3.5(@types/node@26.6.2)(jiti@2.7.0)(yaml@2.8.3))
       '@tailwindcss/vite':
         specifier: 'catalog:'
         version: 4.3.3(vite@8.3.1(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.8.3))
@@ -2994,19 +2994,19 @@ packages:
     peerDependencies:
       eslint: ^10.0.0
 
-  '@santi020k/lumen-astro@2.1.0':
-    resolution: {integrity: sha512-VCDFddXuT20rAPQxUH8VU9Jvqgog3rAzz2DpEo/AKFhEW/CMFbVacM21GUqTp9tn/In282aZa0fIoDhw4bFC+w==}
+  '@santi020k/lumen-astro@3.0.1':
+    resolution: {integrity: sha512-6tFTqjmx+ViCFdFMLvfBMaDfSfXelwxGaOnA9livEGXnSaQYvn2A2MITdbX8ByRwwiGsvcDzAHlfXCZ45Wr4ew==}
     engines: {node: '>=22.12.0'}
     hasBin: true
     peerDependencies:
       astro: '>=7.2.4'
 
-  '@santi020k/lumen-core@2.1.0':
-    resolution: {integrity: sha512-Qgb3I/thLCb8dJwLF995ECgYsHhy2IjlNoKwk5ONNPUawo9lD6BQafjyqDYdCaiDGVaotrEH3ufQZb798zXhJA==}
+  '@santi020k/lumen-core@3.0.1':
+    resolution: {integrity: sha512-AG0btQEuowB2zBKjYncMS3bgL842yqzJiS/l0/unqUcif5CmwxJvNYPS5rD4f6WFhRQGXGQUD5PVAbU+0Qh+ww==}
     engines: {node: '>=22.12.0'}
 
-  '@santi020k/lumen@2.1.0':
-    resolution: {integrity: sha512-vPm4dhcgl1lAnftjIE8URjxCH/YWFqO3JeOiOMWrsYWgstNhmL7Q8h9bTCev8NjI8b1U5X/GV6ImaItpVcjIHQ==}
+  '@santi020k/lumen@3.0.1':
+    resolution: {integrity: sha512-1I1ASDmIzwKC5kbLMVIXkc6o+n2rNdFQLfUrqVWNyEkU3FY8NqDk6jO8XCdbXs2Bjf4STD3rOR0THqfcAWsZVw==}
     engines: {node: '>=22.12.0'}
     hasBin: true
 
@@ -7730,6 +7730,18 @@ packages:
       utf-8-validate:
         optional: true
 
+  ws@8.22.0:
+    resolution: {integrity: sha512-Ydggc987+RO0AnWtZ/7Wq9FtNvcrL1b/RO0ud9mWjUPgDrsAAwQSF51sm2hm1XofbU/4jkpGEsLFsZZxU+1DOg==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
   wsl-utils@0.1.0:
     resolution: {integrity: sha512-h3Fbisa2nKGPxCpm89Hk33lBLsnaGBvctQopaBSOW/uIs6FTe1ATyAnKFJrzVs9vpGdsTe73WF3V4lIsk4Gacw==}
     engines: {node: '>=18'}
@@ -10201,21 +10213,21 @@ snapshots:
       - typescript-eslint
     optional: true
 
-  '@santi020k/lumen-astro@2.1.0(astro@7.3.5(@types/node@26.6.2)(jiti@2.7.0)(yaml@2.8.3))':
+  '@santi020k/lumen-astro@3.0.1(astro@7.3.5(@types/node@26.6.2)(jiti@2.7.0)(yaml@2.8.3))':
     dependencies:
-      '@santi020k/lumen': 2.1.0
-      '@santi020k/lumen-core': 2.1.0
+      '@santi020k/lumen': 3.0.1
+      '@santi020k/lumen-core': 3.0.1
       astro: 7.3.5(@types/node@26.6.2)(jiti@2.7.0)(yaml@2.8.3)
       uqr: 0.1.3
 
-  '@santi020k/lumen-core@2.1.0':
+  '@santi020k/lumen-core@3.0.1':
     dependencies:
       '@lucide/icons': 1.48.0
       libphonenumber-js: 1.13.14
 
-  '@santi020k/lumen@2.1.0':
+  '@santi020k/lumen@3.0.1':
     dependencies:
-      '@santi020k/lumen-core': 2.1.0
+      '@santi020k/lumen-core': 3.0.1
       semver: 7.8.5
 
   '@santi020k/og@1.1.1(@types/node@26.6.2)':
@@ -14863,7 +14875,7 @@ snapshots:
       recast: 0.23.21
       semver: 7.8.5
       use-sync-external-store: 1.7.0(react@19.2.8)
-      ws: 8.21.3
+      ws: 8.22.0
     optionalDependencies:
       prettier: 3.9.9
     transitivePeerDependencies:
@@ -15698,6 +15710,9 @@ snapshots:
   ws@8.21.0: {}
 
   ws@8.21.3: {}
+
+  ws@8.22.0:
+    optional: true
 
   wsl-utils@0.1.0:
     dependencies:
