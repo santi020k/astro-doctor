@@ -1,18 +1,38 @@
-# Astro Doctor
+<p align="center">
+  <img src="apps/docs/public/favicon.svg" alt="Astro Doctor" width="88">
+</p>
+
+<h1 align="center">Astro Doctor</h1>
+
+<p align="center">Deterministic diagnostics for healthier Astro projects.</p>
 
 > Your agent writes bad Astro. This catches it.
 
-[![CI](https://github.com/santi020k/astro-doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/santi020k/astro-doctor/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/santi020k/astro-doctor/actions/workflows/codeql.yml/badge.svg)](https://github.com/santi020k/astro-doctor/actions/workflows/codeql.yml)
-[![npm version](https://img.shields.io/npm/v/@santi020k/astro-doctor.svg?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/@santi020k/astro-doctor)
-[![npm downloads](https://img.shields.io/npm/dt/@santi020k/astro-doctor.svg?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/@santi020k/astro-doctor)
-[![license](https://img.shields.io/npm/l/@santi020k/astro-doctor.svg?style=flat&colorA=000000&colorB=000000)](https://github.com/santi020k/astro-doctor/blob/main/LICENSE)
+<p align="center">
+  <a href="https://github.com/santi020k/astro-doctor/actions/workflows/ci.yml"><img src="https://github.com/santi020k/astro-doctor/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/santi020k/astro-doctor/actions/workflows/codeql.yml"><img src="https://github.com/santi020k/astro-doctor/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"></a>
+  <a href="https://npmjs.com/package/@santi020k/astro-doctor"><img src="https://img.shields.io/npm/v/@santi020k/astro-doctor.svg?style=flat&colorA=000000&colorB=000000" alt="npm version"></a>
+  <a href="https://npmjs.com/package/@santi020k/astro-doctor"><img src="https://img.shields.io/npm/dt/@santi020k/astro-doctor.svg?style=flat&colorA=000000&colorB=000000" alt="npm downloads"></a>
+  <a href="https://github.com/santi020k/astro-doctor/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/@santi020k/astro-doctor.svg?style=flat&colorA=000000&colorB=000000" alt="license"></a>
+</p>
 
 Astro Doctor deterministically scans your Astro codebase and catches issues across **performance**, **accessibility**, **security**, and **best practices** — before they reach production. It scores your project health (0–100), teaches your coding agent Astro patterns, and reports new issues directly on PRs.
 
 Works as a **CLI**, an **ESLint plugin**, and a **GitHub Action**.
 
 ---
+
+<p align="center">
+  <a href="https://astro-doctor.santi020k.com">Documentation</a>
+  ·
+  <a href="#install">Install</a>
+  ·
+  <a href="#cli-reference">CLI</a>
+  ·
+  <a href="#rules">Rules</a>
+</p>
+
+**Explore:** [Install](#install) · [Rules](#rules) · [Health Score](#health-score) · [CLI Reference](#cli-reference) · [Configuration](#configuration) · [Development](#development)
 
 ## Install
 
@@ -397,6 +417,14 @@ Astro Doctor brings the same philosophy to [Astro](https://astro.build). If you 
 ESLint configuration powered by [`@santi020k/eslint-config-basic`](https://github.com/santi020k/eslint-config-basic).
 
 ---
+
+## Find your next step
+
+| Resource | Use it for |
+| --- | --- |
+| [`@santi020k/astro-doctor`](packages/astro-doctor/README.md) | Focused installation and usage reference. |
+| [`@santi020k/eslint-plugin-astro-doctor`](packages/eslint-plugin-astro-doctor/README.md) | Focused installation and usage reference. |
+| [Security policy](SECURITY.md) | Private vulnerability reporting and support boundaries. |
 
 ## License
 
