@@ -1019,18 +1019,7 @@ const auditSessionCookie = (
   if (astroConfigContent === undefined) return
 
   const maskedContent = maskCodeLiterals(astroConfigContent)
-  const defineConfigMatch = /\bdefineConfig\s*\(/u.exec(maskedContent)
-
-  if (defineConfigMatch?.index === undefined) return
-
-  const defineConfigOpeningIndex =
-    defineConfigMatch.index + defineConfigMatch[0].lastIndexOf('(')
-
-  const rootOpeningIndex = findNextNonWhitespaceIndex(
-    maskedContent, defineConfigOpeningIndex + 1
-  )
-
-  const rootObjectRange = findObjectRange(maskedContent, rootOpeningIndex)
+  const rootObjectRange = getAstroConfigRootObjectRange(maskedContent)
 
   if (rootObjectRange === undefined) return
 

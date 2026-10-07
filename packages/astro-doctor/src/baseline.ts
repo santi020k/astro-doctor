@@ -4,6 +4,7 @@ import { dirname, join, relative, resolve } from 'node:path'
 
 import { scan } from './scanner/index.js'
 import { createScanResult } from './utils/create-scan-result.js'
+import { isPlainObject } from './utils/is-plain-object.js'
 import { PERSISTENT_BASELINE_VERSION } from './constants.js'
 import { extractRevision } from './git.js'
 import type { Diagnostic, ScanOptions, ScanResult } from './types.js'
@@ -17,7 +18,6 @@ interface BaselineScanOptions {
 }
 
 interface BaselineSnapshot {
-  readonly directory: string
   readonly projectDirectory: string
   readonly files: readonly string[]
 }
@@ -41,8 +41,10 @@ export interface PersistentBaseline {
 
 const PERSISTENT_BASELINE_SCHEMA_URL = 'https://doctor.santi020k.com/schema/baseline.json'
 
-const createBaselineSnapshot = (options: BaselineScanOptions): BaselineSnapshot => {
-  const snapshotDirectory = mkdtempSync(join(tmpdir(), 'astro-doctor-baseline-'))
+const createBaselineSnapshot = (
+  options: BaselineScanOptions,
+  snapshotDirectory: string
+): BaselineSnapshot => {
   const projectPath = relative(options.repositoryDirectory, options.projectDirectory)
   const snapshotProjectDirectory = resolve(snapshotDirectory, projectPath)
   const snapshotFiles: string[] = []
@@ -61,16 +63,17 @@ const createBaselineSnapshot = (options: BaselineScanOptions): BaselineSnapshot 
   }
 
   return {
-    directory: snapshotDirectory,
     projectDirectory: snapshotProjectDirectory,
     files: snapshotFiles
   }
 }
 
 export const scanBaseline = async (options: BaselineScanOptions): Promise<BaselineScanResult> => {
-  const snapshot = createBaselineSnapshot(options)
+  const snapshotDirectory = mkdtempSync(join(tmpdir(), 'astro-doctor-baseline-'))
 
   try {
+    const snapshot = createBaselineSnapshot(options, snapshotDirectory)
+
     const result = await scan({
       ...options.scanOptions,
       directory: snapshot.projectDirectory,
@@ -83,7 +86,7 @@ export const scanBaseline = async (options: BaselineScanOptions): Promise<Baseli
       rootDirectory: snapshot.projectDirectory
     }
   } finally {
-    rmSync(snapshot.directory, { recursive: true, force: true })
+    rmSync(snapshotDirectory, { recursive: true, force: true })
   }
 }
 
@@ -133,47 +136,42 @@ export const writePersistentBaseline = (
   writeFileSync(filePath, `${JSON.stringify(baseline, null, 2)}\n`, 'utf8')
 }
 
-const isPersistentBaselineEntry = (value: unknown): value is PersistentBaselineEntry => {
-  if (typeof value !== 'object' || value === null) return false
-
-  const entry = value as Record<string, unknown>
-
-  return typeof entry.fingerprint === 'string' &&
-    typeof entry.count === 'number' &&
-    Number.isInteger(entry.count) &&
-    entry.count > 0
-}
+const isPersistentBaselineEntry = (value: unknown): value is PersistentBaselineEntry => isPlainObject(value) &&
+  typeof value.fingerprint === 'string' &&
+  typeof value.count === 'number' &&
+  Number.isInteger(value.count) &&
+  value.count > 0
 
 export const readPersistentBaseline = (filePath: string): PersistentBaseline => {
   const parsed: unknown = JSON.parse(readFileSync(filePath, 'utf8'))
 
-  if (typeof parsed !== 'object' || parsed === null) {
+  if (!isPlainObject(parsed)) {
     throw new TypeError('Baseline must contain a JSON object.')
   }
 
-  const baseline = parsed as Record<string, unknown>
+  const version = parsed.version
 
-  if (baseline.version !== PERSISTENT_BASELINE_VERSION) {
+  if (version !== PERSISTENT_BASELINE_VERSION) {
     throw new Error(
-      `Unsupported baseline version "${String(baseline.version)}". Expected ${PERSISTENT_BASELINE_VERSION}.`
+      `Unsupported baseline version "${String(version)}". Expected ${PERSISTENT_BASELINE_VERSION}.`
     )
   }
 
-  if (typeof baseline.generatedAt !== 'string') {
+  if (typeof parsed.generatedAt !== 'string') {
     throw new TypeError('Baseline generatedAt must be a string.')
   }
 
-  if (!Array.isArray(baseline.entries) || !baseline.entries.every(isPersistentBaselineEntry)) {
+  if (!Array.isArray(parsed.entries) || !parsed.entries.every(isPersistentBaselineEntry)) {
     throw new TypeError('Baseline entries must contain valid fingerprint counts.')
   }
 
   return {
-    $schema: typeof baseline.$schema === 'string' ?
-      baseline.$schema :
+    $schema: typeof parsed.$schema === 'string' ?
+      parsed.$schema :
       PERSISTENT_BASELINE_SCHEMA_URL,
     version: PERSISTENT_BASELINE_VERSION,
-    generatedAt: baseline.generatedAt,
-    entries: baseline.entries
+    generatedAt: parsed.generatedAt,
+    entries: parsed.entries
   }
 }
 

@@ -255,6 +255,99 @@ describe('project audits', () => {
     ).toBe(false)
   })
 
+  test('reports insecure session cookie overrides in a plain object config export', async () => {
+    writeFileSync(
+      join(testDirectory, 'astro.config.mjs'), [
+        'export default {',
+        '  unrelated: { secure: false },',
+        '  session: {',
+        '    cookie: {',
+        '      secure: false,',
+        '      httpOnly: false,',
+        '      sameSite: false,',
+        '    },',
+        '  },',
+        '}'
+      ].join('\n')
+    )
+
+    const scanResult = await scan({ directory: testDirectory })
+    const cookieDiagnostics = scanResult.diagnostics.filter(
+      diagnostic => diagnostic.ruleId === 'astro-doctor/no-insecure-session-cookie'
+    )
+
+    expect(cookieDiagnostics).toHaveLength(3)
+    expect(cookieDiagnostics.map(diagnostic => diagnostic.line)).toEqual([5, 6, 7])
+  })
+
+  test('accepts secure session cookie configuration in a plain object config export', async () => {
+    writeFileSync(
+      join(testDirectory, 'astro.config.mjs'), [
+        'export default {',
+        '  session: {',
+        '    cookie: { secure: true, httpOnly: true, sameSite: "lax" },',
+        '  },',
+        '}'
+      ].join('\n')
+    )
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(
+      scanResult.diagnostics.some(
+        diagnostic => diagnostic.ruleId === 'astro-doctor/no-insecure-session-cookie'
+      )
+    ).toBe(false)
+  })
+
+  test('reports insecure session cookie overrides in a variable-bound config export', async () => {
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), [
+        'const config = {',
+        '  session: {',
+        '    cookie: {',
+        '      secure: false,',
+        '      httpOnly: false,',
+        '      sameSite: false,',
+        '    },',
+        '  },',
+        '}',
+        '',
+        'export default config'
+      ].join('\n')
+    )
+
+    const scanResult = await scan({ directory: testDirectory })
+    const cookieDiagnostics = scanResult.diagnostics.filter(
+      diagnostic => diagnostic.ruleId === 'astro-doctor/no-insecure-session-cookie'
+    )
+
+    expect(cookieDiagnostics).toHaveLength(3)
+    expect(cookieDiagnostics.map(diagnostic => diagnostic.line)).toEqual([4, 5, 6])
+  })
+
+  test('accepts secure session cookie configuration in a variable-bound config export', async () => {
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), [
+        'const config = {',
+        '  session: {',
+        '    cookie: { secure: true, httpOnly: true, sameSite: "lax" },',
+        '  },',
+        '}',
+        '',
+        'export default config'
+      ].join('\n')
+    )
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(
+      scanResult.diagnostics.some(
+        diagnostic => diagnostic.ruleId === 'astro-doctor/no-insecure-session-cookie'
+      )
+    ).toBe(false)
+  })
+
   test('reports Astro 7 experimental flags that moved or were removed', async () => {
     writeFileSync(
       join(testDirectory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } })

@@ -1,6 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalEnv": ["VITEST"],
+  "globalDependencies": ["skills/SKILL.md", "scripts/copy-agent-skill.mjs"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

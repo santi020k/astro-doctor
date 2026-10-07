@@ -1,6 +1,9 @@
+import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
+
 import { ESLint } from 'eslint'
 import { describe, expect, test } from 'vitest'
 import { DiagnosticSeverity } from 'vscode-languageserver/node'
+import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import {
   buildCodeActionsForDiagnostic,
@@ -63,7 +66,7 @@ describe('LSP commands', () => {
 })
 
 describe('LSP code actions', () => {
-  test('exposes rule suggestions alongside suppression and documentation actions', () => {
+  test('exposes rule suggestions and documentation without an unsafe template suppression', () => {
     const range = {
       start: { line: 2, character: 0 },
       end: { line: 2, character: 8 }
@@ -85,11 +88,54 @@ describe('LSP code actions', () => {
 
     expect(actions.map(action => action.title)).toEqual([
       'Add defer to preserve document execution order.',
-      'Disable astro-doctor/no-blocking-script for this line',
       'Open documentation for astro-doctor/no-blocking-script'
     ])
     expect(actions[0]?.edit?.changes?.['file:///workspace/index.astro']?.[0]?.newText)
       .toBe(' defer')
+  })
+
+  test('offers an effective suppression for JavaScript frontmatter', async () => {
+    const content = '---\nconst secret = process.env.SECRET\n---\n<div />'
+    const documentUri = 'file:///workspace/index.astro'
+    const actions = buildCodeActionsForDiagnostic(documentUri, {
+      range: { start: { line: 1, character: 15 }, end: { line: 1, character: 26 } },
+      code: 'astro-doctor/no-process-env',
+      source: 'astro-doctor',
+      message: 'Use import.meta.env.'
+    }, content)
+    const suppression = actions.find(action => action.title.startsWith('Disable '))
+    const edits = suppression?.edit?.changes?.[documentUri]
+
+    expect(edits).toBeDefined()
+    if (!edits) throw new Error('Expected a frontmatter suppression edit')
+
+    const modifiedContent = TextDocument.applyEdits(
+      TextDocument.create(documentUri, 'astro', 0, content), edits
+    )
+    const eslint = new ESLint({
+      overrideConfigFile: true,
+      overrideConfig: [{
+        ...astroDoctorPlugin.configs.recommended,
+        rules: { 'astro-doctor/no-process-env': 'error' }
+      }]
+    })
+    const results = await eslint.lintText(modifiedContent, { filePath: 'index.astro' })
+
+    expect(results[0]?.messages).toEqual([])
+  })
+
+  test.each([
+    '<img src="/hero.png" />',
+    '---\nconst broken = (\n---\n<img src="/hero.png" />'
+  ])('does not insert JavaScript comments into templates or invalid documents', content => {
+    const actions = buildCodeActionsForDiagnostic('file:///workspace/index.astro', {
+      range: { start: { line: 0, character: 0 }, end: { line: 0, character: 1 } },
+      code: 'astro-doctor/no-missing-alt',
+      source: 'astro-doctor',
+      message: 'Missing alt.'
+    }, content)
+
+    expect(actions.some(action => action.title.startsWith('Disable '))).toBe(false)
   })
 
   test('marks an automatic fix as preferred', () => {

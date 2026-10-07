@@ -14,13 +14,14 @@
   },
   "files": [
     "dist/**/*.js",
-    "dist/**/*.d.ts"
+    "dist/**/*.d.ts",
+    "dist/skills/**/*.md"
   ],
   "bin": {
     "astro-doctor": "./dist/bin/astro-doctor.js"
   },
   "scripts": {
-    "build": "tsc --project tsconfig.json",
+    "build": "tsc --project tsconfig.json && node ../../scripts/copy-agent-skill.mjs",
     "dev": "tsc --project tsconfig.json --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

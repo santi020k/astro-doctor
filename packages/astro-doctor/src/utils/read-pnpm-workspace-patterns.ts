@@ -1,29 +1,29 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
+import { parseYAML } from 'confbox/yaml'
+
+const PNPM_WORKSPACE_FILE_NAME = 'pnpm-workspace.yaml'
+const PACKAGES_KEY = 'packages'
+const isUnknownRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
+const isStringArray = (value: unknown): value is string[] => Array.isArray(value) && value.every(item => typeof item === 'string')
+
 export const readPnpmWorkspacePatterns = (rootDirectory: string): string[] => {
-  const pnpmWorkspacePath = join(rootDirectory, 'pnpm-workspace.yaml')
+  const pnpmWorkspacePath = join(rootDirectory, PNPM_WORKSPACE_FILE_NAME)
 
   if (!existsSync(pnpmWorkspacePath)) return []
 
-  const content = readFileSync(pnpmWorkspacePath, 'utf8')
-  const matches = content.matchAll(/^\s+-\s+([^#\n]+)/gmu)
-  const patterns: string[] = []
+  let workspaceConfig: unknown
 
-  for (const match of matches) {
-    let pattern = match[1]?.trim()
-
-    if (!pattern) continue
-
-    if (
-      (pattern.startsWith('\'') && pattern.endsWith('\'')) ||
-      (pattern.startsWith('"') && pattern.endsWith('"'))
-    ) {
-      pattern = pattern.slice(1, -1)
-    }
-
-    patterns.push(pattern)
+  try {
+    workspaceConfig = parseYAML(readFileSync(pnpmWorkspacePath, 'utf8'))
+  } catch {
+    return []
   }
 
-  return patterns
+  if (!isUnknownRecord(workspaceConfig)) return []
+
+  const packages = workspaceConfig[PACKAGES_KEY]
+
+  return isStringArray(packages) ? packages : []
 }

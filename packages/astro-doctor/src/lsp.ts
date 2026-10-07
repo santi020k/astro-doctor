@@ -43,6 +43,7 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { scan } from './scanner/index.js'
+import { getLineSuppressionAction } from './utils/get-line-suppression-action.js'
 import { isFileInDirectory } from './utils/is-file-in-directory.js'
 import { loadConfig } from './config.js'
 import { LSP_SCAN_DEBOUNCE_MS } from './constants.js'
@@ -497,17 +498,13 @@ const buildAstroDiagLspDiagnostic = (d: AstroDiagnostic): LspDiagnostic => {
   }
 }
 
-export const buildCodeActionsForDiagnostic = (
+const buildRuleFixActions = (
   documentUri: string,
-  diagnostic: LspDiagnostic
+  ruleId: string,
+  diagnostic: LspDiagnostic,
+  fixData: DiagnosticFixData | undefined
 ): CodeAction[] => {
-  if (diagnostic.source !== 'astro-doctor' || typeof diagnostic.code !== 'string') return []
-
   const codeActions: CodeAction[] = []
-  const ruleId = diagnostic.code
-  const docUrl = getRuleDocUrl(ruleId)
-  const diagnosticData: unknown = diagnostic.data
-  const fixData = isDiagnosticFixData(diagnosticData) ? diagnosticData : undefined
 
   if (fixData?.fix) {
     codeActions.push({
@@ -542,21 +539,27 @@ export const buildCodeActionsForDiagnostic = (
     })
   }
 
-  const line = diagnostic.range.start.line
+  return codeActions
+}
 
-  codeActions.push({
-    title: `Disable ${ruleId} for this line`,
-    kind: CodeActionKind.QuickFix,
-    diagnostics: [diagnostic],
-    edit: {
-      changes: {
-        [documentUri]: [{
-          range: { start: { line, character: 0 }, end: { line, character: 0 } },
-          newText: `// eslint-disable-next-line ${ruleId}\n`
-        }]
-      }
-    }
-  })
+export const buildCodeActionsForDiagnostic = (
+  documentUri: string,
+  diagnostic: LspDiagnostic,
+  documentContent?: string
+): CodeAction[] => {
+  if (diagnostic.source !== 'astro-doctor' || typeof diagnostic.code !== 'string') return []
+
+  const codeActions: CodeAction[] = []
+  const ruleId = diagnostic.code
+  const docUrl = getRuleDocUrl(ruleId)
+  const diagnosticData: unknown = diagnostic.data
+  const fixData = isDiagnosticFixData(diagnosticData) ? diagnosticData : undefined
+
+  codeActions.push(...buildRuleFixActions(documentUri, ruleId, diagnostic, fixData))
+
+  const suppressionAction = getLineSuppressionAction(documentUri, ruleId, diagnostic, documentContent)
+
+  if (suppressionAction) codeActions.push(suppressionAction)
 
   if (docUrl !== undefined) {
     codeActions.push({
@@ -967,7 +970,9 @@ export const runLsp = (): void => {
   })
 
   connection.onCodeAction(({ textDocument, context }) => context.diagnostics.flatMap(
-    diagnostic => buildCodeActionsForDiagnostic(textDocument.uri, diagnostic)
+    diagnostic => buildCodeActionsForDiagnostic(
+      textDocument.uri, diagnostic, documents.get(textDocument.uri)?.getText()
+    )
   ))
 
   documents.listen(connection)

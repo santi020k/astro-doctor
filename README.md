@@ -344,7 +344,7 @@ those workflows a read-only token. Scanning and failure gates still run.
 
 Astro Doctor has an official extension for VS Code and Cursor. It provides:
 - **Live Diagnostics:** Real-time linting as you type.
-- **Quick Fixes:** Apply safe rule fixes where supported and offer suppression actions for the rest.
+- **Quick Fixes:** Apply safe rule fixes where supported and offer effective line suppression actions in JavaScript frontmatter.
 - **Health Sidebar:** A visual health report with a score ring and category breakdown inside the VS Code Sidebar.
 - **Hover Info:** Detailed explanations when hovering over issues.
 

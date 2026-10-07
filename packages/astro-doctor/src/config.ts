@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 import { parseJSON5 } from 'confbox'
 import { createJiti } from 'jiti'
 
+import { isPlainObject } from './utils/is-plain-object.js'
 import { isPresetName } from './presets.js'
 import type { AstroDoctorConfig } from './types.js'
 
@@ -17,7 +18,6 @@ const CONFIG_FILE_NAMES = [
 ] as const
 
 const jiti = createJiti(import.meta.url)
-const isPlainObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
 const VALID_FAIL_ON = new Set(['error', 'warning', 'off'])
 const VALID_RULE_VALUES = new Set(['error', 'warn', 'off'])
 const isFailOnValue = (value: unknown): value is NonNullable<AstroDoctorConfig['failOn']> => typeof value === 'string' && VALID_FAIL_ON.has(value)
