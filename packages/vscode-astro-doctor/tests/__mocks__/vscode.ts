@@ -1,5 +1,12 @@
 import { vi } from 'vitest'
 
+export const FileType = {
+  Directory: 2,
+  File: 1,
+  SymbolicLink: 64,
+  Unknown: 0,
+} as const
+
 export const ExtensionMode = {
   Development: 1,
   Production: 2,

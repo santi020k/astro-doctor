@@ -47,12 +47,29 @@ The independent review identified unsafe suppression in multiline template text 
 installer documentation. Both were accepted and corrected with regression or source-contract
 verification. The controlled theme toggle also now synchronizes its pressed state.
 
+The completed browser run passed all 10 tests, including 148 route/theme/viewport accessibility
+checks with no violations. A fresh CI-style server run passed two interaction checks and confirmed
+that Playwright stopped both server processes. Native page and theme transitions were also checked
+with normal motion enabled. Both full and production dependency audits report zero vulnerabilities.
+The combined workspace passed `pnpm run ok`, `pnpm run lint:knip`, `pnpm run check:exports`,
+`pnpm run check:packed-install`, and `pnpm run lint:spell`. The packed install was verified on
+Node.js 22.23.1, including non-empty agent skills and the generated workflow.
+
+The dependency resolver still reports upstream peer ranges for `eslint-plugin-jsx-a11y` with
+ESLint 10 and the older TypeScript utilities inside `eslint-plugin-tsdoc` with TypeScript 6.
+These existing transitive declarations were not hidden with peer overrides or weaker lint rules;
+the repository's lint and type-check gates remain required.
+
 ## Integration and recovery
 
 All earlier dependency branch tips are contained in the release. Historical stashes were
 inspected and preserved: their obsolete release-workflow and old package-manager-tab changes
 would regress the current release. Do not reapply them blindly. Preserve checkouts owned by
 other active tasks even after their completed commits are integrated.
+
+The documentation and reliability work is committed as `fadb9b4`. The release also integrates
+the completed ESLint tooling and typed VS Code mock update from `6761b72`, retaining the Lumen v4
+upgrade, removed documentation dependencies, and scoped KaTeX security constraint.
 
 Before publishing, rerun the documented GitHub checks and required reviews on the final release
 revision. Use the existing GitHub release workflow from merged `main`; do not create a local tag
