@@ -94,8 +94,8 @@ describe('LSP code actions', () => {
       .toBe(' defer')
   })
 
-  test('offers an effective suppression for JavaScript frontmatter', async () => {
-    const content = '---\nconst secret = process.env.SECRET\n---\n<div />'
+  test.each(['const secret = process.env.SECRET', 'const secret: string = process.env.SECRET'])('offers an effective suppression for frontmatter: %s', async declaration => {
+    const content = `---\n${declaration}\n---\n<div />`
     const documentUri = 'file:///workspace/index.astro'
     const actions = buildCodeActionsForDiagnostic(documentUri, {
       range: { start: { line: 1, character: 15 }, end: { line: 1, character: 26 } },
@@ -121,6 +121,7 @@ describe('LSP code actions', () => {
     })
     const results = await eslint.lintText(modifiedContent, { filePath: 'index.astro' })
 
+    expect(results[0]?.fatalErrorCount).toBe(0)
     expect(results[0]?.messages).toEqual([])
   })
 

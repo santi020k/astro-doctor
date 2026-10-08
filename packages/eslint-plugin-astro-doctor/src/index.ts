@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module'
 
+import * as typescriptParser from '@typescript-eslint/parser'
 import * as astroParser from 'astro-eslint-parser'
 import type { Linter } from 'eslint'
 
@@ -45,7 +46,9 @@ plugin.configs.recommended = {
   languageOptions: {
     parser: astroParser,
     parserOptions: {
-      sourceType: 'module'
+      sourceType: 'module',
+      parser: typescriptParser,
+      extraFileExtensions: ['.astro']
     }
   },
   rules: disableDuplicateAstroDoctorRules({

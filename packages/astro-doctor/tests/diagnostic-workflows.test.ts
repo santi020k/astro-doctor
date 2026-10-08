@@ -25,6 +25,32 @@ describe('diagnostic workflows', () => {
     process.exitCode = undefined
   })
 
+  test('scans and previews TypeScript frontmatter without a false clean score', async () => {
+    const source = '---\nconst token: string = process.env.SECRET\n---\n<img src="/hero.png" />'
+    const filePath = join(directory, 'index.astro')
+
+    writeFileSync(filePath, source)
+
+    const result = await scan({ directory })
+
+    expect(result.score).toBeLessThan(100)
+    expect(result.diagnostics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ ruleId: 'astro-doctor/no-process-env' }),
+      expect.objectContaining({ ruleId: 'astro-doctor/no-missing-alt' })
+    ]))
+
+    const preview = await scan({ directory, fixDryRun: true })
+
+    expect(preview.fixPreview?.changes[0]?.diff).toContain('+const token: string = import.meta.env.SECRET')
+    expect(readFileSync(filePath, 'utf8')).toBe(source)
+  })
+
+  test('rejects malformed source instead of returning a clean ordinary scan', async () => {
+    writeFileSync(join(directory, 'index.astro'), '---\nconst token =\n---\n<div />')
+
+    await expect(scan({ directory })).rejects.toThrow('source could not be parsed')
+  })
+
   test('previews fixes and remaining manual findings without writing source or cache', async () => {
     const filePath = join(directory, 'index.astro')
     const source = '---\nconst title = process.env.SITE_TITLE\n---\n<h1>{title}</h1>\n<img src="/hero.png" />\n'

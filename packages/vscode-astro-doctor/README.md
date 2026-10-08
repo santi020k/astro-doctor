@@ -1,10 +1,18 @@
 <p align="center">
-  <a href="../../README.md"><img src="../../apps/docs/public/favicon.svg" alt="Astro Doctor" width="72"></a>
+  <a href="https://github.com/santi020k/astro-doctor/blob/main/README.md">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/santi020k/astro-doctor/main/docs/assets/readme/workspace-dark.png">
+      <img src="https://raw.githubusercontent.com/santi020k/astro-doctor/main/docs/assets/readme/workspace-light.png" alt="Astro Doctor — Clear diagnostics. Healthier Astro projects." width="1200" height="220">
+    </picture>
+  </a>
 </p>
 
-<p align="center"><a href="../../README.md">Astro Doctor</a></p>
-
 <h1 align="center">VS Code extension</h1>
+
+<p align="center">
+  <a href="https://github.com/santi020k/astro-doctor/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-13967e?style=flat-square" alt="License: MIT"></a>
+  <a href="https://github.com/santi020k/astro-doctor/blob/main/packages/vscode-astro-doctor/package.json"><img src="https://img.shields.io/badge/editor-VS_Code-a55117?style=flat-square" alt="Editor: VS Code"></a>
+</p>
 
 <p align="center">
   <a href="../../README.md">Project overview</a> ·
@@ -41,11 +49,11 @@ Astro Doctor diagnostics, hovers, and quick fixes right in your editor.
 
 This extension contributes the following settings:
 
-* `astroDoctor.enable`: Enable or disable Astro Doctor features (default: `true`).
-* `astroDoctor.serverPath`: Optional path to a custom `astro-doctor` executable. This always wins over the environment defaults.
-* `astroDoctor.nodePath`: Optional path to the Node.js executable used by the bundled language server. When empty, the extension resolves Node.js from your shell environment.
-* `astroDoctor.scanOnType`: Re-scan files live as you type from the unsaved buffer (default: `true`).
-* `astroDoctor.trace.server`: Trace communication with the underlying Astro Doctor Language Server (`off`, `messages`, `verbose`).
+- `astroDoctor.enable`: Enable or disable Astro Doctor features (default: `true`).
+- `astroDoctor.serverPath`: Optional path to a custom `astro-doctor` executable. This always wins over the environment defaults.
+- `astroDoctor.nodePath`: Optional path to the Node.js executable used by the bundled language server. When empty, the extension resolves Node.js from your shell environment.
+- `astroDoctor.scanOnType`: Re-scan files live as you type from the unsaved buffer (default: `true`).
+- `astroDoctor.trace.server`: Trace communication with the underlying Astro Doctor Language Server (`off`, `messages`, `verbose`).
 
 The extension requires VS Code 1.125 or newer and Node.js `^22.22.3 || ^24.16.0 || >=26.3.0` for the bundled language server. It resolves version-manager installations such as NVM and fnm through your shell, even when VS Code was launched from the Dock or application menu.
 
@@ -53,8 +61,8 @@ The extension requires VS Code 1.125 or newer and Node.js `^22.22.3 || ^24.16.0 
 
 The extension reads `ASTRO_DOCTOR_EXTENSION_ENV` when it starts:
 
-* `local`: Used by the VS Code debug workflow. It prefers the monorepo CLI at `packages/astro-doctor/dist/bin/astro-doctor.js`, then a workspace-local `node_modules/.bin/astro-doctor`, then the bundled server.
-* `production`: Used to smoke-test packaged behavior. It prefers the bundled `dist/server.mjs`, launched with the supported `node` executable from the user's environment, then falls back to a workspace-local `node_modules/.bin/astro-doctor`.
+- `local`: Used by the VS Code debug workflow. It prefers the monorepo CLI at `packages/astro-doctor/dist/bin/astro-doctor.js`, then a workspace-local `node_modules/.bin/astro-doctor`, then the bundled server.
+- `production`: Used to smoke-test packaged behavior. It prefers the bundled `dist/server.mjs`, launched with the supported `node` executable from the user's environment, then falls back to a workspace-local `node_modules/.bin/astro-doctor`.
 
 If the variable is not set, VS Code development mode behaves like `local`; installed extension mode behaves like `production`.
 
@@ -83,12 +91,12 @@ Only run `pnpm --filter vscode-astro-doctor run package` and install the generat
 
 ## Commands
 
-* `Astro Doctor: Scan Workspace`
-* `Astro Doctor: Scan Current File`
-* `Astro Doctor: Apply All Safe Fixes in File`
-* `Astro Doctor: Restart Server`
-* `Astro Doctor: Show Output`
-* `Astro Doctor: Open Documentation`
+- `Astro Doctor: Scan Workspace`
+- `Astro Doctor: Scan Current File`
+- `Astro Doctor: Apply All Safe Fixes in File`
+- `Astro Doctor: Restart Server`
+- `Astro Doctor: Show Output`
+- `Astro Doctor: Open Documentation`
 
 ## Links
 

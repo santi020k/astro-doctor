@@ -1,10 +1,16 @@
+import * as typescriptParser from '@typescript-eslint/parser'
 import { parseForESLint } from 'astro-eslint-parser'
 import type { Position } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 export const isFrontmatterPosition = (content: string, position: Position): boolean => {
   try {
-    const parsedDocument = parseForESLint(content)
+    const parsedDocument = parseForESLint(content, {
+      parser: typescriptParser,
+      sourceType: 'module',
+      extraFileExtensions: ['.astro']
+    })
+
     const frontmatter = parsedDocument.services.getAstroAst().frontmatter
 
     if (!frontmatter) return false

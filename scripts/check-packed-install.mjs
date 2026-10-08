@@ -139,7 +139,7 @@ try {
           }],
         })
         const [result] = await eslint.lintText(
-          '<html><body><img src="/hero.jpg"></body></html>',
+          '---\\nconst title: string = "hello"\\n---\\n<html><body><img src="/hero.jpg"></body></html>',
           { filePath: 'fixture.astro' },
         )
         const ruleIds = result.messages.map((message) => message.ruleId)

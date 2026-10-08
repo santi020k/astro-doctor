@@ -60,6 +60,9 @@ catalogs:
     '@types/vscode':
       specifier: ^1.140.0
       version: 1.140.0
+    '@typescript-eslint/parser':
+      specifier: ^8.71.1
+      version: 8.71.1
     '@vitest/coverage-v8':
       specifier: ^5.0.3
       version: 5.0.3
@@ -274,6 +277,9 @@ importers:
       '@santi020k/eslint-plugin-astro-doctor':
         specifier: workspace:*
         version: link:../eslint-plugin-astro-doctor
+      '@typescript-eslint/parser':
+        specifier: 'catalog:'
+        version: 8.71.1(eslint@10.12.0(jiti@2.7.0))(typescript@6.0.3)
       astro-eslint-parser:
         specifier: 'catalog:'
         version: 3.2.0
@@ -292,6 +298,9 @@ importers:
       semver:
         specifier: 'catalog:'
         version: 7.8.5
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
       vscode-languageserver:
         specifier: 'catalog:'
         version: 10.1.2
@@ -311,21 +320,24 @@ importers:
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 5.0.3(vitest@5.0.3)
-      typescript:
-        specifier: 'catalog:'
-        version: 6.0.3
       vitest:
         specifier: 'catalog:'
         version: 5.0.3(@types/node@26.6.4)(@vitest/coverage-v8@5.0.3)(jsdom@27.4.0)(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.8.3))
 
   packages/eslint-plugin-astro-doctor:
     dependencies:
+      '@typescript-eslint/parser':
+        specifier: 'catalog:'
+        version: 8.71.1(eslint@10.12.0(jiti@2.7.0))(typescript@6.0.3)
       astro-eslint-parser:
         specifier: 'catalog:'
         version: 3.2.0
       eslint-plugin-astro:
         specifier: 'catalog:'
         version: 3.2.1(@typescript-eslint/parser@8.71.1(eslint@10.12.0(jiti@2.7.0))(typescript@6.0.3))(eslint-plugin-jsx-a11y@6.10.2(eslint@10.12.0(jiti@2.7.0)))(eslint@10.12.0(jiti@2.7.0))(typescript-eslint@8.71.1(eslint@10.12.0(jiti@2.7.0))(typescript@6.0.3))
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
     devDependencies:
       '@arethetypeswrong/cli':
         specifier: 'catalog:'
@@ -339,9 +351,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.12.0(jiti@2.7.0)
-      typescript:
-        specifier: 'catalog:'
-        version: 6.0.3
       vitest:
         specifier: 'catalog:'
         version: 5.0.3(@types/node@26.6.4)(@vitest/coverage-v8@5.0.3)(jsdom@27.4.0)(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.8.3))
@@ -8339,7 +8348,7 @@ snapshots:
   '@es-joy/jsdoccomment@0.88.0':
     dependencies:
       '@types/estree': 1.0.9
-      '@typescript-eslint/types': 8.70.1
+      '@typescript-eslint/types': 8.71.1
       comment-parser: 1.4.7
       esquery: 1.7.0
       jsdoc-type-pratt-parser: 7.2.0
@@ -8347,7 +8356,7 @@ snapshots:
   '@es-joy/jsdoccomment@0.91.0':
     dependencies:
       '@types/estree': 1.0.9
-      '@typescript-eslint/types': 8.70.1
+      '@typescript-eslint/types': 8.71.1
       comment-parser: 1.4.7
       esquery: 1.7.0
       jsdoc-type-pratt-parser: 8.0.0
@@ -9687,7 +9696,7 @@ snapshots:
   '@stylistic/eslint-plugin@5.10.0(eslint@10.12.0(jiti@2.7.0))':
     dependencies:
       '@eslint-community/eslint-utils': 4.10.1(eslint@10.12.0(jiti@2.7.0))
-      '@typescript-eslint/types': 8.70.1
+      '@typescript-eslint/types': 8.71.1
       eslint: 10.12.0(jiti@2.7.0)
       eslint-visitor-keys: 4.2.1
       espree: 10.4.0
@@ -9942,8 +9951,8 @@ snapshots:
 
   '@typescript-eslint/project-service@8.56.1(typescript@6.0.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.70.1(typescript@6.0.3)
-      '@typescript-eslint/types': 8.70.1
+      '@typescript-eslint/tsconfig-utils': 8.71.1(typescript@6.0.3)
+      '@typescript-eslint/types': 8.71.1
       debug: 4.4.3
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -9951,8 +9960,8 @@ snapshots:
 
   '@typescript-eslint/project-service@8.70.1(typescript@6.0.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.70.1(typescript@6.0.3)
-      '@typescript-eslint/types': 8.70.1
+      '@typescript-eslint/tsconfig-utils': 8.71.1(typescript@6.0.3)
+      '@typescript-eslint/types': 8.71.1
       debug: 4.4.3
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -11453,7 +11462,7 @@ snapshots:
 
   eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.71.1(eslint@10.12.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.12.0(jiti@2.7.0)):
     dependencies:
-      '@typescript-eslint/types': 8.70.1
+      '@typescript-eslint/types': 8.71.1
       comment-parser: 1.4.9
       debug: 4.4.3
       eslint: 10.12.0(jiti@2.7.0)

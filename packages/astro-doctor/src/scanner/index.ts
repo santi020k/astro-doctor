@@ -8,6 +8,7 @@ import astroDoctorPlugin, {
   getAstroRuleCategory
 } from '@santi020k/eslint-plugin-astro-doctor'
 
+import * as typescriptParser from '@typescript-eslint/parser'
 import * as astroParser from 'astro-eslint-parser'
 import { ESLint } from 'eslint'
 
@@ -104,7 +105,9 @@ export const buildEslintConfig = (options: ScanOptions): ESLint.Options => {
         languageOptions: {
           parser: astroParser,
           parserOptions: {
-            sourceType: 'module'
+            sourceType: 'module',
+            parser: typescriptParser,
+            extraFileExtensions: ['.astro']
           }
         },
         rules: {
@@ -138,7 +141,7 @@ const lintAstroFiles = async (options: ScanOptions, astroFiles: string[], projec
   const eslintResults = await eslint.lintFiles(astroFiles)
   const invalidFile = eslintResults.find(fileResult => fileResult.fatalErrorCount > 0)
 
-  if (invalidFile !== undefined && (options.fixDryRun || options.failOnParseError)) {
+  if (invalidFile !== undefined) {
     throw new Error(`Cannot scan ${invalidFile.filePath}: source could not be parsed.`)
   }
 

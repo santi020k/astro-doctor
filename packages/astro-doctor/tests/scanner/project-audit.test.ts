@@ -845,7 +845,10 @@ describe('project audits', () => {
     )
   })
 
-  test('reports DOMContentLoaded usage in valid script-tag variants across a ClientRouter project', async () => {
+  test.each([
+    { openTag: '<script>', closeTag: '</script>' },
+    { openTag: '<script type="module">', closeTag: '</script>' }
+  ])('audits DOMContentLoaded usage with $openTag across a ClientRouter project', async ({ openTag, closeTag }) => {
     mkdirSync(join(testDirectory, 'src', 'components'), { recursive: true })
     mkdirSync(join(testDirectory, 'src', 'layouts'), { recursive: true })
     writeFileSync(
@@ -860,9 +863,9 @@ describe('project audits', () => {
     writeFileSync(
       join(testDirectory, 'src', 'components', 'menu.astro'), [
         '<button id="menu">Menu</button>',
-        '<SCRIPT>',
+        openTag,
         '  document.addEventListener(\'DOMContentLoaded\', () => {})',
-        '</SCRIPT data-ignored>'
+        closeTag
       ].join('\n')
     )
 

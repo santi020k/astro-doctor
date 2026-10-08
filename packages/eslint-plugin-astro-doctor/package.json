@@ -30,14 +30,15 @@
   },
   "dependencies": {
     "astro-eslint-parser": "catalog:",
-    "eslint-plugin-astro": "catalog:"
+    "eslint-plugin-astro": "catalog:",
+    "@typescript-eslint/parser": "catalog:",
+    "typescript": "catalog:"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
-    "typescript": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {

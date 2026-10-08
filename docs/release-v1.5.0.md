@@ -1,8 +1,8 @@
 # Astro Doctor 1.5.0 release preparation
 
-This release is being prepared locally on `release/v1.5.0`, based on the released 1.4.0
-`main`. Publishing packages, pushing branches, opening or merging pull requests, and deploying
-are separate authorized release actions.
+This release is prepared on `release/v1.5.0`, based on the released 1.4.0 `main`.
+The preparation authorizes committing, pushing, and a draft PR. User merge, publishing, and
+deployment remain separate actions.
 
 ## Scope
 
@@ -20,7 +20,7 @@ are separate authorized release actions.
   partial pruning. Preserve existing baseline and JSON contracts with additive optional fields.
 - Restrict LSP line suppression to JavaScript insertion points outside multiline tokens/comments.
 
-No package API or CLI migration is required. Fix previews and baseline comparisons/pruning fail explicitly on Astro parse errors. Fix-preview scores and gates describe the simulated result.
+No package API or CLI migration is required. All lint scans fail explicitly on Astro parse errors rather than report a false clean score. TypeScript frontmatter is parsed consistently in CLI, plugin and editor paths. Fix-preview scores and gates describe the simulated result.
 Baseline pruning must use the original scan configuration because disabled rules count as resolved. TypeScript remains at 6.0.3 because the latest
 Astro checker and owned ESLint TypeScript configuration do not yet support TypeScript 7.
 The existing Changeset selects the minor version through the repository's release workflow.
@@ -77,7 +77,7 @@ The independent review identified unsafe suppression in multiline template text 
 installer documentation. Both were accepted and corrected with regression or source-contract
 verification. The controlled theme toggle also now synchronizes its pressed state.
 
-The completed browser run passed all 10 tests, including 148 route/theme/viewport accessibility
+The earlier implementation browser run passed all 10 tests, including 148 route/theme/viewport accessibility
 checks with no violations. A fresh CI-style server run passed two interaction checks and confirmed
 that Playwright stopped both server processes. Native page and theme transitions were also checked
 with normal motion enabled. Both full and production dependency audits report zero vulnerabilities.
@@ -101,7 +101,8 @@ The documentation and reliability work is committed as `fadb9b4`. The release al
 the completed ESLint tooling and typed VS Code mock update from `6761b72`, retaining the Lumen v4
 upgrade, removed documentation dependencies, and scoped KaTeX security constraint.
 
-Before publishing, rerun the documented GitHub checks and required reviews on the final release
+See `release-reconciliation-v1.5.0.md` for the final preparation inventory, validation, and
+credential prerequisites. Before publishing, rerun the documented GitHub checks and required reviews on the final release
 revision. Use the existing GitHub release workflow from merged `main`; do not create a local tag
 or publish manually. For a docs regression, revert the relevant source commit and let the normal
 GitHub deployment rebuild it. For published package regressions, ship a corrective version;

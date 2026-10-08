@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="readme-title readme-description">
+  <title id="readme-title">Astro Doctor — Clear diagnostics. Healthier Astro projects.</title>
+  <desc id="readme-description">Cli · Editors · Continuous Integration. Decorative scan illustration in the project's existing palette.</desc>
+  <!-- README artwork. Palette and naming follow this repository's existing brand sources. -->
+  <rect x="1" y="1" width="1198" height="358" rx="22" fill="#fffaf6" stroke="#a55117" stroke-opacity=".24"/>
+  <path d="M778 25V335" stroke="#a55117" stroke-opacity=".16"/>
+  <g fill="none" stroke="#a55117" stroke-opacity=".07"><circle cx="1025" cy="180" r="205"/><circle cx="1025" cy="180" r="238"/></g>
+  <svg x="48" y="30" width="38" height="38" viewBox="0 0 32 32" aria-hidden="true">
+  <rect width="32" height="32" rx="8" fill="#f97316"/>
+  <path d="M16 5.5 22.8 21c.28.64-.37 1.27-1 .97l-4.1-1.83a4.18 4.18 0 0 0-3.4 0l-4.1 1.83c-.63.3-1.28-.33-1-.97L16 5.5Z" fill="#fff"/>
+  <path d="M14.46 18.2 16 14.55l1.54 3.65a5.99 5.99 0 0 0-3.08 0Z" fill="#f97316"/>
+  <path d="M11.85 23.1h2.35l.78-1.45 1.26 2.95.98-1.5h2.93" fill="none" stroke="#fff" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+  <g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif"><text x="100" y="56" font-size="13" font-weight="600" letter-spacing="2" fill="#a55117">CLI · EDITORS · CONTINUOUS INTEGRATION</text><text x="48" y="148" font-size="62.0" font-weight="700" letter-spacing="-1.8" fill="#10141d">Astro Doctor</text><text x="50" y="203" font-size="27" fill="#10141d">Clear diagnostics.</text><text x="50" y="241" font-size="27" fill="#10141d">Healthier Astro projects.</text><path d="M50 287H642" stroke="#a55117" stroke-opacity=".3"/><text x="50" y="320" font-family="ui-monospace,monospace" font-size="13" letter-spacing="1" fill="#a55117">santi020k / astro-doctor</text></g>
+  <g transform="translate(825 32)" stroke-linecap="round" stroke-linejoin="round"><path d="M28 98V30H96M204 30H272V98M272 193V260H204M96 260H28V193" fill="none" stroke="#a55117" stroke-width="6"/><circle cx="150" cy="145" r="78" fill="none" stroke="#a55117" stroke-width="2"/><path d="M98 145L132 178 205 110" fill="none" stroke="#f5b747" stroke-width="9"/><path d="M-4 215H304" stroke="#a55117" stroke-width="2" opacity=".5"/></g>
+</svg>

@@ -14,7 +14,6 @@
  * > The LSP is experimental — its protocol, options, and caching behavior may
  * > change between releases, hence the `experimental-` prefix.
  */
-
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import type { AstroDoctorRule, RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
@@ -24,6 +23,7 @@ import astroDoctorPlugin, {
   getAstroRuleDocUrl
 } from '@santi020k/eslint-plugin-astro-doctor'
 
+import * as typescriptParser from '@typescript-eslint/parser'
 import * as astroParser from 'astro-eslint-parser'
 import { ESLint } from 'eslint'
 import type {
@@ -152,7 +152,11 @@ const buildEslintInstance = (
         },
         languageOptions: {
           parser: astroParser,
-          parserOptions: { sourceType: 'module' }
+          parserOptions: {
+            sourceType: 'module',
+            parser: typescriptParser,
+            extraFileExtensions: ['.astro']
+          }
         },
         rules: {
           ...astroDoctorPlugin.configs.recommended?.rules,
@@ -272,13 +276,14 @@ const buildMessageDiagnostics = (
   filePath: string,
   document: TextDocument
 ): MessageDiagnostics | null => {
-  if (!msg.ruleId) return null
+  if (!msg.ruleId && !msg.fatal) return null
 
+  const ruleId = msg.ruleId ?? 'astro-doctor/parse-error'
   const startLine = Math.max(0, msg.line - 1)
   const startChar = Math.max(0, msg.column - 1)
   const endLine = msg.endLine === undefined ? startLine : Math.max(0, msg.endLine - 1)
   const endChar = msg.endColumn === undefined ? startChar + 1 : Math.max(0, msg.endColumn - 1)
-  const docUrl = getRuleDocUrl(msg.ruleId)
+  const docUrl = getRuleDocUrl(ruleId)
   const fixData = buildDiagnosticFixData(msg, document)
 
   return {
@@ -288,20 +293,20 @@ const buildMessageDiagnostics = (
         end: { line: endLine, character: endChar }
       },
       severity: eslintSeverityToLsp[msg.severity] ?? DiagnosticSeverity.Warning,
-      code: msg.ruleId,
+      code: ruleId,
       codeDescription: docUrl ? { href: docUrl } : undefined,
       source: 'astro-doctor',
       message: msg.message,
       data: fixData
     },
     astro: {
-      ruleId: msg.ruleId,
+      ruleId,
       severity: eslintSeverityToAstro[msg.severity] ?? 'warning',
       message: msg.message,
       filePath,
       line: msg.line,
       column: msg.column,
-      category: getRuleCategory(msg.ruleId)
+      category: getRuleCategory(ruleId)
     }
   }
 }

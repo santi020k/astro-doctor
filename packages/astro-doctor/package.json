@@ -41,14 +41,15 @@
     "jiti": "catalog:",
     "semver": "catalog:",
     "vscode-languageserver": "catalog:",
-    "vscode-languageserver-textdocument": "catalog:"
+    "vscode-languageserver-textdocument": "catalog:",
+    "@typescript-eslint/parser": "catalog:",
+    "typescript": "catalog:"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "typescript": "catalog:",
     "vitest": "catalog:"
   },
   "engines": {

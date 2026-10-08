@@ -1,10 +1,18 @@
 <p align="center">
-  <a href="../../README.md"><img src="public/favicon.svg" alt="Astro Doctor" width="72"></a>
+  <a href="../../README.md">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="../../docs/assets/readme/workspace-dark.svg">
+      <img src="../../docs/assets/readme/workspace-light.svg" alt="Astro Doctor — Clear diagnostics. Healthier Astro projects." width="1200" height="220">
+    </picture>
+  </a>
 </p>
 
-<p align="center"><a href="../../README.md">Astro Doctor</a></p>
-
 <h1 align="center">Documentation</h1>
+
+<p align="center">
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/license-MIT-13967e?style=flat-square" alt="License: MIT"></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/built_with-Astro-a55117?style=flat-square" alt="Built With: Astro"></a>
+</p>
 
 <p align="center">
   <a href="../../README.md">Project overview</a> ·
@@ -29,13 +37,15 @@ pnpm run test:browser  # Build, then check routes and interactions in Chromium
 
 ## Deploy
 
-Deploys automatically to Cloudflare Pages on every push to `main` that touches `apps/docs/**`.
+Deploys automatically to Cloudflare Pages after successful CI for the exact current `main` revision.
 
 **Required secrets:**
+
 - `CLOUDFLARE_API_TOKEN` — Cloudflare API token with Pages:Edit permission
 - `CLOUDFLARE_ACCOUNT_ID` — Your Cloudflare account ID
 
 **First-time setup:**
+
 1. Create a Cloudflare Pages project named `astro-doctor-docs` in your dashboard
 2. Add the secrets to your GitHub repository
 

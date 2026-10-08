@@ -21,5 +21,7 @@ Add safe fix previews with `--fix-dry-run`, effective configuration explanations
 `explain-config <file>`, and baseline progress with full-scan pruning. Preview reports and JSON
 include projected fix results; partial scans never claim resolved findings. Baseline pruning
 preserves existing debt without accepting new findings and writes atomically. Parser failures
-block previews and baseline comparisons/pruning without changing ordinary scan behavior. Existing JSON fields and the
+block previews and baseline comparisons/pruning without changing valid scan behavior. Existing JSON fields and the
 baseline format remain compatible.
+
+Parse TypeScript frontmatter consistently in the CLI, ESLint plugin, editor diagnostics and safe line suppressions. Fail ordinary lint scans on parser errors instead of returning a false clean health score, and keep parser error diagnostics visible in the editor. Ship the parser and its TypeScript runtime dependency for standalone installations.
