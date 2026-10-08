@@ -11,6 +11,8 @@ import {
   DOCS_LAYOUT_TOLERANCE_PX,
   DOCS_MOBILE_WIDTH_PX,
   DOCS_NARROW_WIDTH_PX,
+  DOCS_NAVIGATION_WIDTH_PX,
+  DOCS_TABLET_WIDTH_PX,
   DOCS_TEXT_ZOOM_PERCENT,
   DOCS_VIEWPORT_HEIGHT_PX
 } from './constants'
@@ -205,6 +207,33 @@ test('mobile navigation traps focus, closes safely, and opens after page swaps',
   await expect(panel).not.toBeVisible()
 
   await expect(page.getByRole('navigation', { name: 'Primary', exact: true })).toBeVisible()
+})
+
+test('tablet navigation switches to one desktop navigation at the breakpoint', async ({ page }) => {
+  await page.setViewportSize({ width: DOCS_TABLET_WIDTH_PX, height: DOCS_VIEWPORT_HEIGHT_PX })
+
+  await page.goto('/docs/cli')
+
+  const navigation = page.getByRole('navigation', { name: 'Primary', exact: true })
+  const trigger = page.getByRole('button', { name: 'Open navigation', exact: true })
+
+  await expect(navigation).toBeHidden()
+
+  await expect(trigger).toBeVisible()
+
+  await trigger.click()
+
+  await expect(page.getByRole('dialog', { name: 'Explore the docs.' })).toBeVisible()
+
+  await page.setViewportSize({ width: DOCS_NAVIGATION_WIDTH_PX, height: DOCS_VIEWPORT_HEIGHT_PX })
+
+  await expect(page.getByRole('dialog', { name: 'Explore the docs.' })).not.toBeVisible()
+
+  await expect(trigger).toBeHidden()
+
+  await expect(navigation).toBeVisible()
+
+  await expect(navigation.getByRole('link', { name: 'CLI', exact: true })).toHaveAttribute('aria-current', 'page')
 })
 
 test('narrow and enlarged text layouts stay within the viewport', async ({ page }) => {

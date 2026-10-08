@@ -28,10 +28,10 @@ const navigationItems = [
     <div class="site-header-shell" data-header-shell data-scrolled="false">
       <Link href="/" variant="inherit" class="site-header-brand" aria-label={`${SITE_NAME} home`}>
         <LogoMark class="site-header-mark" />
-        <span class="site-header-brand-name">Astro<span> Doctor</span><span class="
+        <span class="site-header-brand-name">Astro Doctor<span class="
           site-header-period
         "
-                                                                      >.</span></span>
+                                                         >.</span></span>
       </Link>
 
       <NavigationMenu
@@ -52,21 +52,23 @@ class="site-navigation-link"
       </NavigationMenu>
 
       <div class="site-header-actions">
-        <ThemeToggle
-controlled
-aria-label="Dark color theme"
-class="site-theme-toggle"
-data-site-theme-toggle
-        />
-        <ButtonLink
-href={GITHUB_URL}
-newTab
-ariaLabel="Astro Doctor on GitHub"
-variant="unstyled"
-class="site-github-link"
-        >
-          <GitHubIcon />
-        </ButtonLink>
+        <div class="site-header-utilities">
+          <ThemeToggle
+            controlled
+            aria-label="Dark color theme"
+            class="site-theme-toggle"
+            data-site-theme-toggle
+          />
+          <ButtonLink
+            href={GITHUB_URL}
+            newTab
+            ariaLabel="Astro Doctor on GitHub"
+            variant="unstyled"
+            class="site-github-link"
+          >
+            <GitHubIcon />
+          </ButtonLink>
+        </div>
         <ButtonLink
 href="/docs/quick-start"
 variant="unstyled"
