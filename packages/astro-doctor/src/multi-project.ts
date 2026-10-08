@@ -224,6 +224,16 @@ export const aggregateResults = (results: readonly ProjectScanResult[]): ScanRes
     }
   }
 
+  const previews = results.flatMap(result => result.fixPreview === undefined ? [] : [result.fixPreview])
+
+  const fixPreview = previews.length === 0 ?
+    undefined :
+    {
+      changes: previews.flatMap(preview => preview.changes),
+      fixedCount: previews.reduce((total, preview) => total + preview.fixedCount, 0),
+      remainingCount: previews.reduce((total, preview) => total + preview.remainingCount, 0)
+    }
+
   const diagnostics = results.flatMap(r => [...r.diagnostics])
   const fileCount = results.reduce((sum, r) => sum + r.fileCount, 0)
   const errorCount = results.reduce((sum, r) => sum + r.errorCount, 0)
@@ -252,6 +262,7 @@ export const aggregateResults = (results: readonly ProjectScanResult[]): ScanRes
 
   return {
     diagnostics,
+    ...(fixPreview === undefined ? {} : { fixPreview }),
     fileCount,
     errorCount,
     warningCount,

@@ -44,7 +44,7 @@ packages/
   astro-doctor/                 PUBLISHED  The CLI + public API
     bin/astro-doctor.ts         Entry point
     src/
-      cli.ts                    Strict argument parsing + orchestration (JSON, SARIF, baseline, cache)
+      cli.ts                    Strict argument parsing + orchestration (JSON, SARIF, baseline progress/pruning, fix previews, cache)
       config.ts                 loadConfig() — config loader with glob rule overrides
       scorer.ts                 computeScore() / computeScoreLabel() — 0-100 health score
       install.ts                runInstall() — copies agent skills into the user's project
@@ -145,3 +145,11 @@ For `.astro` template content, the parser emits HTML AST nodes:
 - `VAttribute[key.name="class"]` — class attribute
 
 Rules check `context.filename` via `isAstroFile()` before any AST traversal.
+
+## Diagnostic workflow additions (1.5.0)
+
+- `--fix-dry-run` previews safe fixes without source or ESLint cache writes. Console/JSON report diffs, net removed findings, and remaining findings; scores and gates use the simulated result.
+- `explain-config <file> [--dir <path>] [--preset <preset>] [--json]` shows scan configuration and ordered matching overrides, including workspace layering. It does not interpret inline suppressions.
+- `--baseline <path>` reports new/existing findings and resolved counts only for full, unfiltered scans.
+- `baseline prune [--output <path>]` removes only resolved recorded occurrences after a full scan; it never accepts new findings. Use the baseline's original scan configuration. Partial scans, fix flags, and parse failures cannot prune it.
+- JSON report additions are optional `fixPreview` and `baselineProgress` fields. Existing fields and baseline schema version remain compatible.

@@ -47,6 +47,12 @@ astro-doctor --format sarif > astro-doctor.sarif
 # Apply safe automatic fixes
 astro-doctor --fix
 
+# Preview safe fixes without writing source files
+astro-doctor --fix-dry-run
+
+# Explain configuration for a file
+astro-doctor explain-config src/pages/index.astro
+
 # Cache repeated scans by file content
 astro-doctor --cache
 
@@ -75,22 +81,64 @@ astro-doctor --no-score`}
 
   <CodeBlock code="astro-doctor install" language="bash" />
 
-  <h3><code>baseline create|update</code></h3>
+  <h3><code>baseline create|update|prune</code></h3>
 
   <p>
     Saves the current findings to <code>.astro-doctor-baseline.json</code>. Subsequent scans with
     <code>--baseline</code> report only findings that are not already recorded, making gradual
-    adoption practical in existing projects.
+    adoption practical in existing projects. Reports include new and existing finding counts;
+    resolved counts are shown only for full, unfiltered scans. Resolved means no longer reported
+    under the current configuration, including findings in deleted files.
   </p>
 
   <CodeBlock
     code={`astro-doctor baseline create
-astro-doctor baseline update --output ./config/astro-baseline.json`}
+astro-doctor baseline update --output ./config/astro-baseline.json
+astro-doctor baseline prune
+astro-doctor baseline prune --output ./config/astro-baseline.json`}
     language="bash"
     theme="auto"
     variant="block"
     copy
   />
+
+  <p>
+    <code>baseline prune</code> removes only recorded occurrences no longer reported, retaining
+    the original timestamp and never accepting new findings. It requires a full scan and rejects
+    file scopes, category filters, explicit project selections, fix flags, and
+    <code>--no-lint</code>. Astro parse failures block baseline comparisons and leave the baseline unchanged. Run pruning with the same
+    preset and configuration used to create the baseline; disabling a rule also removes its findings.
+  </p>
+
+  <h3><code>explain-config &lt;file&gt;</code></h3>
+
+  <p>
+    Shows the scan preset, effective template rule severities, matching ignore patterns, and
+    zero-based override indexes in application order. Workspace files use the same root and project
+    configuration layering as scans. Project audit rules appear separately because template file
+    overrides do not affect them. Inline suppression comments are evaluated during linting and are
+    not part of this configuration report.
+  </p>
+
+  <CodeBlock
+    code={`astro-doctor explain-config src/pages/index.astro
+astro-doctor explain-config src/pages/index.astro --preset strict --json`}
+    language="bash"
+    copy
+  />
+
+  <h3><code>--fix-dry-run</code></h3>
+
+  <p>
+    Simulates the same safe fixes as <code>--fix</code> and prints unified diffs, the net count of
+    findings removed, and remaining findings. Source files and the ESLint cache stay unchanged.
+    Diagnostic counts, scores, and failure gates describe the simulated result. JSON reports include
+    an optional <code>fixPreview</code> object; baseline reports include
+    <code>baselineProgress</code>, with <code>resolvedCount</code> omitted for partial scans.
+    Combining previews with a baseline shows projected progress after fixes.
+    Use console or JSON output without category filters, <code>--score</code>,
+    <code>--fix</code>, or <code>--no-lint</code>.
+  </p>
 
   <h3><code>experimental-lsp</code></h3>
 
@@ -148,6 +196,11 @@ astro-doctor baseline update --output ./config/astro-baseline.json`}
           <td><code>--preset &lt;name&gt;</code></td>
           <td><code>recommended</code></td>
           <td><code>recommended</code> | <code>strict</code> | <code>ci</code> | <code>all</code></td>
+        </tr>
+        <tr>
+          <td><code>--fix-dry-run</code></td>
+          <td><em>off</em></td>
+          <td>Preview safe fixes and remaining findings without source or cache writes</td>
         </tr>
         <tr>
           <td><code>--cache</code></td>

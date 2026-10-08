@@ -24,6 +24,8 @@ export const formatJsonReport = (
   scoreLabel: result.scoreLabel,
   scoreBreakdown: result.scoreBreakdown,
   diagnostics: result.diagnostics,
+  ...(result.fixPreview === undefined ? {} : { fixPreview: result.fixPreview }),
+  ...(result.baselineProgress === undefined ? {} : { baselineProgress: result.baselineProgress }),
   ...(projects && projects.length > 0 ?
     {
       projects: projects.map(p => ({

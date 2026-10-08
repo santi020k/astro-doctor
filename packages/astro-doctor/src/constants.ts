@@ -14,3 +14,4 @@ export const LSP_SCAN_DEBOUNCE_MS = 150
 export const PERSISTENT_BASELINE_VERSION = 1
 export const DEFAULT_BASELINE_FILE_NAME = '.astro-doctor-baseline.json'
 export const DEFAULT_CACHE_DIRECTORY_NAME = '.astro-doctor/cache'
+export const FIX_DIFF_CONTEXT_LINES = 3

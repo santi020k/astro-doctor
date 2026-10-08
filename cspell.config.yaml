@@ -81,6 +81,7 @@ words:
   - workerd
   - behaviour
   - wght
+  - labelledby
 ignorePaths:
   - node_modules
   - dist
