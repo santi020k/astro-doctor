@@ -39,7 +39,6 @@ interface Props {
   ogImageAlt?: string
   ogType?: 'website' | 'article'
   noIndex?: boolean
-  headerVariant?: 'dock' | 'signature'
 }
 
 const {
@@ -48,8 +47,7 @@ const {
   ogImage,
   ogImageAlt,
   ogType = 'website',
-  noIndex = false,
-  headerVariant = 'dock'
+  noIndex = false
 } = Astro.props
 
 const resolvedOgImage = ogImage ?
@@ -193,7 +191,7 @@ const breadcrumbsJsonLd = breadcrumbs.length > 0 ?
   </head>
   <body>
     <SkipLink href="#main-content">Skip to content</SkipLink>
-    <Nav variant={headerVariant} />
+    <Nav />
     <main id="main-content" tabindex="-1" transition:name="page-content">
       <slot />
     </main>

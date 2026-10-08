@@ -308,6 +308,54 @@ test('content remains readable without JavaScript', async ({ browser }) => {
   await context.close()
 })
 
+test('page navigation keeps directional links usable on desktop and mobile', async ({ page }) => {
+  await page.setViewportSize({ width: DOCS_DESKTOP_WIDTH_PX, height: DOCS_VIEWPORT_HEIGHT_PX })
+
+  await page.goto('/docs/cli')
+
+  const navigation = page.getByRole('navigation', { name: 'Previous and next pages', exact: true })
+  const previous = navigation.getByRole('link', { name: 'Previous ESLint Plugin' })
+  const next = navigation.getByRole('link', { name: 'Next GitHub Action' })
+
+  await expect(previous).toHaveAttribute('href', '/docs/eslint-plugin')
+
+  await expect(next).toHaveAttribute('href', '/docs/github-action')
+
+  await expect(next).toHaveCSS('text-align', 'right')
+
+  const desktopPrevious = await previous.boundingBox()
+  const desktopNext = await next.boundingBox()
+
+  expect(desktopPrevious?.y).toBe(desktopNext?.y)
+
+  await page.setViewportSize({ width: DOCS_MOBILE_WIDTH_PX, height: DOCS_VIEWPORT_HEIGHT_PX })
+
+  await next.scrollIntoViewIfNeeded()
+
+  const mobilePrevious = await previous.boundingBox()
+  const mobileNext = await next.boundingBox()
+
+  expect(mobilePrevious).not.toBeNull()
+
+  expect(mobileNext).not.toBeNull()
+
+  if (mobilePrevious && mobileNext) {
+    expect(mobileNext.y).toBeGreaterThan(mobilePrevious.y + mobilePrevious.height)
+  }
+
+  await next.focus()
+
+  await page.keyboard.press('Enter')
+
+  await expect(page).toHaveURL('/docs/github-action')
+
+  await page.goto('/docs')
+
+  await expect(navigation.getByRole('link')).toHaveCount(1)
+
+  await expect(navigation.getByRole('link', { name: 'Next Installation' })).toHaveAttribute('href', '/docs/installation')
+})
+
 test('wide reference tables can be scrolled with a keyboard', async ({ page }) => {
   await page.setViewportSize({ width: DOCS_MOBILE_WIDTH_PX, height: DOCS_VIEWPORT_HEIGHT_PX })
 

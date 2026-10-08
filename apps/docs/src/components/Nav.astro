@@ -7,11 +7,6 @@ import { Button, ButtonLink, Icon, Link, NavigationMenu, Sheet, ThemeToggle } fr
 
 import { GITHUB_URL, SITE_NAME } from '@/site.config'
 
-interface Props {
-  variant?: 'dock' | 'signature'
-}
-
-const { variant = 'dock' } = Astro.props
 const currentPath = Astro.url.pathname.replace(/\/$/, '')
 const isRulesActive = currentPath === '/docs/rules' || currentPath.startsWith('/docs/rules/')
 const isCliActive = currentPath === '/docs/cli' || currentPath.startsWith('/docs/cli/')
@@ -23,7 +18,7 @@ const navigationItems = [
 ]
 ---
 
-<header class="site-header" data-header-variant={variant}>
+<header class="site-header">
   <div class="container-docs">
     <div class="site-header-shell" data-header-shell data-scrolled="false">
       <Link href="/" variant="inherit" class="site-header-brand" aria-label={`${SITE_NAME} home`}>
