@@ -1,5 +1,13 @@
 # @santi020k/eslint-plugin-astro-doctor
 
+## 1.5.0
+
+### Patch Changes
+
+- [#58](https://github.com/santi020k/astro-doctor/pull/58) [`77aab01`](https://github.com/santi020k/astro-doctor/commit/77aab0164ed93debc1d02d2e9db823dcfd8f8a99) Thanks [@santi020k](https://github.com/santi020k)! - Correct secret-env detection for static bracket access and destructuring while avoiding substring false positives. Recognize aliased Astro asset image imports, ignore unrelated custom components, check static source expressions, and reject disabled size inference.
+  
+  Harden the GitHub Action with validated inputs, literal environment-based argument handling, isolated temporary reports, strict report checks, and failure propagation. Gate releases and documentation deployment on successful CI for the exact current main commit; manual runs reuse the full validation workflow.
+
 ## 1.4.0
 
 ### Minor Changes

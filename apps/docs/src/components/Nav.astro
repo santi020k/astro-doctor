@@ -76,6 +76,8 @@ class="site-start-link"
           class="site-menu-trigger"
           aria-label="Open navigation"
           aria-controls="site-navigation-panel"
+          command="show-modal"
+          commandfor="site-navigation-panel"
           data-ui-sheet-trigger="site-navigation-panel"
         >
           <Icon name="menu" />
@@ -102,7 +104,7 @@ class="site-start-link"
       <span class="site-eyebrow">Astro Doctor</span>
       <h2 id="site-navigation-title">Explore the docs<span>.</span></h2>
     </div>
-    <Button variant="ghost" class="site-menu-close" aria-label="Close navigation" data-ui-sheet-close>
+    <Button variant="ghost" class="site-menu-close" aria-label="Close navigation" command="close" commandfor="site-navigation-panel" data-ui-sheet-close>
       <Icon name="x" />
     </Button>
   </div>

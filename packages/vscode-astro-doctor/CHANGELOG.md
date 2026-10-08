@@ -1,5 +1,12 @@
 # Astro Doctor for VS Code
 
+## 1.5.0
+
+Bundle the 1.5.0 language-server improvements: consistent TypeScript frontmatter
+parsing, visible parser-error diagnostics, responsive startup with malformed files,
+and safer line suppressions. See the [CLI changelog](../astro-doctor/CHANGELOG.md#150)
+for the shared diagnostic changes.
+
 ## 1.4.0
 
 ### Minor Changes
