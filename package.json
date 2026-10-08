@@ -8,8 +8,8 @@
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean && rm -rf node_modules",
-    "test": "turbo run test",
-    "test:coverage": "turbo run test:coverage",
+    "test": "turbo run test && pnpm run check:dependency-security",
+    "test:coverage": "turbo run test:coverage && pnpm run check:dependency-security",
     "lint": "pnpm run lint:repo && turbo run lint",
     "lint:repo": "eslint . --cache --no-warn-ignored --max-warnings=0",
     "lint:fix": "pnpm run lint:repo:fix && turbo run lint:fix",
@@ -17,7 +17,7 @@
     "lint:spell": "cspell \"**\" --gitignore --cache --show-suggestions --show-context",
     "lint:knip": "knip",
     "check:packed-install": "node scripts/check-packed-install.mjs",
-    "ok": "pnpm install --reporter=silent && turbo run build && turbo run test && pnpm run lint:repo && turbo run lint && turbo run typecheck",
+    "ok": "pnpm install --reporter=silent && turbo run build && pnpm run test && pnpm run lint:repo && turbo run lint && turbo run typecheck",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "turbo run build && pnpm run check:packed-install && node scripts/publish-packages.mjs",
@@ -25,7 +25,10 @@
     "prepare": "husky",
     "pre-commit": "lint-staged && pnpm run typecheck && pnpm run lint:spell",
     "pre-push": "pnpm install --frozen-lockfile && pnpm run typecheck && pnpm run lint && pnpm run build && pnpm run test:coverage && pnpm run lint:knip && pnpm run check:exports",
-    "commit": "commitprompt"
+    "commit": "commitprompt",
+    "check:dependency-security": "node --test scripts/check-dependency-security.mjs",
+    "version-packages:validated": "pnpm run version-packages && bash scripts/check-validated-commit.sh --require-current",
+    "release:validated": "pnpm run release && bash scripts/check-validated-commit.sh --require-current"
   },
   "devDependencies": {
     "@changesets/changelog-github": "catalog:",
@@ -58,5 +61,5 @@
   "engines": {
     "node": "^22.22.3 || ^24.16.0 || >=26.3.0"
   },
-  "packageManager": "pnpm@10.34.5"
+  "packageManager": "pnpm@10.34.6"
 }

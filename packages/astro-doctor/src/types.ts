@@ -33,7 +33,26 @@ export interface ScanTimings {
   readonly cacheEnabled: boolean
 }
 
+export interface FixChange {
+  readonly filePath: string
+  readonly diff: string
+}
+
+export interface FixPreview {
+  readonly changes: readonly FixChange[]
+  readonly fixedCount: number
+  readonly remainingCount: number
+}
+
+export interface BaselineProgress {
+  readonly newCount: number
+  readonly existingCount: number
+  readonly resolvedCount?: number
+}
+
 export interface ScanResult {
+  readonly fixPreview?: FixPreview
+  readonly baselineProgress?: BaselineProgress
   readonly diagnostics: readonly Diagnostic[]
   readonly fileCount: number
   readonly errorCount: number
@@ -65,6 +84,10 @@ export interface ScanOptions {
 
   /** Apply safe ESLint fixes to scanned Astro files. */
   readonly fix?: boolean
+  readonly fixDryRun?: boolean
+  /** Reject parse failures by default; the editor opts out to retain live diagnostics. */
+  readonly failOnParseError?: boolean
+  readonly fixPreviewRoot?: string
 
   /** When true, skip lint entirely and return a clean result. */
   readonly noLint?: boolean
@@ -88,6 +111,8 @@ export interface ProjectScanResult extends ScanResult {
 
 /** Shape of the machine-readable JSON report written by --json */
 export interface JsonReport {
+  readonly fixPreview?: FixPreview
+  readonly baselineProgress?: BaselineProgress
   readonly $schema: string
   readonly schemaVersion: number
   readonly version: string

@@ -19,6 +19,18 @@ const ruleTester = new RuleTester({
 ruleTester.run('require-image-dimensions', rule, {
   valid: [
     {
+      code: '---\nimport Image from "./custom-image.astro"\n---\n<Image src="/hero.png" />',
+      filename: 'test.astro'
+    },
+    {
+      code: '---\nimport { Image as AstroImage } from "astro:assets"\n---\n<AstroImage src="https://example.com/hero.png" inferSize={true} alt="Hero" />',
+      filename: 'test.astro'
+    },
+    {
+      code: '---\nimport { Image } from "astro:assets"\nconst infer = true\n---\n<Image src="https://example.com/hero.png" inferSize={infer} alt="Hero" />',
+      filename: 'test.astro'
+    },
+    {
       code: [
         '---',
         'import { Image } from \'astro:assets\'',
@@ -48,6 +60,26 @@ import { Image } from 'astro:assets'
     }
   ],
   invalid: [
+    {
+      code: '---\nimport { Image as AstroImage } from "astro:assets"\n---\n<AstroImage src="/hero.png" alt="Hero" />',
+      filename: 'test.astro',
+      errors: [{ messageId: 'publicImageDimensions' }]
+    },
+    {
+      code: '---\nimport { Picture as AstroPicture } from "astro:assets"\n---\n<AstroPicture src="https://example.com/hero.png" alt="Hero" />',
+      filename: 'test.astro',
+      errors: [{ messageId: 'remoteImageDimensions' }]
+    },
+    {
+      code: '---\nimport { Image } from "astro:assets"\n---\n<Image src="https://example.com/hero.png" inferSize={false} alt="Hero" />',
+      filename: 'test.astro',
+      errors: [{ messageId: 'remoteImageDimensions' }]
+    },
+    {
+      code: '---\nimport { Image } from "astro:assets"\n---\n<Image src={"https://example.com/hero.png"} alt="Hero" />',
+      filename: 'test.astro',
+      errors: [{ messageId: 'remoteImageDimensions' }]
+    },
     {
       code: `---
 import { Image } from 'astro:assets'

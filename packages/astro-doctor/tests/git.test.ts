@@ -8,7 +8,10 @@ vi.mock('node:child_process', () => ({
   execFileSync: vi.fn()
 }))
 
-const mockExec = execFileSync as ReturnType<typeof vi.fn>
+const mockExec = vi.mocked(execFileSync)
+
+/** Encode paths exactly as `git diff --name-only -z` emits them: NUL-terminated, unquoted. */
+const nulDelimited = (paths: string[]): string => paths.map(path => `${path}\0`).join('')
 
 afterEach(() => {
   vi.clearAllMocks()
@@ -20,21 +23,21 @@ afterEach(() => {
 
 describe('getStagedAstroFiles', () => {
   test('returns absolute paths for staged .astro files', () => {
-    mockExec.mockReturnValueOnce('src/pages/index.astro\nsrc/pages/about.astro\n')
+    mockExec.mockReturnValueOnce(nulDelimited(['src/pages/index.astro', 'src/pages/about.astro']))
     const result = getStagedAstroFiles('/project')
 
     expect(result).toEqual(['/project/src/pages/index.astro', '/project/src/pages/about.astro'])
   })
 
   test('filters out non-astro-doctor files', () => {
-    mockExec.mockReturnValueOnce('src/pages/index.astro\nsrc/styles/main.css\nREADME.md\n')
+    mockExec.mockReturnValueOnce(nulDelimited(['src/pages/index.astro', 'src/styles/main.css', 'README.md']))
     const result = getStagedAstroFiles('/project')
 
     expect(result).toEqual(['/project/src/pages/index.astro'])
   })
 
   test('returns empty array when no staged files match', () => {
-    mockExec.mockReturnValueOnce('src/styles/main.css\nREADME.md\n')
+    mockExec.mockReturnValueOnce(nulDelimited(['src/styles/main.css', 'README.md']))
     const result = getStagedAstroFiles('/project')
 
     expect(result).toHaveLength(0)
@@ -48,7 +51,7 @@ describe('getStagedAstroFiles', () => {
   })
 
   test('includes project-audit-relevant files (e.g. package.json)', () => {
-    mockExec.mockReturnValueOnce('src/pages/index.astro\npackage.json\n')
+    mockExec.mockReturnValueOnce(nulDelimited(['src/pages/index.astro', 'package.json']))
     const result = getStagedAstroFiles('/project')
 
     expect(result).toContain('/project/src/pages/index.astro')
@@ -56,7 +59,7 @@ describe('getStagedAstroFiles', () => {
   })
 
   test('includes custom Astro 7 fetch entrypoint candidates', () => {
-    mockExec.mockReturnValueOnce('source/server/handler.mts\nsrc/styles/main.css\n')
+    mockExec.mockReturnValueOnce(nulDelimited(['source/server/handler.mts', 'src/styles/main.css']))
     const result = getStagedAstroFiles('/project')
 
     expect(result).toEqual(['/project/source/server/handler.mts'])
@@ -69,6 +72,45 @@ describe('getStagedAstroFiles', () => {
 
     expect(() => getStagedAstroFiles('/project')).toThrow(/git diff failed/)
   })
+
+  test('requests --relative --name-only -z so output is unquoted and cwd-relative', () => {
+    mockExec.mockReturnValueOnce(nulDelimited(['src/pages/index.astro']))
+    getStagedAstroFiles('/project')
+
+    const [, args] = mockExec.mock.calls[0]
+
+    expect(args).toEqual(
+      expect.arrayContaining(['diff', '--cached', '--relative', '--name-only', '-z', '--diff-filter=ACMR'])
+    )
+  })
+
+  test('preserves Unicode filenames that git would otherwise C-quote without -z', () => {
+    const unicodeFileName = 'ページ-索引-日本語.astro'
+
+    mockExec.mockReturnValueOnce(nulDelimited([unicodeFileName]))
+    const result = getStagedAstroFiles('/project')
+
+    expect(result).toEqual([`/project/${unicodeFileName}`])
+  })
+
+  test('preserves tabs and embedded newlines that -z keeps literal inside a NUL-delimited entry', () => {
+    const tabbedFileName = 'src/pages/weird\tname.astro'
+    const newlineFileName = 'src/pages/weird\nname.astro'
+
+    mockExec.mockReturnValueOnce(nulDelimited([tabbedFileName, newlineFileName]))
+    const result = getStagedAstroFiles('/project')
+
+    expect(result).toEqual([`/project/${tabbedFileName}`, `/project/${newlineFileName}`])
+  })
+
+  test('does not trim leading or trailing whitespace from a NUL-delimited path', () => {
+    const spacedFileName = 'src/pages/ leading and trailing .astro'
+
+    mockExec.mockReturnValueOnce(nulDelimited([spacedFileName]))
+    const result = getStagedAstroFiles('/project')
+
+    expect(result).toEqual([`/project/${spacedFileName}`])
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -76,33 +118,57 @@ describe('getStagedAstroFiles', () => {
 // ---------------------------------------------------------------------------
 
 describe('getDiffAstroFiles', () => {
+  test('rejects base values that would be interpreted as git options', () => {
+    expect(() => getDiffAstroFiles('/project', '--no-index')).toThrow('Invalid base revision')
+    expect(mockExec).not.toHaveBeenCalled()
+  })
   test('passes the provided base to git diff', () => {
-    mockExec.mockReturnValue('src/pages/index.astro\n')
+    mockExec.mockReturnValue(nulDelimited(['src/pages/index.astro']))
     getDiffAstroFiles('/project', 'develop')
 
-    const [, args] = mockExec.mock.calls[mockExec.mock.calls.length - 1] as [string, string[]]
+    const [, args] = mockExec.mock.calls[mockExec.mock.calls.length - 1]
 
     expect(args).toContain('develop')
   })
 
   test('returns absolute paths for changed .astro files', () => {
-    mockExec.mockReturnValue('src/pages/index.astro\n')
+    mockExec.mockReturnValue(nulDelimited(['src/pages/index.astro']))
     const result = getDiffAstroFiles('/project', 'main')
 
     expect(result).toEqual(['/project/src/pages/index.astro'])
+  })
+
+  test('requests --relative --name-only -z so output is unquoted and cwd-relative', () => {
+    mockExec.mockReturnValue(nulDelimited(['src/pages/index.astro']))
+    getDiffAstroFiles('/project', 'main')
+
+    const [, args] = mockExec.mock.calls[mockExec.mock.calls.length - 1]
+
+    expect(args).toEqual(
+      expect.arrayContaining(['diff', '--relative', '--name-only', '-z', '--diff-filter=ACMR', 'main', 'HEAD'])
+    )
+  })
+
+  test('preserves filenames containing spaces and Unicode characters', () => {
+    const spacedUnicodeFileName = 'カフェ 分析 😊.astro'
+
+    mockExec.mockReturnValue(nulDelimited([spacedUnicodeFileName]))
+    const result = getDiffAstroFiles('/project', 'main')
+
+    expect(result).toEqual([`/project/${spacedUnicodeFileName}`])
   })
 
   test('auto-detects the base branch when none is provided', () => {
     // First call: rev-parse main (succeeds), second call: git diff
     mockExec
       .mockReturnValueOnce('abc123')
-      .mockReturnValueOnce('src/pages/index.astro\n')
+      .mockReturnValueOnce(nulDelimited(['src/pages/index.astro']))
 
     const result = getDiffAstroFiles('/project')
 
     expect(result).toEqual(['/project/src/pages/index.astro'])
 
-    const firstCall = mockExec.mock.calls[0] as [string, string[]]
+    const firstCall = mockExec.mock.calls[0]
 
     expect(firstCall[1]).toContain('main')
   })
@@ -122,13 +188,13 @@ describe('getDiffAstroFiles', () => {
       .mockImplementationOnce(() => {
         throw new Error('no origin/master')
       })
-      .mockReturnValueOnce('src/pages/index.astro\n')
+      .mockReturnValueOnce(nulDelimited(['src/pages/index.astro']))
 
     const result = getDiffAstroFiles('/project')
 
     expect(result).toEqual(['/project/src/pages/index.astro'])
 
-    const diffCall = mockExec.mock.calls[mockExec.mock.calls.length - 1] as [string, string[]]
+    const diffCall = mockExec.mock.calls[mockExec.mock.calls.length - 1]
 
     expect(diffCall[1]).toContain('HEAD~1')
   })

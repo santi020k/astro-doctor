@@ -1,6 +1,10 @@
 ---
+import { ClientRouter } from 'astro:transitions'
+
 import Footer from '@/components/Footer.astro'
 import Nav from '@/components/Nav.astro'
+
+import { getOgImagePath } from '@/lib/generated-social-image'
 
 import '@/styles/global.css'
 
@@ -21,7 +25,6 @@ import {
   AUTHOR,
   AUTHOR_URL,
   FREE_SOFTWARE_PRICE_USD,
-  getOgImagePath,
   GITHUB_URL,
   NPM_URL,
   SITE_DESCRIPTION,
@@ -55,7 +58,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE_URL).href
 const fullTitle = title === SITE_NAME ? title : `${title} · ${SITE_NAME}`
 const metadataDescription = description.replace(/<([^>]+)>/gu, '$1')
 const resolvedOgImageAlt = ogImageAlt ?? `${title} — ${SITE_NAME}`
-const imageType = resolvedOgImage.endsWith('.png') ? 'image/png' : 'image/webp'
+const imageType = new URL(resolvedOgImage).pathname.endsWith('.png') ? 'image/png' : 'image/webp'
 
 const site = defineSite({
   locale: 'en_US',
@@ -160,21 +163,27 @@ const breadcrumbsJsonLd = breadcrumbs.length > 0 ?
     <MetadataHead {page} site={site.options} />
     <meta name="title" content={fullTitle} />
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#7c3aed" />
+    <meta name="theme-color" content="#f98d2f" />
+    <ClientRouter />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
-    <!-- Theme init (inline to prevent flash) -->
     <script is:inline>
-      (function () {
-        const saved = localStorage.getItem('theme')
-        const preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      (() => {
+        let theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 
-        document.documentElement.setAttribute('data-theme', saved ?? preferred)
+        try {
+          const saved = localStorage.getItem('theme')
+
+          if (saved === 'dark' || saved === 'light') theme = saved
+        } catch {
+          theme = document.documentElement.dataset.theme === 'light' ? 'light' : theme
+        }
+
+        document.documentElement.setAttribute('data-theme', theme)
       })()
     </script>
 
-    <!-- Structured data -->
     <script type="application/ld+json" is:inline set:html={websiteJsonLd} />
     <script type="application/ld+json" is:inline set:html={softwareJsonLd} />
     {articleJsonLd && <script type="application/ld+json" is:inline set:html={articleJsonLd} />}
@@ -183,45 +192,11 @@ const breadcrumbsJsonLd = breadcrumbs.length > 0 ?
   <body>
     <SkipLink href="#main-content">Skip to content</SkipLink>
     <Nav />
-    <main id="main-content" tabindex="-1">
+    <main id="main-content" tabindex="-1" transition:name="page-content">
       <slot />
     </main>
     <Footer />
     <UIPrimitives />
 
-    <!-- Scroll reveal -->
-    <script>
-const observer = new IntersectionObserver(
-  observerEntries => {
-    for (const entry of observerEntries) {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('is-visible')
-
-        const stagger = entry.target instanceof HTMLElement ? entry.target.dataset['stagger'] : undefined
-
-        if (stagger) {
-          const delay = Number(stagger)
-          const children = entry.target.children
-          let childIndex = 0
-
-          for (const childNode of children) {
-            if (childNode instanceof HTMLElement) {
-              childNode.style.transitionDelay = `${childIndex * delay}ms`
-            }
-
-            childIndex += 1
-          }
-        }
-
-        observer.unobserve(entry.target)
-      }
-    }
-  }, { threshold: 0.08 }
-)
-
-for (const elementNode of document.querySelectorAll('[data-reveal], [data-stagger]')) {
-  observer.observe(elementNode)
-}
-</script>
   </body>
 </html>

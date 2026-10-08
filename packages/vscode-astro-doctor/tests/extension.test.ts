@@ -22,13 +22,12 @@ import {
 const ENV_LOCAL = 'local'
 const ENV_PRODUCTION = 'production'
 const EMPTY_FILE_SIZE_BYTES = 0
-const VSCODE_FILE_TYPE_FILE = 1
 
 const createMockFileStat = () => ({
   ctime: Date.now(),
   mtime: Date.now(),
   size: EMPTY_FILE_SIZE_BYTES,
-  type: VSCODE_FILE_TYPE_FILE,
+  type: vscode.FileType.File,
 })
 
 const workspaceFileSystem = vi.mocked(vscode.workspace.fs)

@@ -1,12 +1,10 @@
 name: Deploy Docs
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
-    paths:
-      - "apps/docs/**"
-      - "packages/*/CHANGELOG.md"
-      - ".github/workflows/deploy-docs.yml"
   workflow_dispatch: {}
 
 permissions:
@@ -17,31 +15,67 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  preflight:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+    secrets:
+      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+
   build-and-deploy:
+    needs: preflight
+    if: >-
+      !cancelled() && github.ref == 'refs/heads/main' &&
+      (
+        (github.event_name == 'workflow_dispatch' && needs.preflight.result == 'success') ||
+        (
+          github.event_name == 'workflow_run' &&
+          github.event.workflow_run.event == 'push' &&
+          github.event.workflow_run.head_branch == 'main' &&
+          github.event.workflow_run.head_repository.full_name == github.repository &&
+          github.event.workflow_run.conclusion == 'success'
+        )
+      )
     name: Build & Deploy to Cloudflare Pages
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment:
       name: docs-production
       url: https://doctor.santi020k.com
+    env:
+      VALIDATED_COMMIT: ${{ github.event.workflow_run.head_sha || github.sha }}
+      WORKFLOW_COMMIT: ${{ github.sha }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          ref: ${{ env.VALIDATED_COMMIT }}
+          fetch-depth: 0
+
+      - name: Check validated commit
+        id: scope
+        run: bash scripts/check-validated-commit.sh
 
       - name: Set up pnpm workspace
-        uses: santi020k/quality/actions/setup-pnpm@eec1701b98bcc0b76d36af288ee78a0369cd84cc # v1
+        if: steps.scope.outputs.relevant == 'true'
+        uses: santi020k/quality/actions/setup-pnpm@ffa37774f75b2b8e761fe3d71e7046cdb6694a69 # v1
         with:
           node-version: 22
 
       - name: Build docs
+        if: steps.scope.outputs.relevant == 'true'
         run: pnpm --filter @santi020k/astro-doctor-docs build
 
       - name: Deploy to Cloudflare Pages
+        if: steps.scope.outputs.relevant == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: >-
-          pnpm exec wrangler pages deploy apps/docs/dist
-          --project-name=astro-doctor-docs
-          --branch=main
-          --commit-hash=${{ github.sha }}
+        run: |
+          bash scripts/check-validated-commit.sh --require-current
+          pnpm exec wrangler pages deploy apps/docs/dist \
+            --project-name=astro-doctor-docs \
+            --branch=main \
+            --commit-hash="$VALIDATED_COMMIT"

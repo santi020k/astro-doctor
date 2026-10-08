@@ -2,7 +2,7 @@
 import CodeBlock from '@/components/code-block.astro'
 import Docs from '@/layouts/Docs.astro'
 
-import { Callout } from '@santi020k/lumen-astro'
+import { Callout, Table } from '@santi020k/lumen-astro'
 ---
 
 <Docs
@@ -10,12 +10,13 @@ import { Callout } from '@santi020k/lumen-astro'
   description="Full reference for doctor.config.ts — custom rules, severity overrides, ignored paths, and per-project settings."
   editPath="apps/docs/src/pages/docs/configuration.astro"
 >
-  <h1>Configuration</h1>
-
-  <p>
-    astro-doctor looks for a <code>doctor.config.*</code> file in the directory you scan.
-    All configuration is optional — the defaults are sensible out of the box.
-  </p>
+  <header class="docs-page-header">
+    <h1>Configuration</h1>
+    <p class="docs-page-lead">
+      astro-doctor looks for a <code>doctor.config.*</code> file in the directory you scan.
+      All configuration is optional — the defaults are sensible out of the box.
+    </p>
+  </header>
 
   <h2>Supported formats</h2>
 
@@ -121,28 +122,30 @@ export default {
     Controls when astro-doctor exits with a non-zero exit code:
   </p>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Value</th>
-        <th>Exits with 1 when…</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>'error'</code> (default)</td>
-        <td>Any error-severity finding exists</td>
-      </tr>
-      <tr>
-        <td><code>'warning'</code></td>
-        <td>Any error or warning finding exists</td>
-      </tr>
-      <tr>
-        <td><code>'off'</code></td>
-        <td>Never (useful for reporting without blocking)</td>
-      </tr>
-    </tbody>
-  </table>
+  <Table aria-label="Failure threshold options" role="region" tabindex="0">
+    <table>
+      <thead>
+        <tr>
+          <th>Value</th>
+          <th>Exits with 1 when…</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>'error'</code> (default)</td>
+          <td>Any error-severity finding exists</td>
+        </tr>
+        <tr>
+          <td><code>'warning'</code></td>
+          <td>Any error or warning finding exists</td>
+        </tr>
+        <tr>
+          <td><code>'off'</code></td>
+          <td>Never (useful for reporting without blocking)</td>
+        </tr>
+      </tbody>
+    </table>
+  </Table>
 
   <p>
     The <code>--fail-on</code> CLI flag takes precedence over the config file value.
@@ -168,14 +171,13 @@ export default {
     copy
   />
 
-  <Callout class="callout callout-tip">
+  <Callout>
     <strong>Tip:</strong> Adding <code>"$schema"</code> enables autocompletion and inline docs for
     all rule names and values in VS Code, WebStorm, and any editor with JSON Schema support.
   </Callout>
 
-  <Callout class="callout callout-tip">
-    <strong>Note:</strong> When using <code>doctor.config.ts</code>, your project must be able to
-    execute TypeScript files (e.g. via tsx, ts-node, or Bun). If that's not available, use
-    <code>doctor.config.js</code> (ESM) instead.
+  <Callout>
+    <strong>TypeScript is included:</strong> Astro Doctor loads <code>doctor.config.ts</code>
+    with its bundled loader. You do not need a separate TypeScript runtime dependency.
   </Callout>
 </Docs>

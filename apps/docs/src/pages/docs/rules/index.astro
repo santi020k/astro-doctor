@@ -2,143 +2,117 @@
 import CodeBlock from '@/components/code-block.astro'
 import Docs from '@/layouts/Docs.astro'
 
-import { Badge, Link } from '@santi020k/lumen-astro'
+import '../docs-pages.css'
 
-import {
-  CATEGORY_COLORS,
-  CATEGORY_LABELS,
-  PROJECT_AUDITS,
-  RULES,
-  SEVERITY_COLORS
-} from '@/data/rules'
+import { Badge, Icon, Link, Stat, StatLabel, StatValue } from '@santi020k/lumen-astro'
+
+import { CATEGORY_LABELS, PROJECT_AUDITS, RULES } from '@/data/rules'
+
+const categories = Object.entries(CATEGORY_LABELS).map(([category, label]) => ({
+  category,
+  label,
+  rules: RULES.filter(ruleDefinition => ruleDefinition.category === category)
+})).filter(categoryDefinition => categoryDefinition.rules.length > 0)
 ---
 
 <Docs
   title="Rules Overview"
-  description={`${RULES.length} proprietary ESLint rules, ${PROJECT_AUDITS.length} project audits, and up to 54 official Astro ecosystem rules.`}
+  description={`${RULES.length} Astro Doctor rules, ${PROJECT_AUDITS.length} project audits, and up to 54 official Astro ecosystem rules. Explore the checks and see how to resolve each finding.`}
   editPath="apps/docs/src/pages/docs/rules/index.astro"
 >
-  <h1>Rules</h1>
+  <header class="docs-page-header">
+    <h1>Small checks.<br /><span class="docs-title-accent">Better foundations.</span></h1>
+    <p class="docs-page-lead">
+      Understand what each rule catches, why it matters, and what a better pattern looks like.
+      Start with the defaults. Tune the checks to your project.
+    </p>
+  </header>
+
+  <div class="docs-stat-strip" role="group" aria-label="Rule catalog coverage">
+    <Stat variant="bare">
+      <StatValue>{RULES.length}</StatValue>
+      <StatLabel>Astro Doctor rules</StatLabel>
+    </Stat>
+    <Stat variant="bare">
+      <StatValue>{PROJECT_AUDITS.length}</StatValue>
+      <StatLabel>Project audits</StatLabel>
+    </Stat>
+    <Stat variant="bare">
+      <StatValue>54</StatValue>
+      <StatLabel>Official Astro rules</StatLabel>
+    </Stat>
+  </div>
+
+  <nav class="docs-category-links" aria-label="Rule categories">
+    {categories.map(categoryDefinition => (
+      <Link href={`#${categoryDefinition.category}`} variant="inherit">
+        {categoryDefinition.label}<Icon name="arrow-down" decorative />
+      </Link>
+    ))}
+    <Link href="#project-audits" variant="inherit">Project audits<Icon name="arrow-down" decorative /></Link>
+  </nav>
 
   <p>
-    astro-doctor provides {RULES.length} proprietary ESLint rules for <code>.astro</code> files,
-    {PROJECT_AUDITS.length} project-wide audits, and up to 54 official
-    <code>eslint-plugin-astro</code> rules. The <code>all</code> preset exposes 63 unique ESLint
-    checks after overlap deduplication, plus project audits.
+    Astro Doctor composes its rules with <code>eslint-plugin-astro</code>. The <code>all</code>
+    preset enables 63 unique ESLint checks after overlap deduplication, plus project audits.
+    Each rule below includes its default severity; you can change that in your configuration.
   </p>
 
-  <h2>Proprietary rules</h2>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Rule</th>
-        <th>Category</th>
-        <th>Default</th>
-        <th>Fixable</th>
-      </tr>
-    </thead>
-    <tbody>
-      {RULES.map(rule => (
-        <tr>
-          <td>
-            <Link href={`/docs/rules/${rule.slug}`}>
-              <code>{rule.id}</code>
+  {categories.map(categoryDefinition => (
+    <section aria-labelledby={categoryDefinition.category}>
+      <h2 class="docs-catalog-heading" id={categoryDefinition.category}>
+        {categoryDefinition.label}
+        <span>{categoryDefinition.rules.length} checks</span>
+      </h2>
+      <ul class="docs-link-list">
+        {categoryDefinition.rules.map(ruleDefinition => (
+          <li class="docs-catalog-row">
+            <Link class="docs-row-link" href={`/docs/rules/${ruleDefinition.slug}`} variant="inherit">
+              <span class="docs-row-copy">
+                <strong>{ruleDefinition.name}</strong>
+                <span>{ruleDefinition.description}</span>
+              </span>
+              <Icon name="arrow-up-right" decorative />
             </Link>
-          </td>
-          <td>
-            <Badge class:list={[`
-              inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs
-              font-medium
-            `, CATEGORY_COLORS[rule.category]]}
-            >
-              {CATEGORY_LABELS[rule.category]}
-            </Badge>
-          </td>
-          <td>
-            <Badge class:list={[
-              `
-                inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs
-                font-medium
-              `,
-              SEVERITY_COLORS[rule.severity]
-            ]}
-            >
-              {rule.severity}
-            </Badge>
-          </td>
-          <td class="text-sm text-[hsl(var(--ink-muted))]">—</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
+            <div class="docs-rule-meta">
+              <Badge variant={ruleDefinition.severity === 'error' ? 'destructive' : 'warning'}>
+                {ruleDefinition.severity === 'warn' ? 'warning' : 'error'}
+              </Badge>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
 
-  <h2>Project audits</h2>
-
-  <p>
-    The CLI also evaluates configuration and relationships across files that an isolated ESLint rule
-    cannot see.
-  </p>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Check</th>
-        <th>Category</th>
-        <th>Preset</th>
-      </tr>
-    </thead>
-    <tbody>
+  <section aria-labelledby="project-audits">
+    <h2 class="docs-catalog-heading" id="project-audits">
+      Project audits<span>{PROJECT_AUDITS.length} checks</span>
+    </h2>
+    <p>
+      The CLI also evaluates configuration and relationships across files that an isolated ESLint
+      rule cannot see. Preset labels show where each audit is enabled.
+    </p>
+    <ul class="docs-link-list">
       {PROJECT_AUDITS.map(projectAudit => (
-        <tr>
-          <td>
-            <Link href={`/docs/rules/${projectAudit.slug}`}>
-              <code>{projectAudit.id}</code>
-            </Link>
-          </td>
-          <td>{CATEGORY_LABELS[projectAudit.category]}</td>
-          <td>{projectAudit.preset}</td>
-        </tr>
+        <li class="docs-catalog-row">
+          <Link class="docs-row-link" href={`/docs/rules/${projectAudit.slug}`} variant="inherit">
+            <span class="docs-row-copy">
+              <strong>{projectAudit.name}</strong>
+              <span>{projectAudit.description}</span>
+            </span>
+            <Icon name="arrow-up-right" decorative />
+          </Link>
+          <div class="docs-rule-meta">
+            <Badge variant="outline">{projectAudit.preset}</Badge>
+          </div>
+        </li>
       ))}
-    </tbody>
-  </table>
+    </ul>
+  </section>
 
-  <h2>Rule categories</h2>
-
-  <h3>Performance</h3>
-  <p>
-    Rules that help you ship faster pages. Covers hydration strategies
-    (<code>no-client-load-overuse</code>), image optimization (<code>use-astro-image</code>),
-    image dimensions (<code>require-image-dimensions</code>), render-blocking scripts
-    (<code>no-blocking-script</code>), and accidental script processing opt-outs
-    (<code>no-unprocessed-script-surprises</code>).
-  </p>
-
-  <h3>Accessibility</h3>
-  <p>
-    Rules that ensure your pages are usable by everyone, including screen-reader users.
-    Covers missing alt text (<code>no-missing-alt</code>) and missing language declaration
-    (<code>no-missing-lang</code>), plus fallback content for islands
-    (<code>require-island-fallback</code>).
-  </p>
-
-  <h3>Security</h3>
-  <p>
-    Rules that prevent common vulnerabilities. Covers unescaped HTML injection
-    (<code>no-set-html</code>) and public environment variables that look like secrets
-    (<code>no-public-secret-env</code>).
-  </p>
-
-  <h3>Best Practices</h3>
-  <p>
-    Rules that encourage idiomatic Astro patterns: conditional class composition
-    (<code>prefer-class-list</code>), environment variable access (<code>no-process-env</code>),
-    and content management (<code>prefer-content-collections</code>).
-  </p>
-
-  <h2>Customizing rules</h2>
-
-  <p>Override any rule severity in your <code>eslint.config.js</code>:</p>
+  <h2>Make the rules yours</h2>
+  <p>Override individual severities in your <code>eslint.config.js</code>:</p>
 
   <CodeBlock
     code={`import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
@@ -147,19 +121,18 @@ export default [
   astroDoctorPlugin.configs.recommended,
   {
     rules: {
-      // Upgrade to error
       'astro-doctor/no-client-load-overuse': 'error',
-      // Disable a rule
       'astro-doctor/prefer-class-list': 'off',
     },
   },
 ]`}
     label="eslint.config.js"
     language="javascript"
-    theme="auto"
-    variant="block"
-    copy
   />
 
-  <p>Or use a <Link href="/docs/configuration"><code>doctor.config.*</code></Link> file for CLI-only overrides.</p>
+  <p>
+    For CLI settings and project audits, use a
+    <Link href="/docs/configuration"><code>doctor.config.*</code> file</Link>.
+    Use <code>--fix</code> to apply automatic fixes offered by supported rules.
+  </p>
 </Docs>

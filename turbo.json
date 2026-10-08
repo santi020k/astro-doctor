@@ -1,6 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalEnv": ["VITEST"],
+  "globalDependencies": ["skills/SKILL.md", "scripts/copy-agent-skill.mjs"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -57,6 +58,28 @@
     },
     "clean": {
       "cache": false
+    },
+    "@santi020k/astro-doctor#test": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "outputLogs": "errors-only",
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/action.yml",
+        "$TURBO_ROOT$/.github/workflows/*.yml",
+        "$TURBO_ROOT$/scripts/check-validated-commit.sh"
+      ]
+    },
+    "@santi020k/astro-doctor#test:coverage": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"],
+      "outputLogs": "errors-only",
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/action.yml",
+        "$TURBO_ROOT$/.github/workflows/*.yml",
+        "$TURBO_ROOT$/scripts/check-validated-commit.sh"
+      ]
     }
   },
   "futureFlags": {

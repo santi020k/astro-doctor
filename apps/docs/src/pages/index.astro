@@ -1,768 +1,255 @@
 ---
 import CodeBlock from '@/components/code-block.astro'
-import GitHubIcon from '@/components/github-icon.astro'
-import LogoMark from '@/components/logo-mark.astro'
 import Base from '@/layouts/Base.astro'
 
-import { Badge, Button, ButtonLink, Card, Icon, Link } from '@santi020k/lumen-astro'
+import { Badge, ButtonLink, Icon, ScrollReveal, Stat } from '@santi020k/lumen-astro'
 
-import { CATEGORY_COLORS, CATEGORY_LABELS, RULES, SEVERITY_COLORS } from '@/data/rules'
-import { REACT_DOCTOR_URL } from '@/site.config'
+import { HOME_FEATURES, HOME_GRADES, HOME_RULE_SLUGS } from '@/data/home'
+import { ALL_RULES, CATEGORY_LABELS, PROJECT_AUDITS, RULES } from '@/data/rules'
+import { GITHUB_URL, REACT_DOCTOR_URL } from '@/site.config'
+
+const featuredRules = ALL_RULES.filter(rule => HOME_RULE_SLUGS.includes(rule.slug))
 ---
 
-<Base title="astro-doctor" description="Your agent writes bad Astro. This catches it. ESLint rules, CLI, GitHub Action and agent skills for better Astro code.">
-
-  <!-- ─── Hero ─────────────────────────────────────────────────────────── -->
-  <section class="
-    relative overflow-hidden pt-20 pb-16
-    md:pt-28 md:pb-24
-  "
-  >
-    <!-- Background glow orbs -->
-    <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-      <div class="
-        absolute -top-32 left-1/2 h-[600px] w-[800px] -translate-x-1/2
-        rounded-full bg-[hsl(var(--brand)/0.06)] blur-[120px]
-      "
-      ></div>
-      <div class="
-        absolute top-0 right-0 size-[400px] rounded-full
-        bg-[hsl(var(--accent)/0.04)] blur-[100px]
-      "
-      ></div>
-    </div>
-
-    <div class="container-docs relative">
-      <div class="mx-auto max-w-3xl text-center">
-        <!-- Badge -->
-        <Badge
-class="
-  mb-6 inline-flex items-center gap-2 rounded-full border
-  border-[hsl(var(--brand)/0.3)] bg-[hsl(var(--brand-soft))] px-4 py-1.5
-"
-data-reveal
-        >
-          <span class="
-            size-1.5 animate-[pulse-brand_2s_ease-in-out_infinite] rounded-full
-            bg-[hsl(var(--brand))]
-          "
-          ></span>
-          <span class="text-xs font-medium text-[hsl(var(--brand))]">ESLint · CLI · GitHub Action · Agent Skills</span>
-        </Badge>
-
-        <!-- Headline -->
-        <h1
-class="
-  mb-6 text-5xl leading-[1.05] font-black tracking-tight
-  sm:text-6xl
-  md:text-7xl
-"
-data-reveal
-style="animation-delay: 50ms"
-        >
-          Your agent writes
-          <br />
-          <span class="gradient-text">bad Astro.</span>
-          <br />
-          This catches it.
-        </h1>
-
-        <!-- Sub-headline -->
-        <p
-class="
-  mx-auto mb-10 max-w-xl text-lg/relaxed text-[hsl(var(--ink-soft))]
-  sm:text-xl
-"
-data-reveal
-style="animation-delay: 100ms"
-        >
-          {RULES.length} proprietary rules and up to 73 checks for <code>.astro</code> projects —
-          with a health score, CLI, and native GitHub Action.
-        </p>
-
-        <!-- CTAs -->
-        <div
-class="
-  flex flex-col justify-center gap-3
-  sm:flex-row
-"
-data-reveal
-style="animation-delay: 150ms"
-        >
+<Base title="astro-doctor" description="Your agent writes bad Astro. This catches it. Deterministic diagnostics, clear fixes, and a health score for your Astro project.">
+  <div class="container-docs">
+    <section class="signature-frame home-hero" aria-labelledby="home-title">
+      <div class="hero-copy">
+        <p class="home-eyebrow"><span class="status-dot" aria-hidden="true"></span> A second opinion for your Astro code</p>
+        <h1 id="home-title">Your agent writes<br />bad Astro.<br /><span>This catches it.</span></h1>
+        <p class="hero-description">Ship the idea. Catch the mistakes. Find performance, accessibility, and security issues with diagnostics that tell you what to fix.</p>
+        <div class="home-actions">
           <ButtonLink
-            href="/docs"
-            variant="primary"
-            class="
-              flex items-center justify-center gap-2 rounded-xl
-              bg-[hsl(var(--brand))] px-6 py-3 text-sm font-semibold text-white
-              no-underline shadow-lg transition-all duration-200
-              hover:bg-[hsl(var(--brand-solid))]
-              hover:shadow-[0_0_24px_hsl(var(--brand)/0.35)]
-            "
-          >
-            Get started
-            <Icon name="arrow-right" decorative />
-          </ButtonLink>
+href="/docs/quick-start"
+variant="unstyled"
+class="home-primary"
+          >Run your first scan <span><Icon class="home-icon" name="arrow-right" decorative /></span></ButtonLink>
           <ButtonLink
-            href="https://github.com/santi020k/astro-doctor"
-            newTab
-            variant="secondary"
-            class="
-              flex items-center justify-center gap-2 rounded-xl border
-              border-[hsl(var(--line))] bg-[hsl(var(--surface))] px-6 py-3
-              text-sm font-semibold text-[hsl(var(--ink))] no-underline
-              transition-all duration-200
-              hover:border-[hsl(var(--brand)/0.5)]
-              hover:bg-[hsl(var(--surface-muted))]
-            "
-          >
-            <GitHubIcon />
-            GitHub
-          </ButtonLink>
+href={GITHUB_URL}
+newTab
+variant="unstyled"
+class="home-secondary"
+          >Explore the source <Icon class="home-icon" name="arrow-up-right" decorative /></ButtonLink>
         </div>
-
-        <!-- Install snippet -->
-        <div
-class="
-  mt-10 inline-flex items-center gap-3 rounded-xl border
-  border-[hsl(var(--line)/0.5)] bg-[hsl(var(--surface))] px-5 py-3 font-mono
-  text-sm
-"
-data-reveal
-style="animation-delay: 200ms"
-        >
-          <span class="text-[hsl(var(--ink-muted))]">$</span>
-          <span class="text-[hsl(var(--brand))]">pnpm</span>
-          <span class="text-[hsl(var(--ink))]">add -D @santi020k/astro-doctor</span>
-          <Button
-            id="copy-install"
-            aria-label="Copy install command"
-            size="icon"
-            variant="ghost"
-            class="
-              ml-2 flex size-6 items-center justify-center rounded-sm
-              text-[hsl(var(--ink-muted))] transition-colors
-              hover:text-[hsl(var(--brand))]
-            "
-          >
-            <Icon class="size-3.5" name="copy" decorative />
-          </Button>
+        <div class="hero-command">
+          <CodeBlock code="pnpm dlx @santi020k/astro-doctor@latest" language="bash" label="Try it without installing" wrap={false} />
         </div>
       </div>
 
-      <!-- Terminal demo -->
-      <div class="mx-auto mt-16 max-w-2xl" data-reveal style="animation-delay: 250ms">
-        <Card class="
-          overflow-hidden rounded-2xl border border-[hsl(var(--line)/0.5)]
-          bg-[hsl(var(--surface))] p-0 shadow-2xl
+      <div class="health-report" aria-label="Illustrative scan report">
+        <div class="report-heading"><Icon class="home-icon" name="activity" decorative /><span>Project health</span><Badge variant="outline">Example scan</Badge></div>
+        <div class="report-score"><span class="score-value">74<span>/100</span></span><div><span class="
+          report-grade
         "
-        >
-          <!-- Terminal header -->
-          <div class="
-            flex items-center gap-2 border-b border-[hsl(var(--line)/0.4)] px-4
-            py-3
+                                                                                           >C · Needs attention</span><p>Clear findings.<br />A place to start.</p></div></div>
+        <div class="score-track" aria-hidden="true"><span></span></div>
+        <div class="report-summary"><span>14 files scanned</span><span>2 errors · 2 warnings</span></div>
+        <ul class="report-findings">
+          <li><Icon class="home-icon" name="shield-alert" decorative /><div><strong>Sanitize raw HTML</strong><code>no-set-html</code></div><span class="
+            finding-error
           "
-          >
-            <span class="size-3 rounded-full bg-red-500/80"></span>
-            <span class="size-3 rounded-full bg-yellow-500/80"></span>
-            <span class="size-3 rounded-full bg-green-500/80"></span>
-            <span class="ml-3 font-mono text-xs text-[hsl(var(--ink-muted))]">astro-doctor scan</span>
-          </div>
-          <!-- Terminal body -->
-          <div class="p-5 font-mono text-sm/relaxed">
-            <div class="text-[hsl(var(--ink-muted))]">$ astro-doctor</div>
-            <div class="mt-2 text-[hsl(var(--ink-soft))]">Scanning /my-astro-project...</div>
-            <div class="mt-3 space-y-1">
-              <div>
-                <span class="text-[hsl(var(--danger))]">✗ error</span>
-                <span class="text-[hsl(var(--ink-soft))]"> src/pages/blog.astro:12 — </span>
-                <span class="text-[hsl(var(--ink))]">no-missing-alt</span>
-              </div>
-              <div>
-                <span class="text-[hsl(var(--danger))]">✗ error</span>
-                <span class="text-[hsl(var(--ink-soft))]"> src/components/Hero.astro:8 — </span>
-                <span class="text-[hsl(var(--ink))]">no-set-html</span>
-              </div>
-              <div>
-                <span class="text-[hsl(var(--warning))]">⚠ warn</span>
-                <span class="text-[hsl(var(--ink-soft))]">  src/components/Counter.astro:3 — </span>
-                <span class="text-[hsl(var(--ink))]">no-client-load-overuse</span>
-              </div>
-              <div>
-                <span class="text-[hsl(var(--warning))]">⚠ warn</span>
-                <span class="text-[hsl(var(--ink-soft))]">  src/pages/index.astro:24 — </span>
-                <span class="text-[hsl(var(--ink))]">use-astro-image</span>
-              </div>
-            </div>
-            <div class="mt-4 text-[hsl(var(--ink-soft))]">14 files scanned · 2 errors · 2 warnings</div>
-            <div class="mt-3 flex items-center gap-3">
-              <span class="text-[hsl(var(--ink-soft))]">Astro Doctor Score:</span>
-              <span class="font-bold text-[hsl(var(--warning))]">72/100 (C)</span>
-              <span class="text-[hsl(var(--warning))]">🟡</span>
-            </div>
-            <div class="mt-1 text-xs text-[hsl(var(--danger))]">Process exited with code 1</div>
-          </div>
-        </Card>
+                                                                                                                                            >error</span></li>
+          <li><Icon class="home-icon" name="image" decorative /><div><strong>Describe the image</strong><code>no-missing-alt</code></div><span class="
+            finding-error
+          "
+                                                                                                                                         >error</span></li>
+          <li><Icon class="home-icon" name="zap" decorative /><div><strong>Hydrate when needed</strong><code>no-client-load-overuse</code></div><span class="
+            finding-warning
+          "
+                                                                                                                                                >warn</span></li>
+          <li><Icon class="home-icon" name="scan" decorative /><div><strong>Optimize your images</strong><code>use-astro-image</code></div><span class="
+            finding-warning
+          "
+                                                                                                                                           >warn</span></li>
+        </ul>
+        <p class="report-note"><Icon class="home-icon" name="info" decorative />Unresolved security errors cap the score at 74.</p>
       </div>
+      <div class="hero-footnote"><span>Built for Astro. Open source by design.</span><span>CLI / ESLint / Editor / CI</span></div>
+    </section>
+
+    <div class="home-facts" aria-label="Project at a glance">
+      <Stat variant="bare" value={String(RULES.length)} label="Astro ESLint rules" />
+      <Stat variant="bare" value={String(PROJECT_AUDITS.length)} label="Project audit checks" />
+      <Stat variant="bare" value="0–100" label="Project health score" />
+      <Stat variant="bare" value="MIT" label="Open source license" />
     </div>
-  </section>
 
-  <!-- ─── Score demo ────────────────────────────────────────────────────── -->
-  <section class="py-16">
-    <div class="container-docs">
-      <div class="mx-auto mb-10 max-w-3xl text-center" data-reveal>
-        <h2 class="mb-3 text-3xl font-bold tracking-tight">Know exactly how healthy your codebase is</h2>
-        <p class="text-[hsl(var(--ink-soft))]">Every scan produces a 0–100 health score with a letter grade, so you can set thresholds and track improvement over time.</p>
-      </div>
-
-      <div
-class="
-  mx-auto grid max-w-2xl grid-cols-2 gap-3
-  sm:grid-cols-3
-  md:grid-cols-6
-"
-data-stagger="80"
-      >
-        {[
-          { grade: 'S', range: '100', desc: 'Zero diagnostics', tone: 'grade-s' },
-          { grade: 'A', range: '90–99', desc: 'Excellent', tone: 'grade-a' },
-          { grade: 'B', range: '75–89', desc: 'Good', tone: 'grade-b' },
-          { grade: 'C', range: '60–74', desc: 'Fair', tone: 'grade-c' },
-          { grade: 'D', range: '40–59', desc: 'Needs attention', tone: 'grade-d' },
-          { grade: 'F', range: '0–39', desc: 'Critical', tone: 'grade-f' }
-        ].map(({ grade, range, desc, tone }) => (
-          <Card class:list={[
-            'flex flex-col items-center gap-2 rounded-xl border p-4',
-            tone
-          ]}
-          >
-            <span class="text-4xl font-black">{grade}</span>
-            <span class="text-xs text-[hsl(var(--ink-muted))]">{range}</span>
-            <span class="text-xs text-[hsl(var(--ink-muted))]">{desc}</span>
-          </Card>
+    <ScrollReveal as="section" animation="slide-up" class="home-section" aria-labelledby="workflow-title">
+      <div class="section-intro"><p class="home-eyebrow">01 / The workflow</p><h2 id="workflow-title">Good habits.<br /><span>Where you already work.</span></h2><p>One set of diagnostics, from your first local scan to the pull request that ships it.</p></div>
+      <div class="workflow-grid">
+        {HOME_FEATURES.map(feature => (
+          <a href={feature.href} class="workflow-link">
+            <Icon class="home-icon" name={feature.icon} decorative />
+            <div><h3>{feature.title}</h3><p>{feature.description}</p></div>
+            <Icon class="home-icon" name="arrow-up-right" decorative />
+          </a>
         ))}
       </div>
+    </ScrollReveal>
 
-      <p class="mt-6 text-center text-xs text-[hsl(var(--ink-muted))]">
-        Score = max(0, 100 − (errors×10 + warnings×3) / files)
-      </p>
-    </div>
-  </section>
-
-  <!-- ─── Features ──────────────────────────────────────────────────────── -->
-  <section class="py-16">
-    <div class="container-docs">
-      <div class="mx-auto mb-12 max-w-3xl text-center" data-reveal>
-        <h2 class="mb-3 text-3xl font-bold tracking-tight">Everything you need to ship better Astro</h2>
-        <p class="text-[hsl(var(--ink-soft))]">One install, multiple touch points — from your editor to your CI pipeline.</p>
-      </div>
-
-      <div
-class="
-  grid gap-4
-  sm:grid-cols-2
-  lg:grid-cols-3
-"
-data-stagger="70"
-      >
-        {[
-          {
-            icon: <><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></>,
-            title: 'ESLint Plugin',
-            desc: 'Drop-in flat-config plugin. Works with any ESLint 10 setup — standalone or alongside your existing config.'
-          },
-          {
-            icon: <><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></>,
-            title: 'VS Code Extension',
-            desc: 'Official extension for VS Code and Cursor. Real-time inline diagnostics, hover explanations, quick fixes, and a health sidebar.'
-          },
-          {
-            icon: <><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M8 8h5M8 16h3"/></>,
-            title: 'CLI Scanner',
-            desc: 'pnpm dlx @santi020k/astro-doctor — scan any directory, output JSON reports, and integrate into any CI pipeline.'
-          },
-          {
-            icon: <><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 5v5l3 3"/><circle cx="12" cy="12" r="1"/></>,
-            title: 'Health Score',
-            desc: '0–100 score with S–F grade. Set --fail-on thresholds. Track codebase health across PRs and releases.'
-          },
-          {
-            icon: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></>,
-            title: 'GitHub Action',
-            desc: 'Composite action with PR diff mode — scan only changed files, post a sticky summary comment on every PR.'
-          },
-          {
-            icon: <><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></>,
-            title: 'JSON Reports',
-            desc: 'Machine-readable output with --json. Pipe into other tools, dashboards, or custom notification systems.'
-          },
-          {
-            icon: <><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></>,
-            title: 'Agent Skills',
-            desc: 'Pre-built skill files for Claude, Cursor, Copilot Workspace. Your AI agent knows the rules — and how to fix them.'
-          }
-        ].map(({ icon, title, desc }) => (
-          <Card class="panel-card flex flex-col gap-4 p-6">
-            <div class="
-              flex size-10 items-center justify-center rounded-xl
-              bg-[hsl(var(--brand-soft))]
-            "
-            >
-              <svg class="size-5 text-[hsl(var(--brand))]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                {icon}
-              </svg>
-            </div>
-            <div>
-              <h3 class="mb-1 font-semibold text-[hsl(var(--ink))]">{title}</h3>
-              <p class="text-sm/relaxed text-[hsl(var(--ink-soft))]">{desc}</p>
-            </div>
-          </Card>
+    <ScrollReveal
+as="section"
+animation="slide-up"
+class="home-section rules-section"
+aria-labelledby="rules-title"
+    >
+      <div class="section-intro"><p class="home-eyebrow">02 / The diagnosis</p><h2 id="rules-title">Small details.<br /><span>Real consequences.</span></h2><p>Every finding names the problem, explains why it matters, and shows a better pattern.</p><ButtonLink
+href="/docs/rules"
+variant="unstyled"
+class="home-secondary"
+                                                                                                                                                                                                                                                        >Explore every rule <Icon
+class="home-icon"
+name="arrow-right"
+decorative
+                                                                                                                                                                                                                                                                            /></ButtonLink></div>
+      <div class="rule-preview">
+        {featuredRules.map(rule => (
+          <a class="rule-preview-link" href={`/docs/rules/${rule.slug}`}>
+            <div><span class="rule-category">{CATEGORY_LABELS[rule.category]}</span><h3>{rule.name}</h3><p>{rule.description}</p></div>
+            <Icon class="home-icon" name="arrow-up-right" decorative />
+          </a>
         ))}
       </div>
-    </div>
-  </section>
+    </ScrollReveal>
 
-  <!-- ─── Rules showcase ────────────────────────────────────────────────── -->
-  <section class="py-16">
-    <div class="container-docs">
-      <div class="mx-auto mb-12 max-w-3xl text-center" data-reveal>
-        <h2 class="mb-3 text-3xl font-bold tracking-tight">{RULES.length} rules we own. 73 checks in all.</h2>
-        <p class="text-[hsl(var(--ink-soft))]">Each rule targets a specific class of mistake that agents and developers commonly make in Astro projects.</p>
-      </div>
-
-      <div
-class="
-  mx-auto grid max-w-3xl gap-3
-  sm:grid-cols-2
-  lg:grid-cols-1
-"
-data-stagger="60"
-      >
-        {RULES.map(rule => (
-          <Link
-            href={`/docs/rules/${rule.slug}`}
-            class="group panel-card flex items-start gap-4 p-5 no-underline"
-          >
-            <div class="mt-0.5 shrink-0">
-              <Badge class:list={[
-                `
-                  inline-flex items-center rounded-md px-2 py-0.5 text-xs
-                  font-semibold
-                `,
-                SEVERITY_COLORS[rule.severity]
-              ]}
-              >
-                {rule.severity}
-              </Badge>
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="mb-1 flex items-center gap-2">
-                <span class="
-                  font-mono text-sm font-semibold text-[hsl(var(--ink))]
-                  transition-colors
-                  group-hover:text-[hsl(var(--brand))]
-                "
-                >
-                  {rule.id}
-                </span>
-                <Badge class:list={[`
-                  inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs
-                  font-medium
-                `, CATEGORY_COLORS[rule.category]]}
-                >
-                  {CATEGORY_LABELS[rule.category]}
-                </Badge>
-              </div>
-              <p class="text-sm text-[hsl(var(--ink-soft))]">{rule.description}</p>
-            </div>
-            <Icon
-              class="
-                mt-0.5 size-4 shrink-0 text-[hsl(var(--ink-muted))]
-                transition-colors
-                group-hover:text-[hsl(var(--brand))]
-              "
-              name="arrow-right"
-              decorative
-            />
-          </Link>
-        ))}
-      </div>
-
-      <div class="mt-8 text-center">
-        <Link
-          href="/docs/rules"
-          class="
-            inline-flex items-center gap-2 text-sm text-[hsl(var(--brand))]
-            transition-colors
-            hover:text-[hsl(var(--accent))]
-          "
-        >
-          View all rules with examples
-          <Icon name="arrow-right" decorative />
-        </Link>
-      </div>
-    </div>
-  </section>
-
-  <!-- ─── Quick start ───────────────────────────────────────────────────── -->
-  <section class="py-16">
-    <div class="container-docs">
-      <div class="mx-auto max-w-2xl" data-reveal>
-        <Card class="section-shell">
-          <h2 class="mb-2 text-2xl font-bold text-[hsl(var(--ink))]">Up and running in 2 minutes</h2>
-          <p class="mb-8 text-sm text-[hsl(var(--ink-soft))]">Install once, catch issues everywhere.</p>
-
-          <ol class="space-y-6">
-            <li class="flex gap-4">
-              <span class="
-                flex size-7 shrink-0 items-center justify-center rounded-full
-                bg-[hsl(var(--brand))] text-xs font-bold text-white
-              "
-              >1</span>
-              <div class="min-w-0 flex-1">
-                <p class="mb-2 text-sm font-medium text-[hsl(var(--ink))]">Install the package</p>
-                <CodeBlock
-                  class="mt-0!"
-                  code="pnpm add -D @santi020k/astro-doctor"
-                  language="bash"
-                  theme="auto"
-                  variant="block"
-                  copy
-                />
-              </div>
-            </li>
-
-            <li class="flex gap-4">
-              <span class="
-                flex size-7 shrink-0 items-center justify-center rounded-full
-                bg-[hsl(var(--brand))] text-xs font-bold text-white
-              "
-              >2</span>
-              <div class="min-w-0 flex-1">
-                <p class="mb-2 text-sm font-medium text-[hsl(var(--ink))]">Add to your ESLint config</p>
-                <CodeBlock
-                  class="mt-0!"
-                  code={`// eslint.config.js
-import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
-
-export default [
-  astroDoctorPlugin.configs.recommended,
-]`}
-                  label="eslint.config.js"
-                  language="javascript"
-                  theme="auto"
-                  variant="block"
-                  copy
-                />
-              </div>
-            </li>
-
-            <li class="flex gap-4">
-              <span class="
-                flex size-7 shrink-0 items-center justify-center rounded-full
-                bg-[hsl(var(--brand))] text-xs font-bold text-white
-              "
-              >3</span>
-              <div class="min-w-0 flex-1">
-                <p class="mb-2 text-sm font-medium text-[hsl(var(--ink))]">Scan your project</p>
-                <CodeBlock
-                  class="mt-0!"
-                  code="pnpm astro-doctor"
-                  language="bash"
-                  theme="auto"
-                  variant="block"
-                  copy
-                />
-              </div>
-            </li>
-          </ol>
-
-          <div class="mt-8 flex gap-3">
-            <ButtonLink
-              href="/docs/quick-start"
-              variant="primary"
-              class="
-                flex items-center gap-2 rounded-lg bg-[hsl(var(--brand))] px-4
-                py-2.5 text-sm font-semibold text-white no-underline
-                transition-colors
-                hover:bg-[hsl(var(--brand-solid))]
-              "
-            >
-              Full quick start guide
-            </ButtonLink>
-            <ButtonLink
-              href="/docs/installation"
-              variant="secondary"
-              class="
-                flex items-center gap-2 rounded-lg border
-                border-[hsl(var(--line))] px-4 py-2.5 text-sm font-medium
-                text-[hsl(var(--ink))] no-underline transition-colors
-                hover:bg-[hsl(var(--surface-muted))]
-              "
-            >
-              Installation options
-            </ButtonLink>
-          </div>
-        </Card>
-      </div>
-    </div>
-  </section>
-
-  <!-- ─── GitHub Action showcase ────────────────────────────────────────── -->
-  <section class="py-16">
-    <div class="container-docs">
-      <div
-class="
-  mx-auto grid max-w-5xl items-center gap-12
-  lg:grid-cols-2
-"
-data-reveal
-      >
-        <div>
-          <Badge class="
-            mb-3 inline-flex items-center rounded-full
-            bg-[hsl(var(--brand-soft))] px-3 py-1 text-xs font-medium
-            text-[hsl(var(--brand))]
-          "
-          >
-            CI / CD
-          </Badge>
-          <h2 class="
-            mb-4 text-3xl font-bold tracking-tight text-[hsl(var(--ink))]
-          "
-          >
-            PR-aware scanning with sticky comments
-          </h2>
-          <p class="mb-6 leading-relaxed text-[hsl(var(--ink-soft))]">
-            The composite GitHub Action scans only the files changed in a pull request and posts a sticky summary comment with the score and all diagnostics. Updated on every push, never duplicated.
-          </p>
-          <ul class="space-y-2">
-            {[
-              'Scans only changed Astro Doctor files with diff-only: true',
-              'Posts and updates a single sticky PR comment',
-              'Outputs score, errors, warnings as Action step outputs',
-              'Configurable fail-on threshold (error / warning / off)'
-            ].map(item => (
-              <li class="
-                flex items-start gap-2 text-sm text-[hsl(var(--ink-soft))]
-              "
-              >
-                <svg class="mt-0.5 size-4 shrink-0 text-[hsl(var(--brand))]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-                {item}
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/docs/github-action"
-            class="
-              mt-6 inline-flex items-center gap-2 text-sm font-medium
-              text-[hsl(var(--brand))] transition-colors
-              hover:text-[hsl(var(--accent))]
-            "
-          >
-            GitHub Action docs
-            <Icon name="arrow-right" decorative />
-          </Link>
+    <ScrollReveal
+as="section"
+animation="slide-up"
+class="home-section score-section"
+aria-labelledby="score-title"
+    >
+      <div class="section-intro"><p class="home-eyebrow">03 / A useful signal</p><h2 id="score-title">Know where<br /><span>your project stands.</span></h2><p>A score you can act on. Review the findings, fix the cause, and keep new issues out of your next pull request.</p></div>
+      <div>
+        <div class="grade-list">
+          {HOME_GRADES.map(grade => (<div class:list={['grade-item', grade.tone]}><strong>{grade.label}</strong><span>{grade.range}</span><span>{grade.description}</span></div>))}
         </div>
-
-        <CodeBlock
-          code={`name: Astro Doctor
-on:
-  pull_request:
-    paths: ['**/*.astro']
-
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: santi020k/astro-doctor@v1
-        with:
-          diff-only: true
-          comment: true
-          fail-on: error`}
-          label=".github/workflows/astro-doctor.yml"
-          language="yaml"
-          theme="auto"
-          variant="block"
-          copy
-        />
+        <p class="score-explanation">Each file starts at 100. Errors cost 25 points and warnings cost 10; file scores are clamped at zero, then averaged. Unresolved errors cap the result at 89, or 74 for security errors.</p>
+        <ButtonLink
+href="/docs#health-score"
+variant="unstyled"
+class="home-secondary"
+        >Understand the score <Icon class="home-icon" name="arrow-right" decorative /></ButtonLink>
       </div>
-    </div>
-  </section>
+    </ScrollReveal>
 
-  <!-- ─── Agent skills ──────────────────────────────────────────────────── -->
-  <section class="py-16">
-    <div class="container-docs">
-      <div class="mx-auto mb-10 max-w-3xl text-center" data-reveal>
-        <Badge class="
-          mb-3 inline-flex items-center rounded-full bg-[hsl(var(--brand-soft))]
-          px-3 py-1 text-xs font-medium text-[hsl(var(--brand))]
-        "
-        >
-          AI-native
-        </Badge>
-        <h2 class="
-          mb-3 text-3xl font-bold tracking-tight text-[hsl(var(--ink))]
-        "
-        >Built for the age of coding agents</h2>
-        <p class="text-[hsl(var(--ink-soft))]">
-          Agent skills teach your AI assistant every rule — what to avoid, why, and how to fix it.
-          Install once with <code>astro-doctor install</code>.
-        </p>
-      </div>
+    <ScrollReveal as="section" animation="slide-up" class="home-start" aria-labelledby="start-title">
+      <div><p class="home-eyebrow">Your next commit can be better</p><h2 id="start-title">Start with<br />a second opinion.</h2><p>Run a scan. Read the findings. Ship with more confidence.</p><ButtonLink
+href="/docs/quick-start"
+variant="unstyled"
+class="home-primary"
+                                                                                                                                                                                                >Get started <span><Icon
+class="home-icon"
+name="arrow-right"
+decorative
+                                                                                                                                                                                                                   /></span></ButtonLink></div>
+      <div class="start-steps"><div><span>01</span><div><h3>Scan your project</h3><CodeBlock code="pnpm dlx @santi020k/astro-doctor@latest" language="bash" wrap={false} /></div></div><div><span>02</span><div><h3>Teach your coding agent</h3><CodeBlock code="pnpm dlx @santi020k/astro-doctor@latest install" language="bash" wrap={false} /></div></div><p>Ready for CI? <a href="/docs/github-action">Add the GitHub Action <Icon
+class="home-icon"
+name="arrow-right"
+decorative
+                                                                                                                                                                                                                                                                                                                                                                                                                                  /></a></p></div>
+    </ScrollReveal>
 
-      <div
-class="
-  mx-auto grid max-w-3xl gap-4
-  sm:grid-cols-3
-"
-data-stagger="70"
-      >
-        {[
-          {
-            name: 'astro-rules',
-            desc: `All ${RULES.length} rules with before/after examples your agent can reference.`,
-            compatible: ['Claude', 'Cursor', 'Copilot']
-          },
-          {
-            name: 'astro-performance',
-            desc: 'Islands architecture, image optimization, View Transitions, Server Islands.',
-            compatible: ['Claude', 'Cursor', 'Copilot']
-          },
-          {
-            name: 'add-rule',
-            desc: 'Step-by-step TDD workflow for contributing new rules to the plugin.',
-            compatible: ['Claude', 'Cursor']
-          }
-        ].map(({ name, desc, compatible }) => (
-          <Card class="panel-card flex flex-col gap-3 p-5">
-            <div class="flex items-center gap-2">
-              <div class="
-                flex size-8 items-center justify-center rounded-lg
-                bg-[hsl(var(--brand-soft))] text-[hsl(var(--brand))]
-              "
-              >
-                <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-              </div>
-              <code class="text-sm font-semibold text-[hsl(var(--ink))]">{name}</code>
-            </div>
-            <p class="flex-1 text-xs/relaxed text-[hsl(var(--ink-soft))]">{desc}</p>
-            <div class="flex flex-wrap gap-1">
-              {compatible.map(tool => (
-                <Badge
-variant="secondary"
-class="
-  rounded-sm bg-[hsl(var(--surface-strong))] px-1.5 py-0.5 text-[10px]
-  text-[hsl(var(--ink-muted))]
-"
-                >{tool}</Badge>
-              ))}
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      <p class="mt-8 text-center text-sm text-[hsl(var(--ink-muted))]">
-        <code class="text-[hsl(var(--brand))]">astro-doctor install</code> copies skill files to <code>.agents/skills/</code> in your project
-      </p>
-    </div>
-  </section>
-
-  <!-- ─── Special Thanks ────────────────────────────────────────────────── -->
-  <section class="py-16">
-    <div class="container-docs">
-      <Card class="section-shell mx-auto max-w-3xl text-center" data-reveal>
-        <h2 class="
-          mb-3 text-2xl font-bold tracking-tight text-[hsl(var(--ink))]
-        "
-        >Special Thanks</h2>
-        <p class="leading-relaxed text-[hsl(var(--ink-soft))]">
-          Astro Doctor was deeply inspired by <Link
-href={REACT_DOCTOR_URL}
-target="_blank"
-rel="noopener noreferrer"
-class="
-  font-semibold text-[hsl(var(--brand))]
-  hover:underline
-"
-                                              >react-doctor</Link> by Million Software, Inc. They pioneered this concept and philosophy for the React ecosystem, and we built Astro Doctor to bring the same excellent developer experience to Astro. Huge thanks to their team!
-        </p>
-      </Card>
-    </div>
-  </section>
-
-  <!-- ─── CTA ───────────────────────────────────────────────────────────── -->
-  <section class="py-20">
-    <div class="container-docs">
-      <Card class="section-shell mx-auto max-w-2xl text-center" data-reveal>
-        <div class="mb-6 flex justify-center">
-        <LogoMark class="brand-glow size-16 rounded-2xl shadow-lg" />
-        </div>
-        <h2 class="
-          mb-4 text-3xl font-black tracking-tight text-[hsl(var(--ink))]
-        "
-        >
-          Start fixing bad Astro today
-        </h2>
-        <p class="mb-8 leading-relaxed text-[hsl(var(--ink-soft))]">
-          One package. Up to 73 checks. A score your team can improve sprint over sprint.
-        </p>
-        <div class="
-          flex flex-col justify-center gap-3
-          sm:flex-row
-        "
-        >
-          <ButtonLink
-            href="/docs"
-            variant="primary"
-            class="
-              flex items-center justify-center gap-2 rounded-xl
-              bg-[hsl(var(--brand))] px-6 py-3 text-sm font-semibold text-white
-              no-underline shadow-lg transition-all duration-200
-              hover:bg-[hsl(var(--brand-solid))]
-              hover:shadow-[0_0_24px_hsl(var(--brand)/0.35)]
-            "
-          >
-            Read the docs
-          </ButtonLink>
-          <ButtonLink
-            href="https://github.com/santi020k/astro-doctor"
-            newTab
-            variant="secondary"
-            class="
-              flex items-center justify-center gap-2 rounded-xl border
-              border-[hsl(var(--line))] px-6 py-3 text-sm font-semibold
-              text-[hsl(var(--ink))] no-underline transition-colors
-              hover:bg-[hsl(var(--surface-muted))]
-            "
-          >
-            Star on GitHub ⭐
-          </ButtonLink>
-        </div>
-      </Card>
-    </div>
-  </section>
+    <p class="home-credit">Inspired by <a href={REACT_DOCTOR_URL} target="_blank" rel="noopener noreferrer">react-doctor</a> by Million Software. The same care, built for the Astro ecosystem.</p>
+  </div>
 </Base>
 
-<script>
-  const btn = document.getElementById('copy-install')
+<style>
+  .home-hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 3.5rem; padding: clamp(1.5rem, 4vw, 3.5rem); }
+  .home-eyebrow { display: flex; align-items: center; gap: .625rem; font-size: .625rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: hsl(var(--ink-soft)); }
+  .status-dot { width: .375rem; height: .375rem; border-radius: 50%; background: hsl(var(--brand)); }
+  h1 { margin: 1.75rem 0 1.5rem; font-size: clamp(2.5rem, 4.7vw, 4.5rem); font-weight: 600; line-height: 1.06; letter-spacing: -.065em; }
+  h1 > span { color: hsl(var(--brand)); }
+  .hero-description { max-width: 28rem; font-size: .9375rem; line-height: 1.85; color: hsl(var(--ink-soft)); }
+  .home-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.25rem; margin-top: 2rem; }
+  :global(.home-primary) { max-width: 100%; display: inline-flex; min-height: 3rem; align-items: center; gap: 1.25rem; padding: .5rem .5rem .5rem 1rem; border-radius: .875rem; background: hsl(var(--ink)); color: hsl(var(--canvas)); font-size: .75rem; font-weight: 600; text-decoration: none; transition: background .2s; }
+  :global(.home-primary > span) { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: .5rem; background: hsl(var(--canvas) / .12); }
+  :global(.home-primary:hover) { background: hsl(var(--ink-soft)); text-decoration: none; }
+  :global(.home-secondary) { display: inline-flex; min-height: 2.75rem; align-items: center; gap: .75rem; color: hsl(var(--ink)); font-size: .75rem; font-weight: 500; text-decoration: none; }
+  :global(.home-secondary:hover) { color: hsl(var(--brand)); text-decoration: underline; text-underline-offset: .25rem; }
+  .hero-command { max-width: 31rem; margin-top: 1.5rem; }
+  .hero-command :global([data-slot="code"]) { font-size: .75rem; }
+  .health-report { align-self: center; min-width: 0; padding: 1.5rem; border: 1px solid hsl(var(--line)); border-radius: 1.5rem; background: hsl(var(--canvas)); }
+  .report-heading { display: flex; align-items: center; gap: .5rem; color: hsl(var(--ink)); font-size: .75rem; font-weight: 600; }
+  .report-heading :global([data-slot="badge"]) { margin-left: auto; font-size: .625rem; }
+  .report-heading > :global(.home-icon) { color: hsl(var(--brand)); }
+  .report-score { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin: 2rem 0 1.25rem; }
+  .score-value { font-size: 5.5rem; line-height: 1; font-weight: 500; letter-spacing: -.075em; font-variant-numeric: tabular-nums; }
+  .score-value > span { font-size: 1rem; letter-spacing: -.025em; color: hsl(var(--ink-soft)); }
+  .report-grade { font-size: .625rem; font-weight: 600; color: hsl(var(--warning)); }
+  .report-score p { margin-top: .5rem; font-size: .75rem; line-height: 1.6; color: hsl(var(--ink-soft)); }
+  .score-track { height: .25rem; background: hsl(var(--line)); border-radius: 1rem; }
+  .score-track > span { display: block; width: 74%; height: 100%; border-radius: inherit; background: hsl(var(--brand)); }
+  .report-summary { display: flex; justify-content: space-between; gap: 1rem; margin: .75rem 0 1.25rem; color: hsl(var(--ink-soft)); font-size: .625rem; }
+  .report-findings { padding: 0; margin: 0; list-style: none; }
+  .report-findings li { display: flex; align-items: center; gap: .75rem; padding: .875rem 0; border-top: 1px solid hsl(var(--line) / .7); }
+  .report-findings li > :global(.home-icon) { flex-shrink: 0; color: hsl(var(--ink-soft)); }
+  .report-findings li > div { min-width: 0; }
+  .report-findings strong { display: block; font-size: .6875rem; font-weight: 500; }
+  .report-findings code { display: block; padding: 0; margin-top: .25rem; border: 0; background: none; font-size: .625rem; color: hsl(var(--ink-soft)); overflow-wrap: anywhere; }
+  .finding-error, .finding-warning { margin-left: auto; font-family: var(--font-mono); font-size: .625rem; }
+  .finding-error { color: hsl(var(--danger)); }
+  .finding-warning { color: hsl(var(--warning)); }
+  .report-note { display: flex; align-items: flex-start; gap: .5rem; margin-top: .5rem; font-size: .625rem; line-height: 1.65; color: hsl(var(--ink-soft)); }
+  .report-note :global(.home-icon) { flex-shrink: 0; }
+  .hero-footnote { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem; padding-top: 1.5rem; border-top: 1px solid hsl(var(--line) / .7); color: hsl(var(--ink-soft)); font-size: .625rem; }
+  .home-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; padding: 2.5rem 0; border-bottom: 1px solid hsl(var(--line) / .65); }
+  .home-facts :global([data-slot="stat"]) { display: flex; flex-direction: column-reverse; align-items: flex-start; gap: .5rem; padding-inline: 1.5rem; }
+  .home-facts :global([data-slot="stat-value"]) { font-size: 1.75rem; font-weight: 500; letter-spacing: -.05em; }
+  .home-facts :global([data-slot="stat-label"]) { font-size: .625rem; font-weight: 400; color: hsl(var(--ink-soft)); }
+  :global(.home-section) { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.4fr); align-items: start; gap: 5rem; padding-block: 6rem; border-bottom: 1px solid hsl(var(--line) / .65); }
+  h2 { margin: 1.5rem 0; font-size: clamp(2rem, 3.2vw, 3rem); font-weight: 500; line-height: 1.12; letter-spacing: -.06em; }
+  h2 span { color: hsl(var(--ink-soft)); }
+  .section-intro > p:not(.home-eyebrow), .home-start p:not(.home-eyebrow) { font-size: .875rem; line-height: 1.85; color: hsl(var(--ink-soft)); }
+  .section-intro > :global(.home-secondary) { margin-top: 1.5rem; }
+  .workflow-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 2rem; }
+  .workflow-link { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; padding: 1.5rem 0; color: hsl(var(--ink)); text-decoration: none; border-bottom: 1px solid hsl(var(--line) / .65); }
+  .workflow-link > :global(.home-icon):first-child { grid-column: 1 / -1; color: hsl(var(--brand)); }
+  .workflow-link > :global(.home-icon):last-child { margin-top: .125rem; }
+  .workflow-link h3 { font-size: .9375rem; font-weight: 600; letter-spacing: -.025em; }
+  .workflow-link p { margin-top: .625rem; font-size: .75rem; line-height: 1.8; color: hsl(var(--ink-soft)); }
+  .workflow-link:hover h3, .rule-preview-link:hover h3 { color: hsl(var(--brand)); text-decoration: underline; text-underline-offset: .25rem; }
+  .workflow-link:hover, .rule-preview-link:hover { text-decoration: none; }
+  .rule-preview-link { display: flex; justify-content: space-between; gap: 1.5rem; padding: 1.5rem 0; border-top: 1px solid hsl(var(--line) / .65); color: hsl(var(--ink)); text-decoration: none; }
+  .rule-preview-link > :global(.home-icon) { flex-shrink: 0; margin-top: 1.75rem; }
+  .rule-category { color: hsl(var(--ink-soft)); font-size: .625rem; }
+  .rule-preview-link h3 { margin: .5rem 0; font-family: var(--font-mono); font-size: .875rem; font-weight: 500; overflow-wrap: anywhere; }
+  .rule-preview-link p { font-size: .75rem; line-height: 1.75; color: hsl(var(--ink-soft)); }
+  .grade-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
+  .grade-item { display: flex; flex-direction: column; align-items: flex-start; gap: .5rem; padding: 1.25rem; border-radius: 1rem; border-width: 1px; }
+  .grade-item strong { font-size: 2rem; font-weight: 500; line-height: 1.15; }
+  .grade-item span { font-size: .625rem; color: hsl(var(--ink-soft)); }
+  .score-explanation { margin-top: 1.5rem; font-size: .75rem; line-height: 1.8; color: hsl(var(--ink-soft)); }
+  .score-section :global(.home-secondary) { margin-top: .5rem; }
+  :global(.home-start) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4rem; margin-top: 5rem; padding: clamp(1.5rem, 4vw, 3.5rem); border-radius: 1.5rem; background: hsl(var(--brand-soft)); }
+  .home-start h2 { margin-top: 1.5rem; }
+  .home-start :global(.home-primary) { margin-top: 1.5rem; }
+  .start-steps { align-self: center; min-width: 0; }
+  .start-steps > div { display: flex; gap: 1rem; padding-block: 1rem; }
+  .start-steps > div > span { padding-top: .125rem; font-size: .625rem; color: hsl(var(--ink-soft)); }
+  .start-steps > div > div { min-width: 0; flex: 1; }
+  .start-steps h3 { margin-bottom: .5rem; font-size: .875rem; font-weight: 500; }
+  .start-steps > p { margin: 1rem 0 0 1.75rem; }
+  .start-steps a { display: inline-flex; align-items: center; gap: .5rem; color: hsl(var(--ink)); text-decoration: underline; text-underline-offset: .25rem; }
+  .home-credit { max-width: 35rem; margin: 2rem auto 5rem; text-align: center; font-size: .75rem; line-height: 1.8; color: hsl(var(--ink-soft)); }
+  .home-credit a { color: hsl(var(--ink)); text-decoration: underline; text-underline-offset: .2rem; }
+  @media (max-width: 64rem) { .home-hero { gap: 2rem; } :global(.home-section) { gap: 3rem; } .health-report { padding: 1.25rem; } }
+  @media (max-width: 48rem) {
+    .home-hero { grid-template-columns: minmax(0, 1fr); gap: 2rem; }
+    h1 { font-size: clamp(2rem, calc(1.5rem + 3vw), 3.75rem); }
+    .hero-description { max-width: 34rem; }
+    .health-report { max-width: 32rem; width: 100%; }
+    .home-facts { grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); gap: 1.5rem .5rem; }
+    .home-facts :global([data-slot="stat"]) { padding-inline: .5rem; }
+    :global(.home-section) { grid-template-columns: minmax(0, 1fr); gap: 2rem; padding-block: 4rem; }
+    :global(.home-start) { grid-template-columns: minmax(0, 1fr); gap: 2rem; margin-top: 3rem; }
+    .hero-footnote { font-size: .625rem; }
+  }
+  @media (max-width: 24rem) { .workflow-grid { grid-template-columns: minmax(0, 1fr); } .grade-list { grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr)); } .report-heading { flex-wrap: wrap; } .report-heading :global([data-slot="badge"]) { margin-left: 0; } }
+  @media (prefers-reduced-motion: reduce) { :global(.home-primary) { transition: none; } }
 
-  btn?.addEventListener('click', async () => {
-    await navigator.clipboard.writeText('pnpm add -D @santi020k/astro-doctor')
-
-    const icon = btn.querySelector('svg')
-
-    if (icon) {
-      icon.innerHTML = '<polyline points="20 6 9 17 4 12"/>'
-
-      setTimeout(() => {
-        icon.innerHTML = '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'
-      }, 1500)
-    }
-  })
-</script>
+  @media (max-width: 24rem) {
+    .home-hero { padding: min(1.5rem, 6vw); }
+    :global(.home-start) { padding: min(1.5rem, 6vw); }
+    .health-report { padding: min(1.25rem, 5vw); }
+  }
+</style>

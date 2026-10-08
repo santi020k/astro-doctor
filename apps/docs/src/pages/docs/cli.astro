@@ -1,6 +1,8 @@
 ---
 import CodeBlock from '@/components/code-block.astro'
 import Docs from '@/layouts/Docs.astro'
+
+import { Table } from '@santi020k/lumen-astro'
 ---
 
 <Docs
@@ -8,7 +10,12 @@ import Docs from '@/layouts/Docs.astro'
   description="All astro-doctor CLI commands, flags, and examples."
   editPath="apps/docs/src/pages/docs/cli.astro"
 >
-  <h1>CLI Reference</h1>
+  <header class="docs-page-header">
+    <h1>CLI reference</h1>
+    <p class="docs-page-lead">
+      Scan a project, control which findings matter, and export a report from your terminal.
+    </p>
+  </header>
 
   <CodeBlock
     code="astro-doctor [command] [options]"
@@ -40,6 +47,12 @@ astro-doctor --format sarif > astro-doctor.sarif
 # Apply safe automatic fixes
 astro-doctor --fix
 
+# Preview safe fixes without writing source files
+astro-doctor --fix-dry-run
+
+# Explain configuration for a file
+astro-doctor explain-config src/pages/index.astro
+
 # Cache repeated scans by file content
 astro-doctor --cache
 
@@ -61,28 +74,72 @@ astro-doctor --no-score`}
   <h3><code>install</code></h3>
 
   <p>
-    Copies the agent skill files (<code>.agents/skills/</code>) into your project root.
-    Run once per project.
+    Writes the portable skill to <code>skills/astro-doctor.md</code> and offers GitHub Actions
+    setup. Use <code>--agent-hooks</code> for Claude Code and Cursor copies,
+    <code>--dry-run</code> to preview changes, or <code>--yes</code> to accept the setup prompts.
   </p>
 
   <CodeBlock code="astro-doctor install" language="bash" />
 
-  <h3><code>baseline create|update</code></h3>
+  <h3><code>baseline create|update|prune</code></h3>
 
   <p>
     Saves the current findings to <code>.astro-doctor-baseline.json</code>. Subsequent scans with
     <code>--baseline</code> report only findings that are not already recorded, making gradual
-    adoption practical in existing projects.
+    adoption practical in existing projects. Reports include new and existing finding counts;
+    resolved counts are shown only for full, unfiltered scans. Resolved means no longer reported
+    under the current configuration, including findings in deleted files.
   </p>
 
   <CodeBlock
     code={`astro-doctor baseline create
-astro-doctor baseline update --output ./config/astro-baseline.json`}
+astro-doctor baseline update --output ./config/astro-baseline.json
+astro-doctor baseline prune
+astro-doctor baseline prune --output ./config/astro-baseline.json`}
     language="bash"
     theme="auto"
     variant="block"
     copy
   />
+
+  <p>
+    <code>baseline prune</code> removes only recorded occurrences no longer reported, retaining
+    the original timestamp and never accepting new findings. It requires a full scan and rejects
+    file scopes, category filters, explicit project selections, fix flags, and
+    <code>--no-lint</code>. Astro parse failures block baseline comparisons and leave the baseline unchanged. Run pruning with the same
+    preset and configuration used to create the baseline; disabling a rule also removes its findings.
+  </p>
+
+  <h3><code>explain-config &lt;file&gt;</code></h3>
+
+  <p>
+    Shows the scan preset, effective template rule severities, matching ignore patterns, and
+    zero-based override indexes in application order. Astro files also show exclusion by full-scan
+    discovery, including hidden files without explicit ignore patterns. Workspace files use the same root and project
+    configuration layering as scans. Project audit rules appear separately because template file
+    overrides do not affect them. Inline suppression comments are evaluated during linting and are
+    not part of this configuration report.
+  </p>
+
+  <CodeBlock
+    code={`astro-doctor explain-config src/pages/index.astro
+astro-doctor explain-config src/pages/index.astro --preset strict --json`}
+    language="bash"
+    copy
+  />
+
+  <h3><code>--fix-dry-run</code></h3>
+
+  <p>
+    Simulates the same safe fixes as <code>--fix</code> and prints unified diffs, the net count of
+    findings removed, and remaining findings. Source files and the ESLint cache stay unchanged.
+    Diagnostic counts, scores, and failure gates describe the simulated result. JSON reports include
+    an optional <code>fixPreview</code> object; baseline reports include
+    <code>baselineProgress</code>, with <code>resolvedCount</code> omitted for partial scans.
+    Combining previews with a baseline shows projected progress after fixes.
+    Use console or JSON output without category filters, <code>--score</code>,
+    <code>--fix</code>, or <code>--no-lint</code>.
+  </p>
 
   <h3><code>experimental-lsp</code></h3>
 
@@ -101,82 +158,89 @@ astro-doctor baseline update --output ./config/astro-baseline.json`}
 
   <h2>Options</h2>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Flag</th>
-        <th>Default</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>-d, --dir &lt;path&gt;</code></td>
-        <td><code>process.cwd()</code></td>
-        <td>Directory to scan</td>
-      </tr>
-      <tr>
-        <td><code>--scope &lt;scope&gt;</code></td>
-        <td><code>full</code></td>
-        <td>Choose <code>full</code>, changed <code>files</code>, or introduced diagnostics with <code>changed</code></td>
-      </tr>
-      <tr>
-        <td><code>--base &lt;ref&gt;</code></td>
-        <td>auto-detected</td>
-        <td>Base revision for <code>files</code> or <code>changed</code> scope</td>
-      </tr>
-      <tr>
-        <td><code>--json [path]</code></td>
-        <td><em>off</em></td>
-        <td>Output JSON to stdout (no path) or to a file</td>
-      </tr>
-      <tr>
-        <td><code>--fix</code></td>
-        <td><em>off</em></td>
-        <td>Apply safe automatic fixes provided by rules</td>
-      </tr>
-      <tr>
-        <td><code>--preset &lt;name&gt;</code></td>
-        <td><code>recommended</code></td>
-        <td><code>recommended</code> | <code>strict</code> | <code>ci</code> | <code>all</code></td>
-      </tr>
-      <tr>
-        <td><code>--cache</code></td>
-        <td><em>off</em></td>
-        <td>Cache ESLint results by file content at <code>.astro-doctor/cache</code>; add it to <code>.gitignore</code></td>
-      </tr>
-      <tr>
-        <td><code>--baseline &lt;path&gt;</code></td>
-        <td><em>off</em></td>
-        <td>Suppress findings recorded in a persistent baseline</td>
-      </tr>
-      <tr>
-        <td><code>--format &lt;format&gt;</code></td>
-        <td><code>console</code></td>
-        <td>Choose <code>console</code>, <code>github</code>, or <code>sarif</code></td>
-      </tr>
-      <tr>
-        <td><code>--no-score</code></td>
-        <td><em>show score</em></td>
-        <td>Omit the health score from output</td>
-      </tr>
-      <tr>
-        <td><code>--fail-on &lt;level&gt;</code></td>
-        <td><code>error</code></td>
-        <td>Exit 1 on: <code>error</code> | <code>warning</code> | <code>off</code></td>
-      </tr>
-      <tr>
-        <td><code>--changed-files-from &lt;path&gt;</code></td>
-        <td><em>off</em></td>
-        <td>Scan only files listed in a file (one path per line) — used by the GitHub Action for PR diff mode</td>
-      </tr>
-      <tr>
-        <td><code>-h, --help</code></td>
-        <td>—</td>
-        <td>Show help message</td>
-      </tr>
-    </tbody>
-  </table>
+  <Table aria-label="CLI options" role="region" tabindex="0">
+    <table>
+      <thead>
+        <tr>
+          <th>Flag</th>
+          <th>Default</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>-d, --dir &lt;path&gt;</code></td>
+          <td><code>process.cwd()</code></td>
+          <td>Directory to scan</td>
+        </tr>
+        <tr>
+          <td><code>--scope &lt;scope&gt;</code></td>
+          <td><code>full</code></td>
+          <td>Choose <code>full</code>, changed <code>files</code>, or introduced diagnostics with <code>changed</code></td>
+        </tr>
+        <tr>
+          <td><code>--base &lt;ref&gt;</code></td>
+          <td>auto-detected</td>
+          <td>Base revision for <code>files</code> or <code>changed</code> scope</td>
+        </tr>
+        <tr>
+          <td><code>--json [path]</code></td>
+          <td><em>off</em></td>
+          <td>Output JSON to stdout (no path) or to a file</td>
+        </tr>
+        <tr>
+          <td><code>--fix</code></td>
+          <td><em>off</em></td>
+          <td>Apply safe automatic fixes provided by rules</td>
+        </tr>
+        <tr>
+          <td><code>--preset &lt;name&gt;</code></td>
+          <td><code>recommended</code></td>
+          <td><code>recommended</code> | <code>strict</code> | <code>ci</code> | <code>all</code></td>
+        </tr>
+        <tr>
+          <td><code>--fix-dry-run</code></td>
+          <td><em>off</em></td>
+          <td>Preview safe fixes and remaining findings without source or cache writes</td>
+        </tr>
+        <tr>
+          <td><code>--cache</code></td>
+          <td><em>off</em></td>
+          <td>Cache ESLint results by file content at <code>.astro-doctor/cache</code>; add it to <code>.gitignore</code></td>
+        </tr>
+        <tr>
+          <td><code>--baseline &lt;path&gt;</code></td>
+          <td><em>off</em></td>
+          <td>Suppress findings recorded in a persistent baseline</td>
+        </tr>
+        <tr>
+          <td><code>--format &lt;format&gt;</code></td>
+          <td><code>console</code></td>
+          <td>Choose <code>console</code>, <code>github</code>, or <code>sarif</code></td>
+        </tr>
+        <tr>
+          <td><code>--no-score</code></td>
+          <td><em>show score</em></td>
+          <td>Omit the health score from output</td>
+        </tr>
+        <tr>
+          <td><code>--fail-on &lt;level&gt;</code></td>
+          <td><code>error</code></td>
+          <td>Exit 1 on: <code>error</code> | <code>warning</code> | <code>off</code></td>
+        </tr>
+        <tr>
+          <td><code>--changed-files-from &lt;path&gt;</code></td>
+          <td><em>off</em></td>
+          <td>Scan only files listed in a file (one path per line) — used by the GitHub Action for PR diff mode</td>
+        </tr>
+        <tr>
+          <td><code>-h, --help</code></td>
+          <td>—</td>
+          <td>Show help message</td>
+        </tr>
+      </tbody>
+    </table>
+  </Table>
 
   <h2>JSON report schema</h2>
 
@@ -193,20 +257,20 @@ astro-doctor baseline update --output ./config/astro-baseline.json`}
   "scope": "full",
   "fileCount": 14,
   "errorCount": 1,
-  "warningCount": 2,
-  "score": 85,
+  "warningCount": 0,
+  "score": 89,
   "scoreLabel": "B",
   "scoreBreakdown": {
-    "performance": 90,
-    "accessibility": 75,
+    "performance": 100,
+    "accessibility": 89,
     "security": 100,
-    "best-practices": 90
+    "best-practices": 100
   },
   "diagnostics": [
     {
       "ruleId": "astro-doctor/no-missing-alt",
       "severity": "error",
-      "message": "img element is missing a non-empty alt attribute",
+      "message": "Image elements must have an alt attribute. Provide a descriptive text for meaningful images, or alt=\\"\\" for decorative ones.",
       "filePath": "/my-project/src/pages/blog.astro",
       "line": 12,
       "column": 5,
@@ -222,24 +286,26 @@ astro-doctor baseline update --output ./config/astro-baseline.json`}
 
   <h2>Exit codes</h2>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Code</th>
-        <th>Meaning</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>0</code></td>
-        <td>Scan completed, no issues at or above the fail-on threshold</td>
-      </tr>
-      <tr>
-        <td><code>1</code></td>
-        <td>Issues found at or above the fail-on threshold</td>
-      </tr>
-    </tbody>
-  </table>
+  <Table aria-label="CLI exit codes" role="region" tabindex="0">
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Meaning</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>0</code></td>
+          <td>Scan completed, no issues at or above the fail-on threshold</td>
+        </tr>
+        <tr>
+          <td><code>1</code></td>
+          <td>Issues found at or above the fail-on threshold</td>
+        </tr>
+      </tbody>
+    </table>
+  </Table>
 
   <h2>Examples</h2>
 

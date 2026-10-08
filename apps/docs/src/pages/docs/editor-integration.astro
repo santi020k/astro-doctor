@@ -10,13 +10,14 @@ import { Callout } from '@santi020k/lumen-astro'
   description="Get inline Astro Doctor diagnostics, hovers, and quick fixes in VS Code, Cursor, Neovim, and any LSP-capable editor."
   editPath="apps/docs/src/pages/docs/editor-integration.astro"
 >
-  <h1>Editor Integration</h1>
-
-  <p>
-    Astro Doctor ships an experimental Language Server Protocol (LSP) server that streams diagnostics
-    live into your editor as you type — underlined inline, with rule descriptions on hover and
-    quick-fix actions available from the lightbulb menu.
-  </p>
+  <header class="docs-page-header">
+    <h1>Editor integration</h1>
+    <p class="docs-page-lead">
+      Astro Doctor ships an experimental Language Server Protocol (LSP) server that streams diagnostics
+      live into your editor as you type — underlined inline, with rule descriptions on hover and
+      quick-fix actions available from the lightbulb menu.
+    </p>
+  </header>
 
   <h2>VS Code &amp; Cursor</h2>
 
@@ -84,7 +85,7 @@ import { Callout } from '@santi020k/lumen-astro'
     copy
   />
 
-  <Callout class="callout callout-tip">
+  <Callout>
     <strong>Experimental:</strong> The LSP protocol, options, and caching behavior may change between
     releases, hence the <code>experimental-</code> prefix. The VS Code extension handles version
     management automatically.

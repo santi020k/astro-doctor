@@ -60,6 +60,23 @@ describe('Astro Doctor configs', () => {
     )
   })
 
+  test('recommended parses TypeScript frontmatter and reports its findings', async () => {
+    const eslint = new ESLint({
+      overrideConfigFile: true,
+      overrideConfig: [astroDoctorPlugin.configs.recommended]
+    })
+    const results = await eslint.lintText(
+      '---\nconst token: string = process.env.SECRET\n---\n<img src="/hero.png" />',
+      { filePath: 'index.astro' }
+    )
+
+    expect(results[0]?.fatalErrorCount).toBe(0)
+    expect(results[0]?.messages).toEqual(expect.arrayContaining([
+      expect.objectContaining({ ruleId: 'astro-doctor/no-process-env' }),
+      expect.objectContaining({ ruleId: 'astro-doctor/no-missing-alt' })
+    ]))
+  })
+
   test('exposes normalized upstream rule metadata', () => {
     const recommendedRules = getAstroEcosystemRules('ci')
     const deduplicatedRules = disableDuplicateAstroDoctorRules({

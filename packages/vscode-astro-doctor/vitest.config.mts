@@ -6,13 +6,13 @@ export default defineConfig({
       vscode: new URL('./tests/__mocks__/vscode.ts', import.meta.url).pathname,
       'vscode-languageclient/node': new URL(
         './tests/__mocks__/vscode-languageclient-node.ts',
-        import.meta.url,
-      ).pathname,
-    },
+        import.meta.url
+      ).pathname
+    }
   },
   test: {
     environment: 'node',
     include: ['tests/**/*.test.ts'],
-    tsconfig: './tsconfig.test.json',
-  },
+    tsconfig: './tsconfig.test.json'
+  }
 })

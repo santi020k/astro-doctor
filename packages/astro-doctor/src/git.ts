@@ -8,16 +8,11 @@ import { isProjectAuditRelevantPath } from './scanner/project-audit.js'
 const isScanRelevantPath = (filePath: string): boolean => filePath.endsWith('.astro') || isProjectAuditRelevantPath(filePath)
 
 /**
- * Run a git command and return stdout lines, or throw with a clean message on failure.
+ * Run a git command and return raw stdout, or throw with a clean message on failure.
  */
-const git = (args: string[], cwd: string): string[] => {
+const runGitCommand = (args: string[], cwd: string): string => {
   try {
-    const output = execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
-
-    return output
-      .split(/\r?\n/u)
-      .map(line => line.trim())
-      .filter(Boolean)
+    return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     const subcommand = args[0] ?? 'command'
@@ -25,6 +20,24 @@ const git = (args: string[], cwd: string): string[] => {
     throw new Error(`git ${subcommand} failed: ${message}`, { cause: error })
   }
 }
+
+/**
+ * Run a git command and return trimmed, non-empty stdout lines.
+ */
+const git = (args: string[], cwd: string): string[] => runGitCommand(args, cwd)
+  .split(/\r?\n/u)
+  .map(line => line.trim())
+  .filter(Boolean)
+
+/**
+ * Run a `git diff --name-only -z` command and return the NUL-delimited paths verbatim.
+ * `-z` disables git's default C-quoting of Unicode, tabs, and newlines in paths, and
+ * NUL (rather than newline) is the only safe delimiter for paths that may themselves
+ * contain newlines, so entries must not be trimmed.
+ */
+const gitDiffPaths = (args: string[], cwd: string): string[] => runGitCommand(args, cwd)
+  .split('\0')
+  .filter(Boolean)
 
 export const extractRevision = (
   cwd: string,
@@ -65,7 +78,7 @@ const detectDefaultBase = (cwd: string): string => {
 
 export const resolveBaseRevision = (cwd: string, base?: string): string => {
   const requestedBase = base ?? detectDefaultBase(cwd)
-  const revision = git(['rev-parse', '--verify', `${requestedBase}^{commit}`], cwd)[0]
+  const revision = git(['rev-parse', '--verify', '--end-of-options', `${requestedBase}^{commit}`], cwd)[0]
 
   if (!revision) throw new Error(`Unable to resolve base revision "${requestedBase}".`)
 
@@ -76,11 +89,14 @@ export const resolveBaseRevision = (cwd: string, base?: string): string => {
  * Return absolute paths of Astro Doctor files currently staged (git add-ed) in the given directory.
  */
 export const getStagedAstroFiles = (cwd: string): string[] => {
-  const lines = git(['diff', '--cached', '--name-only', '--diff-filter=ACMR'], cwd)
+  const paths = gitDiffPaths(
+    ['diff', '--cached', '--relative', '--name-only', '-z', '--diff-filter=ACMR'],
+    cwd
+  )
 
-  return lines
-    .filter(line => isScanRelevantPath(line))
-    .map(line => `${cwd}/${line}`)
+  return paths
+    .filter(path => isScanRelevantPath(path))
+    .map(path => `${cwd}/${path}`)
 }
 
 /**
@@ -89,9 +105,15 @@ export const getStagedAstroFiles = (cwd: string): string[] => {
  */
 export const getDiffAstroFiles = (cwd: string, base?: string): string[] => {
   const resolvedBase = base ?? detectDefaultBase(cwd)
-  const lines = git(['diff', '--name-only', '--diff-filter=ACMR', resolvedBase, 'HEAD'], cwd)
 
-  return lines
-    .filter(line => isScanRelevantPath(line))
-    .map(line => `${cwd}/${line}`)
+  if (resolvedBase.startsWith('-')) throw new Error(`Invalid base revision "${resolvedBase}".`)
+
+  const paths = gitDiffPaths(
+    ['diff', '--relative', '--name-only', '-z', '--diff-filter=ACMR', resolvedBase, 'HEAD', '--'],
+    cwd
+  )
+
+  return paths
+    .filter(path => isScanRelevantPath(path))
+    .map(path => `${cwd}/${path}`)
 }

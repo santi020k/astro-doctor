@@ -72,7 +72,7 @@ describe('telemetry', () => {
   })
 
   test('calls fetch with POST method when endpoint is set', async () => {
-    const mockFetch = vi.fn().mockResolvedValue(new Response())
+    const mockFetch = vi.fn<typeof fetch>().mockResolvedValue(new Response())
     vi.stubGlobal('fetch', mockFetch)
 
     process.env.ASTRO_DOCTOR_TELEMETRY_URL = 'https://example.com/telemetry'
@@ -80,15 +80,24 @@ describe('telemetry', () => {
     const result = makeScanResult()
     trackRun({ command: 'scan', flags: { verbose: true }, result }, false)
 
-    // Let the fire-and-forget settle
-    await new Promise(resolve => setTimeout(resolve, 50))
+    await Promise.resolve()
 
     expect(mockFetch).toHaveBeenCalledOnce()
-    const [, options] = mockFetch.mock.calls[0] as [string, RequestInit]
-    expect(options.method).toBe('POST')
+    expect(mockFetch.mock.calls[0]?.[1]?.method).toBe('POST')
 
     delete process.env.ASTRO_DOCTOR_TELEMETRY_URL
     vi.unstubAllGlobals()
+  })
+
+  test('clears the request timer when telemetry fails', async () => {
+    vi.useFakeTimers()
+    vi.stubEnv('ASTRO_DOCTOR_TELEMETRY_URL', 'https://example.com/telemetry')
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockRejectedValue(new Error('offline')))
+
+    trackRun({ command: 'scan', flags: {} }, false)
+    await Promise.resolve()
+
+    expect(vi.getTimerCount()).toBe(0)
   })
 
   test('CI detection does not throw', () => {
@@ -110,4 +119,6 @@ describe('telemetry', () => {
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  vi.unstubAllEnvs()
+  vi.useRealTimers()
 })

@@ -1,9 +1,21 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { createInterface } from 'node:readline'
 import { fileURLToPath } from 'node:url'
 
-const SKILLS_SOURCE_DIR = resolve(fileURLToPath(import.meta.url), '../../../..')
+import { getGithubWorkflow } from './utils/get-github-workflow.js'
+
+const MODULE_DIRECTORY = dirname(fileURLToPath(import.meta.url))
+
+const resolveSkillSourceFile = (): string => {
+  const packagedSkillPath = resolve(MODULE_DIRECTORY, '../skills/SKILL.md')
+
+  return existsSync(packagedSkillPath) ?
+    packagedSkillPath :
+    resolve(MODULE_DIRECTORY, '../../../skills/SKILL.md')
+}
+
+const SKILL_SOURCE_FILE = resolveSkillSourceFile()
 
 interface SkillTarget {
   readonly sourceFile: string
@@ -21,7 +33,7 @@ interface InstallOptions {
 
 const SKILL_TARGETS: SkillTarget[] = [
   {
-    sourceFile: resolve(SKILLS_SOURCE_DIR, 'skills/SKILL.md'),
+    sourceFile: SKILL_SOURCE_FILE,
     destDir: 'skills',
     destFile: 'astro-doctor.md',
     label: 'Astro Doctor rules (skills/astro-doctor.md)'
@@ -31,38 +43,18 @@ const SKILL_TARGETS: SkillTarget[] = [
 // Agent hook directories that support a skills/ convention
 const AGENT_HOOK_TARGETS: SkillTarget[] = [
   {
-    sourceFile: resolve(SKILLS_SOURCE_DIR, 'skills/SKILL.md'),
+    sourceFile: SKILL_SOURCE_FILE,
     destDir: '.claude/skills',
     destFile: 'astro-doctor.md',
     label: 'Claude Code hook (.claude/skills/astro-doctor.md)'
   },
   {
-    sourceFile: resolve(SKILLS_SOURCE_DIR, 'skills/SKILL.md'),
+    sourceFile: SKILL_SOURCE_FILE,
     destDir: '.cursor/rules',
     destFile: 'astro-doctor.mdc',
     label: 'Cursor rule (.cursor/rules/astro-doctor.mdc)'
   }
 ]
-
-const GITHUB_ACTIONS_WORKFLOW = `name: Astro Doctor
-on:
-  pull_request:
-    paths:
-      - '**/*.astro'
-
-jobs:
-  astro-doctor:
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: santi020k/astro-doctor@v1
-        with:
-          github-token: \${{ secrets.GITHUB_TOKEN }}
-`
 
 const prompt = (question: string): Promise<string> => new Promise(resolve => {
   const rl = createInterface({ input: process.stdin, output: process.stdout })
@@ -123,18 +115,22 @@ const installGitHubAction = (projectRoot: string, dryRun: boolean): void => {
     return
   }
 
-  writeFileSync(workflowPath, GITHUB_ACTIONS_WORKFLOW, 'utf8')
+  writeFileSync(workflowPath, getGithubWorkflow(), 'utf8')
 
   console.log('  ✓ Created .github/workflows/astro-doctor.yml')
 }
 
-const tryInstallTarget = (target: SkillTarget, projectRoot: string, dryRun: boolean): void => {
+const tryInstallTarget = (target: SkillTarget, projectRoot: string, dryRun: boolean): boolean => {
   try {
     installTarget(target, projectRoot, dryRun)
+
+    return true
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
 
     console.error(`  ✗ Failed to install ${target.label}: ${message}`)
+
+    return false
   }
 }
 
@@ -142,10 +138,14 @@ const installAllTargets = (
   targets: readonly SkillTarget[],
   projectRoot: string,
   dryRun: boolean
-): void => {
+): boolean => {
+  let allSucceeded = true
+
   for (const target of targets) {
-    tryInstallTarget(target, projectRoot, dryRun)
+    if (!tryInstallTarget(target, projectRoot, dryRun)) allSucceeded = false
   }
+
+  return allSucceeded
 }
 
 const detectAgents = (projectRoot: string): string[] => {
@@ -162,18 +162,51 @@ const detectAgents = (projectRoot: string): string[] => {
   return detected
 }
 
+const installHooksIfRequested = async (options: InstallOptions): Promise<boolean> => {
+  const detectedAgents = detectAgents(options.projectRoot)
+
+  const shouldInstallHooks =
+    options.agentHooks ||
+    (detectedAgents.length > 0 &&
+      (await confirm(
+        `Detected ${detectedAgents.join(', ')} — install native agent hooks?`, options.yes
+      )))
+
+  if (!shouldInstallHooks) return true
+
+  console.log('\nInstalling native agent hooks...\n')
+
+  return installAllTargets(AGENT_HOOK_TARGETS, options.projectRoot, options.dryRun)
+}
+
+const reportInstallOutcome = (allTargetsSucceeded: boolean): void => {
+  if (!allTargetsSucceeded) {
+    console.log('\nCompleted with errors — see above for details. Your coding agent setup is incomplete.\n')
+
+    process.exitCode = 1
+
+    return
+  }
+
+  console.log('\nDone! Your coding agent will now apply Astro best practices.')
+
+  console.log('Tip: re-run after upgrading astro-doctor to get the latest skill updates.\n')
+}
+
 export const runInstall = async (
   argv: string[] = [],
   projectRoot = process.cwd()
 ): Promise<void> => {
-  const yes = argv.includes('-y') || argv.includes('--yes')
-  const dryRun = argv.includes('--dry-run')
-  const agentHooks = argv.includes('--agent-hooks')
-  const options: InstallOptions = { yes, dryRun, agentHooks, projectRoot }
+  const options: InstallOptions = {
+    yes: argv.includes('-y') || argv.includes('--yes'),
+    dryRun: argv.includes('--dry-run'),
+    agentHooks: argv.includes('--agent-hooks'),
+    projectRoot
+  }
 
   console.log('\nAstro Doctor — Interactive Setup\n')
 
-  if (dryRun) {
+  if (options.dryRun) {
     console.log('  Running in dry-run mode — no files will be written.\n')
   }
 
@@ -183,37 +216,14 @@ export const runInstall = async (
     console.warn('  ⚠ No package.json found — make sure you run this from your project root.\n')
   }
 
-  // 1. GitHub Actions
-  const addGitHubActions = await confirm(
-    'Add GitHub Actions workflow to review every pull request?', yes
-  )
-
-  if (addGitHubActions) {
-    installGitHubAction(projectRoot, dryRun)
+  if (await confirm('Add GitHub Actions workflow to review every pull request?', options.yes)) {
+    installGitHubAction(projectRoot, options.dryRun)
   }
 
-  // 2. Skill for generic agents
   console.log('\nInstalling Astro Doctor skill for coding agents...\n')
 
-  installAllTargets(SKILL_TARGETS, projectRoot, dryRun)
+  const skillsInstalled = installAllTargets(SKILL_TARGETS, projectRoot, options.dryRun)
+  const hooksInstalled = await installHooksIfRequested(options)
 
-  // 3. Agent-specific hooks (--agent-hooks or prompt)
-  const detectedAgents = detectAgents(projectRoot)
-
-  const shouldInstallHooks =
-    options.agentHooks ||
-    (detectedAgents.length > 0 &&
-      (await confirm(
-        `Detected ${detectedAgents.join(', ')} — install native agent hooks?`, yes
-      )))
-
-  if (shouldInstallHooks) {
-    console.log('\nInstalling native agent hooks...\n')
-
-    installAllTargets(AGENT_HOOK_TARGETS, projectRoot, dryRun)
-  }
-
-  console.log('\nDone! Your coding agent will now apply Astro best practices.')
-
-  console.log('Tip: re-run after upgrading astro-doctor to get the latest skill updates.\n')
+  reportInstallOutcome(skillsInstalled && hooksInstalled)
 }

@@ -1,6 +1,9 @@
 version: "0.2"
 language: en
 words:
+  - nums
+  - noopener
+  - noreferrer
   - fflate
   - smol
   - astro
@@ -15,6 +18,7 @@ words:
   - commitizen
   - commitlint
   - commitprompt
+  - commitish
   - eslint
   - gitignore
   - jsonc
@@ -58,6 +62,7 @@ words:
   - confbox
   - esbuild
   - jiti
+  - katex
   - Contentful
   - WCAG
   - frontmatter
@@ -77,6 +82,12 @@ words:
   - workerd
   - behaviour
   - wght
+  - noprofile
+  - norc
+  - pipefail
+  - esac
+  - mktemp
+  - labelledby
 ignorePaths:
   - node_modules
   - dist

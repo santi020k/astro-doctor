@@ -1,4 +1,5 @@
-import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { join, relative } from 'node:path'
 import { performance } from 'node:perf_hooks'
 
 import type { AstroDoctorRule, RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
@@ -7,13 +8,15 @@ import astroDoctorPlugin, {
   getAstroRuleCategory
 } from '@santi020k/eslint-plugin-astro-doctor'
 
+import * as typescriptParser from '@typescript-eslint/parser'
 import * as astroParser from 'astro-eslint-parser'
 import { ESLint } from 'eslint'
 
 import { DEFAULT_CACHE_DIRECTORY_NAME, SCAN_DURATION_PRECISION_DIGITS } from '../constants.js'
 import { getProjectRuleMeta } from '../project-rules.js'
-import type { Diagnostic, ScanOptions, ScanResult, ScanTimings, Severity } from '../types.js'
+import type { Diagnostic, FixPreview, ScanOptions, ScanResult, ScanTimings, Severity } from '../types.js'
 import { createScanResult } from '../utils/create-scan-result.js'
+import { formatFixDiff } from '../utils/format-fix-diff.js'
 
 import { discoverAstroFiles, resolveAstroFiles } from './file-discovery.js'
 import { auditProject } from './project-audit.js'
@@ -57,13 +60,14 @@ const collectEslintDiagnostics = (results: ESLint.LintResult[]): Diagnostic[] =>
 
   for (const fileResult of results) {
     for (const message of fileResult.messages) {
-      if (!message.ruleId || !isConfiguredRule(message.ruleId)) continue
+      if (!message.fatal && (!message.ruleId || !isConfiguredRule(message.ruleId))) continue
 
+      const ruleId = message.ruleId ?? 'astro-doctor/parse-error'
       const severity = SEVERITY_MAP[message.severity] ?? 'warning'
-      const category = getRuleCategory(message.ruleId)
+      const category = getRuleCategory(ruleId)
 
       diagnostics.push({
-        ruleId: message.ruleId,
+        ruleId,
         severity,
         message: message.message,
         filePath: fileResult.filePath,
@@ -77,7 +81,7 @@ const collectEslintDiagnostics = (results: ESLint.LintResult[]): Diagnostic[] =>
   return diagnostics
 }
 
-const buildEslintConfig = (options: ScanOptions): ESLint.Options => {
+export const buildEslintConfig = (options: ScanOptions): ESLint.Options => {
   const pluginRules = options.rules ?
     Object.fromEntries(
       Object.entries(options.rules).filter(([ruleId]) => getProjectRuleMeta(ruleId) === undefined)
@@ -102,7 +106,9 @@ const buildEslintConfig = (options: ScanOptions): ESLint.Options => {
         languageOptions: {
           parser: astroParser,
           parserOptions: {
-            sourceType: 'module'
+            sourceType: 'module',
+            parser: typescriptParser,
+            extraFileExtensions: ['.astro']
           }
         },
         rules: {
@@ -113,8 +119,8 @@ const buildEslintConfig = (options: ScanOptions): ESLint.Options => {
       ...overrideConfigs
     ],
     ignore: false,
-    fix: options.fix,
-    cache: options.cache,
+    fix: Boolean(options.fix) || Boolean(options.fixDryRun),
+    cache: options.fixDryRun ? false : options.cache,
     cacheLocation: join(options.directory, DEFAULT_CACHE_DIRECTORY_NAME),
     cacheStrategy: 'content',
     ...(options.noRespectInlineDisables ? { allowInlineConfig: false } : {})
@@ -123,7 +129,62 @@ const buildEslintConfig = (options: ScanOptions): ESLint.Options => {
 
 const roundDuration = (durationMs: number): number => Number(durationMs.toFixed(SCAN_DURATION_PRECISION_DIGITS))
 
+const lintAstroFiles = async (options: ScanOptions, astroFiles: string[], projectDiagnostics: Diagnostic[]) => {
+  let fixPreview: FixPreview | undefined
+  const eslint = new ESLint(buildEslintConfig(options))
+
+  const originalDiagnostics = options.fixDryRun ?
+    collectEslintDiagnostics(await new ESLint(buildEslintConfig({
+      ...options, fix: false, fixDryRun: false, cache: false
+    })).lintFiles(astroFiles)) :
+    []
+
+  const eslintResults = await eslint.lintFiles(astroFiles)
+  const invalidFile = eslintResults.find(fileResult => fileResult.fatalErrorCount > 0)
+
+  if (invalidFile !== undefined && (options.fixDryRun || options.failOnParseError !== false)) {
+    throw new Error(`Cannot scan ${invalidFile.filePath}: source could not be parsed.`)
+  }
+
+  if (options.fixDryRun) {
+    const changes = eslintResults.flatMap(fileResult => {
+      if (fileResult.output === undefined) return []
+
+      const original = readFileSync(fileResult.filePath, 'utf8')
+
+      if (original === fileResult.output) return []
+
+      return [{
+        filePath: fileResult.filePath,
+        diff: formatFixDiff(relative(options.fixPreviewRoot ?? options.directory, fileResult.filePath).replaceAll('\\', '/'), original, fileResult.output)
+      }]
+    })
+
+    const remainingDiagnostics = collectEslintDiagnostics(eslintResults)
+
+    fixPreview = {
+      changes,
+      fixedCount: Math.max(0, originalDiagnostics.length - remainingDiagnostics.length),
+      remainingCount: remainingDiagnostics.length + projectDiagnostics.length
+    }
+  }
+
+  if (options.fix) await ESLint.outputFixes(eslintResults)
+
+  return { diagnostics: collectEslintDiagnostics(eslintResults), fixPreview }
+}
+
+const validateScanOptions = (options: ScanOptions): void => {
+  if (!options.fixDryRun) return
+
+  if (options.fix || options.noLint || (options.categories?.length ?? 0) > 0) {
+    throw new Error('--fix-dry-run cannot be combined with --fix, --no-lint, or category filters.')
+  }
+}
+
 export const scan = async (options: ScanOptions): Promise<ScanResult> => {
+  validateScanOptions(options)
+
   const scanStartedAt = performance.now()
   const discoveryStartedAt = performance.now()
 
@@ -146,26 +207,30 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
   })
 
   const auditFinishedAt = performance.now()
-
-  if (astroFiles.length === 0 && projectDiagnostics.length === 0) return EMPTY_RESULT(0)
-
   const allDiagnostics: Diagnostic[] = []
+
+  let fixPreview: FixPreview | undefined = options.fixDryRun ?
+    {
+      changes: [], fixedCount: 0, remainingCount: projectDiagnostics.length
+    } :
+    undefined
+
   const lintStartedAt = performance.now()
 
   if (astroFiles.length > 0) {
-    const eslint = new ESLint(buildEslintConfig(options))
-    const eslintResults = await eslint.lintFiles(astroFiles)
+    const lintResult = await lintAstroFiles(options, astroFiles, projectDiagnostics)
 
-    if (options.fix) await ESLint.outputFixes(eslintResults)
+    allDiagnostics.push(...lintResult.diagnostics)
 
-    allDiagnostics.push(...collectEslintDiagnostics(eslintResults))
+    fixPreview = lintResult.fixPreview
   }
 
   const lintFinishedAt = performance.now()
 
   allDiagnostics.push(...projectDiagnostics)
 
-  const { cache, categories } = options
+  const { categories } = options
+  const cache = options.fixDryRun ? false : options.cache
 
   const diagnostics =
     categories && categories.length > 0 ?
@@ -187,6 +252,7 @@ export const scan = async (options: ScanOptions): Promise<ScanResult> => {
 
   return {
     ...createScanResult(diagnostics, fileCount),
-    timings
+    timings,
+    ...(fixPreview === undefined ? {} : { fixPreview })
   }
 }

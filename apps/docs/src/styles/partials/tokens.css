@@ -20,7 +20,7 @@
   /* Text */
   --ink:            220 10% 92%;
   --ink-soft:       220 7%  68%;
-  --ink-muted:      220 5%  46%;
+  --ink-muted:      220 6%  60%;
 
   /* Brand: Astro orange */
   --brand:          25 95% 58%;
@@ -30,9 +30,6 @@
   /* Accent: warm amber */
   --accent:         38 92% 62%;
   --accent-soft:    38 80% 10%;
-
-  /* Glow for gradients */
-  --glow:           25 90% 42%;
 
   /* Semantic */
   --success:        142 71% 45%;
@@ -60,16 +57,14 @@
 
   --ink:            222 20% 14%;
   --ink-soft:       222 12% 34%;
-  --ink-muted:      222 8%  50%;
+  --ink-muted:      222 8%  42%;
 
-  --brand:          25 95% 48%;
+  --brand:          25 88% 34%;
   --brand-solid:    25 88% 42%;
   --brand-soft:     25 90% 92%;
 
   --accent:         38 92% 50%;
   --accent-soft:    38 90% 90%;
-
-  --glow:           25 90% 58%;
 
   --success:        142 76% 25%;
   --warning:        38 92% 29%;
@@ -114,8 +109,8 @@
   --font-sans: 'Montserrat', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'Cascadia Code', 'Fira Code', Menlo, Consolas, monospace;
 
-  /* Animations */
-  --animate-fade-in:    fade-in 0.4s ease both;
-  --animate-slide-up:   slide-up 0.5s ease both;
-  --animate-scale-in:   scale-in 0.35s ease both;
+}
+
+[data-slot="code"] {
+  --brand-solid: var(--brand);
 }

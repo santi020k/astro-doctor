@@ -1,18 +1,43 @@
-# Astro Doctor
+<p align="center">
+  <a href="README.md">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/hero-dark.svg">
+      <img src="docs/assets/readme/hero-light.svg" alt="Astro Doctor — Clear diagnostics. Healthier Astro projects." width="1200" height="360">
+    </picture>
+  </a>
+</p>
+
+<h1 align="center">Astro Doctor</h1>
+
+<p align="center">Deterministic diagnostics for healthier Astro projects.</p>
+
+<p align="center">
+  <a href="https://npmjs.com/package/@santi020k/astro-doctor"><img src="https://img.shields.io/npm/v/@santi020k/astro-doctor.svg?style=flat-square&amp;color=a55117" alt="npm version"></a>
+  <a href="https://github.com/santi020k/astro-doctor/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/@santi020k/astro-doctor.svg?style=flat-square&amp;colorA=000000&amp;colorB=000000" alt="license"></a>
+  <a href="https://npmjs.com/package/@santi020k/astro-doctor"><img src="https://img.shields.io/npm/dt/@santi020k/astro-doctor.svg?style=flat-square&amp;colorA=000000&amp;colorB=000000" alt="npm downloads"></a>
+  <a href="https://github.com/santi020k/astro-doctor/actions/workflows/ci.yml"><img src="https://github.com/santi020k/astro-doctor/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/santi020k/astro-doctor/actions/workflows/codeql.yml"><img src="https://github.com/santi020k/astro-doctor/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"></a>
+</p>
 
 > Your agent writes bad Astro. This catches it.
-
-[![CI](https://github.com/santi020k/astro-doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/santi020k/astro-doctor/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/santi020k/astro-doctor/actions/workflows/codeql.yml/badge.svg)](https://github.com/santi020k/astro-doctor/actions/workflows/codeql.yml)
-[![npm version](https://img.shields.io/npm/v/@santi020k/astro-doctor.svg?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/@santi020k/astro-doctor)
-[![npm downloads](https://img.shields.io/npm/dt/@santi020k/astro-doctor.svg?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/@santi020k/astro-doctor)
-[![license](https://img.shields.io/npm/l/@santi020k/astro-doctor.svg?style=flat&colorA=000000&colorB=000000)](https://github.com/santi020k/astro-doctor/blob/main/LICENSE)
 
 Astro Doctor deterministically scans your Astro codebase and catches issues across **performance**, **accessibility**, **security**, and **best practices** — before they reach production. It scores your project health (0–100), teaches your coding agent Astro patterns, and reports new issues directly on PRs.
 
 Works as a **CLI**, an **ESLint plugin**, and a **GitHub Action**.
 
 ---
+
+<p align="center">
+  <a href="https://doctor.santi020k.com">Documentation</a>
+  ·
+  <a href="#install">Install</a>
+  ·
+  <a href="#cli-reference">CLI</a>
+  ·
+  <a href="#rules">Rules</a>
+</p>
+
+**Explore:** [Install](#install) · [Rules](#rules) · [Health Score](#health-score) · [CLI Reference](#cli-reference) · [Configuration](#configuration) · [Development](#development)
 
 ## Install
 
@@ -32,7 +57,7 @@ Scanning /my-project...
 
 2 problems (0 errors, 2 warnings) across 14 files
 
-Astro Doctor Score: 86/100 (B) 🟢
+Astro Doctor Score: 98/100 (A) 🟢
 ```
 
 ### 2. Install the ESLint plugin
@@ -60,7 +85,7 @@ Once you have a scan, install skills so your coding agent learns from the findin
 pnpm dlx @santi020k/astro-doctor@latest install
 ```
 
-This copies skills to your project that work with Claude Code, Cursor, Codex, OpenCode, and any `AGENTS.md`-compatible tool.
+This copies the packaged guide to `skills/astro-doctor.md`. Reference it from your agent instructions. Add `--agent-hooks` to also install native Claude Code and Cursor paths.
 
 ### 4. Run in CI (GitHub Actions)
 
@@ -103,65 +128,65 @@ Pin to a commit SHA for hardened CI:
 
 Astro Doctor owns 13 opinionated Astro rules and composes them with the official
 `eslint-plugin-astro` catalog. Depending on the preset, the CLI provides up to
-**Up to 73 checks**: 63 ESLint checks plus ten project audits in the `all` preset.
+**73 checks**: 63 ESLint checks plus ten project audits in the `all` preset.
 Overlapping rules are deduplicated automatically.
 
-| Preset | Coverage |
-| ------ | -------- |
-| `recommended` | Astro Doctor rules, project audits, and official Astro recommended rules |
-| `strict` | Recommended plus selected official Astro security and best-practice rules |
-| `all` | Every non-deprecated official Astro rule, including stylistic rules |
-| `ci` | Recommended coverage, failing on warnings with the CI score threshold |
+| Preset        | Coverage                                                                  |
+| ------------- | ------------------------------------------------------------------------- |
+| `recommended` | Astro Doctor rules, project audits, and official Astro recommended rules  |
+| `strict`      | Recommended plus selected official Astro security and best-practice rules |
+| `all`         | Every non-deprecated official Astro rule, including stylistic rules       |
+| `ci`          | Recommended coverage, failing on warnings with the CI score threshold     |
 
 ### Performance
 
-| Rule | Severity | Description |
-| ---- | -------- | ----------- |
-| `no-client-load-overuse` | ⚠️ warning | Prefer `client:idle` or `client:visible` over `client:load` |
-| `use-astro-image` | ⚠️ warning | Use `<Image>` from `astro:assets` instead of raw `<img>` |
-| `require-image-dimensions` | ⚠️ warning | Add dimensions for public and remote Astro image components |
-| `no-blocking-script` | ⚠️ warning | Add `defer`, `async`, or `type="module"` to `<script src="...">` tags |
-| `no-unprocessed-script-surprises` | ⚠️ warning | Warn when script attributes opt out of Astro processing |
+| Rule                              | Severity   | Description                                                           |
+| --------------------------------- | ---------- | --------------------------------------------------------------------- |
+| `no-client-load-overuse`          | ⚠️ warning | Prefer `client:idle` or `client:visible` over `client:load`           |
+| `use-astro-image`                 | ⚠️ warning | Use `<Image>` from `astro:assets` instead of raw `<img>`              |
+| `require-image-dimensions`        | ⚠️ warning | Add dimensions for public and remote Astro image components           |
+| `no-blocking-script`              | ⚠️ warning | Add `defer`, `async`, or `type="module"` to `<script src="...">` tags |
+| `no-unprocessed-script-surprises` | ⚠️ warning | Warn when script attributes opt out of Astro processing               |
 
 ### Accessibility
 
-| Rule | Severity | Description |
-| ---- | -------- | ----------- |
-| `no-missing-alt` | ❌ error | All image elements must have an `alt` attribute |
-| `no-missing-lang` | ❌ error | The `<html>` element must have a `lang` attribute |
+| Rule                      | Severity   | Description                                                       |
+| ------------------------- | ---------- | ----------------------------------------------------------------- |
+| `no-missing-alt`          | ❌ error   | All image elements must have an `alt` attribute                   |
+| `no-missing-lang`         | ❌ error   | The `<html>` element must have a `lang` attribute                 |
 | `require-island-fallback` | ⚠️ warning | Add fallback content for `client:only` and `server:defer` islands |
 
 ### Security
 
-| Rule | Severity | Description |
-| ---- | -------- | ----------- |
-| `no-set-html` | ⚠️ warning | `set:html` is a potential XSS vector — sanitize before use |
-| `no-public-secret-env` | ⚠️ warning | Avoid `PUBLIC_` env names that look like secrets |
+| Rule                   | Severity   | Description                                                |
+| ---------------------- | ---------- | ---------------------------------------------------------- |
+| `no-set-html`          | ⚠️ warning | `set:html` is a potential XSS vector — sanitize before use |
+| `no-public-secret-env` | ⚠️ warning | Avoid `PUBLIC_` env names that look like secrets           |
 
 ### Best Practices
 
-| Rule | Severity | Description |
-| ---- | -------- | ----------- |
-| `prefer-class-list` | ⚠️ warning | Use `class:list` instead of template literals for dynamic class names |
-| `no-process-env` | ⚠️ warning | Use `import.meta.env` instead of `process.env` in Astro files |
+| Rule                         | Severity   | Description                                                                                        |
+| ---------------------------- | ---------- | -------------------------------------------------------------------------------------------------- |
+| `prefer-class-list`          | ⚠️ warning | Use `class:list` instead of template literals for dynamic class names                              |
+| `no-process-env`             | ⚠️ warning | Use `import.meta.env` instead of `process.env` in Astro files                                      |
 | `prefer-content-collections` | ⚠️ warning | Use Content Collections instead of `Astro.glob()` / `import.meta.glob()` for typed, cached content |
 
 ### Project Audits
 
 The CLI also checks project files such as `astro.config.*`, `package.json`, `.env.example`, `src/actions/`, `src/content/`, and Astro components.
 
-| Check | Severity | Description |
-| ----- | -------- | ----------- |
-| `no-disabled-origin-check` | ⚠️ warning | Keep Astro's CSRF origin check enabled |
-| `no-insecure-session-cookie` | ⚠️ warning | Keep secure, HTTP-only, same-site session cookie protections enabled |
-| `no-open-allowed-domains` | ⚠️ warning | Avoid `security.allowedDomains: [{}]` |
-| `no-legacy-astro-7-experimental-flags` | ⚠️ warning | Migrate removed Astro 7 experimental flags |
-| `prefer-env-schema` | ⚠️ warning | Define an Astro env schema for documented env vars |
-| `prefer-pnpm` | opt-in | Use pnpm consistently and avoid npm, Yarn, and Bun lockfiles |
-| `require-action-input-schema` | ⚠️ warning | Validate untrusted Astro Action input before handlers run |
-| `require-client-router-script-lifecycle` | strict | Initialize scripts on `astro:page-load` when using ClientRouter |
-| `require-content-config` | ⚠️ warning | Add a content config when using `src/content/` |
-| `require-fetch-default-export` | ⚠️ warning | Ensure Astro 7 advanced-routing entrypoints have a default export |
+| Check                                    | Severity   | Description                                                          |
+| ---------------------------------------- | ---------- | -------------------------------------------------------------------- |
+| `no-disabled-origin-check`               | ⚠️ warning | Keep Astro's CSRF origin check enabled                               |
+| `no-insecure-session-cookie`             | ⚠️ warning | Keep secure, HTTP-only, same-site session cookie protections enabled |
+| `no-open-allowed-domains`                | ⚠️ warning | Avoid `security.allowedDomains: [{}]`                                |
+| `no-legacy-astro-7-experimental-flags`   | ⚠️ warning | Migrate removed Astro 7 experimental flags                           |
+| `prefer-env-schema`                      | ⚠️ warning | Define an Astro env schema for documented env vars                   |
+| `prefer-pnpm`                            | opt-in     | Use pnpm consistently and avoid npm, Yarn, and Bun lockfiles         |
+| `require-action-input-schema`            | ⚠️ warning | Validate untrusted Astro Action input before handlers run            |
+| `require-client-router-script-lifecycle` | strict     | Initialize scripts on `astro:page-load` when using ClientRouter      |
+| `require-content-config`                 | ⚠️ warning | Add a content config when using `src/content/`                       |
+| `require-fetch-default-export`           | ⚠️ warning | Ensure Astro 7 advanced-routing entrypoints have a default export    |
 
 ---
 
@@ -173,14 +198,14 @@ Each file is scored independently: errors cost 25 points and warnings cost 10 po
 
 Projects with unresolved errors cannot score above 89, and projects with unresolved security errors cannot score above 74. Multi-project scans use the lowest project score as the aggregate so a healthy package cannot hide an unhealthy one.
 
-| Grade | Score | Meaning |
-|-------|-------|---------|
-| S 🌟 | 100 | Zero diagnostics — no issues found anywhere in the codebase |
-| A ✅ | 90–99 | Excellent |
-| B 🟢 | 75–89 | Good |
-| C 🟡 | 60–74 | Fair |
-| D 🟠 | 40–59 | Needs attention |
-| F 🔴 | 0–39 | Critical |
+| Grade | Score | Meaning                                                     |
+| ----- | ----- | ----------------------------------------------------------- |
+| S 🌟  | 100   | Zero diagnostics — no issues found anywhere in the codebase |
+| A ✅  | 90–99 | Excellent                                                   |
+| B 🟢  | 75–89 | Good                                                        |
+| C 🟡  | 60–74 | Fair                                                        |
+| D 🟠  | 40–59 | Needs attention                                             |
+| F 🔴  | 0–39  | Critical                                                    |
 
 Use `--no-score` to hide the score from output.
 
@@ -308,13 +333,13 @@ those workflows a read-only token. Scanning and failure gates still run.
 
 **Outputs:**
 
-| Output | Description |
-|--------|-------------|
-| `total` | Total diagnostics found |
-| `errors` | Error-severity count |
-| `warnings` | Warning-severity count |
-| `score` | Health score 0–100 |
-| `score-label` | Letter grade (S, A–F) |
+| Output        | Description             |
+| ------------- | ----------------------- |
+| `total`       | Total diagnostics found |
+| `errors`      | Error-severity count    |
+| `warnings`    | Warning-severity count  |
+| `score`       | Health score 0–100      |
+| `score-label` | Letter grade (S, A–F)   |
 
 ---
 
@@ -323,14 +348,16 @@ those workflows a read-only token. Scanning and failure gates still run.
 ### VS Code & Cursor
 
 Astro Doctor has an official extension for VS Code and Cursor. It provides:
+
 - **Live Diagnostics:** Real-time linting as you type.
-- **Quick Fixes:** Apply safe rule fixes where supported and offer suppression actions for the rest.
+- **Quick Fixes:** Apply safe rule fixes where supported and offer effective line suppression actions in JavaScript frontmatter.
 - **Health Sidebar:** A visual health report with a score ring and category breakdown inside the VS Code Sidebar.
 - **Hover Info:** Detailed explanations when hovering over issues.
 
 ![Astro Doctor VS Code Extension](./packages/vscode-astro-doctor/resources/vscode-extension-screenshot.png)
 
 Commands available in the Command Palette:
+
 - `Astro Doctor: Scan Workspace`
 - `Astro Doctor: Scan Current File`
 - `Astro Doctor: Apply All Safe Fixes in File`
@@ -349,27 +376,30 @@ astro-doctor experimental-lsp --stdio
 
 ## Agent Skills
 
-Three skills are available for coding agents:
+The repository includes three additional skills for manual use and contribution:
 
-| Skill | Location | Description |
-|-------|----------|-------------|
-| Astro Rules | `.agents/skills/astro-rules/` | All 13 rules with before/after examples |
-| Astro Performance | `.agents/skills/astro-performance/` | Islands architecture patterns |
-| Add Rule | `.agents/skills/add-rule/` | How to add a new rule to astro-doctor |
+| Skill             | Location                            | Description                             |
+| ----------------- | ----------------------------------- | --------------------------------------- |
+| Astro Rules       | `.agents/skills/astro-rules/`       | All 13 rules with before/after examples |
+| Astro Performance | `.agents/skills/astro-performance/` | Islands architecture patterns           |
+| Add Rule          | `.agents/skills/add-rule/`          | How to add a new rule to astro-doctor   |
 
-Install all of them:
+Install the packaged Astro Doctor guide into `skills/astro-doctor.md`:
 
 ```bash
 pnpm dlx @santi020k/astro-doctor@latest install
 ```
 
+Use `--agent-hooks` to additionally write `.claude/skills/astro-doctor.md` and
+`.cursor/rules/astro-doctor.mdc`. The installer does not copy the repository-only skill folders.
+
 ---
 
 ## Packages
 
-| Package | Description |
-| ------- | ----------- |
-| [`@santi020k/astro-doctor`](./packages/astro-doctor) | CLI tool + public API |
+| Package                                                                          | Description                  |
+| -------------------------------------------------------------------------------- | ---------------------------- |
+| [`@santi020k/astro-doctor`](./packages/astro-doctor)                             | CLI tool + public API        |
 | [`@santi020k/eslint-plugin-astro-doctor`](./packages/eslint-plugin-astro-doctor) | ESLint plugin with all rules |
 
 ---
@@ -397,6 +427,14 @@ Astro Doctor brings the same philosophy to [Astro](https://astro.build). If you 
 ESLint configuration powered by [`@santi020k/eslint-config-basic`](https://github.com/santi020k/eslint-config-basic).
 
 ---
+
+## Find your next step
+
+| Resource                                                                                 | Use it for                                              |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| [`@santi020k/astro-doctor`](packages/astro-doctor/README.md)                             | Focused installation and usage reference.               |
+| [`@santi020k/eslint-plugin-astro-doctor`](packages/eslint-plugin-astro-doctor/README.md) | Focused installation and usage reference.               |
+| [Security policy](SECURITY.md)                                                           | Private vulnerability reporting and support boundaries. |
 
 ## License
 

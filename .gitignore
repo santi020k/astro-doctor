@@ -11,3 +11,5 @@ apps/docs/.astro/
 .env
 .env.local
 *.vsix
+apps/docs/test-results/
+apps/docs/playwright-report/

@@ -4,20 +4,14 @@ import type { GetStaticPaths } from 'astro'
 import CodeBlock from '@/components/code-block.astro'
 import Docs from '@/layouts/Docs.astro'
 
+import '../docs-pages.css'
+
 import { Badge, Icon, Link } from '@santi020k/lumen-astro'
 
-import {
-  ALL_RULES,
-  CATEGORY_COLORS,
-  CATEGORY_LABELS,
-  PROJECT_AUDITS,
-  RULE_BY_SLUG,
-  RULES,
-  SEVERITY_COLORS
-} from '@/data/rules'
+import { ALL_RULES, CATEGORY_LABELS, PROJECT_AUDITS, RULE_BY_SLUG, RULES } from '@/data/rules'
 
-export const getStaticPaths = (() => ALL_RULES.map(rule => ({
-  params: { slug: rule.slug }
+export const getStaticPaths = (() => ALL_RULES.map(ruleDefinition => ({
+  params: { slug: ruleDefinition.slug }
 }))) satisfies GetStaticPaths
 
 const { slug } = Astro.params
@@ -34,6 +28,10 @@ if (!rule) {
 
 const isEslintRule = RULES.some(candidateRule => candidateRule.slug === rule.slug)
 const projectAuditRule = PROJECT_AUDITS.find(candidateRule => candidateRule.slug === rule.slug)
+
+const relatedRules = ALL_RULES.filter(candidateRule => (
+  candidateRule.category === rule.category && candidateRule.slug !== rule.slug
+))
 ---
 
 <Docs
@@ -41,155 +39,119 @@ const projectAuditRule = PROJECT_AUDITS.find(candidateRule => candidateRule.slug
   description={rule.description}
   editPath="apps/docs/src/pages/docs/rules/[slug].astro"
 >
-  <!-- Rule header -->
-  <div class="mb-8 flex flex-wrap items-center gap-3">
-    <Badge class:list={[`
-      inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold
-    `, CATEGORY_COLORS[rule.category]]}
-    >
-      {CATEGORY_LABELS[rule.category]}
-    </Badge>
-    <Badge class:list={[
-      `
-        inline-flex items-center rounded-md border px-2 py-1 text-xs
-        font-semibold
-      `,
-      SEVERITY_COLORS[rule.severity]
-    ]}
-    >
-      {rule.severity} by default
-    </Badge>
-    {projectAuditRule && (
-      <Badge class="
-        inline-flex items-center rounded-md border px-2 py-1 text-xs
-        font-semibold
-      "
-      >
-        {projectAuditRule.preset} preset
+  <header class="docs-page-header">
+    <h1>{rule.name}</h1>
+    <p class="docs-page-lead">{rule.description}</p>
+    <div class="docs-rule-meta" role="group" aria-label="Rule details">
+      <Badge variant="outline">{CATEGORY_LABELS[rule.category]}</Badge>
+      <Badge variant={rule.severity === 'error' ? 'destructive' : 'warning'}>
+        {rule.severity === 'warn' ? 'warning' : 'error'} by default
       </Badge>
-    )}
-    <code class="
-      rounded-md border border-[hsl(var(--line)/0.5)]
-      bg-[hsl(var(--surface-muted))] px-2 py-1 text-xs text-[hsl(var(--brand))]
-    "
-    >
-      {rule.id}
-    </code>
-  </div>
+      <Badge variant="secondary">{isEslintRule ? 'ESLint rule' : 'Project audit'}</Badge>
+      {projectAuditRule && <Badge variant="outline">{projectAuditRule.preset} audit</Badge>}
+    </div>
+    <p class="docs-rule-id"><code>{rule.id}</code></p>
+  </header>
 
-  <h1>{rule.name}</h1>
-
-  <p><strong>{rule.description}</strong></p>
-
-  <h2>Why</h2>
+  <h2>Why it matters</h2>
   <p>{rule.why}</p>
 
-  <h2>Examples</h2>
+  <h2>See the difference</h2>
 
-  <h3>
-    <span class="inline-flex items-center gap-1.5">
-      <Icon class="text-[hsl(var(--danger))]" name="x" decorative />
-      Incorrect
-    </span>
-  </h3>
-  <p class="text-sm text-[hsl(var(--ink-muted))]">{rule.bad.label}</p>
-  <CodeBlock
-    code={rule.bad.code}
-    language={rule.bad.language ?? 'astro'}
-    theme="auto"
-    variant="block"
-    copy
-  />
+  <section class="docs-rule-example" data-result="incorrect" aria-labelledby="incorrect-example">
+    <h3 class="docs-example-heading" id="incorrect-example">
+      <Icon name="x" decorative />Incorrect
+    </h3>
+    <p>{rule.bad.label}</p>
+    <CodeBlock
+      code={rule.bad.code}
+      label="Incorrect example"
+      language={rule.bad.language ?? 'astro'}
+    />
+  </section>
 
-  <h3>
-    <span class="inline-flex items-center gap-1.5">
-      <Icon class="text-[hsl(var(--success))]" name="check" decorative />
-      Correct
-    </span>
-  </h3>
-  <p class="text-sm text-[hsl(var(--ink-muted))]">{rule.good.label}</p>
-  <CodeBlock
-    code={rule.good.code}
-    language={rule.good.language ?? 'astro'}
-    theme="auto"
-    variant="block"
-    copy
-  />
+  <section class="docs-rule-example" data-result="correct" aria-labelledby="correct-example">
+    <h3 class="docs-example-heading" id="correct-example">
+      <Icon name="check" decorative />Correct
+    </h3>
+    <p>{rule.good.label}</p>
+    <CodeBlock
+      code={rule.good.code}
+      label="Correct example"
+      language={rule.good.language ?? 'astro'}
+    />
+  </section>
 
-  <h2>Configuration</h2>
+  <h2>Configure this check</h2>
 
   {!isEslintRule ?
     (
-    <>
-      <p>Project audits are configured in <code>doctor.config.ts</code>:</p>
-      <CodeBlock
-        code={`export default {
-            rules: {
-              '${rule.id}': 'error', // or 'warn' or 'off'
-            },
-          }`}
-        label="doctor.config.ts"
-        language="typescript"
-        theme="auto"
-        variant="block"
-        copy
-      />
-    </>
+      <>
+        <p>Project audits are configured in <code>doctor.config.ts</code>:</p>
+        <CodeBlock
+          code={`export default {
+  rules: {
+    '${rule.id}': 'error',
+  },
+}`}
+          label="doctor.config.ts"
+          language="typescript"
+        />
+      </>
     ) :
     (
-    <>
-      <p>Override the default severity in your ESLint config:</p>
-      <CodeBlock
-        code={`// eslint.config.js
-import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
+      <>
+        <p>Override the default severity in your ESLint config:</p>
+        <CodeBlock
+          code={`import astroDoctorPlugin from '@santi020k/eslint-plugin-astro-doctor'
 
 export default [
   astroDoctorPlugin.configs.recommended,
   {
     rules: {
-      '${rule.id}': 'error',   // or 'warn' or 'off'
+      '${rule.id}': 'error',
     },
   },
 ]`}
-        label="eslint.config.js"
-        language="javascript"
-        theme="auto"
-        variant="block"
-        copy
-      />
-      <p>Or in your <Link href="/docs/configuration"><code>doctor.config.ts</code></Link>:</p>
-      <CodeBlock
-        code={`export default {
+          label="eslint.config.js"
+          language="javascript"
+        />
+        <p>Or set the severity for CLI scans in <code>doctor.config.ts</code>:</p>
+        <CodeBlock
+          code={`export default {
   rules: {
     '${rule.id}': 'error',
   },
 }`}
-        label="doctor.config.ts"
-        language="typescript"
-        theme="auto"
-        variant="block"
-        copy
-      />
-    </>
+          label="doctor.config.ts"
+          language="typescript"
+        />
+      </>
     )}
 
-  <h2>All rules</h2>
+  <p>
+    Use <code>'error'</code>, <code>'warn'</code>, or <code>'off'</code>.
+    The <Link href="/docs/configuration">configuration guide</Link> covers presets and per-file overrides.
+  </p>
 
-  <ul>
-    {ALL_RULES.map(innerRule => (
-      <li>
-        <Link
-href={`/docs/rules/${innerRule.slug}`}
-class:list={[innerRule.slug === slug ?
-'font-semibold text-[hsl(var(--brand))]' :
-'']}
-        >
-          <code>{innerRule.id}</code>
-        </Link>
-        {innerRule.slug === slug && (
-<span class="ml-2 text-xs text-[hsl(var(--ink-muted))]">(this page)</span>
-)}
-      </li>
-    ))}
-  </ul>
+  {relatedRules.length > 0 && (
+    <>
+      <h2>Keep exploring {CATEGORY_LABELS[rule.category].toLowerCase()}</h2>
+      <ul class="docs-link-list">
+        {relatedRules.map(relatedRule => (
+          <li>
+            <Link class="docs-row-link" href={`/docs/rules/${relatedRule.slug}`} variant="inherit">
+              <span class="docs-row-copy">
+                <strong>{relatedRule.name}</strong>
+                <span>{relatedRule.description}</span>
+              </span>
+              <Icon name="arrow-up-right" decorative />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </>
+  )}
+
+  <p><Link href="/docs/rules">Browse every rule and project audit</Link></p>
 </Docs>

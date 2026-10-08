@@ -3,7 +3,7 @@ import CodeBlock from '@/components/code-block.astro'
 import PackageManagerTabs from '@/components/PackageManagerTabs.astro'
 import Docs from '@/layouts/Docs.astro'
 
-import { Callout } from '@santi020k/lumen-astro'
+import { Callout, Table } from '@santi020k/lumen-astro'
 ---
 
 <Docs
@@ -11,8 +11,12 @@ import { Callout } from '@santi020k/lumen-astro'
   description="Step-by-step setup for the CLI, ESLint plugin, VS Code extension, and GitHub Action. Zero config required."
   editPath="apps/docs/src/pages/docs/installation.astro"
 >
-  <h1>Installation</h1>
-
+  <header class="docs-page-header">
+    <h1>Installation</h1>
+    <p class="docs-page-lead">
+      Start with a single scan, then add Astro Doctor to your project, editor, or CI workflow.
+    </p>
+  </header>
   <h2>CLI only (no config required)</h2>
 
   <p>Run astro-doctor without installing it at all:</p>
@@ -37,7 +41,7 @@ import { Callout } from '@santi020k/lumen-astro'
     bun="bun add -D @santi020k/astro-doctor"
   />
 
-  <h2>VS Code Extension (Editor Integration)</h2>
+  <h2>VS Code extension</h2>
 
   <p>
     For the best experience in VS Code or Cursor, install the official Astro Doctor extension from the
@@ -57,7 +61,7 @@ import { Callout } from '@santi020k/lumen-astro'
     <a href="/docs/vscode-extension">VS Code Extension</a> for full features.
   </p>
 
-  <h2>ESLint plugin (Standalone or alternative editor integration)</h2>
+  <h2>ESLint plugin</h2>
 
   <p>
     For live in-editor diagnostics (VS Code, Neovim, WebStorm, etc.), install the ESLint plugin
@@ -65,10 +69,10 @@ import { Callout } from '@santi020k/lumen-astro'
   </p>
 
   <PackageManagerTabs
-    pnpm="pnpm add -D @santi020k/eslint-plugin-astro-doctor astro-eslint-parser"
-    npm="npm install --save-dev @santi020k/eslint-plugin-astro-doctor astro-eslint-parser"
-    yarn="yarn add -D @santi020k/eslint-plugin-astro-doctor astro-eslint-parser"
-    bun="bun add -D @santi020k/eslint-plugin-astro-doctor astro-eslint-parser"
+    pnpm="pnpm add -D @santi020k/eslint-plugin-astro-doctor"
+    npm="npm install --save-dev @santi020k/eslint-plugin-astro-doctor"
+    yarn="yarn add -D @santi020k/eslint-plugin-astro-doctor"
+    bun="bun add -D @santi020k/eslint-plugin-astro-doctor"
   />
 
   <CodeBlock
@@ -94,16 +98,20 @@ export default [
   <h2>Agent skills</h2>
 
   <p>
-    To install the AI agent skills into your project (so Claude, Cursor, and Copilot Workspace know
-    the rules and how to fix them):
+    Install the portable Astro Doctor skill so your coding agent can reference the checks and
+    their code examples:
   </p>
 
   <CodeBlock code="astro-doctor install" language="bash" />
 
-  <p>This copies three skill files to <code>.agents/skills/</code> in your project root.</p>
+  <p>
+    This writes <code>skills/astro-doctor.md</code> in your project root. Add
+    <code>--agent-hooks</code> for optional Claude Code and Cursor copies. See
+    <a href="/docs/agent-skills">Agent skills</a> for destinations and setup options.
+  </p>
 
-  <Callout class="callout callout-tip">
-    <strong>Tip:</strong> Commit the <code>.agents/skills/</code> folder to your repository so all
+  <Callout>
+    <strong>Tip:</strong> Commit <code>skills/astro-doctor.md</code> to your repository so all
     contributors and their AI tools benefit from the same context.
   </Callout>
 
@@ -122,52 +130,54 @@ export default [
     (the official community plugin), not replace it. The two cover different ground:
   </p>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Coverage area</th>
-        <th>eslint-plugin-astro</th>
-        <th>astro-doctor</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Syntax correctness</td>
-        <td>✅</td>
-        <td>—</td>
-      </tr>
-      <tr>
-        <td>Astro Doctor accessibility rules</td>
-        <td>✅</td>
-        <td>Focused subset</td>
-      </tr>
-      <tr>
-        <td>Performance (client directives, images, scripts)</td>
-        <td>—</td>
-        <td>✅</td>
-      </tr>
-      <tr>
-        <td>Security (<code>set:html</code>)</td>
-        <td>✅</td>
-        <td>✅</td>
-      </tr>
-      <tr>
-        <td>Best practices (<code>class:list</code>, env vars)</td>
-        <td>Partial</td>
-        <td>✅</td>
-      </tr>
-      <tr>
-        <td>CLI health score + CI reports</td>
-        <td>—</td>
-        <td>✅</td>
-      </tr>
-      <tr>
-        <td>AI agent skills</td>
-        <td>—</td>
-        <td>✅</td>
-      </tr>
-    </tbody>
-  </table>
+  <Table aria-label="ESLint plugin coverage comparison" role="region" tabindex="0">
+    <table>
+      <thead>
+        <tr>
+          <th>Coverage area</th>
+          <th>eslint-plugin-astro</th>
+          <th>astro-doctor</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Syntax correctness</td>
+          <td>Included</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Astro Doctor accessibility rules</td>
+          <td>Included</td>
+          <td>Focused subset</td>
+        </tr>
+        <tr>
+          <td>Performance (client directives, images, scripts)</td>
+          <td>—</td>
+          <td>Included</td>
+        </tr>
+        <tr>
+          <td>Security (<code>set:html</code>)</td>
+          <td>Included</td>
+          <td>Included</td>
+        </tr>
+        <tr>
+          <td>Best practices (<code>class:list</code>, env vars)</td>
+          <td>Partial</td>
+          <td>Included</td>
+        </tr>
+        <tr>
+          <td>CLI health score + CI reports</td>
+          <td>—</td>
+          <td>Included</td>
+        </tr>
+        <tr>
+          <td>AI agent skills</td>
+          <td>—</td>
+          <td>Included</td>
+        </tr>
+      </tbody>
+    </table>
+  </Table>
 
   <p>
     If you already use <code>eslint-plugin-astro</code> (e.g. via

@@ -1,5 +1,5 @@
 {
-  "generatorVersion": "1.1.1",
+  "generatorVersion": "1.2.0",
   "routes": {
     "/": {
       "alt": "Your agent writes bad Astro. This catches it. — Astro Doctor",
@@ -10,7 +10,8 @@
           "height": 630,
           "output": "index.webp",
           "primary": true,
-          "url": "/og/index.webp",
+          "url": "/og/index.webp?v=fadc7d2b77fe",
+          "version": "fadc7d2b77fe",
           "width": 1200
         }
       ],
@@ -29,7 +30,8 @@
           "height": 630,
           "output": "docs.webp",
           "primary": true,
-          "url": "/og/docs.webp",
+          "url": "/og/docs.webp?v=b0a13e7d410b",
+          "version": "b0a13e7d410b",
           "width": 1200
         }
       ],
@@ -48,7 +50,8 @@
           "height": 630,
           "output": "docs/installation.webp",
           "primary": true,
-          "url": "/og/docs/installation.webp",
+          "url": "/og/docs/installation.webp?v=5fbf79018b5e",
+          "version": "5fbf79018b5e",
           "width": 1200
         }
       ],
@@ -67,7 +70,8 @@
           "height": 630,
           "output": "docs/quick-start.webp",
           "primary": true,
-          "url": "/og/docs/quick-start.webp",
+          "url": "/og/docs/quick-start.webp?v=affb6bbece51",
+          "version": "affb6bbece51",
           "width": 1200
         }
       ],
@@ -86,7 +90,8 @@
           "height": 630,
           "output": "docs/configuration.webp",
           "primary": true,
-          "url": "/og/docs/configuration.webp",
+          "url": "/og/docs/configuration.webp?v=d30b99ccfb22",
+          "version": "d30b99ccfb22",
           "width": 1200
         }
       ],
@@ -105,7 +110,8 @@
           "height": 630,
           "output": "docs/eslint-plugin.webp",
           "primary": true,
-          "url": "/og/docs/eslint-plugin.webp",
+          "url": "/og/docs/eslint-plugin.webp?v=d6c238ad0f92",
+          "version": "d6c238ad0f92",
           "width": 1200
         }
       ],
@@ -124,7 +130,8 @@
           "height": 630,
           "output": "docs/cli.webp",
           "primary": true,
-          "url": "/og/docs/cli.webp",
+          "url": "/og/docs/cli.webp?v=88f527754f45",
+          "version": "88f527754f45",
           "width": 1200
         }
       ],
@@ -143,7 +150,8 @@
           "height": 630,
           "output": "docs/github-action.webp",
           "primary": true,
-          "url": "/og/docs/github-action.webp",
+          "url": "/og/docs/github-action.webp?v=b2f4faaa2217",
+          "version": "b2f4faaa2217",
           "width": 1200
         }
       ],
@@ -162,7 +170,8 @@
           "height": 630,
           "output": "docs/vscode-extension.webp",
           "primary": true,
-          "url": "/og/docs/vscode-extension.webp",
+          "url": "/og/docs/vscode-extension.webp?v=10040bcf6e5a",
+          "version": "10040bcf6e5a",
           "width": 1200
         }
       ],
@@ -181,7 +190,8 @@
           "height": 630,
           "output": "docs/editor-integration.webp",
           "primary": true,
-          "url": "/og/docs/editor-integration.webp",
+          "url": "/og/docs/editor-integration.webp?v=3f7681980c4a",
+          "version": "3f7681980c4a",
           "width": 1200
         }
       ],
@@ -200,7 +210,8 @@
           "height": 630,
           "output": "docs/agent-skills.webp",
           "primary": true,
-          "url": "/og/docs/agent-skills.webp",
+          "url": "/og/docs/agent-skills.webp?v=780a0126e447",
+          "version": "780a0126e447",
           "width": 1200
         }
       ],
@@ -219,7 +230,8 @@
           "height": 630,
           "output": "docs/changelog.webp",
           "primary": true,
-          "url": "/og/docs/changelog.webp",
+          "url": "/og/docs/changelog.webp?v=fd80307f41e0",
+          "version": "fd80307f41e0",
           "width": 1200
         }
       ],
@@ -238,7 +250,8 @@
           "height": 630,
           "output": "docs/rules.webp",
           "primary": true,
-          "url": "/og/docs/rules.webp",
+          "url": "/og/docs/rules.webp?v=0b5469472947",
+          "version": "0b5469472947",
           "width": 1200
         }
       ],
@@ -257,7 +270,8 @@
           "height": 630,
           "output": "docs/rules/no-client-load-overuse.webp",
           "primary": true,
-          "url": "/og/docs/rules/no-client-load-overuse.webp",
+          "url": "/og/docs/rules/no-client-load-overuse.webp?v=f24e94b92089",
+          "version": "f24e94b92089",
           "width": 1200
         }
       ],
@@ -276,7 +290,8 @@
           "height": 630,
           "output": "docs/rules/use-astro-image.webp",
           "primary": true,
-          "url": "/og/docs/rules/use-astro-image.webp",
+          "url": "/og/docs/rules/use-astro-image.webp?v=6fb831e1814a",
+          "version": "6fb831e1814a",
           "width": 1200
         }
       ],
@@ -295,7 +310,8 @@
           "height": 630,
           "output": "docs/rules/require-image-dimensions.webp",
           "primary": true,
-          "url": "/og/docs/rules/require-image-dimensions.webp",
+          "url": "/og/docs/rules/require-image-dimensions.webp?v=5daa18ef02ae",
+          "version": "5daa18ef02ae",
           "width": 1200
         }
       ],
@@ -314,7 +330,8 @@
           "height": 630,
           "output": "docs/rules/no-missing-alt.webp",
           "primary": true,
-          "url": "/og/docs/rules/no-missing-alt.webp",
+          "url": "/og/docs/rules/no-missing-alt.webp?v=35eb48664a53",
+          "version": "35eb48664a53",
           "width": 1200
         }
       ],
@@ -333,7 +350,8 @@
           "height": 630,
           "output": "docs/rules/no-set-html.webp",
           "primary": true,
-          "url": "/og/docs/rules/no-set-html.webp",
+          "url": "/og/docs/rules/no-set-html.webp?v=ed8d10a4339e",
+          "version": "ed8d10a4339e",
           "width": 1200
         }
       ],
@@ -352,7 +370,8 @@
           "height": 630,
           "output": "docs/rules/no-public-secret-env.webp",
           "primary": true,
-          "url": "/og/docs/rules/no-public-secret-env.webp",
+          "url": "/og/docs/rules/no-public-secret-env.webp?v=1ab3ac32f219",
+          "version": "1ab3ac32f219",
           "width": 1200
         }
       ],
@@ -371,7 +390,8 @@
           "height": 630,
           "output": "docs/rules/prefer-class-list.webp",
           "primary": true,
-          "url": "/og/docs/rules/prefer-class-list.webp",
+          "url": "/og/docs/rules/prefer-class-list.webp?v=766d9a1ebd4e",
+          "version": "766d9a1ebd4e",
           "width": 1200
         }
       ],
@@ -390,7 +410,8 @@
           "height": 630,
           "output": "docs/rules/no-blocking-script.webp",
           "primary": true,
-          "url": "/og/docs/rules/no-blocking-script.webp",
+          "url": "/og/docs/rules/no-blocking-script.webp?v=a2f094bfd46b",
+          "version": "a2f094bfd46b",
           "width": 1200
         }
       ],
@@ -409,7 +430,8 @@
           "height": 630,
           "output": "docs/rules/no-unprocessed-script-surprises.webp",
           "primary": true,
-          "url": "/og/docs/rules/no-unprocessed-script-surprises.webp",
+          "url": "/og/docs/rules/no-unprocessed-script-surprises.webp?v=b97f521064f8",
+          "version": "b97f521064f8",
           "width": 1200
         }
       ],
@@ -428,7 +450,8 @@
           "height": 630,
           "output": "docs/rules/no-missing-lang.webp",
           "primary": true,
-          "url": "/og/docs/rules/no-missing-lang.webp",
+          "url": "/og/docs/rules/no-missing-lang.webp?v=1ec9e237b892",
+          "version": "1ec9e237b892",
           "width": 1200
         }
       ],
@@ -447,7 +470,8 @@
           "height": 630,
           "output": "docs/rules/require-island-fallback.webp",
           "primary": true,
-          "url": "/og/docs/rules/require-island-fallback.webp",
+          "url": "/og/docs/rules/require-island-fallback.webp?v=97524a56ed72",
+          "version": "97524a56ed72",
           "width": 1200
         }
       ],
@@ -466,7 +490,8 @@
           "height": 630,
           "output": "docs/rules/no-process-env.webp",
           "primary": true,
-          "url": "/og/docs/rules/no-process-env.webp",
+          "url": "/og/docs/rules/no-process-env.webp?v=cb0850757853",
+          "version": "cb0850757853",
           "width": 1200
         }
       ],
@@ -485,7 +510,8 @@
           "height": 630,
           "output": "docs/rules/prefer-content-collections.webp",
           "primary": true,
-          "url": "/og/docs/rules/prefer-content-collections.webp",
+          "url": "/og/docs/rules/prefer-content-collections.webp?v=29c1da8a61bf",
+          "version": "29c1da8a61bf",
           "width": 1200
         }
       ],
@@ -504,7 +530,8 @@
           "height": 630,
           "output": "docs/rules/no-disabled-origin-check.webp",
           "primary": true,
-          "url": "/og/docs/rules/no-disabled-origin-check.webp",
+          "url": "/og/docs/rules/no-disabled-origin-check.webp?v=a41cbdbde289",
+          "version": "a41cbdbde289",
           "width": 1200
         }
       ],
@@ -523,7 +550,8 @@
           "height": 630,
           "output": "docs/rules/no-insecure-session-cookie.webp",
           "primary": true,
-          "url": "/og/docs/rules/no-insecure-session-cookie.webp",
+          "url": "/og/docs/rules/no-insecure-session-cookie.webp?v=d79f5e5a908e",
+          "version": "d79f5e5a908e",
           "width": 1200
         }
       ],
@@ -542,7 +570,8 @@
           "height": 630,
           "output": "docs/rules/no-open-allowed-domains.webp",
           "primary": true,
-          "url": "/og/docs/rules/no-open-allowed-domains.webp",
+          "url": "/og/docs/rules/no-open-allowed-domains.webp?v=fc20db4bbc9e",
+          "version": "fc20db4bbc9e",
           "width": 1200
         }
       ],
@@ -561,7 +590,8 @@
           "height": 630,
           "output": "docs/rules/no-legacy-astro-7-experimental-flags.webp",
           "primary": true,
-          "url": "/og/docs/rules/no-legacy-astro-7-experimental-flags.webp",
+          "url": "/og/docs/rules/no-legacy-astro-7-experimental-flags.webp?v=b51a6ecbd3ba",
+          "version": "b51a6ecbd3ba",
           "width": 1200
         }
       ],
@@ -580,7 +610,8 @@
           "height": 630,
           "output": "docs/rules/prefer-env-schema.webp",
           "primary": true,
-          "url": "/og/docs/rules/prefer-env-schema.webp",
+          "url": "/og/docs/rules/prefer-env-schema.webp?v=b653bb7cc81f",
+          "version": "b653bb7cc81f",
           "width": 1200
         }
       ],
@@ -599,7 +630,8 @@
           "height": 630,
           "output": "docs/rules/prefer-pnpm.webp",
           "primary": true,
-          "url": "/og/docs/rules/prefer-pnpm.webp",
+          "url": "/og/docs/rules/prefer-pnpm.webp?v=d6f85a0c9152",
+          "version": "d6f85a0c9152",
           "width": 1200
         }
       ],
@@ -618,7 +650,8 @@
           "height": 630,
           "output": "docs/rules/require-action-input-schema.webp",
           "primary": true,
-          "url": "/og/docs/rules/require-action-input-schema.webp",
+          "url": "/og/docs/rules/require-action-input-schema.webp?v=68b52e180e55",
+          "version": "68b52e180e55",
           "width": 1200
         }
       ],
@@ -637,7 +670,8 @@
           "height": 630,
           "output": "docs/rules/require-client-router-script-lifecycle.webp",
           "primary": true,
-          "url": "/og/docs/rules/require-client-router-script-lifecycle.webp",
+          "url": "/og/docs/rules/require-client-router-script-lifecycle.webp?v=e3901c5cca5a",
+          "version": "e3901c5cca5a",
           "width": 1200
         }
       ],
@@ -656,7 +690,8 @@
           "height": 630,
           "output": "docs/rules/require-content-config.webp",
           "primary": true,
-          "url": "/og/docs/rules/require-content-config.webp",
+          "url": "/og/docs/rules/require-content-config.webp?v=909f524fac5e",
+          "version": "909f524fac5e",
           "width": 1200
         }
       ],
@@ -675,7 +710,8 @@
           "height": 630,
           "output": "docs/rules/require-fetch-default-export.webp",
           "primary": true,
-          "url": "/og/docs/rules/require-fetch-default-export.webp",
+          "url": "/og/docs/rules/require-fetch-default-export.webp?v=cb28bf1d1e30",
+          "version": "cb28bf1d1e30",
           "width": 1200
         }
       ],

@@ -1019,18 +1019,7 @@ const auditSessionCookie = (
   if (astroConfigContent === undefined) return
 
   const maskedContent = maskCodeLiterals(astroConfigContent)
-  const defineConfigMatch = /\bdefineConfig\s*\(/u.exec(maskedContent)
-
-  if (defineConfigMatch?.index === undefined) return
-
-  const defineConfigOpeningIndex =
-    defineConfigMatch.index + defineConfigMatch[0].lastIndexOf('(')
-
-  const rootOpeningIndex = findNextNonWhitespaceIndex(
-    maskedContent, defineConfigOpeningIndex + 1
-  )
-
-  const rootObjectRange = findObjectRange(maskedContent, rootOpeningIndex)
+  const rootObjectRange = getAstroConfigRootObjectRange(maskedContent)
 
   if (rootObjectRange === undefined) return
 
@@ -1229,7 +1218,7 @@ const getEnvExampleVariableNames = (envExampleContent: string): string[] => envE
 
 const looksLikeSecret = (
   variableName: string
-): boolean => SECRET_ENV_NAME_PARTS.some(secretNamePart => variableName.includes(secretNamePart))
+): boolean => variableName.split('_').some(namePart => SECRET_ENV_NAME_PARTS.includes(namePart))
 
 const auditEnvExample = (
   options: ProjectAuditOptions,
@@ -1322,6 +1311,26 @@ const auditContentConfig = (
       options.directory, options.rules, 'astro-doctor/require-content-config', CONTENT_DIRECTORY_NAME, 'Add a content config with defineCollection() so content entries are typed and validated.'
     )
   )
+}
+
+export const isProjectAuditDiscoveryPath = (
+  directory: string, filePath: string, ignore?: readonly string[]
+): boolean => {
+  const projectPath = toProjectPath(directory, filePath)
+  const astroConfigPath = findExistingProjectFile(directory, ASTRO_CONFIG_FILE_NAMES)
+  const fetchPaths = isAstro7Project(directory) ? getFetchEntrypointProjectPaths(directory, astroConfigPath) : undefined
+
+  const discoveryPaths = [
+    PACKAGE_FILE_NAME,
+    ...COMPETING_LOCK_FILE_NAMES,
+    ENV_EXAMPLE_FILE_NAME,
+    astroConfigPath,
+    findExistingProjectFile(directory, CONTENT_CONFIG_FILE_NAMES),
+    findExistingProjectFile(directory, fetchPaths ?? []),
+    ...getActionProjectPaths({ directory, ignore }, undefined)
+  ]
+
+  return discoveryPaths.includes(projectPath) || projectPath.startsWith(`${CONTENT_DIRECTORY_NAME}/`)
 }
 
 export const auditProject = (options: ProjectAuditOptions): Diagnostic[] => {

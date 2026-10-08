@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 
+import { getGithubWorkflow } from './utils/get-github-workflow.js'
 import type { PresetName } from './presets.js'
 import { isPresetName } from './presets.js'
 
@@ -60,34 +61,6 @@ const getEslintConfig = (): string => [
   'export default [',
   '  astroDoctorPlugin.configs.recommended,',
   ']',
-  ''
-].join('\n')
-
-const getGithubWorkflow = (): string => [
-  'name: Astro Doctor',
-  '',
-  'on:',
-  '  pull_request:',
-  '    types: [opened, synchronize, reopened, ready_for_review]',
-  '',
-  'permissions:',
-  '  contents: read',
-  '  pull-requests: write',
-  '',
-  'concurrency:',
-  '  group: astro-doctor-${{ github.event.pull_request.number || github.ref }}',
-  '  cancel-in-progress: true',
-  '',
-  'jobs:',
-  '  astro-doctor:',
-  '    runs-on: ubuntu-latest',
-  '    steps:',
-  '      - uses: actions/checkout@v7',
-  '        with:',
-  '          fetch-depth: 0',
-  '      - uses: santi020k/astro-doctor@v1',
-  '        with:',
-  '          fail-on: \'error\'',
   ''
 ].join('\n')
 

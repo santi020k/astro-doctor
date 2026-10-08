@@ -1,0 +1,13 @@
+export const DOCS_PREVIEW_PORT = 4468
+export const DOCS_PREVIEW_URL = `http://127.0.0.1:${DOCS_PREVIEW_PORT}`
+export const DOCS_TEST_TIMEOUT_MS = 600_000
+export const DOCS_SERVER_TIMEOUT_MS = 180_000
+export const DOCS_TEST_WORKERS = 2
+export const DOCS_VIEWPORT_HEIGHT_PX = 1000
+export const DOCS_MOBILE_WIDTH_PX = 390
+export const DOCS_TABLET_WIDTH_PX = 768
+export const DOCS_NAVIGATION_WIDTH_PX = 1024
+export const DOCS_DESKTOP_WIDTH_PX = 1440
+export const DOCS_NARROW_WIDTH_PX = 320
+export const DOCS_LAYOUT_TOLERANCE_PX = 1
+export const DOCS_TEXT_ZOOM_PERCENT = '200%'

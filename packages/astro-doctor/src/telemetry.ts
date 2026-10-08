@@ -78,23 +78,25 @@ const buildPayload = (options: TelemetryOptions): TelemetryPayload => ({
 })
 
 const sendTelemetry = async (endpoint: string, payload: TelemetryPayload): Promise<void> => {
+  const controller = new AbortController()
+
+  const timeoutId = setTimeout(() => {
+    controller.abort()
+  }, TELEMETRY_REQUEST_TIMEOUT_MS)
+
+  timeoutId.unref()
+
   try {
-    const controller = new AbortController()
-
-    const timeoutId = setTimeout(() => {
-      controller.abort()
-    }, TELEMETRY_REQUEST_TIMEOUT_MS)
-
     await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
       signal: controller.signal
     })
-
-    clearTimeout(timeoutId)
   } catch {
     // Silently ignore — telemetry must never cause CLI failures
+  } finally {
+    clearTimeout(timeoutId)
   }
 }
 

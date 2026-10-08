@@ -14,7 +14,6 @@
  * > The LSP is experimental — its protocol, options, and caching behavior may
  * > change between releases, hence the `experimental-` prefix.
  */
-
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import type { AstroDoctorRule, RuleCategory } from '@santi020k/eslint-plugin-astro-doctor'
@@ -24,6 +23,7 @@ import astroDoctorPlugin, {
   getAstroRuleDocUrl
 } from '@santi020k/eslint-plugin-astro-doctor'
 
+import * as typescriptParser from '@typescript-eslint/parser'
 import * as astroParser from 'astro-eslint-parser'
 import { ESLint } from 'eslint'
 import type {
@@ -43,6 +43,7 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
 import { scan } from './scanner/index.js'
+import { getLineSuppressionAction } from './utils/get-line-suppression-action.js'
 import { isFileInDirectory } from './utils/is-file-in-directory.js'
 import { loadConfig } from './config.js'
 import { LSP_SCAN_DEBOUNCE_MS } from './constants.js'
@@ -151,7 +152,11 @@ const buildEslintInstance = (
         },
         languageOptions: {
           parser: astroParser,
-          parserOptions: { sourceType: 'module' }
+          parserOptions: {
+            sourceType: 'module',
+            parser: typescriptParser,
+            extraFileExtensions: ['.astro']
+          }
         },
         rules: {
           ...astroDoctorPlugin.configs.recommended?.rules,
@@ -271,13 +276,14 @@ const buildMessageDiagnostics = (
   filePath: string,
   document: TextDocument
 ): MessageDiagnostics | null => {
-  if (!msg.ruleId) return null
+  if (!msg.ruleId && !msg.fatal) return null
 
+  const ruleId = msg.ruleId ?? 'astro-doctor/parse-error'
   const startLine = Math.max(0, msg.line - 1)
   const startChar = Math.max(0, msg.column - 1)
   const endLine = msg.endLine === undefined ? startLine : Math.max(0, msg.endLine - 1)
   const endChar = msg.endColumn === undefined ? startChar + 1 : Math.max(0, msg.endColumn - 1)
-  const docUrl = getRuleDocUrl(msg.ruleId)
+  const docUrl = getRuleDocUrl(ruleId)
   const fixData = buildDiagnosticFixData(msg, document)
 
   return {
@@ -287,20 +293,20 @@ const buildMessageDiagnostics = (
         end: { line: endLine, character: endChar }
       },
       severity: eslintSeverityToLsp[msg.severity] ?? DiagnosticSeverity.Warning,
-      code: msg.ruleId,
+      code: ruleId,
       codeDescription: docUrl ? { href: docUrl } : undefined,
       source: 'astro-doctor',
       message: msg.message,
       data: fixData
     },
     astro: {
-      ruleId: msg.ruleId,
+      ruleId,
       severity: eslintSeverityToAstro[msg.severity] ?? 'warning',
       message: msg.message,
       filePath,
       line: msg.line,
       column: msg.column,
-      category: getRuleCategory(msg.ruleId)
+      category: getRuleCategory(ruleId)
     }
   }
 }
@@ -431,7 +437,8 @@ const scanWorkspaceState = async (
       ignore: config?.ignore,
       overrides: config?.overrides,
       rules: effectiveRules,
-      cache: true
+      cache: true,
+      failOnParseError: false
     })
 
     return {
@@ -459,7 +466,7 @@ const scanWorkspaceState = async (
     rootDirectory: workspaceRoot,
     projectArgs: discoveredProjects.map(project => project.directory),
     rootConfig: config,
-    scanOptions: { cache: true, noLint: false, noRespectInlineDisables: false }
+    scanOptions: { cache: true, noLint: false, noRespectInlineDisables: false, failOnParseError: false }
   })
 
   return {
@@ -497,17 +504,13 @@ const buildAstroDiagLspDiagnostic = (d: AstroDiagnostic): LspDiagnostic => {
   }
 }
 
-export const buildCodeActionsForDiagnostic = (
+const buildRuleFixActions = (
   documentUri: string,
-  diagnostic: LspDiagnostic
+  ruleId: string,
+  diagnostic: LspDiagnostic,
+  fixData: DiagnosticFixData | undefined
 ): CodeAction[] => {
-  if (diagnostic.source !== 'astro-doctor' || typeof diagnostic.code !== 'string') return []
-
   const codeActions: CodeAction[] = []
-  const ruleId = diagnostic.code
-  const docUrl = getRuleDocUrl(ruleId)
-  const diagnosticData: unknown = diagnostic.data
-  const fixData = isDiagnosticFixData(diagnosticData) ? diagnosticData : undefined
 
   if (fixData?.fix) {
     codeActions.push({
@@ -542,21 +545,27 @@ export const buildCodeActionsForDiagnostic = (
     })
   }
 
-  const line = diagnostic.range.start.line
+  return codeActions
+}
 
-  codeActions.push({
-    title: `Disable ${ruleId} for this line`,
-    kind: CodeActionKind.QuickFix,
-    diagnostics: [diagnostic],
-    edit: {
-      changes: {
-        [documentUri]: [{
-          range: { start: { line, character: 0 }, end: { line, character: 0 } },
-          newText: `// eslint-disable-next-line ${ruleId}\n`
-        }]
-      }
-    }
-  })
+export const buildCodeActionsForDiagnostic = (
+  documentUri: string,
+  diagnostic: LspDiagnostic,
+  documentContent?: string
+): CodeAction[] => {
+  if (diagnostic.source !== 'astro-doctor' || typeof diagnostic.code !== 'string') return []
+
+  const codeActions: CodeAction[] = []
+  const ruleId = diagnostic.code
+  const docUrl = getRuleDocUrl(ruleId)
+  const diagnosticData: unknown = diagnostic.data
+  const fixData = isDiagnosticFixData(diagnosticData) ? diagnosticData : undefined
+
+  codeActions.push(...buildRuleFixActions(documentUri, ruleId, diagnostic, fixData))
+
+  const suppressionAction = getLineSuppressionAction(documentUri, ruleId, diagnostic, documentContent)
+
+  if (suppressionAction) codeActions.push(suppressionAction)
 
   if (docUrl !== undefined) {
     codeActions.push({
@@ -967,7 +976,9 @@ export const runLsp = (): void => {
   })
 
   connection.onCodeAction(({ textDocument, context }) => context.diagnostics.flatMap(
-    diagnostic => buildCodeActionsForDiagnostic(textDocument.uri, diagnostic)
+    diagnostic => buildCodeActionsForDiagnostic(
+      textDocument.uri, diagnostic, documents.get(textDocument.uri)?.getText()
+    )
   ))
 
   documents.listen(connection)

@@ -62,13 +62,42 @@ runs:
       with:
         node-version: '24.16.0'
 
+    - name: Prepare scan
+      id: prepare
+      shell: bash
+      env:
+        FAIL_ON: ${{ inputs.fail-on }}
+        MIN_SCORE: ${{ inputs.min-score }}
+        COMMENT: ${{ inputs.comment }}
+        DIFF_ONLY: ${{ inputs.diff-only }}
+        UPLOAD_SARIF: ${{ inputs.upload-sarif }}
+      run: |
+        case "$FAIL_ON" in
+          error|warning|off) ;;
+          *) echo "::error::Invalid fail-on. Use error, warning, or off."; exit 1 ;;
+        esac
+        if ! [[ "$MIN_SCORE" =~ ^([0-9]|[1-9][0-9]|100)$ ]]; then
+          echo "::error::Invalid min-score. Use an integer from 0 to 100."
+          exit 1
+        fi
+        for BOOLEAN_INPUT in "$COMMENT" "$DIFF_ONLY" "$UPLOAD_SARIF"; do
+          case "$BOOLEAN_INPUT" in
+            true|false) ;;
+            *) echo "::error::Boolean inputs must be true or false."; exit 1 ;;
+          esac
+        done
+        REPORT_DIRECTORY=$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/astro-doctor.XXXXXXXX")
+        echo "directory=$REPORT_DIRECTORY" >> "$GITHUB_OUTPUT"
+        echo "json_path=$REPORT_DIRECTORY/report.json" >> "$GITHUB_OUTPUT"
+
     - name: Detect changed Astro Doctor files (PR diff mode)
       id: diff
       if: github.event_name == 'pull_request' && inputs.diff-only == 'true'
       shell: bash
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        WORKING_DIRECTORY: ${{ inputs.working-directory }}
       run: |
-        BASE_SHA="${{ github.event.pull_request.base.sha }}"
-        WORKING_DIRECTORY="${{ inputs.working-directory }}"
         CHANGED_FILES=$(git -C "$WORKING_DIRECTORY" diff --name-only --diff-filter=AMR --relative "$BASE_SHA"...HEAD)
 
         if ! grep -E '(\.astro$|\.(ts|js|mjs|mts)$|(^|/)astro\.config\.(ts|mjs|js|cjs|mts|cts)$|(^|/)package\.json$|(^|/)(package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|bun\.lock|bun\.lockb)$|(^|/)\.env\.example$|(^|/)src/content\.config\.(ts|mjs|js)$|(^|/)src/content/config\.(ts|mjs|js)$|(^|/)src/content/|(^|/)src/actions/)' \
@@ -87,16 +116,20 @@ runs:
       if: steps.diff.outputs.no_astro_changes != 'true'
       shell: bash
       env:
-        ASTRO_DOCTOR_JSON_OUT: /tmp/astro-doctor-report.json
+        JSON_REPORT_PATH: ${{ steps.prepare.outputs.json_path }}
+        FAIL_ON: ${{ inputs.fail-on }}
+        WORKING_DIRECTORY: ${{ inputs.working-directory }}
+        EVENT_NAME: ${{ github.event_name }}
+        DIFF_ONLY: ${{ inputs.diff-only }}
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
       run: |
-        JSON_REPORT_PATH="/tmp/astro-doctor-report.json"
         JSON_FLAG=(--json "$JSON_REPORT_PATH")
-        FAIL_FLAG=(--fail-on "${{ inputs.fail-on }}")
-        DIR_FLAG=(--dir "${{ inputs.working-directory }}")
+        FAIL_FLAG=(--fail-on "$FAIL_ON" --threshold 0)
+        DIR_FLAG=(--dir "$WORKING_DIRECTORY")
         CHANGED_FLAG=()
 
-        if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ inputs.diff-only }}" = "true" ]; then
-          CHANGED_FLAG=(--scope changed --base "${{ github.event.pull_request.base.sha }}")
+        if [ "$EVENT_NAME" = "pull_request" ] && [ "$DIFF_ONLY" = "true" ]; then
+          CHANGED_FLAG=(--scope changed --base "$BASE_SHA")
         fi
 
         set +e
@@ -104,7 +137,7 @@ runs:
           echo "Using local built Astro Doctor from $GITHUB_ACTION_PATH"
           node "$GITHUB_ACTION_PATH/packages/astro-doctor/dist/bin/astro-doctor.js" "${DIR_FLAG[@]}" "${JSON_FLAG[@]}" "${FAIL_FLAG[@]}" "${CHANGED_FLAG[@]}"
         else
-          PACKAGE_VERSION=$(node -p "require('$GITHUB_ACTION_PATH/packages/astro-doctor/package.json').version")
+          PACKAGE_VERSION=$(node -p 'require(process.env.GITHUB_ACTION_PATH + "/packages/astro-doctor/package.json").version')
           npx --yes "@santi020k/astro-doctor@$PACKAGE_VERSION" "${DIR_FLAG[@]}" "${JSON_FLAG[@]}" "${FAIL_FLAG[@]}" "${CHANGED_FLAG[@]}"
         fi
         SCAN_STATUS=$?
@@ -115,8 +148,11 @@ runs:
     - name: Parse report and set outputs
       id: report
       shell: bash
+      env:
+        NO_ASTRO_CHANGES: ${{ steps.diff.outputs.no_astro_changes }}
+        JSON_REPORT_PATH: ${{ steps.prepare.outputs.json_path }}
       run: |
-        if [ "${{ steps.diff.outputs.no_astro_changes }}" = "true" ]; then
+        if [ "$NO_ASTRO_CHANGES" = "true" ]; then
           echo "scan_failed=false" >> "$GITHUB_OUTPUT"
           echo "total=0" >> "$GITHUB_OUTPUT"
           echo "errors=0" >> "$GITHUB_OUTPUT"
@@ -126,22 +162,29 @@ runs:
           exit 0
         fi
 
-        if [ ! -f /tmp/astro-doctor-report.json ]; then
+        if [ ! -f "$JSON_REPORT_PATH" ] || ! jq -e '
+          (.errorCount | type == "number" and . >= 0 and . == floor) and
+          (.warningCount | type == "number" and . >= 0 and . == floor) and
+          (.fileCount | type == "number" and . >= 0 and . == floor) and
+          (.score | type == "number" and . >= 0 and . <= 100 and . == floor) and
+          (.scoreLabel | . == "S" or . == "A" or . == "B" or . == "C" or . == "D" or . == "F") and
+          (.diagnostics | type == "array")
+        ' "$JSON_REPORT_PATH" > /dev/null; then
           echo "scan_failed=true" >> "$GITHUB_OUTPUT"
           echo "total=0" >> "$GITHUB_OUTPUT"
           echo "errors=0" >> "$GITHUB_OUTPUT"
           echo "warnings=0" >> "$GITHUB_OUTPUT"
-          echo "score=100" >> "$GITHUB_OUTPUT"
-          echo "score_label=S" >> "$GITHUB_OUTPUT"
+          echo "score=0" >> "$GITHUB_OUTPUT"
+          echo "score_label=F" >> "$GITHUB_OUTPUT"
           exit 0
         fi
 
         echo "scan_failed=false" >> "$GITHUB_OUTPUT"
-        TOTAL=$(jq '.errorCount + .warningCount' /tmp/astro-doctor-report.json)
-        ERRORS=$(jq '.errorCount' /tmp/astro-doctor-report.json)
-        WARNINGS=$(jq '.warningCount' /tmp/astro-doctor-report.json)
-        SCORE=$(jq '.score' /tmp/astro-doctor-report.json)
-        LABEL=$(jq -r '.scoreLabel' /tmp/astro-doctor-report.json)
+        TOTAL=$(jq '.errorCount + .warningCount' "$JSON_REPORT_PATH")
+        ERRORS=$(jq '.errorCount' "$JSON_REPORT_PATH")
+        WARNINGS=$(jq '.warningCount' "$JSON_REPORT_PATH")
+        SCORE=$(jq '.score' "$JSON_REPORT_PATH")
+        LABEL=$(jq -r '.scoreLabel' "$JSON_REPORT_PATH")
 
         echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
         echo "errors=$ERRORS" >> "$GITHUB_OUTPUT"
@@ -152,7 +195,12 @@ runs:
     - name: Copy JSON report to requested path
       if: inputs.json-report != '' && steps.diff.outputs.no_astro_changes != 'true' && steps.report.outputs.scan_failed != 'true'
       shell: bash
-      run: cp /tmp/astro-doctor-report.json "${{ inputs.json-report }}"
+      env:
+        JSON_REPORT_PATH: ${{ steps.prepare.outputs.json_path }}
+        DESTINATION_PATH: ${{ inputs.json-report }}
+      run: |
+        mkdir -p -- "$(dirname -- "$DESTINATION_PATH")"
+        cp -- "$JSON_REPORT_PATH" "$DESTINATION_PATH"
 
     - name: Generate SARIF report
       id: sarif
@@ -161,46 +209,54 @@ runs:
         steps.report.outputs.scan_failed != 'true' &&
         (inputs.sarif-report != '' || inputs.upload-sarif == 'true')
       shell: bash
+      env:
+        SARIF_PATH: ${{ inputs.sarif-report }}
+        REPORT_DIRECTORY: ${{ steps.prepare.outputs.directory }}
+        WORKING_DIRECTORY: ${{ inputs.working-directory }}
+        EVENT_NAME: ${{ github.event_name }}
+        DIFF_ONLY: ${{ inputs.diff-only }}
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
       run: |
-        SARIF_PATH="${{ inputs.sarif-report }}"
         if [ -z "$SARIF_PATH" ]; then
-          SARIF_PATH="${RUNNER_TEMP:-/tmp}/astro-doctor.sarif"
+          SARIF_PATH="$REPORT_DIRECTORY/report.sarif"
         fi
 
         mkdir -p "$(dirname "$SARIF_PATH")"
 
-        DIR_FLAG=(--dir "${{ inputs.working-directory }}")
+        DIR_FLAG=(--dir "$WORKING_DIRECTORY")
         CHANGED_FLAG=()
 
-        if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ inputs.diff-only }}" = "true" ]; then
-          CHANGED_FLAG=(--scope changed --base "${{ github.event.pull_request.base.sha }}")
+        if [ "$EVENT_NAME" = "pull_request" ] && [ "$DIFF_ONLY" = "true" ]; then
+          CHANGED_FLAG=(--scope changed --base "$BASE_SHA")
         fi
 
         if [ -f "$GITHUB_ACTION_PATH/packages/astro-doctor/dist/bin/astro-doctor.js" ]; then
           node "$GITHUB_ACTION_PATH/packages/astro-doctor/dist/bin/astro-doctor.js" \
-            "${DIR_FLAG[@]}" --format sarif --fail-on off "${CHANGED_FLAG[@]}" > "$SARIF_PATH"
+            "${DIR_FLAG[@]}" --format sarif --fail-on off --threshold 0 "${CHANGED_FLAG[@]}" > "$SARIF_PATH"
         else
-          PACKAGE_VERSION=$(node -p "require('$GITHUB_ACTION_PATH/packages/astro-doctor/package.json').version")
+          PACKAGE_VERSION=$(node -p 'require(process.env.GITHUB_ACTION_PATH + "/packages/astro-doctor/package.json").version')
           npx --yes "@santi020k/astro-doctor@$PACKAGE_VERSION" \
-            "${DIR_FLAG[@]}" --format sarif --fail-on off "${CHANGED_FLAG[@]}" > "$SARIF_PATH"
+            "${DIR_FLAG[@]}" --format sarif --fail-on off --threshold 0 "${CHANGED_FLAG[@]}" > "$SARIF_PATH"
         fi
 
         echo "path=$SARIF_PATH" >> "$GITHUB_OUTPUT"
 
     - name: Upload SARIF to GitHub Code Scanning
       if: inputs.upload-sarif == 'true' && steps.sarif.outputs.path != ''
-      uses: github/codeql-action/upload-sarif@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4.33.0
+      uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.33.0
       with:
         sarif_file: ${{ steps.sarif.outputs.path }}
 
     - name: Publish workflow annotations
       if: steps.diff.outputs.no_astro_changes != 'true' && steps.report.outputs.scan_failed != 'true'
       shell: bash
+      env:
+        JSON_REPORT_PATH: ${{ steps.prepare.outputs.json_path }}
       run: |
         node --input-type=module <<'EOF'
         import { readFileSync } from 'node:fs'
 
-        const report = JSON.parse(readFileSync('/tmp/astro-doctor-report.json', 'utf8'))
+        const report = JSON.parse(readFileSync(process.env.JSON_REPORT_PATH, 'utf8'))
         const escapeData = (value) => String(value)
           .replaceAll('%', '%25')
           .replaceAll('\r', '%0D')
@@ -232,13 +288,17 @@ runs:
         steps.diff.outputs.no_astro_changes != 'true' &&
         steps.report.outputs.scan_failed != 'true'
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        JSON_REPORT_PATH: ${{ steps.prepare.outputs.json_path }}
+        EVENT_NAME: ${{ github.event_name }}
+        DIFF_ONLY: ${{ inputs.diff-only }}
       with:
         script: |
           const fs = require('fs')
-          const report = JSON.parse(fs.readFileSync('/tmp/astro-doctor-report.json', 'utf8'))
+          const report = JSON.parse(fs.readFileSync(process.env.JSON_REPORT_PATH, 'utf8'))
 
           const scoreEmoji = { S: '🌟', A: '✅', B: '🟢', C: '🟡', D: '🟠', F: '🔴' }[report.scoreLabel] ?? '🟡'
-          const diffMode = '${{ github.event_name }}' === 'pull_request' && '${{ inputs.diff-only }}' === 'true'
+          const diffMode = process.env.EVENT_NAME === 'pull_request' && process.env.DIFF_ONLY === 'true'
           const scopeNote = diffMode ? ' _(introduced issues only)_' : ''
           const escapeCell = value => String(value)
             .replaceAll('|', '\\|')
@@ -246,7 +306,7 @@ runs:
             .replaceAll('\n', '<br>')
 
           const rows = report.diagnostics.slice(0, 25).map(d => {
-            const rel = d.filePath.replace('${{ github.workspace }}/', '')
+            const rel = d.filePath.replace(`${process.env.GITHUB_WORKSPACE}/`, '')
             const icon = d.severity === 'error' ? '🔴' : '🟡'
             return `| ${icon} | \`${escapeCell(rel)}\` | ${d.line}:${d.column} | ${escapeCell(d.message)} | \`${escapeCell(d.ruleId.replace('astro-doctor/', ''))}\` |`
           }).join('\n')
@@ -297,22 +357,17 @@ runs:
     - name: Fail check on violations
       if: steps.diff.outputs.no_astro_changes != 'true'
       shell: bash
+      env:
+        SCAN_FAILED: ${{ steps.report.outputs.scan_failed || 'false' }}
+        SCAN_STATUS: ${{ steps.scan.outputs.exit_code || '1' }}
+        ERRORS: ${{ steps.report.outputs.errors || '0' }}
+        WARNINGS: ${{ steps.report.outputs.warnings || '0' }}
+        SCORE: ${{ steps.report.outputs.score || '0' }}
+        FAIL_ON: ${{ inputs.fail-on }}
+        MIN_SCORE: ${{ inputs.min-score }}
       run: |
-        SCAN_FAILED="${{ steps.report.outputs.scan_failed || 'false' }}"
-        SCAN_STATUS="${{ steps.scan.outputs.exit_code || 1 }}"
-        ERRORS=${{ steps.report.outputs.errors || 0 }}
-        WARNINGS=${{ steps.report.outputs.warnings || 0 }}
-        SCORE=${{ steps.report.outputs.score || 100 }}
-        FAIL_ON="${{ inputs.fail-on }}"
-        MIN_SCORE="${{ inputs.min-score }}"
-
         if [ "$SCAN_FAILED" = "true" ]; then
-          echo "::error::Astro Doctor scan failed before writing a report."
-          exit "$SCAN_STATUS"
-        fi
-
-        if ! [[ "$MIN_SCORE" =~ ^([0-9]|[1-9][0-9]|100)$ ]]; then
-          echo "::error::Invalid min-score '$MIN_SCORE'. Use an integer from 0 to 100."
+          echo "::error::Astro Doctor scan did not produce a valid report."
           exit 1
         fi
 
@@ -330,6 +385,18 @@ runs:
           echo "::error::Astro Doctor found $((ERRORS + WARNINGS)) issue(s). Fix them or set fail-on: 'error'."
           exit 1
         fi
+
+        if [ "$SCAN_STATUS" -ne 0 ]; then
+          echo "::error::Astro Doctor exited unsuccessfully."
+          exit "$SCAN_STATUS"
+        fi
+
+    - name: Clean temporary reports
+      if: always() && steps.prepare.outputs.directory != ''
+      shell: bash
+      env:
+        REPORT_DIRECTORY: ${{ steps.prepare.outputs.directory }}
+      run: rm -rf -- "$REPORT_DIRECTORY"
 
 branding:
   icon: activity

@@ -1,43 +1,27 @@
 ---
 import Base from '@/layouts/Base.astro'
 
-import { ButtonLink } from '@santi020k/lumen-astro'
+import { ButtonLink, Icon } from '@santi020k/lumen-astro'
 ---
 
-<Base title="Page not found" noIndex={true} ogImage="/og/index.webp">
-  <div class="
-    container-docs flex min-h-[60vh] flex-col items-center justify-center py-20
-    text-center
-  "
-  >
-    <div class="mb-6 text-8xl font-black text-[hsl(var(--brand)/0.15)]">404</div>
-    <h1 class="mb-4 text-3xl font-bold text-[hsl(var(--ink))]">Page not found</h1>
-    <p class="mb-8 text-[hsl(var(--ink-soft))]">
-      This page doesn't exist. Maybe the docs moved?
-    </p>
-    <div class="flex gap-3">
-      <ButtonLink
-        href="/"
-        variant="primary"
-        class="
-          rounded-xl bg-[hsl(var(--brand))] px-5 py-2.5 text-sm font-semibold
-          text-white no-underline transition-colors
-          hover:bg-[hsl(var(--brand-solid))]
-        "
-      >
-        Go home
-      </ButtonLink>
-      <ButtonLink
-        href="/docs"
-        variant="secondary"
-        class="
-          rounded-xl border border-[hsl(var(--line))] px-5 py-2.5 text-sm
-          font-medium text-[hsl(var(--ink))] no-underline transition-colors
-          hover:bg-[hsl(var(--surface-muted))]
-        "
-      >
-        Read docs
-      </ButtonLink>
-    </div>
+<Base title="Page not found" noIndex={true}>
+  <div class="container-docs">
+    <section class="missing-page" aria-labelledby="missing-title">
+      <p class="site-eyebrow">404 / Route not found</p>
+      <h1 id="missing-title">A missing page.<br /><span>An easy recovery.</span></h1>
+      <p>This address doesn't lead to a page. Find your next step in the documentation, or start again from home.</p>
+      <div class="missing-actions">
+        <ButtonLink href="/docs" variant="unstyled" class="site-primary-action" showArrow>Explore the docs</ButtonLink>
+        <ButtonLink href="/" variant="ghost"><Icon name="arrow-left" decorative /> Back home</ButtonLink>
+      </div>
+    </section>
   </div>
 </Base>
+
+<style>
+  .missing-page { padding: clamp(2rem, 7vw, 6rem) clamp(1.5rem, 4vw, 3rem); margin-block: 1rem; border-radius: 1.5rem; background: hsl(var(--surface)); }
+  h1 { margin: 2rem 0; font-size: clamp(2.25rem, 5vw, 4.5rem); font-weight: 500; line-height: 1.1; letter-spacing: -.06em; }
+  h1 span { color: hsl(var(--ink-soft)); }
+  p:not(.site-eyebrow) { max-width: 30rem; font-size: .9375rem; line-height: 1.85; color: hsl(var(--ink-soft)); }
+  .missing-actions { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 2rem; }
+</style>

@@ -15,6 +15,7 @@ import {
   createPersistentBaseline,
   filterIntroducedDiagnostics,
   filterPersistentBaselineDiagnostics,
+  prunePersistentBaseline,
   readPersistentBaseline,
   scanBaseline,
   writePersistentBaseline
@@ -26,14 +27,17 @@ import {
   MAXIMUM_THRESHOLD_SCORE,
   MINIMUM_THRESHOLD_SCORE
 } from './constants.js'
+import { explainConfig, formatConfigExplanation } from './explain-config.js'
 import { getDiffAstroFiles, getStagedAstroFiles, resolveBaseRevision } from './git.js'
 import { runInit } from './init.js'
 import { runInstall } from './install.js'
 import { runLsp } from './lsp.js'
+import type { WorkspacePackage } from './multi-project.js'
 import {
   aggregateResults,
   autoDiscoverAstroProjects,
   mergeConfigs,
+  resolveProjectDirectories,
   scanProjects
 } from './multi-project.js'
 import type { PresetName } from './presets.js'
@@ -75,6 +79,7 @@ interface CliOptions {
   readonly base?: string
   readonly categories: readonly RuleCategory[]
   readonly fix: boolean
+  readonly fixDryRun: boolean
   readonly noLint: boolean
   readonly noRespectInlineDisables: boolean
   readonly projects: readonly string[]
@@ -92,6 +97,7 @@ const VALID_CATEGORIES: RuleCategory[] = [
 
 const BOOLEAN_OPTIONS = new Set([
   '--fix',
+  '--fix-dry-run',
   '--help',
   '-h',
   '--json-compact',
@@ -406,8 +412,30 @@ const parseThreshold = (argv: readonly string[]): number => {
   return parsed
 }
 
+const validateFixPreviewArguments = (argv: string[]): void => {
+  if (!argv.includes('--fix-dry-run')) return
+
+  if (parseScope(argv) === 'changed') {
+    throw new Error('--fix-dry-run cannot be combined with --scope changed; preview edits require full or files scope.')
+  }
+
+  if ((argv.includes('--fix') || argv.includes('--no-lint'))) {
+    throw new Error('--fix-dry-run cannot be combined with --fix or --no-lint.')
+  }
+
+  if ((argv.includes('--category') || argv.some(argument => argument.startsWith('--category=')))) {
+    throw new Error('--fix-dry-run requires an unfiltered scan; --category cannot be combined with fix previews.')
+  }
+
+  if ((argv.includes('--score') || parseFormat(argv) !== 'console')) {
+    throw new Error('--fix-dry-run requires console or JSON output; --score and other formats cannot be combined with fix previews.')
+  }
+}
+
 const parseArguments = (argv: string[]): CliOptions => {
   validateArguments(argv)
+
+  validateFixPreviewArguments(argv)
 
   const directoryArg = getOptionValue(argv, '--dir', '-d')
   const directory = directoryArg ? resolve(directoryArg) : process.cwd()
@@ -437,6 +465,7 @@ const parseArguments = (argv: string[]): CliOptions => {
     base: getOptionValue(argv, '--base'),
     categories: parseCategories(argv),
     fix: argv.includes('--fix'),
+    fixDryRun: argv.includes('--fix-dry-run'),
     noLint: argv.includes('--no-lint'),
     noRespectInlineDisables: argv.includes('--no-respect-inline-disables'),
     projects: getProjectsOption(argv),
@@ -462,6 +491,8 @@ Commands:
   rules explain <rule-id>  Explain a rule in detail
   baseline create          Save current findings as a persistent baseline
   baseline update          Replace an existing persistent baseline
+  baseline prune           Remove resolved findings without accepting new ones
+  explain-config <file>    Show preset, matching overrides, ignores, and rule severities
   experimental-lsp         Start the experimental language server (--stdio)
 
 Scan options:
@@ -477,6 +508,7 @@ Scan options:
                                     Categories: performance | accessibility | security | best-practices
       --preset <name>               recommended (default) | strict | ci | all
       --fix                         Apply safe automatic fixes
+      --fix-dry-run                 Preview fixes without writes (full/files scope)
       --cache                       Cache lint results by file content
       --baseline <path>             Suppress findings stored in a persistent baseline
       --no-lint                     Skip lint; report a clean result
@@ -713,6 +745,10 @@ const tryScan = async (scanOptions: ScanOptions): Promise<ScanResult | null> => 
   }
 }
 
+const isFullBaselineComparison = (options: CliOptions): boolean => options.scope === 'full' &&
+  options.diff === false && !options.staged && options.changedFilesFrom === undefined &&
+  options.categories.length === 0 && !options.noLint && options.projects.length === 0
+
 const applyPersistentBaseline = (
   result: ScanResult,
   options: CliOptions
@@ -725,7 +761,7 @@ const applyPersistentBaseline = (
 
   const baseline = readPersistentBaseline(baselinePath)
 
-  return filterPersistentBaselineDiagnostics(result, baseline, options.directory)
+  return filterPersistentBaselineDiagnostics(result, baseline, options.directory, isFullBaselineComparison(options))
 }
 
 const reportOperationFailure = (operation: string, error: unknown): void => {
@@ -772,7 +808,7 @@ const filterIntroducedProjectResults = async (
       scanOptions: {
         ...baseScanOptions,
         ignore: mergedConfig.ignore,
-        rules: mergedConfig.rules,
+        rules: getEffectiveRules(mergedConfig, options.preset ?? mergedConfig.preset),
         overrides: mergedConfig.overrides
       }
     })
@@ -821,6 +857,28 @@ const tryFilterIntroducedProjectResults = async (
   }
 }
 
+const applyProjectBaseline = (projectResults: ProjectScanResult[], options: CliOptions): ScanResult | null => {
+  if (options.baseline === undefined) return aggregateResults(projectResults)
+
+  try {
+    const baselineProgress = applyPersistentBaseline(aggregateResults(projectResults), options).baselineProgress
+
+    const filteredProjects = projectResults.map(projectResult => ({
+      ...applyPersistentBaseline(projectResult, options),
+      name: projectResult.name,
+      directory: projectResult.directory
+    }))
+
+    projectResults.splice(0, projectResults.length, ...filteredProjects)
+
+    return { ...aggregateResults(projectResults), baselineProgress }
+  } catch (error) {
+    reportOperationFailure('apply persistent baseline', error)
+
+    return null
+  }
+}
+
 const executeMultiProjectScan = async (
   options: CliOptions,
   config: AstroDoctorConfig | null,
@@ -834,8 +892,7 @@ const executeMultiProjectScan = async (
 
   const effectiveConfig: AstroDoctorConfig = {
     ...config,
-    preset: effectivePreset,
-    rules: getEffectiveRules(config, effectivePreset)
+    preset: effectivePreset
   }
 
   if (failed) return
@@ -848,6 +905,7 @@ const executeMultiProjectScan = async (
     rootDirectory: options.directory,
     projectArgs: effectiveProjects,
     rootConfig: effectiveConfig,
+    preset: options.preset,
     scanOptions: {
       ...baseScanOptions,
       files: filesToScan
@@ -864,21 +922,9 @@ const executeMultiProjectScan = async (
     if (!projectResults) return
   }
 
-  if (options.baseline !== undefined) {
-    try {
-      projectResults = projectResults.map(projectResult => ({
-        ...applyPersistentBaseline(projectResult, options),
-        name: projectResult.name,
-        directory: projectResult.directory
-      }))
-    } catch (error) {
-      reportOperationFailure('apply persistent baseline', error)
+  const aggregate = applyProjectBaseline(projectResults, options)
 
-      return
-    }
-  }
-
-  const aggregate = aggregateResults(projectResults)
+  if (aggregate === null) return
 
   if (printReport(aggregate, options, projectResults)) return
 
@@ -888,6 +934,8 @@ const executeMultiProjectScan = async (
 interface BaseScanOptions {
   categories: readonly RuleCategory[] | undefined
   fix: boolean
+  fixDryRun?: boolean
+  failOnParseError?: boolean
   noLint: boolean
   noRespectInlineDisables: boolean
   cache: boolean
@@ -1002,6 +1050,12 @@ const executeSingleDirectoryScan = async (
 
 const executeScan = async (options: CliOptions): Promise<void> => {
   const config = await loadConfig(options.directory)
+
+  const reportingOptions = {
+    ...options,
+    projects: options.projects.length > 0 ? options.projects : config?.projects ?? []
+  }
+
   const effectivePreset = getEffectivePreset(options, config)
   const effectiveFailOn = getEffectiveFailOn(options, config, effectivePreset)
   const effectiveThreshold = getEffectiveThreshold(options, config, effectivePreset)
@@ -1009,6 +1063,8 @@ const executeScan = async (options: CliOptions): Promise<void> => {
   const baseScanOptions: BaseScanOptions = {
     categories: options.categories.length > 0 ? options.categories : undefined,
     fix: options.fix,
+    fixDryRun: options.fixDryRun,
+    failOnParseError: true,
     noLint: options.noLint,
     noRespectInlineDisables: options.noRespectInlineDisables,
     cache: options.cache
@@ -1019,7 +1075,7 @@ const executeScan = async (options: CliOptions): Promise<void> => {
 
   if (effectiveProjects.length > 0) {
     await executeMultiProjectScan(
-      options, config, effectiveProjects, effectivePreset, effectiveFailOn, effectiveThreshold, baseScanOptions
+      reportingOptions, config, effectiveProjects, effectivePreset, effectiveFailOn, effectiveThreshold, baseScanOptions
     )
 
     return
@@ -1027,7 +1083,7 @@ const executeScan = async (options: CliOptions): Promise<void> => {
 
   // ── Single-directory mode ───────────────────────────────────────────────────
   await executeSingleDirectoryScan(
-    options, config, effectivePreset, effectiveFailOn, effectiveThreshold, baseScanOptions
+    reportingOptions, config, effectivePreset, effectiveFailOn, effectiveThreshold, baseScanOptions
   )
 }
 
@@ -1061,6 +1117,7 @@ const createBaselineResult = async (
   const scanOptions: BaseScanOptions = {
     categories: options.categories.length > 0 ? options.categories : undefined,
     fix: false,
+    failOnParseError: true,
     noLint: options.noLint,
     noRespectInlineDisables: options.noRespectInlineDisables,
     cache: options.cache
@@ -1072,9 +1129,9 @@ const createBaselineResult = async (
       projectArgs: effectiveProjects,
       rootConfig: {
         ...config,
-        preset: effectivePreset,
-        rules: getEffectiveRules(config, effectivePreset)
+        preset: effectivePreset
       },
+      preset: options.preset,
       scanOptions
     })
 
@@ -1090,11 +1147,23 @@ const createBaselineResult = async (
   })
 }
 
+const validatePruneOptions = async (options: CliOptions): Promise<void> => {
+  const config = await loadConfig(options.directory)
+
+  if (!isFullBaselineComparison(options) || options.fix || options.fixDryRun || (config?.projects?.length ?? 0) > 0) {
+    throw new Error('Baseline pruning requires a full scan without file, category, project, fix, or no-lint filters.')
+  }
+}
+
+const readBaselineForPruning = (action: string | undefined, outputPath: string) => action === 'prune' ?
+  readPersistentBaseline(outputPath) :
+  undefined
+
 const runBaselineCommand = async (argv: string[]): Promise<void> => {
   const action = argv[0]
 
-  if (action !== 'create' && action !== 'update') {
-    throw new Error('Usage: astro-doctor baseline create|update [--output <path>] [scan options]')
+  if (!new Set(['create', 'update', 'prune']).has(action ?? '')) {
+    throw new Error('Usage: astro-doctor baseline create|update|prune [--output <path>] [scan options]')
   }
 
   const outputValue = getOptionValue(argv, '--output')
@@ -1105,18 +1174,25 @@ const runBaselineCommand = async (argv: string[]): Promise<void> => {
 
   const scanArguments = removeValueOption(argv.slice(1), '--output')
   const options = parseArguments(scanArguments)
+
+  if (action === 'prune') await validatePruneOptions(options)
+
+  const outputPath = resolve(options.directory, outputValue ?? DEFAULT_BASELINE_FILE_NAME)
+  const previousBaseline = readBaselineForPruning(action, outputPath)
   const result = await createBaselineResult(options)
 
   if (!result) return
 
-  const outputPath = resolve(options.directory, outputValue ?? DEFAULT_BASELINE_FILE_NAME)
+  const baseline = previousBaseline === undefined ?
+    createPersistentBaseline(result, options.directory) :
+    prunePersistentBaseline(result, previousBaseline, options.directory)
 
-  writePersistentBaseline(
-    outputPath, createPersistentBaseline(result, options.directory)
-  )
+  writePersistentBaseline(outputPath, baseline)
+
+  const findingCount = baseline.entries.reduce((total, entry) => total + entry.count, 0)
 
   console.log(
-    `Baseline written to ${outputPath} with ${result.diagnostics.length} finding${result.diagnostics.length === 1 ? '' : 's'}.`
+    `Baseline written to ${outputPath} with ${findingCount} finding${findingCount === 1 ? '' : 's'}.`
   )
 }
 
@@ -1192,13 +1268,61 @@ const handleBaseline = async (argv: string[], noTelemetry: boolean) => {
   }
 }
 
+const selectExplanationProject = (
+  filePath: string, projects: readonly WorkspacePackage[], hasProjectSelection: boolean
+): WorkspacePackage | undefined => {
+  const project = projects.filter(candidate => isFileInDirectory(filePath, candidate.directory))
+    .sort((firstProject, secondProject) => secondProject.directory.length - firstProject.directory.length)[0]
+
+  if (project === undefined && hasProjectSelection) {
+    throw new Error('The file is outside the selected projects and is excluded from the workspace scan.')
+  }
+
+  return project
+}
+
+const handleExplainConfig = async (argv: string[]): Promise<void> => {
+  try {
+    const filePath = argv[1]
+
+    if (filePath === undefined || filePath.startsWith('-')) {
+      throw new Error('Usage: astro-doctor explain-config <file> [--dir <path>] [--preset <preset>] [--json]')
+    }
+
+    const argumentsForOptions = argv.slice(2)
+
+    validateSimpleArguments(argumentsForOptions, new Set(['--json']), new Set(['--dir', '-d', '--preset']))
+
+    const options = parseArguments(argumentsForOptions)
+    const rootConfig = await loadConfig(options.directory)
+    const preset = getEffectivePreset(options, rootConfig)
+    const effectiveConfig = { ...rootConfig, preset }
+    const projectArgs = await resolveProjectsWithDiscovery(options, rootConfig)
+    const projects = await resolveProjectDirectories(projectArgs, options.directory)
+    const absolutePath = resolve(options.directory, filePath)
+    const project = selectExplanationProject(absolutePath, projects, projectArgs.length > 0)
+    const directory = project?.directory ?? options.directory
+    const config = project === undefined ? effectiveConfig : mergeConfigs(effectiveConfig, await loadConfig(directory))
+    const selectedPreset = options.preset ?? config.preset ?? preset
+
+    const explanation = await explainConfig(absolutePath, directory, {
+      ...config, rules: getEffectiveRules(config, selectedPreset)
+    }, selectedPreset)
+
+    console.log(options.json === false ? formatConfigExplanation(explanation) : JSON.stringify(explanation, null, 2))
+  } catch (error) {
+    reportOperationFailure('explain configuration', error)
+  }
+}
+
 const commandRunners: Record<string, (argv: string[], noTelemetry: boolean) => Promise<void> | void> = {
   init: handleInit,
   install: handleInstall,
   why: handleWhy,
   rules: handleRules,
   'experimental-lsp': handleLsp,
-  baseline: handleBaseline
+  baseline: handleBaseline,
+  'explain-config': handleExplainConfig
 }
 
 export const runCli = async (argv: string[] = process.argv.slice(2)): Promise<void> => {

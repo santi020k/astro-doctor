@@ -183,12 +183,22 @@ export const formatProjectScoreTable = (
   return `\nProject scores:\n${lines.join('\n')}\n${dim('─'.repeat(PAD_NAME + 30))}\n${aggregateLine}\n`
 }
 
+const formatWorkflowSummary = (result: ScanResult): string => {
+  const baseline = result.baselineProgress
+  const baselineSummary = baseline === undefined ? '' : `\nBaseline: ${baseline.newCount} new · ${baseline.existingCount} existing · ${baseline.resolvedCount === undefined ? 'resolved not evaluated (partial scan)' : `${baseline.resolvedCount} resolved`}`
+  const preview = result.fixPreview
+  const fixSummary = preview === undefined ? '' : `\nFix preview: ${preview.fixedCount} fixed · ${preview.remainingCount} remaining · files to change: ${preview.changes.length} (source files unchanged)\n${preview.changes.map(change => change.diff).join('\n\n')}`
+
+  return `${baselineSummary}${fixSummary}`
+}
+
 export const formatConsoleReport = (
   result: ScanResult,
   rootDirectory = process.cwd(),
   showScore = true,
   verbose = false
 ): string => {
+  const workflowSummary = formatWorkflowSummary(result)
   const scoreLine = formatScoreLine(result, showScore)
   const verboseSummary = verbose ? formatVerboseRuleSummary(result.diagnostics) : ''
   const timings = verbose ? formatTimings(result) : ''
@@ -196,7 +206,11 @@ export const formatConsoleReport = (
   if (result.diagnostics.length === 0) {
     const fileLabel = result.fileCount === 1 ? '1 file' : `${result.fileCount} files`
 
-    return `\n${green('✔')} No issues found across ${fileLabel}. Your Astro is healthy!${verboseSummary}${timings}${scoreLine}\n`
+    const cleanSummary = result.fixPreview === undefined ?
+      `No issues found across ${fileLabel}. Your Astro is healthy!` :
+      `No issues would remain after fixes across ${fileLabel}.`
+
+    return `\n${green('✔')} ${cleanSummary}${workflowSummary}${verboseSummary}${timings}${scoreLine}\n`
   }
 
   const grouped = groupByFile(result.diagnostics)
@@ -207,5 +221,5 @@ export const formatConsoleReport = (
 
   const summaryLine = formatSummaryLine(result)
 
-  return `\n${fileBlocks}\n\n${summaryLine}${verboseSummary}${timings}${scoreLine}\n`
+  return `\n${fileBlocks}\n\n${summaryLine}${workflowSummary}${verboseSummary}${timings}${scoreLine}\n`
 }

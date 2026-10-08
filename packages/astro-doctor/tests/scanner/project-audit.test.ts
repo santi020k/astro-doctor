@@ -19,6 +19,19 @@ describe('project audits', () => {
     rmSync(testDirectory, { recursive: true, force: true })
   })
 
+  test('matches secret env names by tokens consistently with template diagnostics', async () => {
+    writeFileSync(join(testDirectory, '.env.example'), [
+      'PUBLIC_KEYBOARD_LAYOUT=en', 'PUBLIC_TOKENIZER_MODE=basic', 'PUBLIC_KEY=value', 'PUBLIC_ACCESS_TOKEN=value'
+    ].join('\n'))
+    const result = await scan({ directory: testDirectory })
+    const secrets = result.diagnostics.filter(diagnostic => diagnostic.ruleId === 'astro-doctor/no-public-secret-env')
+
+    expect(secrets).toHaveLength(2)
+    expect(secrets.map(diagnostic => diagnostic.message)).toEqual(expect.arrayContaining([
+      expect.stringContaining('PUBLIC_KEY is declared'), expect.stringContaining('PUBLIC_ACCESS_TOKEN is declared')
+    ]))
+  })
+
   test('inherits pnpm configuration from the workspace root', async () => {
     const projectDirectory = join(testDirectory, 'apps', 'docs')
 
@@ -243,6 +256,99 @@ describe('project audits', () => {
         '    cookie: { secure: true, httpOnly: true, sameSite: "lax" },',
         '  },',
         '})'
+      ].join('\n')
+    )
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(
+      scanResult.diagnostics.some(
+        diagnostic => diagnostic.ruleId === 'astro-doctor/no-insecure-session-cookie'
+      )
+    ).toBe(false)
+  })
+
+  test('reports insecure session cookie overrides in a plain object config export', async () => {
+    writeFileSync(
+      join(testDirectory, 'astro.config.mjs'), [
+        'export default {',
+        '  unrelated: { secure: false },',
+        '  session: {',
+        '    cookie: {',
+        '      secure: false,',
+        '      httpOnly: false,',
+        '      sameSite: false,',
+        '    },',
+        '  },',
+        '}'
+      ].join('\n')
+    )
+
+    const scanResult = await scan({ directory: testDirectory })
+    const cookieDiagnostics = scanResult.diagnostics.filter(
+      diagnostic => diagnostic.ruleId === 'astro-doctor/no-insecure-session-cookie'
+    )
+
+    expect(cookieDiagnostics).toHaveLength(3)
+    expect(cookieDiagnostics.map(diagnostic => diagnostic.line)).toEqual([5, 6, 7])
+  })
+
+  test('accepts secure session cookie configuration in a plain object config export', async () => {
+    writeFileSync(
+      join(testDirectory, 'astro.config.mjs'), [
+        'export default {',
+        '  session: {',
+        '    cookie: { secure: true, httpOnly: true, sameSite: "lax" },',
+        '  },',
+        '}'
+      ].join('\n')
+    )
+
+    const scanResult = await scan({ directory: testDirectory })
+
+    expect(
+      scanResult.diagnostics.some(
+        diagnostic => diagnostic.ruleId === 'astro-doctor/no-insecure-session-cookie'
+      )
+    ).toBe(false)
+  })
+
+  test('reports insecure session cookie overrides in a variable-bound config export', async () => {
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), [
+        'const config = {',
+        '  session: {',
+        '    cookie: {',
+        '      secure: false,',
+        '      httpOnly: false,',
+        '      sameSite: false,',
+        '    },',
+        '  },',
+        '}',
+        '',
+        'export default config'
+      ].join('\n')
+    )
+
+    const scanResult = await scan({ directory: testDirectory })
+    const cookieDiagnostics = scanResult.diagnostics.filter(
+      diagnostic => diagnostic.ruleId === 'astro-doctor/no-insecure-session-cookie'
+    )
+
+    expect(cookieDiagnostics).toHaveLength(3)
+    expect(cookieDiagnostics.map(diagnostic => diagnostic.line)).toEqual([4, 5, 6])
+  })
+
+  test('accepts secure session cookie configuration in a variable-bound config export', async () => {
+    writeFileSync(
+      join(testDirectory, 'astro.config.ts'), [
+        'const config = {',
+        '  session: {',
+        '    cookie: { secure: true, httpOnly: true, sameSite: "lax" },',
+        '  },',
+        '}',
+        '',
+        'export default config'
       ].join('\n')
     )
 
@@ -752,7 +858,10 @@ describe('project audits', () => {
     )
   })
 
-  test('reports DOMContentLoaded usage in valid script-tag variants across a ClientRouter project', async () => {
+  test.each([
+    { openTag: '<script>', closeTag: '</script>' },
+    { openTag: '<script type="module">', closeTag: '</script>' }
+  ])('audits DOMContentLoaded usage with $openTag across a ClientRouter project', async ({ openTag, closeTag }) => {
     mkdirSync(join(testDirectory, 'src', 'components'), { recursive: true })
     mkdirSync(join(testDirectory, 'src', 'layouts'), { recursive: true })
     writeFileSync(
@@ -767,9 +876,9 @@ describe('project audits', () => {
     writeFileSync(
       join(testDirectory, 'src', 'components', 'menu.astro'), [
         '<button id="menu">Menu</button>',
-        '<SCRIPT>',
+        openTag,
         '  document.addEventListener(\'DOMContentLoaded\', () => {})',
-        '</SCRIPT data-ignored>'
+        closeTag
       ].join('\n')
     )
 

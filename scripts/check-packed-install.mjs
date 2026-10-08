@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import {
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
@@ -138,7 +139,7 @@ try {
           }],
         })
         const [result] = await eslint.lintText(
-          '<html><body><img src="/hero.jpg"></body></html>',
+          '---\\nconst title: string = "hello"\\n---\\n<html><body><img src="/hero.jpg"></body></html>',
           { filePath: 'fixture.astro' },
         )
         const ruleIds = result.messages.map((message) => message.ruleId)
@@ -161,9 +162,67 @@ try {
     },
   )
 
+  const astroDoctorManifest = JSON.parse(
+    readFileSync(
+      join(temporaryDirectory, 'node_modules/@santi020k/astro-doctor/package.json'),
+      'utf8',
+    ),
+  )
+
+  const astroDoctorBinPath = join(
+    temporaryDirectory,
+    'node_modules/@santi020k/astro-doctor/dist/bin/astro-doctor.js',
+  )
+
+  const installTargetDirectory = join(temporaryDirectory, 'install-target')
+
+  mkdirSync(installTargetDirectory, { recursive: true })
+
+  execFileSync(
+    process.execPath,
+    [astroDoctorBinPath, 'install', '-y', '--agent-hooks'],
+    {
+      cwd: installTargetDirectory,
+      stdio: 'pipe',
+    },
+  )
+
+  const installedSkillFiles = [
+    join(installTargetDirectory, 'skills/astro-doctor.md'),
+    join(installTargetDirectory, '.claude/skills/astro-doctor.md'),
+    join(installTargetDirectory, '.cursor/rules/astro-doctor.mdc'),
+  ]
+
+  for (const installedSkillFile of installedSkillFiles) {
+    if (!existsSync(installedSkillFile)) {
+      throw new Error(`Expected astro-doctor install to create ${installedSkillFile}`)
+    }
+
+    if (readFileSync(installedSkillFile, 'utf8') !==
+      readFileSync(join(rootDirectory, 'skills/SKILL.md'), 'utf8')) {
+      throw new Error(`Expected ${installedSkillFile} to match the packaged skill source`)
+    }
+  }
+
+  const installedWorkflowPath = join(
+    installTargetDirectory, '.github/workflows/astro-doctor.yml',
+  )
+
+  const installedWorkflow = readFileSync(installedWorkflowPath, 'utf8')
+
+  if (!installedWorkflow.includes('contents: read') ||
+    !installedWorkflow.includes('pull-requests: write') ||
+    installedWorkflow.includes('paths:') || installedWorkflow.includes('github-token:')) {
+    throw new Error(
+      `Expected ${installedWorkflowPath} to grant contents:read and pull-requests:write, got:\n${installedWorkflow}`,
+    )
+  }
+
   process.stdout.write(
     `Packed Astro Doctor ${pluginManifest.version} installed and linted with ` +
-    `Node.js ${process.version}.\n`,
+    `Node.js ${process.version}.\n` +
+    `Verified astro-doctor@${astroDoctorManifest.version} CLI install -y --agent-hooks ` +
+    'produced non-empty skill files and a correctly scoped workflow.\n',
   )
 } finally {
   rmSync(temporaryDirectory, { force: true, recursive: true })

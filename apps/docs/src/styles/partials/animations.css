@@ -1,48 +1,32 @@
-/* ─── Animations ──────────────────────────────────────────────────────────────
- * @keyframes and scroll-reveal system.
- * ─────────────────────────────────────────────────────────────────────────── */
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+@keyframes menu-entrance {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
+::view-transition-old(root),
+::view-transition-new(root),
+::view-transition-old(page-content),
+::view-transition-new(page-content) {
+  animation-duration: 180ms;
+  animation-timing-function: ease-out;
 }
 
-@keyframes scale-in {
-  from { opacity: 0; transform: scale(0.96); }
-  to   { opacity: 1; transform: scale(1); }
-}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
 
-@keyframes pulse-brand {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.6; }
-}
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 
-/* ─── Scroll reveal ─────────────────────────────────────────────────────────── */
-
-[data-reveal] {
-  opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-[data-reveal].is-visible {
-  opacity: 1;
-  transform: none;
-}
-
-/* Stagger children */
-[data-stagger] > * {
-  opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-
-[data-stagger].is-visible > * {
-  opacity: 1;
-  transform: none;
+  ::view-transition-old(root),
+  ::view-transition-new(root),
+  ::view-transition-old(page-content),
+  ::view-transition-new(page-content) {
+    animation: none;
+  }
 }

@@ -72,6 +72,66 @@
         "$ref": "#/$defs/diagnostic"
       }
     },
+    "baselineProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "newCount",
+        "existingCount"
+      ],
+      "properties": {
+        "newCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "existingCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "resolvedCount": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "fixPreview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "changes",
+        "fixedCount",
+        "remainingCount"
+      ],
+      "properties": {
+        "fixedCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "remainingCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "filePath",
+              "diff"
+            ],
+            "properties": {
+              "filePath": {
+                "type": "string"
+              },
+              "diff": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
     "projects": {
       "type": "array",
       "items": {

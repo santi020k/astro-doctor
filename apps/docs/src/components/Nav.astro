@@ -1,236 +1,198 @@
 ---
+import DocsSidebar from '@/components/DocsSidebar.astro'
 import GitHubIcon from '@/components/github-icon.astro'
 import LogoMark from '@/components/logo-mark.astro'
 
-import { ButtonLink, Link, NavigationMenu, ThemeToggle } from '@santi020k/lumen-astro'
+import { Button, ButtonLink, Icon, Link, NavigationMenu, Sheet, ThemeToggle } from '@santi020k/lumen-astro'
 
-import { GITHUB_URL, NPM_URL, SITE_NAME } from '@/site.config'
+import { GITHUB_URL, SITE_NAME } from '@/site.config'
 
 const currentPath = Astro.url.pathname.replace(/\/$/, '')
 const isRulesActive = currentPath === '/docs/rules' || currentPath.startsWith('/docs/rules/')
 const isCliActive = currentPath === '/docs/cli' || currentPath.startsWith('/docs/cli/')
-const isDocsActive = currentPath.startsWith('/docs') && !isRulesActive && !isCliActive
+
+const navigationItems = [
+  { label: 'Documentation', href: '/docs', active: currentPath.startsWith('/docs') && !isRulesActive && !isCliActive },
+  { label: 'Rules', href: '/docs/rules', active: isRulesActive },
+  { label: 'CLI', href: '/docs/cli', active: isCliActive }
+]
 ---
 
-<header class="
-  sticky top-0 z-50 w-full border-b border-[hsl(var(--line)/0.4)]
-  bg-[hsl(var(--theme-bg)/0.85)] backdrop-blur-md
-"
->
-  <div class="
-    site-navigation container-docs flex h-14 items-center justify-between gap-4
-  "
-  >
-    <!-- Logo -->
-    <Link
-href="/"
-class="
-  group flex items-center gap-2.5 no-underline
-  hover:no-underline
-"
-    >
-      <LogoMark
-        class="
-          size-8 rounded-lg shadow-md transition-shadow
-          group-hover:shadow-[0_0_16px_hsl(var(--brand)/0.5)]
+<header class="site-header">
+  <div class="container-docs">
+    <div class="site-header-shell" data-header-shell data-scrolled="false">
+      <Link href="/" variant="inherit" class="site-header-brand" aria-label={`${SITE_NAME} home`}>
+        <LogoMark class="site-header-mark" />
+        <span class="site-header-brand-name">Astro Doctor<span class="
+          site-header-period
         "
-      />
-      <span class="font-semibold tracking-tight text-[hsl(var(--ink))]">
-        {SITE_NAME}
-      </span>
-    </Link>
-
-    <!-- Desktop nav -->
-    <NavigationMenu
-      aria-label="Primary"
-      class="site-primary-navigation items-center gap-1"
-    >
-      <Link
-        href="/docs"
-        aria-current={isDocsActive ? 'page' : undefined}
-        class:list={[
-          'rounded-md px-3 py-1.5 text-sm transition-colors',
-          isDocsActive ?
-            'bg-[hsl(var(--brand-soft))] font-medium text-[hsl(var(--brand))]' :
-            `
-              text-[hsl(var(--ink-soft))]
-              hover:bg-[hsl(var(--surface-muted))] hover:text-[hsl(var(--ink))]
-            `
-        ]}
-      >
-        Docs
+                                                         >.</span></span>
       </Link>
-      <Link
-        href="/docs/rules"
-        aria-current={isRulesActive ? 'page' : undefined}
-        class:list={[
-          'rounded-md px-3 py-1.5 text-sm transition-colors',
-          isRulesActive ?
-            'bg-[hsl(var(--brand-soft))] font-medium text-[hsl(var(--brand))]' :
-            `
-              text-[hsl(var(--ink-soft))]
-              hover:bg-[hsl(var(--surface-muted))] hover:text-[hsl(var(--ink))]
-            `
-        ]}
-      >
-        Rules
-      </Link>
-      <Link
-        href="/docs/cli"
-        aria-current={isCliActive ? 'page' : undefined}
-        class:list={[
-          'rounded-md px-3 py-1.5 text-sm transition-colors',
-          isCliActive ?
-            'bg-[hsl(var(--brand-soft))] font-medium text-[hsl(var(--brand))]' :
-            `
-              text-[hsl(var(--ink-soft))]
-              hover:bg-[hsl(var(--surface-muted))] hover:text-[hsl(var(--ink))]
-            `
-        ]}
-      >
-        CLI
-      </Link>
-    </NavigationMenu>
 
-    <!-- Right side actions -->
-    <div class="flex items-center gap-2">
-      <!-- Theme toggle -->
-      <ThemeToggle
-        aria-label="Toggle color scheme"
-        data-ui-controlled
-        class="
-          site-theme-toggle flex size-8 items-center justify-center rounded-md
-          text-[hsl(var(--ink-soft))] transition-colors
-          hover:bg-[hsl(var(--surface-muted))] hover:text-[hsl(var(--ink))]
-        "
-      />
-
-      <!-- GitHub link -->
-      <ButtonLink
-        href={GITHUB_URL}
-        newTab
-        ariaLabel="View on GitHub"
-        shape="icon"
-        variant="ghost"
-        class="
-          site-icon-link flex size-8 items-center justify-center rounded-md
-          text-[hsl(var(--ink-soft))] transition-colors
-          hover:bg-[hsl(var(--surface-muted))] hover:text-[hsl(var(--ink))]
-        "
+      <NavigationMenu
+variant="unstyled"
+aria-label="Primary"
+class="site-primary-navigation"
       >
-        <GitHubIcon />
-      </ButtonLink>
+        {navigationItems.map(item => (
+          <Link
+href={item.href}
+variant="inherit"
+aria-current={item.active ? 'page' : undefined}
+class="site-navigation-link"
+          >
+            {item.label}
+          </Link>
+        ))}
+      </NavigationMenu>
 
-      <ButtonLink
-        href={NPM_URL}
-        newTab
-        variant="primary"
-        class="
-          site-npm-link hidden h-8 items-center gap-1.5 rounded-md
-          bg-[hsl(var(--brand))] px-3 text-xs font-semibold text-white
-          no-underline transition-colors
-          hover:bg-[hsl(var(--brand-solid))]
-          sm:flex
-        "
-      >
-        npm package
-      </ButtonLink>
+      <div class="site-header-actions">
+        <div class="site-header-utilities">
+          <ThemeToggle
+            controlled
+            aria-label="Dark color theme"
+            class="site-theme-toggle"
+            data-site-theme-toggle
+          />
+          <ButtonLink
+            href={GITHUB_URL}
+            newTab
+            ariaLabel="Astro Doctor on GitHub"
+            variant="unstyled"
+            class="site-github-link"
+          >
+            <GitHubIcon />
+          </ButtonLink>
+        </div>
+        <ButtonLink
+href="/docs/quick-start"
+variant="unstyled"
+class="site-start-link"
+        >
+          <span>Get started</span><span class="site-action-arrow"><Icon name="arrow-up-right" /></span>
+        </ButtonLink>
+        <Button
+          variant="ghost"
+          class="site-menu-trigger"
+          aria-label="Open navigation"
+          aria-controls="site-navigation-panel"
+          data-ui-sheet-trigger="site-navigation-panel"
+        >
+          <Icon name="menu" />
+        </Button>
+      </div>
     </div>
   </div>
 </header>
 
-<style>
-  :global(.site-primary-navigation.ui-navigation-menu) {
-    display: none;
-    width: auto;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    padding: 0;
-  }
+<noscript>
+  <style is:inline>
+    .site-menu-trigger, .site-theme-toggle { display: none; }
+  </style>
+  <div class="container-docs site-no-script-navigation">
+    <NavigationMenu variant="unstyled" aria-label="Primary">
+      {navigationItems.map(item => <Link href={item.href} variant="inherit">{item.label}</Link>)}
+    </NavigationMenu>
+  </div>
+</noscript>
 
-  @media (min-width: 48rem) {
-    :global(.site-primary-navigation.ui-navigation-menu) {
-      display: flex;
-    }
-  }
-
-  :global(.site-navigation .ui-link) {
-    font-weight: inherit;
-  }
-
-  :global(.site-navigation .site-theme-toggle.ui-theme-toggle) {
-    width: 2rem;
-    height: 2rem;
-    border: 0;
-    border-radius: 0.375rem;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  :global(.site-navigation .site-theme-toggle.ui-theme-toggle::before) {
-    display: none;
-  }
-
-  :global(.site-navigation .site-theme-toggle.ui-theme-toggle:hover) {
-    transform: none;
-    background: hsl(var(--surface-muted));
-    color: hsl(var(--ink));
-    box-shadow: none;
-  }
-
-  :global(.site-navigation .site-theme-toggle .ui-theme-toggle__sun),
-  :global(.site-navigation .site-theme-toggle .ui-theme-toggle__moon) {
-    width: 1rem;
-    height: 1rem;
-    margin-top: -0.5rem;
-    margin-left: -0.5rem;
-  }
-
-  :global(.site-navigation .site-icon-link.ui-button-link--icon) {
-    width: 2rem;
-    height: 2rem;
-    min-height: 2rem;
-    border: 0;
-    border-radius: 0.375rem;
-    padding: 0;
-  }
-
-  :global(.site-navigation .site-npm-link.ui-button-link) {
-    display: none;
-    min-height: 2rem;
-    border: 0;
-    border-radius: 0.375rem;
-    padding: 0 0.75rem;
-  }
-
-  @media (min-width: 40rem) {
-    :global(.site-navigation .site-npm-link.ui-button-link) {
-      display: flex;
-    }
-  }
-</style>
+<Sheet id="site-navigation-panel" class="site-navigation-panel" aria-labelledby="site-navigation-title">
+  <div class="site-menu-heading">
+    <div>
+      <span class="site-eyebrow">Astro Doctor</span>
+      <h2 id="site-navigation-title">Explore the docs<span>.</span></h2>
+    </div>
+    <Button variant="ghost" class="site-menu-close" aria-label="Close navigation" data-ui-sheet-close>
+      <Icon name="x" />
+    </Button>
+  </div>
+  <nav class="site-mobile-primary" aria-label="Main navigation">
+    <Link href="/" variant="inherit">Home<Icon name="arrow-up-right" /></Link>
+    <Link href="/docs/quick-start" variant="inherit">Start your first scan<Icon name="arrow-up-right" /></Link>
+  </nav>
+  <DocsSidebar placement="menu" />
+  <Link href={GITHUB_URL} newTab variant="inherit" class="site-menu-source">View the source on GitHub <Icon name="arrow-up-right" /></Link>
+</Sheet>
 
 <script>
-  import { transitionColorTheme } from '@/utils/transition-color-theme'
+  import { SITE_HEADER_SCROLL_THRESHOLD_PX } from '@/constants'
 
-  const html = document.documentElement
-  const themeToggle = document.querySelector<HTMLButtonElement>('[data-ui-theme-toggle]')
+import { runLumenViewTransition } from '@santi020k/lumen-core'
 
-  const getTheme = () => html.getAttribute('data-theme') ??
-    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+  let navigationController: AbortController | undefined
 
-  const applyTheme = (theme: string) => {
-    html.setAttribute('data-theme', theme)
+  const initializeNavigation = (): void => {
+    navigationController?.abort()
 
-    localStorage.setItem('theme', theme)
+    navigationController = new AbortController()
+
+    const { signal } = navigationController
+    const header = document.querySelector<HTMLElement>('[data-header-shell]')
+    const headerRegion = document.querySelector<HTMLElement>('.site-header')
+    const themeToggle = document.querySelector<HTMLButtonElement>('[data-site-theme-toggle]')
+    const navigationPanel = document.querySelector<HTMLDialogElement>('#site-navigation-panel')
+    const desktopQuery = window.matchMedia('(min-width: 64rem)')
+
+    const updateHeader = (): void => {
+      if (header) header.dataset.scrolled = String(window.scrollY > SITE_HEADER_SCROLL_THRESHOLD_PX)
+    }
+
+    const updateThemeControl = (): void => {
+      const isDark = document.documentElement.dataset.theme === 'dark'
+
+      themeToggle?.setAttribute('title', isDark ? 'Switch to light theme' : 'Switch to dark theme')
+
+      themeToggle?.setAttribute('aria-pressed', String(isDark))
+
+      if (themeToggle) themeToggle.dataset.uiTheme = isDark ? 'dark' : 'light'
+    }
+
+    themeToggle?.addEventListener('click', () => {
+      void runLumenViewTransition(document, () => {
+      const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'
+
+      document.documentElement.dataset.theme = nextTheme
+
+      updateThemeControl()
+
+      try {
+        localStorage.setItem('theme', nextTheme)
+      } catch {
+        document.documentElement.dataset.theme = nextTheme
+      }
+    })
+    }, { signal })
+
+    desktopQuery.addEventListener('change', () => {
+      if (desktopQuery.matches) navigationPanel?.close()
+    }, { signal })
+
+    if (headerRegion) {
+      const headerObserver = new ResizeObserver(() => {
+        document.documentElement.style.setProperty('--site-header-height', `${Math.ceil(headerRegion.offsetHeight)}px`)
+      })
+
+      headerObserver.observe(headerRegion)
+
+      signal.addEventListener('abort', () => headerObserver.disconnect(), { once: true })
+    }
+
+    window.addEventListener('scroll', updateHeader, { passive: true, signal })
+
+    updateHeader()
+
+    updateThemeControl()
   }
 
-  applyTheme(localStorage.getItem('theme') ?? getTheme())
+  document.addEventListener('astro:before-swap', event => {
+    event.newDocument.documentElement.dataset.theme = document.documentElement.dataset.theme
 
-  themeToggle?.addEventListener('click', () => {
-    const nextTheme = getTheme() === 'dark' ? 'light' : 'dark'
+    document.querySelector<HTMLDialogElement>('#site-navigation-panel')?.close()
 
-    transitionColorTheme(themeToggle, () => applyTheme(nextTheme))
+    navigationController?.abort()
   })
+
+  document.addEventListener('astro:page-load', initializeNavigation)
+
+  initializeNavigation()
 </script>

@@ -7,12 +7,18 @@ on:
   push:
     branches: [main]
   workflow_dispatch: {}
+  workflow_call:
+    secrets:
+      TURBO_TEAM:
+        required: false
+      TURBO_TOKEN:
+        required: false
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -31,7 +37,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up pnpm workspace
-        uses: santi020k/quality/actions/setup-pnpm@eec1701b98bcc0b76d36af288ee78a0369cd84cc # v1
+        uses: santi020k/quality/actions/setup-pnpm@ffa37774f75b2b8e761fe3d71e7046cdb6694a69 # v1
         with:
           node-version: 22.22.3
 
@@ -60,3 +66,9 @@ jobs:
           pnpm run lint:knip &&
           pnpm run check:exports &&
           pnpm run check:packed-install
+
+      - name: Install documentation test browser
+        run: pnpm --filter @santi020k/astro-doctor-docs exec playwright install --with-deps chromium
+
+      - name: Check documentation routes and interactions
+        run: pnpm --filter @santi020k/astro-doctor-docs exec playwright test

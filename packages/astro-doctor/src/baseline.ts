@@ -1,9 +1,10 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
 
 import { scan } from './scanner/index.js'
 import { createScanResult } from './utils/create-scan-result.js'
+import { isPlainObject } from './utils/is-plain-object.js'
 import { PERSISTENT_BASELINE_VERSION } from './constants.js'
 import { extractRevision } from './git.js'
 import type { Diagnostic, ScanOptions, ScanResult } from './types.js'
@@ -17,7 +18,6 @@ interface BaselineScanOptions {
 }
 
 interface BaselineSnapshot {
-  readonly directory: string
   readonly projectDirectory: string
   readonly files: readonly string[]
 }
@@ -41,8 +41,10 @@ export interface PersistentBaseline {
 
 const PERSISTENT_BASELINE_SCHEMA_URL = 'https://doctor.santi020k.com/schema/baseline.json'
 
-const createBaselineSnapshot = (options: BaselineScanOptions): BaselineSnapshot => {
-  const snapshotDirectory = mkdtempSync(join(tmpdir(), 'astro-doctor-baseline-'))
+const createBaselineSnapshot = (
+  options: BaselineScanOptions,
+  snapshotDirectory: string
+): BaselineSnapshot => {
   const projectPath = relative(options.repositoryDirectory, options.projectDirectory)
   const snapshotProjectDirectory = resolve(snapshotDirectory, projectPath)
   const snapshotFiles: string[] = []
@@ -61,21 +63,23 @@ const createBaselineSnapshot = (options: BaselineScanOptions): BaselineSnapshot 
   }
 
   return {
-    directory: snapshotDirectory,
     projectDirectory: snapshotProjectDirectory,
     files: snapshotFiles
   }
 }
 
 export const scanBaseline = async (options: BaselineScanOptions): Promise<BaselineScanResult> => {
-  const snapshot = createBaselineSnapshot(options)
+  const snapshotDirectory = mkdtempSync(join(tmpdir(), 'astro-doctor-baseline-'))
 
   try {
+    const snapshot = createBaselineSnapshot(options, snapshotDirectory)
+
     const result = await scan({
       ...options.scanOptions,
       directory: snapshot.projectDirectory,
       files: snapshot.files,
-      fix: false
+      fix: false,
+      fixDryRun: false
     })
 
     return {
@@ -83,7 +87,7 @@ export const scanBaseline = async (options: BaselineScanOptions): Promise<Baseli
       rootDirectory: snapshot.projectDirectory
     }
   } finally {
-    rmSync(snapshot.directory, { recursive: true, force: true })
+    rmSync(snapshotDirectory, { recursive: true, force: true })
   }
 }
 
@@ -130,57 +134,73 @@ export const writePersistentBaseline = (
 ): void => {
   mkdirSync(dirname(filePath), { recursive: true })
 
-  writeFileSync(filePath, `${JSON.stringify(baseline, null, 2)}\n`, 'utf8')
+  const temporaryDirectory = mkdtempSync(join(dirname(filePath), '.astro-doctor-baseline-'))
+
+  try {
+    const temporaryPath = join(temporaryDirectory, 'baseline.json')
+
+    writeFileSync(temporaryPath, `${JSON.stringify(baseline, null, 2)}\n`, 'utf8')
+
+    renameSync(temporaryPath, filePath)
+  } finally {
+    rmSync(temporaryDirectory, { recursive: true, force: true })
+  }
 }
 
-const isPersistentBaselineEntry = (value: unknown): value is PersistentBaselineEntry => {
-  if (typeof value !== 'object' || value === null) return false
-
-  const entry = value as Record<string, unknown>
-
-  return typeof entry.fingerprint === 'string' &&
-    typeof entry.count === 'number' &&
-    Number.isInteger(entry.count) &&
-    entry.count > 0
-}
+const isPersistentBaselineEntry = (value: unknown): value is PersistentBaselineEntry => isPlainObject(value) &&
+  typeof value.fingerprint === 'string' &&
+  typeof value.count === 'number' &&
+  Number.isInteger(value.count) &&
+  value.count > 0
 
 export const readPersistentBaseline = (filePath: string): PersistentBaseline => {
   const parsed: unknown = JSON.parse(readFileSync(filePath, 'utf8'))
 
-  if (typeof parsed !== 'object' || parsed === null) {
+  if (!isPlainObject(parsed)) {
     throw new TypeError('Baseline must contain a JSON object.')
   }
 
-  const baseline = parsed as Record<string, unknown>
+  const version = parsed.version
 
-  if (baseline.version !== PERSISTENT_BASELINE_VERSION) {
+  if (version !== PERSISTENT_BASELINE_VERSION) {
     throw new Error(
-      `Unsupported baseline version "${String(baseline.version)}". Expected ${PERSISTENT_BASELINE_VERSION}.`
+      `Unsupported baseline version "${String(version)}". Expected ${PERSISTENT_BASELINE_VERSION}.`
     )
   }
 
-  if (typeof baseline.generatedAt !== 'string') {
+  if (typeof parsed.generatedAt !== 'string') {
     throw new TypeError('Baseline generatedAt must be a string.')
   }
 
-  if (!Array.isArray(baseline.entries) || !baseline.entries.every(isPersistentBaselineEntry)) {
+  if (!Array.isArray(parsed.entries) || !parsed.entries.every(isPersistentBaselineEntry)) {
     throw new TypeError('Baseline entries must contain valid fingerprint counts.')
   }
 
+  const fingerprints = new Set(parsed.entries.map(entry => entry.fingerprint))
+
+  if (fingerprints.size !== parsed.entries.length) {
+    throw new Error('Baseline entries must have unique fingerprints.')
+  }
+
   return {
-    $schema: typeof baseline.$schema === 'string' ?
-      baseline.$schema :
+    $schema: typeof parsed.$schema === 'string' ?
+      parsed.$schema :
       PERSISTENT_BASELINE_SCHEMA_URL,
     version: PERSISTENT_BASELINE_VERSION,
-    generatedAt: baseline.generatedAt,
-    entries: baseline.entries
+    generatedAt: parsed.generatedAt,
+    entries: parsed.entries
   }
 }
+
+const recountFixPreview = (result: ScanResult, diagnostics: readonly Diagnostic[]): Pick<ScanResult, 'fixPreview'> => result.fixPreview === undefined ?
+  {} :
+  { fixPreview: { ...result.fixPreview, remainingCount: diagnostics.length } }
 
 export const filterPersistentBaselineDiagnostics = (
   result: ScanResult,
   baseline: PersistentBaseline,
-  rootDirectory: string
+  rootDirectory: string,
+  fullComparison = true
 ): ScanResult => {
   const baselineCounts = new Map(
     baseline.entries.map(entry => [entry.fingerprint, entry.count])
@@ -199,7 +219,17 @@ export const filterPersistentBaselineDiagnostics = (
 
   return {
     ...createScanResult(diagnostics, result.fileCount),
-    timings: result.timings
+    timings: result.timings,
+    ...recountFixPreview(result, diagnostics),
+    baselineProgress: {
+      newCount: diagnostics.length,
+      existingCount: result.diagnostics.length - diagnostics.length,
+      ...(fullComparison ?
+        {
+          resolvedCount: [...baselineCounts.values()].reduce((total, count) => total + count, 0)
+        } :
+        {})
+    }
   }
 }
 
@@ -224,5 +254,25 @@ export const filterIntroducedDiagnostics = (
     return false
   })
 
-  return createScanResult(introducedDiagnostics, currentResult.fileCount)
+  return {
+    ...createScanResult(introducedDiagnostics, currentResult.fileCount),
+    ...recountFixPreview(currentResult, introducedDiagnostics)
+  }
+}
+
+export const prunePersistentBaseline = (
+  result: ScanResult,
+  baseline: PersistentBaseline,
+  rootDirectory: string
+): PersistentBaseline => {
+  const currentCounts = createFingerprintCounts(result.diagnostics, rootDirectory)
+
+  return {
+    ...baseline,
+    entries: baseline.entries.flatMap(entry => {
+      const count = Math.min(entry.count, currentCounts.get(entry.fingerprint) ?? 0)
+
+      return count > 0 ? [{ fingerprint: entry.fingerprint, count }] : []
+    })
+  }
 }

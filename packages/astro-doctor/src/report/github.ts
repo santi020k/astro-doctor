@@ -1,4 +1,6 @@
 import type { Diagnostic, ScanResult } from '../types.js'
+import { escapeGithubCommandData } from '../utils/escape-github-command-data.js'
+import { escapeGithubCommandProperty } from '../utils/escape-github-command-property.js'
 
 /**
  * Formats diagnostics as GitHub Actions workflow commands so they appear as
@@ -10,12 +12,11 @@ import type { Diagnostic, ScanResult } from '../types.js'
  */
 const formatAnnotation = (diagnostic: Diagnostic): string => {
   const level = diagnostic.severity === 'error' ? 'error' : 'warning'
-  const ruleShortName = diagnostic.ruleId.replace('astro-doctor/', '')
-  // GitHub Actions annotation properties must not contain commas or newlines
-  const escapedMessage = diagnostic.message.replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A')
-  const location = `file=${diagnostic.filePath},line=${diagnostic.line},col=${diagnostic.column}`
+  const ruleShortName = escapeGithubCommandProperty(diagnostic.ruleId.replace('astro-doctor/', ''))
+  const escapedMessage = escapeGithubCommandData(diagnostic.message)
+  const location = `file=${escapeGithubCommandProperty(diagnostic.filePath)},line=${diagnostic.line},col=${diagnostic.column}`
 
   return `::${level} ${location},title=${ruleShortName}::${escapedMessage}`
 }
 
-export const formatGithubReport = (result: ScanResult): string => result.diagnostics.length === 0 ? '' : result.diagnostics.map(d => formatAnnotation(d)).join('\n')
+export const formatGithubReport = (result: ScanResult): string => result.diagnostics.length === 0 ? '' : result.diagnostics.map(diagnostic => formatAnnotation(diagnostic)).join('\n')

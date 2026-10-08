@@ -29,14 +29,16 @@ const {
 
 const languageLabel = typeof language === 'string' ? language : language.name
 
-const themes: Record<'dark' | 'light', 'catppuccin-latte' | 'catppuccin-mocha'> = {
+const themes: Record<'dark' | 'light', 'catppuccin-mocha' | 'github-light-high-contrast'> = {
   dark: 'catppuccin-mocha',
-  light: 'catppuccin-latte'
+  light: 'github-light-high-contrast'
 }
 ---
 
 <Code
   class={className}
+  code={code}
+  codeLabel={label ?? `${languageLabel} example`}
   copy={copy}
   highlighted
   label={label}

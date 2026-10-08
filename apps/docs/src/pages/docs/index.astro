@@ -1,83 +1,146 @@
 ---
+import PackageManagerTabs from '@/components/PackageManagerTabs.astro'
 import Docs from '@/layouts/Docs.astro'
 
-import { CATEGORY_LABELS, RULES } from '@/data/rules'
+import './docs-pages.css'
+
+import { Icon, Link, Stat, StatLabel, StatValue } from '@santi020k/lumen-astro'
+
+import { CATEGORY_LABELS, PROJECT_AUDITS, RULES } from '@/data/rules'
+
+const startingPoints = [
+  {
+    href: '/docs/quick-start',
+    label: 'Run your first check',
+    description: 'Install, scan, and make the results part of your workflow.'
+  },
+  {
+    href: '/docs/rules',
+    label: 'Understand a finding',
+    description: 'See why a check matters, with examples of what to change.'
+  },
+  {
+    href: '/docs/github-action',
+    label: 'Check every pull request',
+    description: 'Report new findings in CI and set a passing threshold.'
+  },
+  {
+    href: '/docs/vscode-extension',
+    label: 'Bring it into your editor',
+    description: 'Get diagnostics and a project health panel in VS Code.'
+  }
+]
+
+const categories = Object.entries(CATEGORY_LABELS).filter(([category]) => (
+  RULES.some(ruleDefinition => ruleDefinition.category === category)
+))
 ---
 
 <Docs
   title="Introduction"
-  description="What is astro-doctor and why you need it in your Astro projects."
+  description="A practical guide to healthier Astro projects: start a scan, understand findings, and check every change."
   editPath="apps/docs/src/pages/docs/index.astro"
 >
-  <h1>Introduction</h1>
+  <header class="docs-page-header">
+    <h1>Healthier Astro.<br /><span class="docs-title-accent">One check at a time.</span></h1>
+    <p class="docs-page-lead">
+      Astro Doctor catches common mistakes in your Astro project, explains what matters,
+      and helps you fix them. Start with a scan. Build better habits from there.
+    </p>
+  </header>
 
+  <div class="docs-stat-strip" role="group" aria-label="Astro Doctor coverage">
+    <Stat variant="bare">
+      <StatValue>{RULES.length}</StatValue>
+      <StatLabel>Astro Doctor rules</StatLabel>
+    </Stat>
+    <Stat variant="bare">
+      <StatValue>{PROJECT_AUDITS.length}</StatValue>
+      <StatLabel>Project audits</StatLabel>
+    </Stat>
+    <Stat variant="bare">
+      <StatValue>0–100</StatValue>
+      <StatLabel>Project health score</StatLabel>
+    </Stat>
+  </div>
+
+  <h2>Start in your terminal</h2>
+  <p>Run this from your Astro project. No configuration or installation is required.</p>
+
+  <PackageManagerTabs
+    pnpm="pnpm dlx @santi020k/astro-doctor@latest"
+    npm="npx @santi020k/astro-doctor@latest"
+    yarn="yarn dlx @santi020k/astro-doctor@latest"
+    bun="bunx @santi020k/astro-doctor@latest"
+  />
+
+  <h2 id="health-score">Read the health score</h2>
   <p>
-    <strong>astro-doctor</strong> is an ESLint-based quality tool for Astro projects.
-    It ships {RULES.length} opinionated ESLint rules plus project-level audits that catch the most
-    common mistakes developers (and AI agents) make in Astro codebases — from missing image alt
-    text to accidental XSS vectors.
+    The report includes file locations, diagnostics, and an S–F health grade. Each file starts at
+    100: errors cost 25 points and warnings cost 10, with a minimum score of zero per file.
+    File scores are then averaged. Unresolved errors cap the score at 89;
+    security errors cap it at 74. Workspace scans use the lowest project score.
   </p>
 
-  <p>
-    Each scan produces a <strong>health score from 0 to 100</strong> with an S–F grade, so you always
-    know how your codebase compares to best practice and can track improvement over time.
-  </p>
-
-  <h2>What it checks</h2>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Rule</th>
-        <th>Category</th>
-        <th>Default severity</th>
-      </tr>
-    </thead>
-    <tbody>
-      {RULES.map(rule => (
-        <tr>
-          <td><a href={`/docs/rules/${rule.slug}`}>{rule.name}</a></td>
-          <td>{CATEGORY_LABELS[rule.category]}</td>
-          <td>{rule.severity}</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-
-  <h2>Why astro-doctor?</h2>
-
-  <p>
-    AI coding agents are prolific writers of Astro code — and they make the same mistakes humans do:
-    raw <code>&lt;img&gt;</code> tags instead of <code>&lt;Image&gt;</code>, <code>client:load</code>
-    on every island, missing alt text, and so on. astro-doctor adds a fast, deterministic safety net
-    to every commit and pull request.
-  </p>
-
-  <p>
-    It is inspired by <a href="https://react.doctor" target="_blank" rel="noopener noreferrer">react-doctor</a>
-    and follows the same philosophy: a small, focused tool that does one thing well.
-  </p>
-
-  <h2>Packages</h2>
-
-  <p>The project is a monorepo with two public packages:</p>
-
-  <ul>
-    <li>
-      <strong><code>@santi020k/astro-doctor</code></strong> — the CLI. Run
-      <code>pnpm dlx @santi020k/astro-doctor@latest</code> to scan any directory without any setup.
-    </li>
-    <li>
-      <strong><code>@santi020k/eslint-plugin-astro-doctor</code></strong> — the ESLint plugin.
-      Import and add to your <code>eslint.config.js</code> for live editor integration.
-    </li>
+  <h2>Find your next step</h2>
+  <ul class="docs-link-list">
+    {startingPoints.map(startingPoint => (
+      <li>
+        <Link class="docs-row-link" href={startingPoint.href} variant="inherit">
+          <span class="docs-row-copy">
+            <strong>{startingPoint.label}</strong>
+            <span>{startingPoint.description}</span>
+          </span>
+          <Icon name="arrow-up-right" decorative />
+        </Link>
+      </li>
+    ))}
   </ul>
 
-  <h2>Requirements</h2>
+  <h2>What it looks for</h2>
+  <p>
+    From eager island hydration to missing image descriptions and exposed secrets, the checks
+    focus on mistakes that affect real pages. The CLI combines Astro Doctor rules with
+    <code>eslint-plugin-astro</code> and audits relationships across project files.
+  </p>
 
+  <nav class="docs-category-links" aria-label="Browse rules by category">
+    {categories.map(([category, label]) => (
+      <Link href={`/docs/rules#${category}`} variant="inherit">
+        {label}<Icon name="arrow-right" decorative />
+      </Link>
+    ))}
+  </nav>
+
+  <h2>Choose how you work</h2>
+  <dl class="docs-definition-list">
+    <div>
+      <dt><Link href="/docs/cli">CLI</Link></dt>
+      <dd><code>@santi020k/astro-doctor</code> scans projects, scores findings, and exports reports.</dd>
+    </div>
+    <div>
+      <dt><Link href="/docs/eslint-plugin">ESLint plugin</Link></dt>
+      <dd><code>@santi020k/eslint-plugin-astro-doctor</code> adds Astro checks to your flat config.</dd>
+    </div>
+    <div>
+      <dt>
+        <Link href="https://www.npmjs.com/package/@santi020k/oxlint-config-astro-doctor" newTab>
+          Oxlint config
+        </Link>
+      </dt>
+      <dd><code>@santi020k/oxlint-config-astro-doctor</code> enables the built-in Oxlint checks that overlap with Astro Doctor.</dd>
+    </div>
+  </dl>
+
+  <h2>Before you begin</h2>
   <ul>
     <li>Node.js <code>^22.22.3 || ^24.16.0 || &gt;=26.3.0</code></li>
-    <li>ESLint 10 (flat config)</li>
-    <li>Astro project with <code>.astro</code> files</li>
+    <li>An Astro project with <code>.astro</code> files</li>
+    <li>ESLint 10 with flat config when using the plugin directly</li>
   </ul>
+
+  <p>
+    Inspired by <Link href="https://react.doctor" newTab>react-doctor</Link>, Astro Doctor brings
+    the same focused approach to Astro: deterministic checks for developers and coding agents.
+  </p>
 </Docs>

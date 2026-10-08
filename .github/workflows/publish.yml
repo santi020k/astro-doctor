@@ -1,11 +1,10 @@
 name: Release
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
-    paths:
-      - ".changeset/**"
-      - "packages/**"
   workflow_dispatch:
     inputs:
       publish_extension_recovery:
@@ -19,8 +18,29 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  preflight:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+    secrets:
+      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+
   release:
-    if: github.ref == 'refs/heads/main'
+    needs: preflight
+    if: >-
+      !cancelled() && github.ref == 'refs/heads/main' &&
+      (
+        (github.event_name == 'workflow_dispatch' && needs.preflight.result == 'success') ||
+        (
+          github.event_name == 'workflow_run' &&
+          github.event.workflow_run.event == 'push' &&
+          github.event.workflow_run.head_branch == 'main' &&
+          github.event.workflow_run.head_repository.full_name == github.repository &&
+          github.event.workflow_run.conclusion == 'success'
+        )
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment:
@@ -31,52 +51,74 @@ jobs:
       pull-requests: write
       id-token: write
 
+    env:
+      VALIDATED_COMMIT: ${{ github.event.workflow_run.head_sha || github.sha }}
+      WORKFLOW_COMMIT: ${{ github.sha }}
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
         with:
+          ref: ${{ env.VALIDATED_COMMIT }}
           fetch-depth: 0
 
+      - name: Check validated commit
+        id: scope
+        run: bash scripts/check-validated-commit.sh
+
       - name: Set up pnpm workspace
-        uses: santi020k/quality/actions/setup-pnpm@eec1701b98bcc0b76d36af288ee78a0369cd84cc # v1
+        if: steps.scope.outputs.relevant == 'true'
+        uses: santi020k/quality/actions/setup-pnpm@ffa37774f75b2b8e761fe3d71e7046cdb6694a69 # v1
         with:
           node-version: 22.x
           registry-url: https://registry.npmjs.org
 
       - name: Install OIDC-compatible npm
+        if: steps.scope.outputs.relevant == 'true'
         run: |
           pnpm add --global npm@11.20.0
           node "$(pnpm root --global)/npm/bin/npm-cli.js" --version
 
+      - name: Recheck main before release mutation
+        if: steps.scope.outputs.relevant == 'true'
+        id: release-scope
+        run: bash scripts/check-validated-commit.sh
+
+      - name: Verify editor recovery source
+        if: steps.release-scope.outputs.relevant == 'true' && inputs.publish_extension_recovery
+        id: editor-recovery-source
+        run: bash scripts/check-extension-release-source.sh
+
       - name: Create release pull request or publish
+        if: steps.release-scope.outputs.relevant == 'true'
         id: changesets
         uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         with:
-          publish: pnpm run release
-          version: pnpm run version-packages
+          publish: pnpm run release:validated
+          version: pnpm run version-packages:validated
           commit: "chore(release): version packages"
           title: "chore(release): version packages"
-          createGithubReleases: true
+          createGithubReleases: false
           commitMode: github-api
         env:
           HUSKY: 0
           GITHUB_TOKEN: ${{ secrets.CHANGESETS_TOKEN || github.token }}
 
       - name: Determine release readiness
+        if: steps.scope.outputs.relevant == 'true'
         id: release-ready
         run: |
           VERSION=$(node -p "require('./packages/astro-doctor/package.json').version")
           TAG="@santi020k/astro-doctor@${VERSION}"
           TAG_SHA=$(git ls-remote --refs --tags origin "refs/tags/${TAG}" | cut -f1)
 
-          if [ "$TAG_SHA" = "$GITHUB_SHA" ]; then
+          if [ "$TAG_SHA" = "$VALIDATED_COMMIT" ]; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Verify published CLI package
-        if: steps.release-ready.outputs.ready == 'true'
+        if: steps.scope.outputs.relevant == 'true' && (steps.release-ready.outputs.ready == 'true')
         run: |
           VERSION=$(node -p "require('./packages/astro-doctor/package.json').version")
           PUBLISHED_VERSION=$(pnpm dlx "@santi020k/astro-doctor@${VERSION}" --version)
@@ -87,7 +129,7 @@ jobs:
           fi
 
       - name: Create umbrella version tag
-        if: steps.release-ready.outputs.ready == 'true'
+        if: steps.scope.outputs.relevant == 'true' && (steps.release-ready.outputs.ready == 'true')
         run: |
           VERSION=$(node -p "require('./packages/astro-doctor/package.json').version")
           git config user.name "github-actions[bot]"
@@ -97,22 +139,33 @@ jobs:
             echo "Tag v${VERSION} already exists. Skipping."
           else
             git tag -a "v${VERSION}" -m "Release v${VERSION}"
+            bash scripts/check-validated-commit.sh --require-current
             git push origin "v${VERSION}"
           fi
 
           RELEASE_SHA=$(git rev-list -n 1 "v${VERSION}")
           git tag -fa v1 "$RELEASE_SHA" -m "Update v1 to v${VERSION}"
+          bash scripts/check-validated-commit.sh --require-current
           git push --force origin refs/tags/v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build VS Code Extension dependencies
-        if: steps.release-ready.outputs.ready == 'true' || inputs.publish_extension_recovery
+        if: steps.scope.outputs.relevant == 'true' && (steps.release-ready.outputs.ready == 'true' || inputs.publish_extension_recovery)
         run: pnpm exec turbo run build --filter=vscode-astro-doctor...
 
+      - name: Package VS Code Extension
+        if: steps.scope.outputs.relevant == 'true' && (steps.release-ready.outputs.ready == 'true' || inputs.publish_extension_recovery)
+        run: pnpm run package
+        working-directory: packages/vscode-astro-doctor
+
       - name: Publish VS Code Extension
-        if: steps.release-ready.outputs.ready == 'true' || inputs.publish_extension_recovery
-        run: pnpm run publish:ext
+        if: steps.scope.outputs.relevant == 'true' && (steps.release-ready.outputs.ready == 'true' || inputs.publish_extension_recovery)
+        run: |
+          bash ../../scripts/check-extension-release-source.sh
+          pnpm run publish:vsce
+          bash ../../scripts/check-extension-release-source.sh
+          pnpm run publish:ovsx
         working-directory: packages/vscode-astro-doctor
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
