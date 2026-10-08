@@ -271,8 +271,8 @@ importers:
         specifier: 'catalog:'
         version: 3.5.4(c335c07b40fe50f8241ae2d04e1ca5b7)
       '@santi020k/og':
-        specifier: 1.1.1
-        version: 1.1.1(@types/node@26.6.3)
+        specifier: 1.2.0
+        version: 1.2.0(@types/node@26.6.3)
       eslint:
         specifier: 'catalog:'
         version: 10.11.0(jiti@2.7.0)
@@ -3062,8 +3062,8 @@ packages:
     engines: {node: '>=22.12.0'}
     hasBin: true
 
-  '@santi020k/og@1.1.1':
-    resolution: {integrity: sha512-9v+5oC6qgmNQb9S5gR1xQeB9DqaXDRTxrZ7Miakdc4kf1IXOEKCkO4MmZzyBN+INuEwnfU5/ViWu5uyZzZqCMw==}
+  '@santi020k/og@1.2.0':
+    resolution: {integrity: sha512-BO82nXFYSIatkuQSKiMjj3P2Y4Lyne1l+5BA9ZD5CCXdvKjXWtGVsiavouGoLmO9gjqvh3vsOOIVjrgxTYolfg==}
     engines: {node: '>=22.18.0'}
     hasBin: true
 
@@ -6817,6 +6817,10 @@ packages:
     resolution: {integrity: sha512-PNW6ktrQ8SM6kk7u4aOuTkkUewkzyTOrj+QeEzXSsnNMAdff4ire9CAqIz8+4C3rCiBtK8QTELv52AZEd1PbRw==}
     engines: {node: '>=16'}
 
+  satori@0.36.0:
+    resolution: {integrity: sha512-DA39AMW6BDBle9FEJJK5gsqBKrmKY/9rT4mfK/jg1Yd9HAE24vFrRlrsG4H+ySo2tSYhX43WwVTv5nZz3trqKQ==}
+    engines: {node: '>=16'}
+
   satteri@0.10.5:
     resolution: {integrity: sha512-Ao1LKpAEa9Wdg0otgbVKViZHEq9ebdXe4DMrp3s9vQAU0HNIuHnFEuMuOcm0ZIXyV0Yzxj91NvhLpvXZJO/5ZQ==}
 
@@ -10395,12 +10399,12 @@ snapshots:
       '@santi020k/lumen-core': 3.0.1
       semver: 7.8.5
 
-  '@santi020k/og@1.1.1(@types/node@26.6.3)':
+  '@santi020k/og@1.2.0(@types/node@26.6.3)':
     dependencies:
       '@fontsource-variable/inter': 5.3.0
       '@resvg/resvg-js': 2.6.2
       fontkit: 2.0.4
-      satori: 0.33.5
+      satori: 0.36.0
       satori-html: 0.3.2
       sharp: 0.35.5(@types/node@26.6.3)
       yaml: 2.9.1
@@ -14866,6 +14870,22 @@ snapshots:
       ultrahtml: 1.7.0
 
   satori@0.33.5:
+    dependencies:
+      '@shuding/opentype.js': 1.4.0-beta.0
+      css-background-parser: 0.1.0
+      css-box-shadow: 1.0.0-3
+      css-gradient-parser: 0.0.17
+      css-to-react-native: 3.2.0
+      emoji-regex-xs: 2.0.1
+      escape-html: 1.0.3
+      fflate: 0.8.3
+      harfbuzzjs: 0.10.0
+      linebreak: 1.1.0
+      parse-css-color: 0.2.1
+      postcss-value-parser: 4.2.0
+      yoga-layout: 3.2.1
+
+  satori@0.36.0:
     dependencies:
       '@shuding/opentype.js': 1.4.0-beta.0
       css-background-parser: 0.1.0

@@ -2,6 +2,8 @@
 import Footer from '@/components/Footer.astro'
 import Nav from '@/components/Nav.astro'
 
+import { getOgImagePath } from '@/lib/generated-social-image'
+
 import '@/styles/global.css'
 
 import { SkipLink } from '@santi020k/lumen-astro'
@@ -21,7 +23,6 @@ import {
   AUTHOR,
   AUTHOR_URL,
   FREE_SOFTWARE_PRICE_USD,
-  getOgImagePath,
   GITHUB_URL,
   NPM_URL,
   SITE_DESCRIPTION,
@@ -55,7 +56,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE_URL).href
 const fullTitle = title === SITE_NAME ? title : `${title} · ${SITE_NAME}`
 const metadataDescription = description.replace(/<([^>]+)>/gu, '$1')
 const resolvedOgImageAlt = ogImageAlt ?? `${title} — ${SITE_NAME}`
-const imageType = resolvedOgImage.endsWith('.png') ? 'image/png' : 'image/webp'
+const imageType = new URL(resolvedOgImage).pathname.endsWith('.png') ? 'image/png' : 'image/webp'
 
 const site = defineSite({
   locale: 'en_US',

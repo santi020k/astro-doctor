@@ -32,7 +32,7 @@
     "@astrojs/check": "catalog:",
     "@resvg/resvg-js": "catalog:",
     "@santi020k/eslint-config-basic": "catalog:",
-    "@santi020k/og": "1.1.1",
+    "@santi020k/og": "1.2.0",
     "eslint": "catalog:",
     "satori": "catalog:",
     "satori-html": "catalog:",

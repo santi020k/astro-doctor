@@ -35,3 +35,10 @@ src/
 public/
   favicon.svg
 ```
+
+## Generated social images
+
+The documentation uses `@santi020k/og` 1.2 presets and a route manifest with content-versioned
+image URLs. Generation fingerprints include copy, assets, renderer configuration and the
+library version, so regenerated cards invalidate social preview caches. Run the workspace
+build to regenerate cards and verify the built metadata, images and sitemap audit.
