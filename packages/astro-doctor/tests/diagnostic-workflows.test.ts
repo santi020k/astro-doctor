@@ -5,7 +5,7 @@ import { join } from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
-import { readPersistentBaseline } from '../src/baseline.js'
+import { filterIntroducedDiagnostics, readPersistentBaseline } from '../src/baseline.js'
 import { runCli } from '../src/cli.js'
 import { getPresetRules } from '../src/presets.js'
 import { scan } from '../src/scanner/index.js'
@@ -180,6 +180,73 @@ describe('diagnostic workflows', () => {
       matchedOverrides: [0, 1],
       rules: { 'astro-doctor/no-missing-alt': 'off' }
     })
+  })
+
+  test('recounts preview findings after persistent and introduced baseline filtering', async () => {
+    writeFileSync(join(directory, 'index.astro'), '<img src="/hero.png" alt="Hero" />')
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())
+    const initial = await scan({ directory })
+    const preview = await scan({ directory, fixDryRun: true })
+
+    expect(preview.fixPreview?.remainingCount).toBeGreaterThan(0)
+    const introduced = filterIntroducedDiagnostics(preview, initial, directory, directory)
+
+    expect(introduced.diagnostics).toEqual([])
+    expect(introduced.fixPreview?.remainingCount).toBe(0)
+
+    await runCli(['baseline', 'create', '--dir', directory])
+    await runCli(['--dir', directory, '--baseline', '.astro-doctor-baseline.json', '--fix-dry-run', '--json'])
+
+    expect(JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0]))).toMatchObject({
+      diagnostics: [],
+      errorCount: 0,
+      warningCount: 0,
+      score: 100,
+      fixPreview: { remainingCount: 0 }
+    })
+  })
+
+  test('rejects explaining files outside configured workspace projects', async () => {
+    writeFileSync(join(directory, 'pnpm-workspace.yaml'), 'packages:\n  - apps/*\n')
+    writeFileSync(join(directory, 'doctor.config.json'), JSON.stringify({ projects: ['one'] }))
+    for (const name of ['one', 'two']) {
+      const project = join(directory, 'apps', name)
+
+      mkdirSync(project, { recursive: true })
+      writeFileSync(join(project, 'package.json'), JSON.stringify({ name, dependencies: { astro: '^7.0.0' } }))
+      writeFileSync(join(project, 'index.astro'), '<div />')
+    }
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(vi.fn())
+
+    await runCli(['--dir', directory, '--json', '--fail-on', 'off'])
+    expect(JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0]))).toMatchObject({ fileCount: 1 })
+    consoleLog.mockClear()
+    await runCli(['explain-config', 'apps/two/index.astro', '--dir', directory, '--json'])
+
+    expect(process.exitCode).toBe(1)
+    expect(consoleError).toHaveBeenCalledWith(expect.stringContaining('outside the selected projects'))
+    expect(consoleLog).not.toHaveBeenCalled()
+  })
+
+  test('bounds distant fixes to separate applicable hunks', () => {
+    const gapLength = 100
+    const fileName = 'long page.astro'
+    const original = [
+      'before first',
+      ...Array.from({ length: gapLength }, (_, index) => `untouched ${index}`),
+      'before second',
+      ''
+    ].join('\n')
+    const fixed = original.replace('before first', 'after first').replace('before second', 'after second')
+    const patch = formatFixDiff(fileName, original, fixed)
+
+    writeFileSync(join(directory, fileName), original)
+    expect(patch.match(/^@@/gmu)).toHaveLength(2)
+    expect(patch).not.toContain('untouched 50')
+    execFileSync('git', ['apply', '--check', '-'], { cwd: directory, input: patch })
+    execFileSync('git', ['apply', '-'], { cwd: directory, input: patch })
+    expect(readFileSync(join(directory, fileName), 'utf8')).toBe(fixed)
   })
 
   test('reports baseline progress and prunes only resolved occurrences', async () => {

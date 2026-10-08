@@ -192,6 +192,10 @@ export const readPersistentBaseline = (filePath: string): PersistentBaseline => 
   }
 }
 
+const recountFixPreview = (result: ScanResult, diagnostics: readonly Diagnostic[]): Pick<ScanResult, 'fixPreview'> => result.fixPreview === undefined ?
+  {} :
+  { fixPreview: { ...result.fixPreview, remainingCount: diagnostics.length } }
+
 export const filterPersistentBaselineDiagnostics = (
   result: ScanResult,
   baseline: PersistentBaseline,
@@ -216,7 +220,7 @@ export const filterPersistentBaselineDiagnostics = (
   return {
     ...createScanResult(diagnostics, result.fileCount),
     timings: result.timings,
-    ...(result.fixPreview === undefined ? {} : { fixPreview: result.fixPreview }),
+    ...recountFixPreview(result, diagnostics),
     baselineProgress: {
       newCount: diagnostics.length,
       existingCount: result.diagnostics.length - diagnostics.length,
@@ -252,7 +256,7 @@ export const filterIntroducedDiagnostics = (
 
   return {
     ...createScanResult(introducedDiagnostics, currentResult.fileCount),
-    ...(currentResult.fixPreview === undefined ? {} : { fixPreview: currentResult.fixPreview })
+    ...recountFixPreview(currentResult, introducedDiagnostics)
   }
 }
 

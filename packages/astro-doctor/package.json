@@ -43,7 +43,8 @@
     "vscode-languageserver": "catalog:",
     "vscode-languageserver-textdocument": "catalog:",
     "@typescript-eslint/parser": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "diff": "catalog:"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",

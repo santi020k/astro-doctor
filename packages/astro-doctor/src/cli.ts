@@ -32,6 +32,7 @@ import { getDiffAstroFiles, getStagedAstroFiles, resolveBaseRevision } from './g
 import { runInit } from './init.js'
 import { runInstall } from './install.js'
 import { runLsp } from './lsp.js'
+import type { WorkspacePackage } from './multi-project.js'
 import {
   aggregateResults,
   autoDiscoverAstroProjects,
@@ -1261,6 +1262,19 @@ const handleBaseline = async (argv: string[], noTelemetry: boolean) => {
   }
 }
 
+const selectExplanationProject = (
+  filePath: string, projects: readonly WorkspacePackage[], hasProjectSelection: boolean
+): WorkspacePackage | undefined => {
+  const project = projects.filter(candidate => isFileInDirectory(filePath, candidate.directory))
+    .sort((firstProject, secondProject) => secondProject.directory.length - firstProject.directory.length)[0]
+
+  if (project === undefined && hasProjectSelection) {
+    throw new Error('The file is outside the selected projects and is excluded from the workspace scan.')
+  }
+
+  return project
+}
+
 const handleExplainConfig = async (argv: string[]): Promise<void> => {
   try {
     const filePath = argv[1]
@@ -1280,10 +1294,7 @@ const handleExplainConfig = async (argv: string[]): Promise<void> => {
     const projectArgs = await resolveProjectsWithDiscovery(options, rootConfig)
     const projects = await resolveProjectDirectories(projectArgs, options.directory)
     const absolutePath = resolve(options.directory, filePath)
-
-    const project = projects.filter(candidate => isFileInDirectory(absolutePath, candidate.directory))
-      .sort((firstProject, secondProject) => secondProject.directory.length - firstProject.directory.length)[0]
-
+    const project = selectExplanationProject(absolutePath, projects, projectArgs.length > 0)
     const directory = project?.directory ?? options.directory
     const config = project === undefined ? effectiveConfig : mergeConfigs(effectiveConfig, await loadConfig(directory))
     const selectedPreset = options.preset ?? config.preset ?? preset

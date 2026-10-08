@@ -84,3 +84,9 @@ write. Automatic Changesets tag/release writes are disabled. Dedicated validated
 scripts enforce the gate after version/package preparation, and docs, umbrella tags, and
 both editor registries repeat it directly before their mutation commands. Temporary Git and
 intercepted registry/API regressions verify that advancing main blocks stale writes.
+
+A third Codex pass found preview counts retained before baseline filtering, explanations for
+files outside selected projects, and oversized diff hunks around distant fixes. The candidate
+recounts filtered previews, rejects excluded-file explanations, and uses the packaged diff
+runtime to generate bounded Git patches. Regressions verify JSON count consistency and
+apply separated hunks, whitespace paths, empty files and missing final newlines with Git.

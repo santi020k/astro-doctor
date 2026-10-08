@@ -7,6 +7,7 @@ allowBuilds:
   unrs-resolver: true
   workerd: true
 catalog:
+  diff: ^9.0.0
   "@arethetypeswrong/cli": ^0.18.5
   "@astrojs/check": ^0.9.10
   "@astrojs/compiler-binding-wasm32-wasi": 0.5.1

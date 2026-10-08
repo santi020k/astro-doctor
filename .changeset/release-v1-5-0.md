@@ -29,3 +29,5 @@ Parse TypeScript frontmatter consistently in the CLI, ESLint plugin, editor diag
 Keep workspace config explanations and scans aligned with project presets, disambiguate fix-preview patch paths, and retain editor diagnostics when malformed files are present at startup.
 
 Honor explicit CLI presets over workspace configuration and revalidate current main immediately before publishing, release metadata writes, and deployment.
+
+Recount preview diagnostics after baseline filtering, reject config explanations for files excluded by selected workspace projects, and emit bounded, Git-applicable hunks for distant fixes.
