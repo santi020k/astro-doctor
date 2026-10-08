@@ -68,3 +68,10 @@ now use the supported TypeScript parser; ordinary scans reject parse failures an
 diagnostics retain fatal parse messages. Regression fixtures use valid Astro script markup.
 GitHub checks must still be verified on the committed final SHA; local evidence alone does not
 confirm merge or deployment readiness.
+
+GitHub Codex review found three workspace/editor gaps in the first preparation commit.
+The follow-up expands each selected project preset after configuration merging, emits
+workspace preview patch paths relative to the invocation root, and keeps editor initialization
+alive while retaining fatal on-disk parser diagnostics. CLI scans and baseline creation/pruning
+remain strict. Regressions include applying a two-project patch from the workspace root and
+starting the real bundled editor server with malformed source already on disk.

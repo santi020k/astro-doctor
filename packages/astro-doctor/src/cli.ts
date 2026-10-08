@@ -801,7 +801,7 @@ const filterIntroducedProjectResults = async (
       scanOptions: {
         ...baseScanOptions,
         ignore: mergedConfig.ignore,
-        rules: mergedConfig.rules,
+        rules: getEffectiveRules(mergedConfig, mergedConfig.preset),
         overrides: mergedConfig.overrides
       }
     })
@@ -885,8 +885,7 @@ const executeMultiProjectScan = async (
 
   const effectiveConfig: AstroDoctorConfig = {
     ...config,
-    preset: effectivePreset,
-    rules: getEffectiveRules(config, effectivePreset)
+    preset: effectivePreset
   }
 
   if (failed) return
@@ -1057,7 +1056,7 @@ const executeScan = async (options: CliOptions): Promise<void> => {
     categories: options.categories.length > 0 ? options.categories : undefined,
     fix: options.fix,
     fixDryRun: options.fixDryRun,
-    failOnParseError: options.baseline !== undefined,
+    failOnParseError: true,
     noLint: options.noLint,
     noRespectInlineDisables: options.noRespectInlineDisables,
     cache: options.cache
@@ -1101,8 +1100,7 @@ const removeValueOption = (argv: readonly string[], optionName: string): string[
 }
 
 const createBaselineResult = async (
-  options: CliOptions,
-  failOnParseError = false
+  options: CliOptions
 ): Promise<ScanResult | null> => {
   const config = await loadConfig(options.directory)
   const effectivePreset = getEffectivePreset(options, config)
@@ -1111,7 +1109,7 @@ const createBaselineResult = async (
   const scanOptions: BaseScanOptions = {
     categories: options.categories.length > 0 ? options.categories : undefined,
     fix: false,
-    failOnParseError,
+    failOnParseError: true,
     noLint: options.noLint,
     noRespectInlineDisables: options.noRespectInlineDisables,
     cache: options.cache
@@ -1123,8 +1121,7 @@ const createBaselineResult = async (
       projectArgs: effectiveProjects,
       rootConfig: {
         ...config,
-        preset: effectivePreset,
-        rules: getEffectiveRules(config, effectivePreset)
+        preset: effectivePreset
       },
       scanOptions
     })
@@ -1173,7 +1170,7 @@ const runBaselineCommand = async (argv: string[]): Promise<void> => {
 
   const outputPath = resolve(options.directory, outputValue ?? DEFAULT_BASELINE_FILE_NAME)
   const previousBaseline = readBaselineForPruning(action, outputPath)
-  const result = await createBaselineResult(options, action === 'prune')
+  const result = await createBaselineResult(options)
 
   if (!result) return
 
@@ -1277,7 +1274,7 @@ const handleExplainConfig = async (argv: string[]): Promise<void> => {
     const options = parseArguments(argumentsForOptions)
     const rootConfig = await loadConfig(options.directory)
     const preset = getEffectivePreset(options, rootConfig)
-    const effectiveConfig = { ...rootConfig, preset, rules: getEffectiveRules(rootConfig, preset) }
+    const effectiveConfig = { ...rootConfig, preset }
     const projectArgs = await resolveProjectsWithDiscovery(options, rootConfig)
     const projects = await resolveProjectDirectories(projectArgs, options.directory)
     const absolutePath = resolve(options.directory, filePath)
@@ -1287,7 +1284,11 @@ const handleExplainConfig = async (argv: string[]): Promise<void> => {
 
     const directory = project?.directory ?? options.directory
     const config = project === undefined ? effectiveConfig : mergeConfigs(effectiveConfig, await loadConfig(directory))
-    const explanation = await explainConfig(absolutePath, directory, config, preset)
+    const selectedPreset = config.preset ?? preset
+
+    const explanation = await explainConfig(absolutePath, directory, {
+      ...config, rules: getEffectiveRules(config, selectedPreset)
+    }, selectedPreset)
 
     console.log(options.json === false ? formatConfigExplanation(explanation) : JSON.stringify(explanation, null, 2))
   } catch (error) {

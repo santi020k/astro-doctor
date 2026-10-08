@@ -437,7 +437,8 @@ const scanWorkspaceState = async (
       ignore: config?.ignore,
       overrides: config?.overrides,
       rules: effectiveRules,
-      cache: true
+      cache: true,
+      failOnParseError: false
     })
 
     return {
@@ -465,7 +466,7 @@ const scanWorkspaceState = async (
     rootDirectory: workspaceRoot,
     projectArgs: discoveredProjects.map(project => project.directory),
     rootConfig: config,
-    scanOptions: { cache: true, noLint: false, noRespectInlineDisables: false }
+    scanOptions: { cache: true, noLint: false, noRespectInlineDisables: false, failOnParseError: false }
   })
 
   return {

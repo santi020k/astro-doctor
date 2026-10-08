@@ -49,6 +49,74 @@ describe('diagnostic workflows', () => {
     writeFileSync(join(directory, 'index.astro'), '---\nconst token =\n---\n<div />')
 
     await expect(scan({ directory })).rejects.toThrow('source could not be parsed')
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(vi.fn())
+
+    await runCli(['baseline', 'create', '--dir', directory])
+    expect(process.exitCode).toBe(1)
+    expect(consoleError).toHaveBeenCalledWith(expect.stringContaining('source could not be parsed'))
+    expect(existsSync(join(directory, '.astro-doctor-baseline.json'))).toBe(false)
+  })
+
+  test('retains fatal diagnostics in the editor scan mode', async () => {
+    writeFileSync(join(directory, 'index.astro'), '---\nconst token =\n---\n<div />')
+    const result = await scan({ directory, failOnParseError: false })
+
+    expect(result.diagnostics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ ruleId: 'astro-doctor/parse-error', severity: 'error' })
+    ]))
+    expect(result.score).toBeLessThan(100)
+    await expect(scan({ directory, failOnParseError: false, fixDryRun: true })).rejects.toThrow('source could not be parsed')
+  })
+
+  test.each([
+    { rootPreset: 'recommended', projectPreset: 'strict', lifecycleSeverity: 'error' },
+    { rootPreset: 'strict', projectPreset: 'recommended', lifecycleSeverity: undefined }
+  ])('explains the selected project $projectPreset preset over root $rootPreset', async ({ rootPreset, projectPreset, lifecycleSeverity }) => {
+    const project = join(directory, 'apps', 'one')
+
+    mkdirSync(project, { recursive: true })
+    writeFileSync(join(directory, 'pnpm-workspace.yaml'), 'packages:\n  - apps/*\n')
+    writeFileSync(join(directory, 'doctor.config.json'), JSON.stringify({ preset: rootPreset }))
+    writeFileSync(join(project, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } }))
+    writeFileSync(join(project, 'doctor.config.json'), JSON.stringify({ preset: projectPreset }))
+    writeFileSync(join(project, 'index.astro'), '<ClientRouter /><script>document.addEventListener("DOMContentLoaded", () => {})</script>')
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())
+
+    await runCli(['explain-config', 'apps/one/index.astro', '--dir', directory, '--json'])
+    const explanation = JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0])) as {
+      preset: string
+      projectRules: Record<string, string>
+    }
+
+    expect(explanation.preset).toBe(projectPreset)
+    expect(explanation.projectRules['astro-doctor/require-client-router-script-lifecycle']).toBe(lifecycleSeverity)
+
+    await runCli(['--dir', directory, '--json', '--fail-on', 'off'])
+    const result = JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0])) as { diagnostics: { ruleId: string }[] }
+
+    expect(result.diagnostics.some(diagnostic => diagnostic.ruleId === 'astro-doctor/require-client-router-script-lifecycle')).toBe(projectPreset === 'strict')
+  })
+
+  test('workspace fix previews apply from the invocation root with distinct targets', async () => {
+    writeFileSync(join(directory, 'pnpm-workspace.yaml'), 'packages:\n  - apps/*\n')
+    for (const name of ['one', 'two']) {
+      const project = join(directory, 'apps', name)
+
+      mkdirSync(project, { recursive: true })
+      writeFileSync(join(project, 'package.json'), JSON.stringify({ name, dependencies: { astro: '^7.0.0' } }))
+      writeFileSync(join(project, 'index.astro'), '---\nconst title = process.env.SITE_TITLE\n---\n<h1>{title}</h1>\n')
+    }
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())
+
+    await runCli(['--dir', directory, '--fix-dry-run', '--json', '--fail-on', 'off'])
+    const result = JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0])) as {
+      fixPreview: { changes: { diff: string }[] }
+    }
+    const patch = result.fixPreview.changes.map(change => change.diff).join('\n') + '\n'
+
+    expect(patch).toContain('a/apps/one/index.astro')
+    expect(patch).toContain('a/apps/two/index.astro')
+    expect(() => execFileSync('git', ['apply', '--check', '-'], { cwd: directory, input: patch })).not.toThrow()
   })
 
   test('previews fixes and remaining manual findings without writing source or cache', async () => {

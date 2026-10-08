@@ -85,7 +85,9 @@ export interface ScanOptions {
   /** Apply safe ESLint fixes to scanned Astro files. */
   readonly fix?: boolean
   readonly fixDryRun?: boolean
+  /** Reject parse failures by default; the editor opts out to retain live diagnostics. */
   readonly failOnParseError?: boolean
+  readonly fixPreviewRoot?: string
 
   /** When true, skip lint entirely and return a clean result. */
   readonly noLint?: boolean

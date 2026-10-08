@@ -10,13 +10,16 @@ import { SERVER_RESPONSE_TIMEOUT_MS, SERVER_TEST_TIMEOUT_MS } from './constants.
 
 const SERVER_RESPONSE_ID = 'astro-doctor-server-smoke'
 
-test('bundled language server initializes and diagnoses TypeScript and malformed buffers', async () => {
+test.each([
+  { malformedOnDisk: false, initialDiagnostic: 'astro-doctor/no-process-env' },
+  { malformedOnDisk: true, initialDiagnostic: 'astro-doctor/parse-error' },
+])('bundled language server diagnoses buffers with malformedOnDisk=$malformedOnDisk', async ({ malformedOnDisk, initialDiagnostic }) => {
   const workspaceDirectory = mkdtempSync(join(tmpdir(), 'astro-doctor-editor-'))
   const documentPath = join(workspaceDirectory, 'index.astro')
   const content = '---\nconst token: string = process.env.SECRET\n---\n<img src="/hero.png" />'
   const documentUri = pathToFileURL(documentPath).toString()
 
-  writeFileSync(documentPath, content)
+  writeFileSync(documentPath, malformedOnDisk ? '---\nconst invalid = ;\n---\n<div />' : content)
   const serverPath = resolve(import.meta.dirname, '../dist/server.mjs')
   const serverProcess = spawn(process.execPath, [serverPath, '--stdio'], {
     env: {
@@ -111,7 +114,7 @@ test('bundled language server initializes and diagnoses TypeScript and malformed
 
     const initialized = JSON.stringify({ jsonrpc: '2.0', method: 'initialized', params: {} })
 
-    serverProcess.stdin.write(`Content-Length: ${Buffer.byteLength(initialized)}\r\n\r\n${initialized}`)
+    await expectDiagnostics(initialized, initialDiagnostic)
     await expectDiagnostics(JSON.stringify({
       jsonrpc: '2.0',
       method: 'textDocument/didOpen',

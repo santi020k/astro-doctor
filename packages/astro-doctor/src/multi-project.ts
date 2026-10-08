@@ -7,6 +7,7 @@ import { scan } from './scanner/index.js'
 import { isFileInDirectory } from './utils/is-file-in-directory.js'
 import { readPnpmWorkspacePatterns } from './utils/read-pnpm-workspace-patterns.js'
 import { loadConfig } from './config.js'
+import { getPresetRules } from './presets.js'
 import { computeScoreLabel } from './scorer.js'
 import type {
   AstroDoctorConfig,
@@ -292,7 +293,8 @@ export const scanProjects = async (options: MultiProjectOptions): Promise<Projec
       directory: project.directory,
       files: projectFiles,
       ignore: mergedConfig.ignore,
-      rules: mergedConfig.rules,
+      rules: { ...getPresetRules(mergedConfig.preset ?? 'recommended'), ...mergedConfig.rules },
+      fixPreviewRoot: rootDirectory,
       overrides: mergedConfig.overrides
     })
 

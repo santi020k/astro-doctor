@@ -60,13 +60,14 @@ const collectEslintDiagnostics = (results: ESLint.LintResult[]): Diagnostic[] =>
 
   for (const fileResult of results) {
     for (const message of fileResult.messages) {
-      if (!message.ruleId || !isConfiguredRule(message.ruleId)) continue
+      if (!message.fatal && (!message.ruleId || !isConfiguredRule(message.ruleId))) continue
 
+      const ruleId = message.ruleId ?? 'astro-doctor/parse-error'
       const severity = SEVERITY_MAP[message.severity] ?? 'warning'
-      const category = getRuleCategory(message.ruleId)
+      const category = getRuleCategory(ruleId)
 
       diagnostics.push({
-        ruleId: message.ruleId,
+        ruleId,
         severity,
         message: message.message,
         filePath: fileResult.filePath,
@@ -141,7 +142,7 @@ const lintAstroFiles = async (options: ScanOptions, astroFiles: string[], projec
   const eslintResults = await eslint.lintFiles(astroFiles)
   const invalidFile = eslintResults.find(fileResult => fileResult.fatalErrorCount > 0)
 
-  if (invalidFile !== undefined) {
+  if (invalidFile !== undefined && (options.fixDryRun || options.failOnParseError !== false)) {
     throw new Error(`Cannot scan ${invalidFile.filePath}: source could not be parsed.`)
   }
 
@@ -155,7 +156,7 @@ const lintAstroFiles = async (options: ScanOptions, astroFiles: string[], projec
 
       return [{
         filePath: fileResult.filePath,
-        diff: formatFixDiff(relative(options.directory, fileResult.filePath).replaceAll('\\', '/'), original, fileResult.output)
+        diff: formatFixDiff(relative(options.fixPreviewRoot ?? options.directory, fileResult.filePath).replaceAll('\\', '/'), original, fileResult.output)
       }]
     })
 
