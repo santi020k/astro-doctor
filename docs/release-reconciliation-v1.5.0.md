@@ -98,3 +98,14 @@ artifact before a separately authorized recovery. Fix previews require full or f
 avoiding pre-existing debt edits in introduced-only scans. Unsupported file explanations use
 the scanner relevance predicate. Mocked registry/Git regressions cover matching, missing and
 different publishing SHAs without external mutations.
+
+A fifth Codex pass identified secret-token matching, Action/config threshold precedence, and
+template-ignore explanations for project audits. Local fixes align environment-name tokens,
+make the Action min-score input authoritative while retaining error/severity gates, and
+explain that project audits still run despite template ignores. A real CLI/Action regression
+checks both permissive and failing Action thresholds.
+
+The user subsequently placed remote operations on hold. These final fixes are prepared and
+committed locally only; the existing draft PR remains at 22939fec97b40d0202687bf5ba54de0bcf49a2cd.
+Its three latest Codex threads require the local fixes to be pushed and reviewed after renewed
+remote authorization. No merge, publication or deployment has occurred.

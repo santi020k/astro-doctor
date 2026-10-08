@@ -19,6 +19,19 @@ describe('project audits', () => {
     rmSync(testDirectory, { recursive: true, force: true })
   })
 
+  test('matches secret env names by tokens consistently with template diagnostics', async () => {
+    writeFileSync(join(testDirectory, '.env.example'), [
+      'PUBLIC_KEYBOARD_LAYOUT=en', 'PUBLIC_TOKENIZER_MODE=basic', 'PUBLIC_KEY=value', 'PUBLIC_ACCESS_TOKEN=value'
+    ].join('\n'))
+    const result = await scan({ directory: testDirectory })
+    const secrets = result.diagnostics.filter(diagnostic => diagnostic.ruleId === 'astro-doctor/no-public-secret-env')
+
+    expect(secrets).toHaveLength(2)
+    expect(secrets.map(diagnostic => diagnostic.message)).toEqual(expect.arrayContaining([
+      expect.stringContaining('PUBLIC_KEY is declared'), expect.stringContaining('PUBLIC_ACCESS_TOKEN is declared')
+    ]))
+  })
+
   test('inherits pnpm configuration from the workspace root', async () => {
     const projectDirectory = join(testDirectory, 'apps', 'docs')
 

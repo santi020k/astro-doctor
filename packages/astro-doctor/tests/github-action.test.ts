@@ -8,6 +8,8 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 
 import { isPlainObject } from '../src/utils/is-plain-object.js'
 
+import { ACTION_SCAN_TEST_TIMEOUT_MS } from './constants.js'
+
 interface PreparedScan {
   readonly jsonPath: string
   readonly directory: string
@@ -133,6 +135,31 @@ describe('GitHub Action shell behavior', () => {
     expect(runStep('Prepare scan', environment).status).toBe(1)
     expect(parseOutputs(outputPath)).not.toHaveProperty('json_path')
   })
+
+  test('uses action gates without inheriting the project score threshold', () => {
+    const prepared = prepareScan()
+
+    writeFileSync(join(testDirectory, 'index.astro'), '<img src="/hero.png" />')
+    writeFileSync(join(testDirectory, 'doctor.config.json'), JSON.stringify({ threshold: 100 }))
+    expect(runStep('Run Astro Doctor scan', {
+      GITHUB_ACTION_PATH: resolve(import.meta.dirname, '../../..'),
+      JSON_REPORT_PATH: prepared.jsonPath,
+      WORKING_DIRECTORY: testDirectory,
+      EVENT_NAME: 'push',
+      FAIL_ON: 'off'
+    }).status).toBe(0)
+    const status = parseOutputs(outputPath).exit_code
+    const report = JSON.parse(readFileSync(prepared.jsonPath, 'utf8')) as { score: number }
+
+    expect(report.score).toBeLessThan(100)
+    expect(status).toBe('0')
+    expect(runStep('Fail check on violations', {
+      SCAN_FAILED: 'false', SCAN_STATUS: status ?? '1', SCORE: String(report.score), FAIL_ON: 'off', MIN_SCORE: '0'
+    }).status).toBe(0)
+    expect(runStep('Fail check on violations', {
+      SCAN_FAILED: 'false', SCAN_STATUS: status ?? '1', SCORE: String(report.score), FAIL_ON: 'off', MIN_SCORE: '100'
+    }).status).toBe(1)
+  }, ACTION_SCAN_TEST_TIMEOUT_MS)
 
   test('passes paths as literal arguments without executing shell content', () => {
     const prepared = prepareScan()

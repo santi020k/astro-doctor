@@ -124,7 +124,7 @@ runs:
         BASE_SHA: ${{ github.event.pull_request.base.sha }}
       run: |
         JSON_FLAG=(--json "$JSON_REPORT_PATH")
-        FAIL_FLAG=(--fail-on "$FAIL_ON")
+        FAIL_FLAG=(--fail-on "$FAIL_ON" --threshold 0)
         DIR_FLAG=(--dir "$WORKING_DIRECTORY")
         CHANGED_FLAG=()
 
@@ -232,11 +232,11 @@ runs:
 
         if [ -f "$GITHUB_ACTION_PATH/packages/astro-doctor/dist/bin/astro-doctor.js" ]; then
           node "$GITHUB_ACTION_PATH/packages/astro-doctor/dist/bin/astro-doctor.js" \
-            "${DIR_FLAG[@]}" --format sarif --fail-on off "${CHANGED_FLAG[@]}" > "$SARIF_PATH"
+            "${DIR_FLAG[@]}" --format sarif --fail-on off --threshold 0 "${CHANGED_FLAG[@]}" > "$SARIF_PATH"
         else
           PACKAGE_VERSION=$(node -p 'require(process.env.GITHUB_ACTION_PATH + "/packages/astro-doctor/package.json").version')
           npx --yes "@santi020k/astro-doctor@$PACKAGE_VERSION" \
-            "${DIR_FLAG[@]}" --format sarif --fail-on off "${CHANGED_FLAG[@]}" > "$SARIF_PATH"
+            "${DIR_FLAG[@]}" --format sarif --fail-on off --threshold 0 "${CHANGED_FLAG[@]}" > "$SARIF_PATH"
         fi
 
         echo "path=$SARIF_PATH" >> "$GITHUB_OUTPUT"

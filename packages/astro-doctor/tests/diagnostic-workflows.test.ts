@@ -442,6 +442,22 @@ describe('diagnostic workflows', () => {
     })
   })
 
+  test('keeps project-audit explanations active despite template ignore patterns', async () => {
+    writeFileSync(join(directory, 'astro.config.mjs'), 'export default { security: { checkOrigin: false } }')
+    writeFileSync(join(directory, 'doctor.config.json'), JSON.stringify({ ignore: ['astro.config.mjs'] }))
+    const result = await scan({ directory, ignore: ['astro.config.mjs'] })
+
+    expect(result.diagnostics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ ruleId: 'astro-doctor/no-disabled-origin-check' })
+    ]))
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())
+
+    await runCli(['explain-config', 'astro.config.mjs', '--dir', directory, '--json'])
+    const explanation: unknown = JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0]))
+
+    expect(explanation).toMatchObject({ ignored: false, discoveryExcluded: false, ignorePatterns: [] })
+  })
+
   test('explains missing files as errors and checks project audit rules independently', async () => {
     writeFileSync(join(directory, 'astro.config.mjs'), 'export default {}')
     const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())

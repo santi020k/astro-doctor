@@ -90,8 +90,8 @@ export const explainConfig = async (
   }
 
   const discoveryExcluded = await isDiscoveryExcluded(directory, absolutePath, config)
-  const ignorePatterns = getMatchingIgnorePatterns(directory, absolutePath, config)
   const isAstroFile = absolutePath.endsWith('.astro')
+  const ignorePatterns = isAstroFile ? getMatchingIgnorePatterns(directory, absolutePath, config) : []
   const eslint = new ESLint(buildEslintConfig({ directory, rules: config.rules, overrides: config.overrides }))
   const effectiveConfig: unknown = isAstroFile ? await eslint.calculateConfigForFile(absolutePath) : undefined
 
@@ -128,6 +128,6 @@ export const formatConfigExplanation = (explanation: ConfigExplanation): string 
   `Matching overrides (zero-based, applied in order): ${explanation.matchedOverrides.join(', ') || 'none'}`,
   'Template rules:',
   ...Object.entries(explanation.rules).sort(([firstRule], [secondRule]) => firstRule.localeCompare(secondRule)).map(([ruleId, severity]) => `  ${severity}  ${ruleId}`),
-  'Project audit rules (file overrides do not apply):',
+  'Project audit rules (template ignores and file overrides do not apply):',
   ...Object.entries(explanation.projectRules).sort(([firstRule], [secondRule]) => firstRule.localeCompare(secondRule)).map(([ruleId, severity]) => `  ${severity}  ${ruleId}`)
 ].join('\n')

@@ -33,3 +33,5 @@ Honor explicit CLI presets over workspace configuration and revalidate current m
 Recount preview diagnostics after baseline filtering, reject config explanations for files excluded by selected workspace projects, and emit bounded, Git-applicable hunks for distant fixes.
 
 Fail closed when recovering published-version metadata without a matching registry publishing SHA. Require full or files scope for fix previews, and mark unsupported file types excluded in config explanations.
+
+Align .env.example secret-token matching with template diagnostics. Let the GitHub Action apply its own score threshold and keep project-audit config explanations consistent with template-only ignores.

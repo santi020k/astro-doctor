@@ -1218,7 +1218,7 @@ const getEnvExampleVariableNames = (envExampleContent: string): string[] => envE
 
 const looksLikeSecret = (
   variableName: string
-): boolean => SECRET_ENV_NAME_PARTS.some(secretNamePart => variableName.includes(secretNamePart))
+): boolean => variableName.split('_').some(namePart => SECRET_ENV_NAME_PARTS.includes(namePart))
 
 const auditEnvExample = (
   options: ProjectAuditOptions,
