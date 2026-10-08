@@ -162,6 +162,27 @@ test('theme, tabs, and copy continue working across client navigation', async ({
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
 })
 
+test('mobile navigation opens before the optional dialog controller loads', async ({ page }) => {
+  await page.setViewportSize({ width: DOCS_MOBILE_WIDTH_PX, height: DOCS_VIEWPORT_HEIGHT_PX })
+
+  await page.route(/\/dialogs\.[^/]+\.js$/u, route => route.abort())
+
+  await page.goto('/')
+
+  const trigger = page.getByRole('button', { name: 'Open navigation', exact: true })
+  const panel = page.getByRole('dialog', { name: 'Explore the docs.' })
+
+  await expect(trigger).not.toHaveAttribute('data-ui-bound', 'true')
+
+  await trigger.click()
+
+  await expect(panel).toBeVisible()
+
+  await page.getByRole('button', { name: 'Close navigation', exact: true }).click()
+
+  await expect(panel).not.toBeVisible()
+})
+
 test('mobile navigation traps focus, closes safely, and opens after page swaps', async ({ page }) => {
   await page.setViewportSize({ width: DOCS_MOBILE_WIDTH_PX, height: DOCS_VIEWPORT_HEIGHT_PX })
 
