@@ -83,6 +83,11 @@ jobs:
         id: release-scope
         run: bash scripts/check-validated-commit.sh
 
+      - name: Verify editor recovery source
+        if: steps.release-scope.outputs.relevant == 'true' && inputs.publish_extension_recovery
+        id: editor-recovery-source
+        run: bash scripts/check-extension-release-source.sh
+
       - name: Create release pull request or publish
         if: steps.release-scope.outputs.relevant == 'true'
         id: changesets
@@ -157,9 +162,9 @@ jobs:
       - name: Publish VS Code Extension
         if: steps.scope.outputs.relevant == 'true' && (steps.release-ready.outputs.ready == 'true' || inputs.publish_extension_recovery)
         run: |
-          bash ../../scripts/check-validated-commit.sh --require-current
+          bash ../../scripts/check-extension-release-source.sh
           pnpm run publish:vsce
-          bash ../../scripts/check-validated-commit.sh --require-current
+          bash ../../scripts/check-extension-release-source.sh
           pnpm run publish:ovsx
         working-directory: packages/vscode-astro-doctor
         env:

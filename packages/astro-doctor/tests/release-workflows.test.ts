@@ -299,3 +299,43 @@ await import('./scripts/publish-packages.mjs');
     }, GIT_WORKFLOW_TEST_TIMEOUT_MS
   )
 })
+
+describe('editor recovery source validation', () => {
+  test.each(['matching', 'advanced-main', 'missing-tag'])('requires the published source: %s', scenario => {
+    const directory = mkdtempSync(join(tmpdir(), 'astro-doctor-editor-recovery-'))
+
+    try {
+      mkdirSync(join(directory, 'scripts'))
+      mkdirSync(join(directory, 'packages/vscode-astro-doctor'), { recursive: true })
+      writeFileSync(join(directory, 'packages/vscode-astro-doctor/package.json'), JSON.stringify({ version: '0.0.1' }))
+      for (const name of ['check-extension-release-source.sh', 'check-validated-commit.sh']) {
+        writeFileSync(join(directory, 'scripts', name), readFileSync(resolve(import.meta.dirname, '../../../scripts', name)))
+      }
+      execFileSync('git', ['init', '--initial-branch=main'], { cwd: directory })
+      execFileSync('git', ['config', 'user.email', 'fixture@example.com'], { cwd: directory })
+      execFileSync('git', ['config', 'user.name', 'Fixture'], { cwd: directory })
+      execFileSync('git', ['add', '.'], { cwd: directory })
+      execFileSync('git', ['commit', '-m', 'released'], { cwd: directory })
+      if (scenario !== 'missing-tag') {
+        execFileSync('git', ['tag', '@santi020k/astro-doctor@0.0.1'], { cwd: directory })
+      }
+      if (scenario === 'advanced-main') {
+        writeFileSync(join(directory, 'changed.txt'), 'post-release source')
+        execFileSync('git', ['add', '.'], { cwd: directory })
+        execFileSync('git', ['commit', '-m', 'next main'], { cwd: directory })
+      }
+      const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: directory, encoding: 'utf8' }).trim()
+
+      execFileSync('git', ['remote', 'add', 'origin', directory], { cwd: directory })
+      const result = spawnSync('bash', [join(directory, 'scripts/check-extension-release-source.sh')], {
+        cwd: join(directory, 'packages/vscode-astro-doctor'), encoding: 'utf8', env: { ...process.env, VALIDATED_COMMIT: head, WORKFLOW_COMMIT: head }
+      })
+
+      expect(result.status).toBe(scenario === 'matching' ? 0 : 1)
+      expect(result.stderr.includes('No editor artifact will be published')).toBe(scenario !== 'matching')
+      expect(execFileSync('git', ['rev-parse', 'HEAD'], { cwd: directory, encoding: 'utf8' }).trim()).toBe(head)
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  }, GIT_WORKFLOW_TEST_TIMEOUT_MS)
+})

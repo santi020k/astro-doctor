@@ -38,7 +38,8 @@ describe('diagnostic workflows', () => {
     expect(consoleLog).not.toHaveBeenCalled()
   })
 
-  test.each(['README.md', 'style.css'])('explains unsupported %s as excluded from discovery', async fileName => {
+  test.each(['README.md', 'style.css', 'src/utils/helper.ts', 'src/utils/helper.js', 'src/utils/helper.mjs'])('explains unsupported %s as excluded from discovery', async fileName => {
+    mkdirSync(join(directory, 'src', 'utils'), { recursive: true })
     writeFileSync(join(directory, fileName), 'fixture')
     const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())
 
@@ -440,6 +441,35 @@ describe('diagnostic workflows', () => {
     expect(JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0]))).toMatchObject({
       directory: firstProject, matchedOverrides: [0], rules: { 'astro-doctor/no-missing-alt': 'warn' }
     })
+  })
+
+  test('resolves configured fetch entrypoints instead of every source extension', async () => {
+    mkdirSync(join(directory, 'source'), { recursive: true })
+    mkdirSync(join(directory, 'src'), { recursive: true })
+    writeFileSync(join(directory, 'package.json'), JSON.stringify({ dependencies: { astro: '^7.0.0' } }))
+    writeFileSync(join(directory, 'astro.config.mjs'), 'export default { srcDir: \'source\', fetchFile: \'runtime\' }')
+    writeFileSync(join(directory, 'source/runtime.ts'), 'export const handler = {}')
+    writeFileSync(join(directory, 'source/helper.ts'), 'export const helper = true')
+    writeFileSync(join(directory, 'src/fetch.ts'), 'export const unused = true')
+    const result = await scan({ directory, rules: { 'astro-doctor/require-fetch-default-export': 'warn' } })
+
+    expect(result.diagnostics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ filePath: join(directory, 'source/runtime.ts'), ruleId: 'astro-doctor/require-fetch-default-export' })
+    ]))
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())
+
+    const fixtures = [
+      { fileName: 'source/runtime.ts', excluded: false },
+      { fileName: 'source/helper.ts', excluded: true },
+      { fileName: 'src/fetch.ts', excluded: true }
+    ]
+
+    for (const { fileName, excluded } of fixtures) {
+      await runCli(['explain-config', fileName, '--dir', directory, '--json'])
+      const explanation: unknown = JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0]))
+
+      expect(explanation).toMatchObject({ discoveryExcluded: excluded, ignored: excluded })
+    }
   })
 
   test('keeps project-audit explanations active despite template ignore patterns', async () => {

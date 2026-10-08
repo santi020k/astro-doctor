@@ -1313,6 +1313,26 @@ const auditContentConfig = (
   )
 }
 
+export const isProjectAuditDiscoveryPath = (
+  directory: string, filePath: string, ignore?: readonly string[]
+): boolean => {
+  const projectPath = toProjectPath(directory, filePath)
+  const astroConfigPath = findExistingProjectFile(directory, ASTRO_CONFIG_FILE_NAMES)
+  const fetchPaths = isAstro7Project(directory) ? getFetchEntrypointProjectPaths(directory, astroConfigPath) : undefined
+
+  const discoveryPaths = [
+    PACKAGE_FILE_NAME,
+    ...COMPETING_LOCK_FILE_NAMES,
+    ENV_EXAMPLE_FILE_NAME,
+    astroConfigPath,
+    findExistingProjectFile(directory, CONTENT_CONFIG_FILE_NAMES),
+    findExistingProjectFile(directory, fetchPaths ?? []),
+    ...getActionProjectPaths({ directory, ignore }, undefined)
+  ]
+
+  return discoveryPaths.includes(projectPath) || projectPath.startsWith(`${CONTENT_DIRECTORY_NAME}/`)
+}
+
 export const auditProject = (options: ProjectAuditOptions): Diagnostic[] => {
   const selectedProjectPaths = getSelectedProjectPaths(options.directory, options.files)
   const diagnostics: Diagnostic[] = []

@@ -5,7 +5,7 @@ import { ESLint } from 'eslint'
 
 import { buildIgnorePatterns, discoverAstroFiles } from './scanner/file-discovery.js'
 import { buildEslintConfig } from './scanner/index.js'
-import { isProjectAuditRelevantPath } from './scanner/project-audit.js'
+import { isProjectAuditDiscoveryPath } from './scanner/project-audit.js'
 import { isFileInDirectory } from './utils/is-file-in-directory.js'
 import { isPlainObject } from './utils/is-plain-object.js'
 import type { PresetName } from './presets.js'
@@ -70,7 +70,7 @@ const getMatchingOverrides = async (
 const isDiscoveryExcluded = async (
   directory: string, filePath: string, config: AstroDoctorConfig
 ): Promise<boolean> => {
-  if (!filePath.endsWith('.astro')) return !isProjectAuditRelevantPath(filePath)
+  if (!filePath.endsWith('.astro')) return !isProjectAuditDiscoveryPath(directory, filePath, config.ignore)
 
   const discoveredFiles = await discoverAstroFiles(directory, config.ignore)
 
@@ -128,6 +128,6 @@ export const formatConfigExplanation = (explanation: ConfigExplanation): string 
   `Matching overrides (zero-based, applied in order): ${explanation.matchedOverrides.join(', ') || 'none'}`,
   'Template rules:',
   ...Object.entries(explanation.rules).sort(([firstRule], [secondRule]) => firstRule.localeCompare(secondRule)).map(([ruleId, severity]) => `  ${severity}  ${ruleId}`),
-  'Project audit rules (template ignores and file overrides do not apply):',
+  'Project audit rules (file overrides do not apply):',
   ...Object.entries(explanation.projectRules).sort(([firstRule], [secondRule]) => firstRule.localeCompare(secondRule)).map(([ruleId, severity]) => `  ${severity}  ${ruleId}`)
 ].join('\n')

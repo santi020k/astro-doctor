@@ -35,3 +35,5 @@ Recount preview diagnostics after baseline filtering, reject config explanations
 Fail closed when recovering published-version metadata without a matching registry publishing SHA. Require full or files scope for fix previews, and mark unsupported file types excluded in config explanations.
 
 Align .env.example secret-token matching with template diagnostics. Let the GitHub Action apply its own score threshold and keep project-audit config explanations consistent with template-only ignores.
+
+Require editor recovery and registry publication to use the package-tagged release source. Resolve config explanation discovery from actual configured project audit paths instead of conservative changed-file extensions.

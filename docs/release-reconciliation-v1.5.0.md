@@ -105,7 +105,15 @@ make the Action min-score input authoritative while retaining error/severity gat
 explain that project audits still run despite template ignores. A real CLI/Action regression
 checks both permissive and failing Action thresholds.
 
-The user subsequently placed remote operations on hold. These final fixes are prepared and
+The user subsequently placed remote operations on hold. At that point, those fixes were prepared and
 committed locally only; the existing draft PR remains at 22939fec97b40d0202687bf5ba54de0bcf49a2cd.
-Its three latest Codex threads require the local fixes to be pushed and reviewed after renewed
+Its three then-latest Codex threads required the local fixes to be pushed and reviewed after renewed
 remote authorization. No merge, publication or deployment has occurred.
+
+The user then authorized completing the missing steps and deployment. The held fixes were
+pushed, all checks passed, and their threads were resolved. A sixth Codex pass found editor
+recovery source identity and conservative source-file discovery. Editor recovery is checked
+before Changesets and each editor registry publication against the released package-tag SHA;
+missing or different provenance blocks publication. Explanations resolve configured fetch
+entrypoints and actual action/config audit paths. Temporary Git regressions verify matching,
+missing and advanced release sources from the editor working directory.
