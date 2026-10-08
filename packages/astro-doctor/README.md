@@ -1,4 +1,19 @@
-# @santi020k/astro-doctor
+<p align="center">
+  <a href="https://github.com/santi020k/astro-doctor/blob/main/README.md"><img src="https://raw.githubusercontent.com/santi020k/astro-doctor/main/apps/docs/public/favicon.svg" alt="Astro Doctor" width="72"></a>
+</p>
+
+<p align="center"><a href="https://github.com/santi020k/astro-doctor/blob/main/README.md">Astro Doctor</a></p>
+
+<h1 align="center">Diagnostic CLI</h1>
+
+<p align="center">
+  <a href="https://github.com/santi020k/astro-doctor/blob/main/README.md">Project overview</a> ·
+  <a href="https://github.com/santi020k/astro-doctor/blob/main/packages/astro-doctor/package.json">Package manifest</a> ·
+  <a href="https://github.com/santi020k/astro-doctor/blob/main/packages/astro-doctor/CHANGELOG.md">Changelog</a> ·
+  <a href="#resources">Resources</a>
+</p>
+
+**On this page:** [Quick Start](#quick-start) · [Programmatic API](#programmatic-api) · [GitHub Actions](#github-actions) · [See Also](#see-also) · [License](#license) · [Resources](#resources)
 
 > Your agent writes bad Astro. This catches it.
 
@@ -77,3 +92,7 @@ console.log(formatConsoleReport(result))
 ## License
 
 MIT — [santi020k](https://santi020k.com)
+
+## Resources
+
+[Project overview](https://github.com/santi020k/astro-doctor/blob/main/README.md) · [License](https://github.com/santi020k/astro-doctor/blob/main/LICENSE)

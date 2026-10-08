@@ -1,4 +1,19 @@
-# @santi020k/eslint-plugin-astro-doctor
+<p align="center">
+  <a href="https://github.com/santi020k/astro-doctor/blob/main/README.md"><img src="https://raw.githubusercontent.com/santi020k/astro-doctor/main/apps/docs/public/favicon.svg" alt="Astro Doctor" width="72"></a>
+</p>
+
+<p align="center"><a href="https://github.com/santi020k/astro-doctor/blob/main/README.md">Astro Doctor</a></p>
+
+<h1 align="center">ESLint plugin</h1>
+
+<p align="center">
+  <a href="https://github.com/santi020k/astro-doctor/blob/main/README.md">Project overview</a> ·
+  <a href="https://github.com/santi020k/astro-doctor/blob/main/packages/eslint-plugin-astro-doctor/package.json">Package manifest</a> ·
+  <a href="https://github.com/santi020k/astro-doctor/blob/main/packages/eslint-plugin-astro-doctor/CHANGELOG.md">Changelog</a> ·
+  <a href="#resources">Resources</a>
+</p>
+
+**On this page:** [Install](#install) · [Usage](#usage) · [Proprietary Rules](#proprietary-rules) · [See Also](#see-also) · [License](#license) · [Resources](#resources)
 
 > ESLint plugin for Astro Doctor — Astro-specific rules for performance, accessibility, security, and best practices.
 
@@ -104,3 +119,7 @@ export default await defineConfig({
 ## License
 
 MIT — [santi020k](https://santi020k.com)
+
+## Resources
+
+[Project overview](https://github.com/santi020k/astro-doctor/blob/main/README.md) · [License](https://github.com/santi020k/astro-doctor/blob/main/LICENSE)

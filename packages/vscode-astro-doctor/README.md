@@ -1,4 +1,30 @@
-# Astro Doctor for VS Code
+<p align="center">
+  <a href="../../README.md"><img src="../../apps/docs/public/favicon.svg" alt="Astro Doctor" width="72"></a>
+</p>
+
+<p align="center"><a href="../../README.md">Astro Doctor</a></p>
+
+<h1 align="center">VS Code extension</h1>
+
+<p align="center">
+  <a href="../../README.md">Project overview</a> ·
+  <a href="package.json">Package manifest</a> ·
+  <a href="CHANGELOG.md">Changelog</a> ·
+  <a href="#resources">Resources</a>
+</p>
+
+<details>
+<summary>On this page</summary>
+
+- [Features](#features)
+- [Extension Settings](#extension-settings)
+- [Development Environments](#development-environments)
+- [Development Workflow](#development-workflow)
+- [Commands](#commands)
+- [Links](#links)
+- [Resources](#resources)
+
+</details>
 
 Astro Doctor diagnostics, hovers, and quick fixes right in your editor.
 
@@ -69,3 +95,7 @@ Only run `pnpm --filter vscode-astro-doctor run package` and install the generat
 - [Official Documentation](https://doctor.santi020k.com)
 - [GitHub Repository](https://github.com/santi020k/astro-doctor)
 - [Sponsor](https://github.com/sponsors/santi020k)
+
+## Resources
+
+[Project overview](../../README.md) · [License](../../LICENSE)

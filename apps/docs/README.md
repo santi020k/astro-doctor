@@ -1,4 +1,18 @@
-# astro-doctor docs
+<p align="center">
+  <a href="../../README.md"><img src="public/favicon.svg" alt="Astro Doctor" width="72"></a>
+</p>
+
+<p align="center"><a href="../../README.md">Astro Doctor</a></p>
+
+<h1 align="center">Documentation</h1>
+
+<p align="center">
+  <a href="../../README.md">Project overview</a> ·
+  <a href="package.json">Package manifest</a> ·
+  <a href="#resources">Resources</a>
+</p>
+
+**On this page:** [Development](#development) · [Deploy](#deploy) · [Structure](#structure) · [Generated social images](#generated-social-images) · [Design and motion](#design-and-motion) · [Resources](#resources)
 
 Documentation website for [astro-doctor](https://github.com/santi020k/astro-doctor), built with Astro and deployed to Cloudflare Pages.
 
@@ -64,3 +78,7 @@ external link safety, theme persistence, package-manager keyboard behavior, clip
 mobile navigation, narrow/enlarged text layouts, and reading without JavaScript. Set
 `DOCS_CAPTURE_DIR` to an absolute temporary directory to save full-page screenshots. Use
 `PLAYWRIGHT_CHROMIUM_CHANNEL=chrome` to run against installed Chrome during local development.
+
+## Resources
+
+[Project overview](../../README.md) · [License](../../LICENSE)
