@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { appendFile, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   HTTP_NOT_FOUND_STATUS,
@@ -46,6 +47,14 @@ const runCommand = async (command, argumentsList, workingDirectory) =>
       );
     });
   });
+
+const requireCurrentMain = async () => {
+  if (process.env.VALIDATED_COMMIT) {
+    await runCommand("bash", [fileURLToPath(new URL("check-validated-commit.sh", import.meta.url)), "--require-current"], fileURLToPath(new URL("../", import.meta.url)));
+  } else if (process.env.GITHUB_ACTIONS === "true") {
+    throw new Error("CI publishing requires a validated main commit.");
+  }
+};
 
 const getCommandOutput = async (command, argumentsList, workingDirectory) =>
   new Promise((resolve, reject) => {
@@ -184,6 +193,51 @@ const hasGitHubRelease = async (tag) => {
   );
 };
 
+const createPackageRelease = async (packagePath, tag, headCommit, tagCommit, releaseExists) => {
+  if (process.env.GITHUB_ACTIONS !== "true") return;
+
+  const repository = process.env.GITHUB_REPOSITORY;
+  const token = process.env.GITHUB_TOKEN;
+
+  if (!repository || !token) throw new Error("CI release metadata requires GitHub authentication.");
+
+  if (!tagCommit) {
+    await runCommand("git", ["tag", tag, headCommit], process.cwd());
+
+    await requireCurrentMain();
+
+    await runCommand("git", ["push", "origin", `refs/tags/${tag}`], process.cwd());
+  }
+
+  if (releaseExists) return;
+
+  const changelog = await readFile(new URL("CHANGELOG.md", packagePath), "utf8");
+  const version = tag.slice(tag.lastIndexOf("@") + 1);
+  const lines = changelog.split("\n");
+  const start = lines.findIndex(line => line.trim() === `## ${version}`);
+
+  if (start < 0) throw new Error(`Missing changelog entry for ${tag}`);
+
+  const following = lines.slice(start + 1);
+  const end = following.findIndex(line => line.startsWith("## "));
+  const body = (end < 0 ? following : following.slice(0, end)).join("\n").trim();
+
+  await requireCurrentMain();
+
+  const response = await fetch(`${GITHUB_API_URL}/repos/${repository}/releases`, {
+    method: "POST",
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${token}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ name: tag, tag_name: tag, target_commitish: headCommit, body, prerelease: version.includes("-") }),
+  });
+
+  if (!response.ok) throw new Error(`GitHub returned ${response.status} while creating release ${tag}`);
+};
+
 const publishPackage = async (packagePath) => {
   const packDirectory = await mkdtemp(path.join(os.tmpdir(), "astro-doctor-pack-"));
 
@@ -216,6 +270,8 @@ const publishPackage = async (packagePath) => {
         `Expected one package archive in ${packDirectory}, found ${packFiles.length}`,
       );
     }
+
+    await requireCurrentMain();
 
     await runCommand(
       "node",
@@ -287,6 +343,8 @@ for (const packageDirectory of packageDirectories) {
   }
 
   if (!tagCommit || !releaseExists) {
+    await createPackageRelease(packagePath, tag, headCommit, tagCommit, releaseExists);
+
     console.log(`New tag: ${tag}`);
 
     await writeChangesetsEvent(packageName, version);

@@ -801,7 +801,7 @@ const filterIntroducedProjectResults = async (
       scanOptions: {
         ...baseScanOptions,
         ignore: mergedConfig.ignore,
-        rules: getEffectiveRules(mergedConfig, mergedConfig.preset),
+        rules: getEffectiveRules(mergedConfig, options.preset ?? mergedConfig.preset),
         overrides: mergedConfig.overrides
       }
     })
@@ -898,6 +898,7 @@ const executeMultiProjectScan = async (
     rootDirectory: options.directory,
     projectArgs: effectiveProjects,
     rootConfig: effectiveConfig,
+    preset: options.preset,
     scanOptions: {
       ...baseScanOptions,
       files: filesToScan
@@ -1123,6 +1124,7 @@ const createBaselineResult = async (
         ...config,
         preset: effectivePreset
       },
+      preset: options.preset,
       scanOptions
     })
 
@@ -1284,7 +1286,7 @@ const handleExplainConfig = async (argv: string[]): Promise<void> => {
 
     const directory = project?.directory ?? options.directory
     const config = project === undefined ? effectiveConfig : mergeConfigs(effectiveConfig, await loadConfig(directory))
-    const selectedPreset = config.preset ?? preset
+    const selectedPreset = options.preset ?? config.preset ?? preset
 
     const explanation = await explainConfig(absolutePath, directory, {
       ...config, rules: getEffectiveRules(config, selectedPreset)

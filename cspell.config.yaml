@@ -18,6 +18,7 @@ words:
   - commitizen
   - commitlint
   - commitprompt
+  - commitish
   - eslint
   - gitignore
   - jsonc

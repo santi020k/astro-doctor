@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { runInNewContext } from 'node:vm'
@@ -123,7 +123,7 @@ describe.each(['publish', 'deploy-docs'])('%s workflow', workflowName => {
     expect(getRecord(getRecord(checkout).with).ref).toBe('${{ env.VALIDATED_COMMIT }}')
   })
 
-  test.each(['current', 'superseded', 'wrong-checkout', 'wrong-context'])(
+  test.each(['current', 'superseded', 'wrong-checkout', 'wrong-context', 'advanced-after-gate'])(
     'verifies commit identity before privileged operations: %s', scenario => {
       const testDirectory = mkdtempSync(join(tmpdir(), 'astro-doctor-workflow-'))
 
@@ -153,26 +153,148 @@ describe.each(['publish', 'deploy-docs'])('%s workflow', workflowName => {
         execFileSync('git', ['remote', 'add', 'origin', testDirectory], { cwd: testDirectory })
         if (scenario === 'superseded') execFileSync('git', ['-c', 'advice.detachedHead=false', 'checkout', '--quiet', firstCommit], { cwd: testDirectory })
 
+        if (scenario === 'advanced-after-gate') {
+          execFileSync('git', ['-c', 'advice.detachedHead=false', 'checkout', '--quiet', firstCommit], { cwd: testDirectory })
+          execFileSync('git', ['update-ref', 'refs/heads/main', firstCommit], { cwd: testDirectory })
+        }
+
         const outputPath = join(testDirectory, 'output')
 
         writeFileSync(outputPath, '')
-        const result = spawnSync('bash', ['-e', '-o', 'pipefail', '-c', getScopeScript(job)], {
+        let result = spawnSync('bash', ['-e', '-o', 'pipefail', '-c', getScopeScript(job)], {
           cwd: testDirectory,
           encoding: 'utf8',
           env: {
             ...process.env,
             GITHUB_OUTPUT: outputPath,
-            VALIDATED_COMMIT: scenario === 'superseded' || scenario === 'wrong-checkout' ? firstCommit : currentCommit,
-            WORKFLOW_COMMIT: scenario === 'wrong-context' ? firstCommit : currentCommit
+            VALIDATED_COMMIT: new Set(['superseded', 'wrong-checkout', 'advanced-after-gate']).has(scenario) ?
+              firstCommit :
+              currentCommit,
+            WORKFLOW_COMMIT: new Set(['wrong-context', 'advanced-after-gate']).has(scenario) ? firstCommit : currentCommit
           }
         })
 
-        expect(result.status).toBe(scenario === 'wrong-checkout' ? 1 : 0)
+        if (scenario === 'advanced-after-gate') {
+          execFileSync('git', ['update-ref', 'refs/heads/main', currentCommit], { cwd: testDirectory })
+          const guardedMutation = 'bash scripts/check-validated-commit.sh --require-current && touch external-mutation'
+
+          result = spawnSync('bash', ['-e', '-o', 'pipefail', '-c', guardedMutation], {
+            cwd: testDirectory,
+            encoding: 'utf8',
+            env: {
+              ...process.env,
+              GITHUB_OUTPUT: outputPath,
+              VALIDATED_COMMIT: firstCommit,
+              WORKFLOW_COMMIT: firstCommit
+            }
+          })
+        }
+
+        expect(existsSync(join(testDirectory, 'external-mutation'))).toBe(false)
+        expect(result.status).toBe(new Set(['wrong-checkout', 'advanced-after-gate']).has(scenario) ? 1 : 0)
         expect(readFileSync(outputPath, 'utf8').trim()).toBe(
-          scenario === 'wrong-checkout' ? '' : `relevant=${scenario === 'current'}`
+          scenario === 'wrong-checkout' ? '' : `relevant=${new Set(['current', 'advanced-after-gate']).has(scenario)}`
         )
       } finally {
         rmSync(testDirectory, { recursive: true, force: true })
+      }
+    }, GIT_WORKFLOW_TEST_TIMEOUT_MS
+  )
+})
+
+const locateGitExecutable = (): string => execFileSync(
+  process.platform === 'win32' ? 'where' : 'which', ['git'], { encoding: 'utf8' }
+).trim().split(/\r?\n/u)[0] ?? 'git'
+
+describe('guarded package release metadata', () => {
+  test.each(['current', 'advance-before-tag', 'advance-before-release'])(
+    'blocks stale tag and GitHub release mutations: %s', scenario => {
+      const directory = mkdtempSync(join(tmpdir(), 'astro-doctor-release-metadata-'))
+
+      try {
+        mkdirSync(join(directory, 'scripts'))
+        mkdirSync(join(directory, 'packages', 'example'), { recursive: true })
+        mkdirSync(join(directory, 'bin'))
+        writeFileSync(join(directory, 'package.json'), JSON.stringify({ type: 'module', private: true }))
+        writeFileSync(join(directory, 'packages/example/package.json'), JSON.stringify({ name: '@fixture/example', version: '0.0.1' }))
+        writeFileSync(join(directory, 'packages/example/CHANGELOG.md'), '# Changelog\n\n## 0.0.1\n\nFixture release notes.\n\n## 0.0.0\n\nOld notes.\n')
+        for (const name of ['publish-packages.mjs', 'constants.ts', 'check-validated-commit.sh']) {
+          writeFileSync(join(directory, 'scripts', name), readFileSync(resolve(import.meta.dirname, '../../../scripts', name)))
+        }
+        execFileSync('git', ['init', '--initial-branch=main'], { cwd: directory })
+        execFileSync('git', ['config', 'user.email', 'fixture@example.com'], { cwd: directory })
+        execFileSync('git', ['config', 'user.name', 'Fixture'], { cwd: directory })
+        execFileSync('git', ['add', '.'], { cwd: directory })
+        execFileSync('git', ['commit', '-m', 'first'], { cwd: directory })
+        const first = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: directory, encoding: 'utf8' }).trim()
+
+        writeFileSync(join(directory, 'changed.txt'), 'next main')
+        execFileSync('git', ['add', '.'], { cwd: directory })
+        execFileSync('git', ['commit', '-m', 'second'], { cwd: directory })
+        const second = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: directory, encoding: 'utf8' }).trim()
+        const realGit = locateGitExecutable()
+
+        execFileSync('git', ['-c', 'advice.detachedHead=false', 'checkout', '--quiet', first], { cwd: directory })
+        execFileSync('git', ['update-ref', 'refs/heads/main', first], { cwd: directory })
+        execFileSync('git', ['remote', 'add', 'origin', directory], { cwd: directory })
+        writeFileSync(join(directory, 'bin/git'), [
+          '#!/bin/sh',
+          'if [ "$1" = "push" ]; then',
+          '  touch tag-push',
+          '  if [ "$RELEASE_SCENARIO" = "advance-before-release" ]; then',
+          '    "$REAL_GIT" update-ref refs/heads/main "$NEXT_MAIN"',
+          '  fi',
+          '  exit 0',
+          'fi',
+          'exec "$REAL_GIT" "$@"'
+        ].join('\n'))
+        chmodSync(join(directory, 'bin/git'), 0o755)
+        writeFileSync(join(directory, 'bootstrap.mjs'), `
+import { execFileSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+globalThis.fetch = async (url, options = {}) => {
+  if (String(url).startsWith('https://registry.npmjs.org/')) return new Response('{}');
+  if (options.method === 'POST') {
+    writeFileSync('release-post', options.body);
+    return new Response('{}', { status: 201 });
+  }
+  if (process.env.RELEASE_SCENARIO === 'advance-before-tag') {
+    execFileSync(process.env.REAL_GIT, ['update-ref', 'refs/heads/main', process.env.NEXT_MAIN]);
+  }
+  return new Response('{}', { status: 404 });
+};
+await import('./scripts/publish-packages.mjs');
+`)
+        const result = spawnSync(process.execPath, ['bootstrap.mjs'], {
+          cwd: directory,
+          encoding: 'utf8',
+          env: {
+            ...process.env,
+            PATH: `${join(directory, 'bin')}:${process.env.PATH ?? ''}`,
+            REAL_GIT: realGit,
+            NEXT_MAIN: second,
+            RELEASE_SCENARIO: scenario,
+            GITHUB_ACTIONS: 'true',
+            GITHUB_REPOSITORY: 'fixture/example',
+            GITHUB_TOKEN: 'fixture-token',
+            VALIDATED_COMMIT: first,
+            WORKFLOW_COMMIT: first,
+            CHANGESETS_OUTPUT: join(directory, 'events')
+          }
+        })
+
+        const releasePath = join(directory, 'release-post')
+        const releaseBody = existsSync(releasePath) ?
+          JSON.parse(readFileSync(releasePath, 'utf8')) as { body: string, target_commitish: string } :
+          undefined
+
+        expect(releaseBody?.body).toBe(scenario === 'current' ? 'Fixture release notes.' : undefined)
+        expect(releaseBody?.target_commitish).toBe(scenario === 'current' ? first : undefined)
+        expect(result.status).toBe(scenario === 'current' ? 0 : 1)
+        expect(existsSync(join(directory, 'tag-push'))).toBe(scenario !== 'advance-before-tag')
+        expect(existsSync(join(directory, 'release-post'))).toBe(scenario === 'current')
+      } finally {
+        rmSync(directory, { recursive: true, force: true })
       }
     }, GIT_WORKFLOW_TEST_TIMEOUT_MS
   )

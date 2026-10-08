@@ -27,3 +27,5 @@ baseline format remain compatible.
 Parse TypeScript frontmatter consistently in the CLI, ESLint plugin, editor diagnostics and safe line suppressions. Fail ordinary lint scans on parser errors instead of returning a false clean health score, and keep parser error diagnostics visible in the editor. Ship the parser and its TypeScript runtime dependency for standalone installations.
 
 Keep workspace config explanations and scans aligned with project presets, disambiguate fix-preview patch paths, and retain editor diagnostics when malformed files are present at startup.
+
+Honor explicit CLI presets over workspace configuration and revalidate current main immediately before publishing, release metadata writes, and deployment.

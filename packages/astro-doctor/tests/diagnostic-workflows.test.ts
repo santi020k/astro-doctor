@@ -69,9 +69,11 @@ describe('diagnostic workflows', () => {
   })
 
   test.each([
-    { rootPreset: 'recommended', projectPreset: 'strict', lifecycleSeverity: 'error' },
-    { rootPreset: 'strict', projectPreset: 'recommended', lifecycleSeverity: undefined }
-  ])('explains the selected project $projectPreset preset over root $rootPreset', async ({ rootPreset, projectPreset, lifecycleSeverity }) => {
+    { rootPreset: 'recommended', projectPreset: 'strict', lifecycleSeverity: 'error', cliPreset: undefined },
+    { rootPreset: 'strict', projectPreset: 'recommended', lifecycleSeverity: undefined, cliPreset: undefined },
+    { rootPreset: 'recommended', projectPreset: 'recommended', lifecycleSeverity: 'error', cliPreset: 'strict' },
+    { rootPreset: 'recommended', projectPreset: 'recommended', lifecycleSeverity: 'error', cliPreset: 'all' }
+  ])('applies root=$rootPreset project=$projectPreset CLI=$cliPreset consistently', async ({ rootPreset, projectPreset, lifecycleSeverity, cliPreset }) => {
     const project = join(directory, 'apps', 'one')
 
     mkdirSync(project, { recursive: true })
@@ -82,19 +84,19 @@ describe('diagnostic workflows', () => {
     writeFileSync(join(project, 'index.astro'), '<ClientRouter /><script>document.addEventListener("DOMContentLoaded", () => {})</script>')
     const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())
 
-    await runCli(['explain-config', 'apps/one/index.astro', '--dir', directory, '--json'])
+    await runCli(['explain-config', 'apps/one/index.astro', '--dir', directory, '--json', ...(cliPreset === undefined ? [] : ['--preset', cliPreset])])
     const explanation = JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0])) as {
       preset: string
       projectRules: Record<string, string>
     }
 
-    expect(explanation.preset).toBe(projectPreset)
+    expect(explanation.preset).toBe(cliPreset ?? projectPreset)
     expect(explanation.projectRules['astro-doctor/require-client-router-script-lifecycle']).toBe(lifecycleSeverity)
 
-    await runCli(['--dir', directory, '--json', '--fail-on', 'off'])
+    await runCli(['--dir', directory, '--json', '--fail-on', 'off', ...(cliPreset === undefined ? [] : ['--preset', cliPreset])])
     const result = JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0])) as { diagnostics: { ruleId: string }[] }
 
-    expect(result.diagnostics.some(diagnostic => diagnostic.ruleId === 'astro-doctor/require-client-router-script-lifecycle')).toBe(projectPreset === 'strict')
+    expect(result.diagnostics.some(diagnostic => diagnostic.ruleId === 'astro-doctor/require-client-router-script-lifecycle')).toBe(lifecycleSeverity === 'error')
   })
 
   test('workspace fix previews apply from the invocation root with distinct targets', async () => {

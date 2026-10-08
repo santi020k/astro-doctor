@@ -78,16 +78,21 @@ jobs:
           pnpm add --global npm@11.20.0
           node "$(pnpm root --global)/npm/bin/npm-cli.js" --version
 
-      - name: Create release pull request or publish
+      - name: Recheck main before release mutation
         if: steps.scope.outputs.relevant == 'true'
+        id: release-scope
+        run: bash scripts/check-validated-commit.sh
+
+      - name: Create release pull request or publish
+        if: steps.release-scope.outputs.relevant == 'true'
         id: changesets
         uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         with:
-          publish: pnpm run release
-          version: pnpm run version-packages
+          publish: pnpm run release:validated
+          version: pnpm run version-packages:validated
           commit: "chore(release): version packages"
           title: "chore(release): version packages"
-          createGithubReleases: true
+          createGithubReleases: false
           commitMode: github-api
         env:
           HUSKY: 0
@@ -129,11 +134,13 @@ jobs:
             echo "Tag v${VERSION} already exists. Skipping."
           else
             git tag -a "v${VERSION}" -m "Release v${VERSION}"
+            bash scripts/check-validated-commit.sh --require-current
             git push origin "v${VERSION}"
           fi
 
           RELEASE_SHA=$(git rev-list -n 1 "v${VERSION}")
           git tag -fa v1 "$RELEASE_SHA" -m "Update v1 to v${VERSION}"
+          bash scripts/check-validated-commit.sh --require-current
           git push --force origin refs/tags/v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -142,9 +149,18 @@ jobs:
         if: steps.scope.outputs.relevant == 'true' && (steps.release-ready.outputs.ready == 'true' || inputs.publish_extension_recovery)
         run: pnpm exec turbo run build --filter=vscode-astro-doctor...
 
+      - name: Package VS Code Extension
+        if: steps.scope.outputs.relevant == 'true' && (steps.release-ready.outputs.ready == 'true' || inputs.publish_extension_recovery)
+        run: pnpm run package
+        working-directory: packages/vscode-astro-doctor
+
       - name: Publish VS Code Extension
         if: steps.scope.outputs.relevant == 'true' && (steps.release-ready.outputs.ready == 'true' || inputs.publish_extension_recovery)
-        run: pnpm run publish:ext
+        run: |
+          bash ../../scripts/check-validated-commit.sh --require-current
+          pnpm run publish:vsce
+          bash ../../scripts/check-validated-commit.sh --require-current
+          pnpm run publish:ovsx
         working-directory: packages/vscode-astro-doctor
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}

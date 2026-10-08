@@ -75,3 +75,12 @@ workspace preview patch paths relative to the invocation root, and keeps editor 
 alive while retaining fatal on-disk parser diagnostics. CLI scans and baseline creation/pruning
 remain strict. Regressions include applying a two-project patch from the workspace root and
 starting the real bundled editor server with malformed source already on disk.
+
+A second Codex pass identified explicit CLI preset precedence and stale-main mutation windows.
+Explicit preset flags now win over both root and project configuration in scans, explanations,
+and baseline comparison. Release metadata writes are owned by the repository script, with
+a fresh current-main check before each npm publish, package tag push, and GitHub release API
+write. Automatic Changesets tag/release writes are disabled. Dedicated validated command
+scripts enforce the gate after version/package preparation, and docs, umbrella tags, and
+both editor registries repeat it directly before their mutation commands. Temporary Git and
+intercepted registry/API regressions verify that advancing main blocks stale writes.

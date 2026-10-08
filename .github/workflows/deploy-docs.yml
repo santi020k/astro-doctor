@@ -73,8 +73,9 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: >-
-          pnpm exec wrangler pages deploy apps/docs/dist
-          --project-name=astro-doctor-docs
-          --branch=main
-          --commit-hash="$VALIDATED_COMMIT"
+        run: |
+          bash scripts/check-validated-commit.sh --require-current
+          pnpm exec wrangler pages deploy apps/docs/dist \
+            --project-name=astro-doctor-docs \
+            --branch=main \
+            --commit-hash="$VALIDATED_COMMIT"
