@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
 
@@ -78,7 +78,8 @@ export const scanBaseline = async (options: BaselineScanOptions): Promise<Baseli
       ...options.scanOptions,
       directory: snapshot.projectDirectory,
       files: snapshot.files,
-      fix: false
+      fix: false,
+      fixDryRun: false
     })
 
     return {
@@ -133,7 +134,17 @@ export const writePersistentBaseline = (
 ): void => {
   mkdirSync(dirname(filePath), { recursive: true })
 
-  writeFileSync(filePath, `${JSON.stringify(baseline, null, 2)}\n`, 'utf8')
+  const temporaryDirectory = mkdtempSync(join(dirname(filePath), '.astro-doctor-baseline-'))
+
+  try {
+    const temporaryPath = join(temporaryDirectory, 'baseline.json')
+
+    writeFileSync(temporaryPath, `${JSON.stringify(baseline, null, 2)}\n`, 'utf8')
+
+    renameSync(temporaryPath, filePath)
+  } finally {
+    rmSync(temporaryDirectory, { recursive: true, force: true })
+  }
 }
 
 const isPersistentBaselineEntry = (value: unknown): value is PersistentBaselineEntry => isPlainObject(value) &&
@@ -165,6 +176,12 @@ export const readPersistentBaseline = (filePath: string): PersistentBaseline => 
     throw new TypeError('Baseline entries must contain valid fingerprint counts.')
   }
 
+  const fingerprints = new Set(parsed.entries.map(entry => entry.fingerprint))
+
+  if (fingerprints.size !== parsed.entries.length) {
+    throw new Error('Baseline entries must have unique fingerprints.')
+  }
+
   return {
     $schema: typeof parsed.$schema === 'string' ?
       parsed.$schema :
@@ -178,7 +195,8 @@ export const readPersistentBaseline = (filePath: string): PersistentBaseline => 
 export const filterPersistentBaselineDiagnostics = (
   result: ScanResult,
   baseline: PersistentBaseline,
-  rootDirectory: string
+  rootDirectory: string,
+  fullComparison = true
 ): ScanResult => {
   const baselineCounts = new Map(
     baseline.entries.map(entry => [entry.fingerprint, entry.count])
@@ -197,7 +215,17 @@ export const filterPersistentBaselineDiagnostics = (
 
   return {
     ...createScanResult(diagnostics, result.fileCount),
-    timings: result.timings
+    timings: result.timings,
+    ...(result.fixPreview === undefined ? {} : { fixPreview: result.fixPreview }),
+    baselineProgress: {
+      newCount: diagnostics.length,
+      existingCount: result.diagnostics.length - diagnostics.length,
+      ...(fullComparison ?
+        {
+          resolvedCount: [...baselineCounts.values()].reduce((total, count) => total + count, 0)
+        } :
+        {})
+    }
   }
 }
 
@@ -222,5 +250,25 @@ export const filterIntroducedDiagnostics = (
     return false
   })
 
-  return createScanResult(introducedDiagnostics, currentResult.fileCount)
+  return {
+    ...createScanResult(introducedDiagnostics, currentResult.fileCount),
+    ...(currentResult.fixPreview === undefined ? {} : { fixPreview: currentResult.fixPreview })
+  }
+}
+
+export const prunePersistentBaseline = (
+  result: ScanResult,
+  baseline: PersistentBaseline,
+  rootDirectory: string
+): PersistentBaseline => {
+  const currentCounts = createFingerprintCounts(result.diagnostics, rootDirectory)
+
+  return {
+    ...baseline,
+    entries: baseline.entries.flatMap(entry => {
+      const count = Math.min(entry.count, currentCounts.get(entry.fingerprint) ?? 0)
+
+      return count > 0 ? [{ fingerprint: entry.fingerprint, count }] : []
+    })
+  }
 }

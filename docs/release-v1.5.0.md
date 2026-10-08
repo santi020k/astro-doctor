@@ -15,9 +15,13 @@ are separate authorized release actions.
 - Improve all documentation route families, syntax contrast, mobile navigation, copy controls,
   keyboard scrolling, page/theme transitions, reduced motion, and no-JavaScript reading.
 - Correct health-score examples and installation destinations against the current CLI contracts.
+- Add CLI fix previews, effective configuration explanations, and baseline progress/pruning.
+  Keep source/cache unchanged during previews, omit resolved counts for partial scans, and reject
+  partial pruning. Preserve existing baseline and JSON contracts with additive optional fields.
 - Restrict LSP line suppression to JavaScript insertion points outside multiline tokens/comments.
 
-No package API or CLI migration is required. TypeScript remains at 6.0.3 because the latest
+No package API or CLI migration is required. Fix previews and baseline comparisons/pruning fail explicitly on Astro parse errors. Fix-preview scores and gates describe the simulated result.
+Baseline pruning must use the original scan configuration because disabled rules count as resolved. TypeScript remains at 6.0.3 because the latest
 Astro checker and owned ESLint TypeScript configuration do not yet support TypeScript 7.
 The existing Changeset selects the minor version through the repository's release workflow.
 

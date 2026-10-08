@@ -10,7 +10,10 @@ export { scan } from './scanner/index.js'
 export { computeScore, computeScoreLabel } from './scorer.js'
 export type {
   AstroDoctorConfig,
+  BaselineProgress,
   Diagnostic,
+  FixChange,
+  FixPreview,
   JsonReport,
   ScanOptions,
   ScanResult,

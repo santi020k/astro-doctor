@@ -16,3 +16,10 @@ Refresh the documentation with Lumen v4, the project's orange brand palette, acc
 navigation, page and theme transitions, readable rule examples, and accurate score explanations.
 Remove unused documentation dependencies and code, expand unused-code checks to the docs, and add
 browser and dependency-security regression checks.
+
+Add safe fix previews with `--fix-dry-run`, effective configuration explanations with
+`explain-config <file>`, and baseline progress with full-scan pruning. Preview reports and JSON
+include projected fix results; partial scans never claim resolved findings. Baseline pruning
+preserves existing debt without accepting new findings and writes atomically. Parser failures
+block previews and baseline comparisons/pruning without changing ordinary scan behavior. Existing JSON fields and the
+baseline format remain compatible.
