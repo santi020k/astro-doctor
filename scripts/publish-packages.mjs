@@ -91,19 +91,22 @@ const getCommandOutput = async (command, argumentsList, workingDirectory) =>
 const getPackageVersionUrl = (packageName, version) =>
   `${NPM_REGISTRY_URL}/${encodeURIComponent(packageName)}/${version}`;
 
-const isPublished = async (packageName, version) => {
+const getPublishedVersion = async (packageName, version) => {
   const response = await fetch(getPackageVersionUrl(packageName, version));
 
   if (response.ok) {
-    return true;
+    return response.json();
   }
 
   if (response.status === HTTP_NOT_FOUND_STATUS) {
-    return false;
+    return null;
   }
 
   throw new NpmRegistryError(response.status, packageName, version);
 };
+
+
+const isPublished = async (packageName, version) => Boolean(await getPublishedVersion(packageName, version));
 
 const isTransientRegistryError = (error) =>
   error instanceof TypeError ||
@@ -317,7 +320,8 @@ for (const packageDirectory of packageDirectories) {
   const packageName = packageJson.name;
   const version = packageJson.version;
   const tag = `${packageName}@${version}`;
-  const versionIsPublished = await isPublished(packageName, version);
+  const publishedVersion = await getPublishedVersion(packageName, version);
+  const versionIsPublished = Boolean(publishedVersion);
 
   if (!versionIsPublished) {
     await publishPackage(path.resolve(packagePath.pathname));
@@ -343,6 +347,10 @@ for (const packageDirectory of packageDirectories) {
   }
 
   if (!tagCommit || !releaseExists) {
+    if (versionIsPublished && publishedVersion.gitHead !== headCommit) {
+      throw new Error(`Cannot recover ${tag}: registry publishing SHA is missing or differs from ${headCommit}. Verify original provenance before metadata recovery.`);
+    }
+
     await createPackageRelease(packagePath, tag, headCommit, tagCommit, releaseExists);
 
     console.log(`New tag: ${tag}`);

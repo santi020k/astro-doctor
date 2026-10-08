@@ -207,7 +207,7 @@ const locateGitExecutable = (): string => execFileSync(
 ).trim().split(/\r?\n/u)[0] ?? 'git'
 
 describe('guarded package release metadata', () => {
-  test.each(['current', 'advance-before-tag', 'advance-before-release'])(
+  test.each(['current', 'advance-before-tag', 'advance-before-release', 'published-other-sha', 'published-no-sha'])(
     'blocks stale tag and GitHub release mutations: %s', scenario => {
       const directory = mkdtempSync(join(tmpdir(), 'astro-doctor-release-metadata-'))
 
@@ -253,7 +253,7 @@ describe('guarded package release metadata', () => {
 import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 globalThis.fetch = async (url, options = {}) => {
-  if (String(url).startsWith('https://registry.npmjs.org/')) return new Response('{}');
+  if (String(url).startsWith('https://registry.npmjs.org/')) return new Response(JSON.stringify({ gitHead: process.env.RELEASE_SCENARIO === 'published-no-sha' ? undefined : process.env.RELEASE_SCENARIO === 'published-other-sha' ? process.env.NEXT_MAIN : process.env.VALIDATED_COMMIT }));
   if (options.method === 'POST') {
     writeFileSync('release-post', options.body);
     return new Response('{}', { status: 201 });
@@ -291,7 +291,7 @@ await import('./scripts/publish-packages.mjs');
         expect(releaseBody?.body).toBe(scenario === 'current' ? 'Fixture release notes.' : undefined)
         expect(releaseBody?.target_commitish).toBe(scenario === 'current' ? first : undefined)
         expect(result.status).toBe(scenario === 'current' ? 0 : 1)
-        expect(existsSync(join(directory, 'tag-push'))).toBe(scenario !== 'advance-before-tag')
+        expect(existsSync(join(directory, 'tag-push'))).toBe(scenario === 'current' || scenario === 'advance-before-release')
         expect(existsSync(join(directory, 'release-post'))).toBe(scenario === 'current')
       } finally {
         rmSync(directory, { recursive: true, force: true })

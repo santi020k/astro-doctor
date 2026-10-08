@@ -31,3 +31,5 @@ Keep workspace config explanations and scans aligned with project presets, disam
 Honor explicit CLI presets over workspace configuration and revalidate current main immediately before publishing, release metadata writes, and deployment.
 
 Recount preview diagnostics after baseline filtering, reject config explanations for files excluded by selected workspace projects, and emit bounded, Git-applicable hunks for distant fixes.
+
+Fail closed when recovering published-version metadata without a matching registry publishing SHA. Require full or files scope for fix previews, and mark unsupported file types excluded in config explanations.

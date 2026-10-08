@@ -413,15 +413,21 @@ const parseThreshold = (argv: readonly string[]): number => {
 }
 
 const validateFixPreviewArguments = (argv: string[]): void => {
-  if (argv.includes('--fix-dry-run') && (argv.includes('--fix') || argv.includes('--no-lint'))) {
+  if (!argv.includes('--fix-dry-run')) return
+
+  if (parseScope(argv) === 'changed') {
+    throw new Error('--fix-dry-run cannot be combined with --scope changed; preview edits require full or files scope.')
+  }
+
+  if ((argv.includes('--fix') || argv.includes('--no-lint'))) {
     throw new Error('--fix-dry-run cannot be combined with --fix or --no-lint.')
   }
 
-  if (argv.includes('--fix-dry-run') && (argv.includes('--category') || argv.some(argument => argument.startsWith('--category=')))) {
+  if ((argv.includes('--category') || argv.some(argument => argument.startsWith('--category=')))) {
     throw new Error('--fix-dry-run requires an unfiltered scan; --category cannot be combined with fix previews.')
   }
 
-  if (argv.includes('--fix-dry-run') && (argv.includes('--score') || parseFormat(argv) !== 'console')) {
+  if ((argv.includes('--score') || parseFormat(argv) !== 'console')) {
     throw new Error('--fix-dry-run requires console or JSON output; --score and other formats cannot be combined with fix previews.')
   }
 }
@@ -502,7 +508,7 @@ Scan options:
                                     Categories: performance | accessibility | security | best-practices
       --preset <name>               recommended (default) | strict | ci | all
       --fix                         Apply safe automatic fixes
-      --fix-dry-run                 Preview fixes without writing source files
+      --fix-dry-run                 Preview fixes without writes (full/files scope)
       --cache                       Cache lint results by file content
       --baseline <path>             Suppress findings stored in a persistent baseline
       --no-lint                     Skip lint; report a clean result

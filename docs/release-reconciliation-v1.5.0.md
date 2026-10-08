@@ -90,3 +90,11 @@ files outside selected projects, and oversized diff hunks around distant fixes. 
 recounts filtered previews, rejects excluded-file explanations, and uses the packaged diff
 runtime to generate bounded Git patches. Regressions verify JSON count consistency and
 apply separated hunks, whitespace paths, empty files and missing final newlines with Git.
+
+A fourth Codex pass identified published-version recovery provenance and two discovery/scope
+edge cases. Metadata recovery now requires the registry version to carry the current publishing
+SHA; missing or different provenance blocks writes and needs verification of the original
+artifact before a separately authorized recovery. Fix previews require full or files scope,
+avoiding pre-existing debt edits in introduced-only scans. Unsupported file explanations use
+the scanner relevance predicate. Mocked registry/Git regressions cover matching, missing and
+different publishing SHAs without external mutations.

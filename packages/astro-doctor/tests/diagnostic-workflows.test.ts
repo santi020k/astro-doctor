@@ -25,6 +25,29 @@ describe('diagnostic workflows', () => {
     process.exitCode = undefined
   })
 
+  test.each(['--scope', '--scope=changed'])('rejects introduced-only previews with %s', async scopeFlag => {
+    writeFileSync(join(directory, 'index.astro'), '---\nconst title = process.env.SITE_TITLE\n---\n<h1>{title}</h1>')
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(vi.fn())
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())
+
+    const scopeArguments = scopeFlag === '--scope' ? ['--scope', 'changed'] : [scopeFlag]
+
+    await runCli(['--dir', directory, '--fix-dry-run', '--json', ...scopeArguments])
+    expect(process.exitCode).toBe(1)
+    expect(consoleError).toHaveBeenCalledWith(expect.stringContaining('--scope changed'))
+    expect(consoleLog).not.toHaveBeenCalled()
+  })
+
+  test.each(['README.md', 'style.css'])('explains unsupported %s as excluded from discovery', async fileName => {
+    writeFileSync(join(directory, fileName), 'fixture')
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())
+
+    await runCli(['explain-config', fileName, '--dir', directory, '--json'])
+    const explanation: unknown = JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0]))
+
+    expect(explanation).toMatchObject({ ignored: true, discoveryExcluded: true })
+  })
+
   test('scans and previews TypeScript frontmatter without a false clean score', async () => {
     const source = '---\nconst token: string = process.env.SECRET\n---\n<img src="/hero.png" />'
     const filePath = join(directory, 'index.astro')
