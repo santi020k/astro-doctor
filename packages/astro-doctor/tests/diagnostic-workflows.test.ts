@@ -288,4 +288,18 @@ describe('diagnostic workflows', () => {
     execFileSync('git', ['apply', '-'], { cwd: directory, input: `${patch}\n` })
     expect(readFileSync(join(directory, fileName), 'utf8')).toBe(fixed)
   })
+
+  test('explains hidden-file discovery exclusions without claiming a matching ignore pattern', async () => {
+    writeFileSync(join(directory, '.hidden.astro'), '<p>Hello</p>')
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(vi.fn())
+
+    await runCli(['explain-config', '.hidden.astro', '--dir', directory, '--json'])
+
+    expect(JSON.parse(String(consoleLog.mock.calls.at(-1)?.[0]))).toMatchObject({
+      ignored: true, discoveryExcluded: true, ignorePatterns: []
+    })
+    const result = await scan({ directory })
+
+    expect(result.fileCount).toBe(0)
+  })
 })

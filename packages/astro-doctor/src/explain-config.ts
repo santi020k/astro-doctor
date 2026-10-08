@@ -3,7 +3,7 @@ import { matchesGlob, relative, resolve } from 'node:path'
 
 import { ESLint } from 'eslint'
 
-import { buildIgnorePatterns } from './scanner/file-discovery.js'
+import { buildIgnorePatterns, discoverAstroFiles } from './scanner/file-discovery.js'
 import { buildEslintConfig } from './scanner/index.js'
 import { isFileInDirectory } from './utils/is-file-in-directory.js'
 import { isPlainObject } from './utils/is-plain-object.js'
@@ -16,6 +16,7 @@ interface ConfigExplanation {
   readonly filePath: string
   readonly preset: PresetName
   readonly ignored: boolean
+  readonly discoveryExcluded: boolean
   readonly ignorePatterns: readonly string[]
   readonly matchedOverrides: readonly number[]
   readonly rules: Record<string, 'error' | 'warn' | 'off'>
@@ -65,6 +66,16 @@ const getMatchingOverrides = async (
   return matches
 }
 
+const isDiscoveryExcluded = async (
+  directory: string, filePath: string, config: AstroDoctorConfig
+): Promise<boolean> => {
+  if (!filePath.endsWith('.astro')) return false
+
+  const discoveredFiles = await discoverAstroFiles(directory, config.ignore)
+
+  return !discoveredFiles.includes(filePath)
+}
+
 export const explainConfig = async (
   filePath: string,
   directory: string,
@@ -77,6 +88,7 @@ export const explainConfig = async (
     throw new Error('explain-config requires an existing file inside the selected project.')
   }
 
+  const discoveryExcluded = await isDiscoveryExcluded(directory, absolutePath, config)
   const ignorePatterns = getMatchingIgnorePatterns(directory, absolutePath, config)
   const isAstroFile = absolutePath.endsWith('.astro')
   const eslint = new ESLint(buildEslintConfig({ directory, rules: config.rules, overrides: config.overrides }))
@@ -96,7 +108,8 @@ export const explainConfig = async (
     directory,
     filePath: absolutePath,
     preset,
-    ignored: ignorePatterns.length > 0,
+    ignored: ignorePatterns.length > 0 || discoveryExcluded,
+    discoveryExcluded,
     ignorePatterns,
     matchedOverrides,
     rules,
@@ -109,6 +122,7 @@ export const formatConfigExplanation = (explanation: ConfigExplanation): string 
   `Project: ${explanation.directory}`,
   `Preset: ${explanation.preset}`,
   `Ignored: ${explanation.ignored ? 'yes' : 'no'}`,
+  `Excluded by full-scan discovery: ${explanation.discoveryExcluded ? 'yes' : 'no'}`,
   `Matching ignore patterns: ${explanation.ignorePatterns.join(', ') || 'none'}`,
   `Matching overrides (zero-based, applied in order): ${explanation.matchedOverrides.join(', ') || 'none'}`,
   'Template rules:',

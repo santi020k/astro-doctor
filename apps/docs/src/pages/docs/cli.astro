@@ -114,7 +114,8 @@ astro-doctor baseline prune --output ./config/astro-baseline.json`}
 
   <p>
     Shows the scan preset, effective template rule severities, matching ignore patterns, and
-    zero-based override indexes in application order. Workspace files use the same root and project
+    zero-based override indexes in application order. Astro files also show exclusion by full-scan
+    discovery, including hidden files without explicit ignore patterns. Workspace files use the same root and project
     configuration layering as scans. Project audit rules appear separately because template file
     overrides do not affect them. Inline suppression comments are evaluated during linting and are
     not part of this configuration report.
