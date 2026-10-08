@@ -1,5 +1,9 @@
 # @santi020k/oxlint-config-astro-doctor
 
+## 1.5.0
+
+No changes in this release.
+
 ## 1.4.0
 
 ### Minor Changes
