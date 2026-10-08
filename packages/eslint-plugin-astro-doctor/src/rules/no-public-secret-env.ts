@@ -4,28 +4,31 @@ import { RULE_DOCS_BASE_URL } from '../constants.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
 
 const PUBLIC_ENV_PREFIX = 'PUBLIC_'
-const SECRET_ENV_NAME_PARTS = ['TOKEN', 'SECRET', 'PASSWORD', 'PRIVATE', 'KEY']
+const SECRET_ENV_NAME_PARTS = new Set(['TOKEN', 'SECRET', 'PASSWORD', 'PRIVATE', 'KEY'])
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
 
-const getIdentifierName = (node: unknown): string | undefined => {
-  if (!isRecord(node) || node.type !== 'Identifier') return undefined
+const getPropertyName = (node: unknown, computed: boolean): string | undefined => {
+  if (!isRecord(node)) return undefined
 
-  return typeof node.name === 'string' ? node.name : undefined
+  if (!computed && node.type === 'Identifier' && typeof node.name === 'string') return node.name
+
+  return node.type === 'Literal' && typeof node.value === 'string' ? node.value : undefined
 }
 
-const getPublicEnvName = (node: unknown): string | undefined => {
-  if (!isRecord(node) || node.type !== 'MemberExpression') return undefined
+const isImportMetaEnv = (node: unknown): boolean => {
+  if (!isRecord(node) || node.type !== 'MemberExpression') return false
 
-  if (node.computed === true) return undefined
+  if (getPropertyName(node.property, node.computed === true) !== 'env') return false
 
-  const variableName = getIdentifierName(node.property)
+  const metaProperty = node.object
 
-  return variableName?.startsWith(PUBLIC_ENV_PREFIX) ? variableName : undefined
+  return isRecord(metaProperty) && metaProperty.type === 'MetaProperty' &&
+    getPropertyName(metaProperty.meta, false) === 'import' &&
+    getPropertyName(metaProperty.property, false) === 'meta'
 }
 
-const looksLikeSecret = (
-  variableName: string
-): boolean => SECRET_ENV_NAME_PARTS.some(secretNamePart => variableName.includes(secretNamePart))
+const looksLikeSecret = (variableName: string): boolean => variableName.startsWith(PUBLIC_ENV_PREFIX) &&
+  variableName.split('_').some(namePart => SECRET_ENV_NAME_PARTS.has(namePart))
 
 export default createRule({
   meta: {
@@ -46,19 +49,26 @@ export default createRule({
   create(context) {
     if (!isAstroFile(context.filename)) return {}
 
+    const reportSecret = (node: Rule.Node, variableName: string | undefined): void => {
+      if (variableName === undefined || !looksLikeSecret(variableName)) return
+
+      context.report({ node, messageId: 'publicSecretEnv', data: { variableName } })
+    }
+
     return {
-      'MemberExpression[object.type="MemberExpression"][object.object.type="MetaProperty"][object.property.name="env"]'(
-        node: Rule.Node
-      ) {
-        const variableName = getPublicEnvName(node)
+      MemberExpression(node) {
+        if (!isImportMetaEnv(node.object)) return
 
-        if (variableName === undefined || !looksLikeSecret(variableName)) return
+        reportSecret(node, getPropertyName(node.property, node.computed))
+      },
+      VariableDeclarator(node) {
+        if (!isImportMetaEnv(node.init) || node.id.type !== 'ObjectPattern') return
 
-        context.report({
-          node,
-          messageId: 'publicSecretEnv',
-          data: { variableName }
-        })
+        for (const propertyNode of node.id.properties) {
+          if (propertyNode.type !== 'Property') continue
+
+          reportSecret(node, getPropertyName(propertyNode.key, propertyNode.computed))
+        }
       }
     }
   }

@@ -56,7 +56,7 @@ import heroImage from '../assets/hero.jpg'
 
 ### `astro-doctor/require-image-dimensions` — performance, warning
 
-Public and remote string image sources need dimensions or `inferSize`; Astro can only infer dimensions automatically for imported images from `src/`.
+Public string image sources need dimensions. Remote string sources need dimensions or enabled `inferSize`; `inferSize={false}` does not enable inference. Aliased `Image` and `Picture` imports from `astro:assets` are recognized, and unrelated custom components are ignored. Astro can infer dimensions automatically for imported images from `src/`.
 
 ```astro
 ---
@@ -110,6 +110,8 @@ import DOMPurify from 'isomorphic-dompurify'
 ```
 
 ### `astro-doctor/no-public-secret-env` — security, warning
+
+Checks dot access, static bracket access, and destructuring of `import.meta.env`. Secret keywords must be underscore-separated name segments, so `PUBLIC_KEYBOARD_LAYOUT` is allowed.
 
 `PUBLIC_` variables are exposed to client-side code. Do not put secret-looking names behind the public prefix.
 

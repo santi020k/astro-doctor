@@ -1,9 +1,11 @@
 import { RULE_DOCS_BASE_URL } from '../constants.js'
+import type { AstroAttributeNode } from '../utils/astro-ast.js'
 import { forEachAstroElement, reportAstroNode } from '../utils/astro-ast.js'
-import { getAstroAttributeValue, hasAstroAttribute } from '../utils/attribute.js'
+import { getAstroAttribute } from '../utils/attribute.js'
+import { getAstroImageComponentNames } from '../utils/get-astro-image-component-names.js'
+import { getStaticAstroAttributeValue } from '../utils/get-static-astro-attribute-value.js'
 import { createRule, isAstroFile } from '../utils/rule.js'
 
-const IMAGE_COMPONENT_NAMES = new Set(['Image', 'Picture'])
 const SOURCE_ATTRIBUTE_NAME = 'src'
 const WIDTH_ATTRIBUTE_NAME = 'width'
 const HEIGHT_ATTRIBUTE_NAME = 'height'
@@ -16,8 +18,15 @@ const isRemoteSource = (
 ): boolean => REMOTE_SOURCE_PREFIXES.some(sourcePrefix => sourceValue.startsWith(sourcePrefix))
 
 const hasExplicitDimensions = (
-  attributeNames: readonly string[]
-): boolean => attributeNames.includes(WIDTH_ATTRIBUTE_NAME) && attributeNames.includes(HEIGHT_ATTRIBUTE_NAME)
+  attributes: readonly AstroAttributeNode[]
+): boolean => Boolean(getAstroAttribute(attributes, WIDTH_ATTRIBUTE_NAME)) &&
+  Boolean(getAstroAttribute(attributes, HEIGHT_ATTRIBUTE_NAME))
+
+const hasSizeInference = (attributes: readonly AstroAttributeNode[]): boolean => {
+  const attributeNode = getAstroAttribute(attributes, INFER_SIZE_ATTRIBUTE_NAME)
+
+  return Boolean(attributeNode) && getStaticAstroAttributeValue(attributeNode) !== false
+}
 
 export default createRule({
   meta: {
@@ -40,24 +49,23 @@ export default createRule({
   create(context) {
     if (!isAstroFile(context.filename)) return {}
 
+    const componentNames = getAstroImageComponentNames(context)
+
     return {
       Program() {
         forEachAstroElement(context, elementNode => {
-          if (!elementNode.name || !IMAGE_COMPONENT_NAMES.has(elementNode.name)) return
+          if (!elementNode.name || !componentNames.has(elementNode.name)) return
 
           const attributes = elementNode.attributes ?? []
-          const sourceValue = getAstroAttributeValue(attributes, SOURCE_ATTRIBUTE_NAME)
+          const sourceAttribute = getAstroAttribute(attributes, SOURCE_ATTRIBUTE_NAME)
+          const sourceValue = getStaticAstroAttributeValue(sourceAttribute)
 
-          if (sourceValue === undefined) return
+          if (typeof sourceValue !== 'string') return
 
-          const attributeNames = attributes
-            .map(attributeNode => attributeNode.name)
-            .filter((attributeName): attributeName is string => attributeName !== undefined)
-
-          if (hasExplicitDimensions(attributeNames)) return
+          if (hasExplicitDimensions(attributes)) return
 
           if (isRemoteSource(sourceValue)) {
-            if (hasAstroAttribute(attributes, INFER_SIZE_ATTRIBUTE_NAME)) return
+            if (hasSizeInference(attributes)) return
 
             reportAstroNode(context, elementNode, 'remoteImageDimensions')
 

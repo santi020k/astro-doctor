@@ -25,6 +25,7 @@ interface AstroNodeBase {
 export interface AstroAttributeNode extends AstroNodeBase {
   readonly name?: string
   readonly kind?: string
+  readonly staticValue?: string | boolean | number | null
   readonly value?: string | boolean | number | null
 }
 
@@ -93,6 +94,16 @@ const getJsxLiteralValue = (
     undefined
 }
 
+const getJsxStaticValue = (valueNode: unknown): string | boolean | number | null | undefined => {
+  if (!isRecord(valueNode)) return true
+
+  if (valueNode.type === 'JSXExpressionContainer') {
+    return isRecord(valueNode.expression) ? getJsxLiteralValue(valueNode.expression) : undefined
+  }
+
+  return getJsxLiteralValue(valueNode)
+}
+
 const normalizeJsxAttribute = (
   context: Rule.RuleContext,
   node: unknown
@@ -127,6 +138,7 @@ const normalizeJsxAttribute = (
     name,
     kind,
     value,
+    staticValue: getJsxStaticValue(valueNode),
     position: getNodePosition(context, node)
   }
 }

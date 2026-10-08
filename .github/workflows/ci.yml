@@ -7,12 +7,18 @@ on:
   push:
     branches: [main]
   workflow_dispatch: {}
+  workflow_call:
+    secrets:
+      TURBO_TEAM:
+        required: false
+      TURBO_TOKEN:
+        required: false
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:

@@ -81,6 +81,11 @@ words:
   - workerd
   - behaviour
   - wght
+  - noprofile
+  - norc
+  - pipefail
+  - esac
+  - mktemp
 ignorePaths:
   - node_modules
   - dist

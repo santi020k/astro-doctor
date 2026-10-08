@@ -21,6 +21,32 @@ No package API or CLI migration is required. TypeScript remains at 6.0.3 because
 Astro checker and owned ESLint TypeScript configuration do not yet support TypeScript 7.
 The existing Changeset selects the minor version through the repository's release workflow.
 
+## Diagnostic and workflow improvements
+
+- Secret environment checks cover static bracket access and destructuring, including aliases and
+  defaults. Secret keywords match underscore-separated segments rather than arbitrary substrings.
+- Image dimensions checks follow `Image` and `Picture` imports from `astro:assets`, including local
+  aliases. Custom components are ignored, static source expressions are checked, and
+  `inferSize={false}` no longer bypasses missing-dimension diagnostics. Dynamic inference values
+  remain accepted because the rule cannot determine their runtime value.
+- The composite Action validates inputs before scanning, passes values through environment
+  variables, creates a separate temporary directory for each invocation, validates reports, and
+  fails on missing reports or unsuccessful scanner exits. Temporary reports are removed afterward;
+  explicitly requested report copies are preserved.
+- CLI test and coverage caches include the Action, workflow YAML, and shared commit-check script,
+  so changes to those files rerun the executable regression checks.
+- Release and documentation workflows follow successful push CI runs on this repository's `main`.
+  They check out the validated SHA and skip superseded runs. Manual dispatches on `main` reuse the
+  full CI workflow first. Existing required CI job naming is preserved. CI success is the automatic
+  trigger; each current successful main revision now receives a docs rebuild, including root
+  dependency changes. This avoids incomplete path detection for pushes containing multiple commits.
+
+These fixes preserve rule IDs, severities, CLI flags, and Action inputs/outputs. Consumers may see
+new warnings for previously missed unsafe syntax and fewer warnings for unrelated image components
+or non-secret names containing a secret keyword as a substring. No data or configuration migration
+is required. Roll back workflow changes through a source revert and the normal GitHub workflow;
+ship published rule regressions in a corrective package version.
+
 ## Security dependency constraint
 
 The narrowly scoped `micromark-extension-math@3.1.0>katex: 0.19.0` override addresses

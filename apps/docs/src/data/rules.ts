@@ -83,7 +83,7 @@ import hero from '../assets/hero.png'
     category: 'performance',
     severity: 'warn',
     description: 'Require dimensions for public and remote astro:assets images.',
-    why: 'Astro can infer dimensions for imported images from src/, but it cannot analyze files served from public/ and needs dimensions or inferSize for remote images. Missing dimensions can cause layout shift while the image loads.',
+    why: 'Astro can infer dimensions for imported images from src/, but it cannot analyze files served from public/ and needs dimensions or enabled inferSize for remote images. Aliased Image and Picture imports from astro:assets are recognized; unrelated components are ignored. Missing dimensions can cause layout shift while the image loads.',
     bad: {
       label: 'Public image without dimensions',
       code: `---
@@ -164,7 +164,7 @@ const structuredData = JSON.stringify({
     category: 'security',
     severity: 'warn',
     description: 'Warn when PUBLIC_ environment variables appear to contain secrets.',
-    why: 'Astro exposes PUBLIC_ environment variables to client-side code. Names like PUBLIC_TOKEN, PUBLIC_SECRET, PUBLIC_PASSWORD, and PUBLIC_API_KEY usually indicate accidental secret exposure.',
+    why: 'Astro exposes PUBLIC_ environment variables to client-side code. Names containing TOKEN, SECRET, PASSWORD, PRIVATE, or KEY as underscore-separated segments usually indicate accidental secret exposure. Dot access, static bracket access, and destructuring are checked; names such as PUBLIC_KEYBOARD_LAYOUT are allowed.',
     bad: {
       label: 'Secret-looking public env variable',
       code: `---
