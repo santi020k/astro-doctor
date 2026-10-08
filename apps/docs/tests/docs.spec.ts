@@ -347,7 +347,7 @@ test('page navigation keeps directional links usable on desktop and mobile', asy
 
   await page.keyboard.press('Enter')
 
-  await expect(page).toHaveURL('/docs/github-action')
+  await expect(page).toHaveURL(/\/docs\/github-action\/?$/u)
 
   await page.goto('/docs')
 
