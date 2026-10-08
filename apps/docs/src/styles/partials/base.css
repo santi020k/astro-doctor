@@ -16,24 +16,13 @@
     color: hsl(var(--ink));
     font-family: var(--font-sans);
     text-rendering: optimizeLegibility;
-    scroll-padding-top: 5rem;
+    scroll-padding-top: var(--site-header-height);
     scroll-behavior: smooth;
   }
 
   body {
     min-height: 100vh;
-    background:
-      radial-gradient(
-        ellipse at 10% 0%,
-        hsl(var(--glow) / 0.1),
-        transparent 40%
-      ),
-      radial-gradient(
-        ellipse at 90% 0%,
-        hsl(var(--accent) / 0.06),
-        transparent 35%
-      ),
-      hsl(var(--theme-bg));
+    background: hsl(var(--theme-bg));
   }
 
   /* Focus ring */
@@ -94,7 +83,7 @@
   /* Headings */
   h1, h2, h3, h4 {
     letter-spacing: -0.02em;
-    font-weight: 700;
+    font-weight: 500;
     line-height: 1.2;
   }
 

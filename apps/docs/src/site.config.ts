@@ -1,7 +1,6 @@
 export const SITE_NAME = 'astro-doctor'
 export const SITE_URL = 'https://doctor.santi020k.com'
 export const SITE_DESCRIPTION = 'astro-doctor — ESLint rules and CLI for finding common Astro mistakes. Score your codebase, scan in CI, and ship better Astro apps.'
-export const SITE_TAGLINE = 'Your agent writes bad Astro. This catches it.'
 
 export const AUTHOR = 'santi020k'
 export const AUTHOR_URL = 'https://santi020k.com'

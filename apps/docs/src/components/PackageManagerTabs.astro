@@ -30,10 +30,11 @@ const tabs = [
   class="pm-tabs"
   items={tabs}
   storageKey="astro-doctor-preferred-pm"
+  wrap={false}
 />
 
 <style is:global>
-  .pm-tabs.ui-code-tabs {
+  .pm-tabs[data-slot="code-tabs"] {
     margin: 1.25rem 0;
   }
 </style>

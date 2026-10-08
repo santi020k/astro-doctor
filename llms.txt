@@ -20,7 +20,7 @@ It ships as:
 1. A **CLI** (`@santi020k/astro-doctor`) — `pnpm dlx @santi020k/astro-doctor@latest`
 2. An **ESLint plugin** (`@santi020k/eslint-plugin-astro-doctor`) — for inline editor diagnostics
 3. A **GitHub Action** — PR diff mode, sticky summary comment, health score output
-4. **Agent skills** (`.agents/skills/`) — installed into Claude Code, Cursor, Codex, etc.
+4. **Agent guide** (`skills/astro-doctor.md`) — installed in a consumer project; optional native Claude Code and Cursor paths with `--agent-hooks`.
 5. An **experimental LSP** — `astro-doctor experimental-lsp --stdio` (project-aware workspace scans, diagnostics, hover, code actions, and safe fixes)
 6. A **VS Code extension** (`vscode-astro-doctor`) — inline diagnostics, sidebar health panel, status bar
 
@@ -91,7 +91,7 @@ action.yml                      GitHub Action (composite, PR diff mode, sticky c
 - **Config files**: `doctor.config.*` (following react-doctor's naming). Supports TS/JS/JSON/JSONC, workspace projects, and glob-based template rule overrides. JSON/JSONC configs support `"$schema": "https://doctor.santi020k.com/schema/config.json"` for IDE autocompletion.
 - **Adoption**: `baseline create|update` writes a versioned persistent baseline; `--baseline` filters recorded findings while preserving newly introduced diagnostics.
 - **Performance**: `--cache` uses content-based ESLint caching and `--verbose` reports discovery, audit, lint, and total durations.
-- **Agent skills**: Three skills in `.agents/skills/` (rules, performance, add-rule). `install` subcommand copies to user's project.
+- **Agent skills**: Three repository-only skills in `.agents/skills/` (rules, performance, add-rule) support manual use and contribution. `install` copies the packaged `skills/SKILL.md` to `skills/astro-doctor.md` in the selected project. `--agent-hooks` also writes `.claude/skills/astro-doctor.md` and `.cursor/rules/astro-doctor.mdc`.
 
 ## Environment Variables
 

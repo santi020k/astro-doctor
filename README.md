@@ -52,7 +52,7 @@ Scanning /my-project...
 
 2 problems (0 errors, 2 warnings) across 14 files
 
-Astro Doctor Score: 86/100 (B) 🟢
+Astro Doctor Score: 98/100 (A) 🟢
 ```
 
 ### 2. Install the ESLint plugin
@@ -80,7 +80,7 @@ Once you have a scan, install skills so your coding agent learns from the findin
 pnpm dlx @santi020k/astro-doctor@latest install
 ```
 
-This copies skills to your project that work with Claude Code, Cursor, Codex, OpenCode, and any `AGENTS.md`-compatible tool.
+This copies the packaged guide to `skills/astro-doctor.md`. Reference it from your agent instructions. Add `--agent-hooks` to also install native Claude Code and Cursor paths.
 
 ### 4. Run in CI (GitHub Actions)
 
@@ -369,7 +369,7 @@ astro-doctor experimental-lsp --stdio
 
 ## Agent Skills
 
-Three skills are available for coding agents:
+The repository includes three additional skills for manual use and contribution:
 
 | Skill | Location | Description |
 |-------|----------|-------------|
@@ -377,11 +377,14 @@ Three skills are available for coding agents:
 | Astro Performance | `.agents/skills/astro-performance/` | Islands architecture patterns |
 | Add Rule | `.agents/skills/add-rule/` | How to add a new rule to astro-doctor |
 
-Install all of them:
+Install the packaged Astro Doctor guide into `skills/astro-doctor.md`:
 
 ```bash
 pnpm dlx @santi020k/astro-doctor@latest install
 ```
+
+Use `--agent-hooks` to additionally write `.claude/skills/astro-doctor.md` and
+`.cursor/rules/astro-doctor.mdc`. The installer does not copy the repository-only skill folders.
 
 ---
 

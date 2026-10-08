@@ -11,12 +11,13 @@ import { Callout } from '@santi020k/lumen-astro'
   description="The core engine behind Astro Doctor, available as a standalone ESLint plugin."
   editPath="apps/docs/src/pages/docs/eslint-plugin.astro"
 >
-  <h1>ESLint Plugin</h1>
-
-  <p>
-    Under the hood, Astro Doctor is powered by an ESLint plugin: <code>@santi020k/eslint-plugin-astro-doctor</code>.
-    While the CLI and GitHub Action wrap this plugin to provide a health score and easy integration, you can also use the plugin directly in your editor or existing linting pipeline!
-  </p>
+  <header class="docs-page-header">
+    <h1>ESLint plugin</h1>
+    <p class="docs-page-lead">
+      Under the hood, Astro Doctor is powered by an ESLint plugin: <code>@santi020k/eslint-plugin-astro-doctor</code>.
+      While the CLI and GitHub Action wrap this plugin to provide a health score and easy integration, you can also use the plugin directly in your editor or existing linting pipeline!
+    </p>
+  </header>
 
   <h2>Installation</h2>
 
@@ -95,7 +96,7 @@ export default [
     copy
   />
 
-  <Callout class="callout callout-tip">
+  <Callout>
     <strong>Tip:</strong> If you are using the Astro Doctor CLI instead of running ESLint directly, you can customize rule severities using a <code>doctor.config.ts</code> file. See the <a href="/docs/configuration">Configuration</a> page.
   </Callout>
 

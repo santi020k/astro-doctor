@@ -4,9 +4,11 @@
   "rules": {
     "duplicates": "off"
   },
-  "ignore": ["apps/docs/**"],
   "workspaces": {
-
+    "apps/docs": {
+      "entry": ["src/pages/**/*.{astro,ts}", "scripts/*.mjs", "og.audit.config.mjs"],
+      "project": ["src/**/*.{astro,ts,css}", "scripts/*.mjs"]
+    },
     "packages/eslint-plugin-astro-doctor": {
       "ignoreDependencies": ["@arethetypeswrong/cli"],
       "project": ["src/**/*.ts"]

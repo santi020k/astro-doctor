@@ -2,7 +2,7 @@
 import CodeBlock from '@/components/code-block.astro'
 import Docs from '@/layouts/Docs.astro'
 
-import { Callout } from '@santi020k/lumen-astro'
+import { Callout, Table } from '@santi020k/lumen-astro'
 ---
 
 <Docs
@@ -10,12 +10,13 @@ import { Callout } from '@santi020k/lumen-astro'
   description="Use astro-doctor in GitHub Actions with PR diff mode and sticky PR comments."
   editPath="apps/docs/src/pages/docs/github-action.astro"
 >
-  <h1>GitHub Action</h1>
-
-  <p>
-    The <code>santi020k/astro-doctor</code> composite action scans your Astro project in CI, posts a
-    sticky PR comment with the health score, and fails the check when issues are found.
-  </p>
+  <header class="docs-page-header">
+    <h1>GitHub Action</h1>
+    <p class="docs-page-lead">
+      The <code>santi020k/astro-doctor</code> composite action scans your Astro project in CI, posts a
+      sticky PR comment with the health score, and fails the check when issues are found.
+    </p>
+  </header>
 
   <h2>Minimal setup</h2>
 
@@ -68,90 +69,94 @@ jobs:
 
   <h2>Inputs</h2>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Input</th>
-        <th>Default</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>working-directory</code></td>
-        <td><code>.</code></td>
-        <td>Directory to scan</td>
-      </tr>
-      <tr>
-        <td><code>fail-on</code></td>
-        <td><code>error</code></td>
-        <td>When to fail: <code>error</code> | <code>warning</code> | <code>off</code></td>
-      </tr>
-      <tr>
-        <td><code>min-score</code></td>
-        <td><code>0</code></td>
-        <td>Minimum health score required to pass, from <code>0</code> to <code>100</code></td>
-      </tr>
-      <tr>
-        <td><code>comment</code></td>
-        <td><code>true</code></td>
-        <td>Post/update a sticky PR comment with the report</td>
-      </tr>
-      <tr>
-        <td><code>diff-only</code></td>
-        <td><code>true</code></td>
-        <td>Report only diagnostics introduced by the PR</td>
-      </tr>
-      <tr>
-        <td><code>json-report</code></td>
-        <td><em>empty</em></td>
-        <td>Path to write a JSON report; leave empty to skip</td>
-      </tr>
-      <tr>
-        <td><code>sarif-report</code></td>
-        <td><em>empty</em></td>
-        <td>Path to write a SARIF 2.1.0 report; leave empty to skip</td>
-      </tr>
-      <tr>
-        <td><code>upload-sarif</code></td>
-        <td><code>false</code></td>
-        <td>Upload findings to GitHub Code Scanning; requires <code>security-events: write</code></td>
-      </tr>
-    </tbody>
-  </table>
+  <Table aria-label="GitHub Action inputs" role="region" tabindex="0">
+    <table>
+      <thead>
+        <tr>
+          <th>Input</th>
+          <th>Default</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>working-directory</code></td>
+          <td><code>.</code></td>
+          <td>Directory to scan</td>
+        </tr>
+        <tr>
+          <td><code>fail-on</code></td>
+          <td><code>error</code></td>
+          <td>When to fail: <code>error</code> | <code>warning</code> | <code>off</code></td>
+        </tr>
+        <tr>
+          <td><code>min-score</code></td>
+          <td><code>0</code></td>
+          <td>Minimum health score required to pass, from <code>0</code> to <code>100</code></td>
+        </tr>
+        <tr>
+          <td><code>comment</code></td>
+          <td><code>true</code></td>
+          <td>Post/update a sticky PR comment with the report</td>
+        </tr>
+        <tr>
+          <td><code>diff-only</code></td>
+          <td><code>true</code></td>
+          <td>Report only diagnostics introduced by the PR</td>
+        </tr>
+        <tr>
+          <td><code>json-report</code></td>
+          <td><em>empty</em></td>
+          <td>Path to write a JSON report; leave empty to skip</td>
+        </tr>
+        <tr>
+          <td><code>sarif-report</code></td>
+          <td><em>empty</em></td>
+          <td>Path to write a SARIF 2.1.0 report; leave empty to skip</td>
+        </tr>
+        <tr>
+          <td><code>upload-sarif</code></td>
+          <td><code>false</code></td>
+          <td>Upload findings to GitHub Code Scanning; requires <code>security-events: write</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </Table>
 
   <h2>Outputs</h2>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Output</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>total</code></td>
-        <td>Total number of diagnostics</td>
-      </tr>
-      <tr>
-        <td><code>errors</code></td>
-        <td>Number of error-severity diagnostics</td>
-      </tr>
-      <tr>
-        <td><code>warnings</code></td>
-        <td>Number of warning-severity diagnostics</td>
-      </tr>
-      <tr>
-        <td><code>score</code></td>
-        <td>Health score (0–100)</td>
-      </tr>
-      <tr>
-        <td><code>score-label</code></td>
-        <td>Letter grade (S, A–F)</td>
-      </tr>
-    </tbody>
-  </table>
+  <Table aria-label="GitHub Action outputs" role="region" tabindex="0">
+    <table>
+      <thead>
+        <tr>
+          <th>Output</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>total</code></td>
+          <td>Total number of diagnostics</td>
+        </tr>
+        <tr>
+          <td><code>errors</code></td>
+          <td>Number of error-severity diagnostics</td>
+        </tr>
+        <tr>
+          <td><code>warnings</code></td>
+          <td>Number of warning-severity diagnostics</td>
+        </tr>
+        <tr>
+          <td><code>score</code></td>
+          <td>Health score (0–100)</td>
+        </tr>
+        <tr>
+          <td><code>score-label</code></td>
+          <td>Letter grade (S, A–F)</td>
+        </tr>
+      </tbody>
+    </table>
+  </Table>
 
   <h2>Enforcing a minimum score</h2>
 
@@ -192,7 +197,7 @@ jobs:
     the existing comment.
   </p>
 
-  <Callout class="callout callout-tip">
+  <Callout>
     <strong>Permissions:</strong> The <code>pull-requests: write</code> permission is only required
     when <code>comment: true</code>. The action automatically skips comments for fork and Dependabot
     pull requests, where GitHub provides a read-only token. Scanning, annotations, and failure gates

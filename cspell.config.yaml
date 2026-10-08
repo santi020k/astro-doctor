@@ -1,6 +1,9 @@
 version: "0.2"
 language: en
 words:
+  - nums
+  - noopener
+  - noreferrer
   - fflate
   - smol
   - astro
@@ -58,6 +61,7 @@ words:
   - confbox
   - esbuild
   - jiti
+  - katex
   - Contentful
   - WCAG
   - frontmatter

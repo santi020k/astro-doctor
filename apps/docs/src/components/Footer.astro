@@ -1,194 +1,69 @@
 ---
 import LogoMark from '@/components/logo-mark.astro'
 
-import { Link } from '@santi020k/lumen-astro'
+import { ButtonLink, Icon, Link } from '@santi020k/lumen-astro'
 
-import { AUTHOR, AUTHOR_URL, CHANGELOG_URL, GITHUB_URL, NPM_URL, REACT_DOCTOR_URL, SITE_NAME, SITE_TAGLINE } from '@/site.config'
+import { AUTHOR, AUTHOR_URL, CHANGELOG_URL, GITHUB_URL, NPM_URL, REACT_DOCTOR_URL, SITE_NAME } from '@/site.config'
 
 const year = new Date().getFullYear()
+
+const linkGroups = [
+  { title: 'Start here',
+items: [
+    { label: 'Introduction', href: '/docs' },
+    { label: 'Installation', href: '/docs/installation' },
+    { label: 'Quick start', href: '/docs/quick-start' },
+    { label: 'Configuration', href: '/docs/configuration' }
+  ] },
+  { title: 'Reference',
+items: [
+    { label: 'Rules', href: '/docs/rules' },
+    { label: 'CLI', href: '/docs/cli' },
+    { label: 'GitHub Action', href: '/docs/github-action' },
+    { label: 'Agent skills', href: '/docs/agent-skills' }
+  ] },
+  { title: 'Open source',
+items: [
+    { label: 'GitHub', href: GITHUB_URL },
+    { label: 'npm package', href: NPM_URL },
+    { label: 'Changelog', href: CHANGELOG_URL }
+  ] }
+]
 ---
 
-<footer class="site-footer mt-24 border-t border-[hsl(var(--line)/0.4)] py-12">
-  <div class="container-docs">
-    <div class="
-      flex flex-col gap-8
-      sm:flex-row sm:justify-between
-    "
-    >
-      <!-- Brand -->
-      <div class="flex flex-col gap-3">
-        <div class="flex items-center gap-2.5">
-          <LogoMark class="size-7 rounded-md" />
-          <span class="font-semibold text-[hsl(var(--ink))]">{SITE_NAME}</span>
-        </div>
-        <p class="max-w-xs text-sm text-[hsl(var(--ink-muted))]">
-          {SITE_TAGLINE}
-        </p>
-        <p class="text-xs text-[hsl(var(--ink-muted))]">
-          Inspired by <Link
-href={REACT_DOCTOR_URL}
-target="_blank"
-rel="noopener noreferrer"
-class="
-  transition-colors
-  hover:text-[hsl(var(--brand))]
-"
-                      >react-doctor</Link>
-        </p>
+<footer class="site-footer container-docs">
+  <div class="site-footer-surface">
+    <div class="site-footer-intro">
+      <div>
+        <span class="site-eyebrow">A little care goes a long way.</span>
+        <h2>Better Astro.<br /><span>One check at a time.</span></h2>
       </div>
-
-      <!-- Links -->
-      <div class="
-        grid grid-cols-2 gap-8
-        sm:grid-cols-3
-      "
-      >
-        <div class="flex flex-col gap-2">
-          <h3 class="
-            text-xs font-semibold tracking-wider text-[hsl(var(--ink-muted))]
-            uppercase
-          "
-          >Docs</h3>
-          <Link
-href="/docs"
-class="
-  text-sm text-[hsl(var(--ink-soft))] transition-colors
-  hover:text-[hsl(var(--brand))]
-"
-          >Introduction</Link>
-          <Link
-href="/docs/installation"
-class="
-  text-sm text-[hsl(var(--ink-soft))] transition-colors
-  hover:text-[hsl(var(--brand))]
-"
-          >Installation</Link>
-          <Link
+      <ButtonLink
 href="/docs/quick-start"
-class="
-  text-sm text-[hsl(var(--ink-soft))] transition-colors
-  hover:text-[hsl(var(--brand))]
-"
-          >Quick Start</Link>
-          <Link
-href="/docs/configuration"
-class="
-  text-sm text-[hsl(var(--ink-soft))] transition-colors
-  hover:text-[hsl(var(--brand))]
-"
-          >Configuration</Link>
-        </div>
-
-        <div class="flex flex-col gap-2">
-          <h3 class="
-            text-xs font-semibold tracking-wider text-[hsl(var(--ink-muted))]
-            uppercase
-          "
-          >Reference</h3>
-          <Link
-href="/docs/rules"
-class="
-  text-sm text-[hsl(var(--ink-soft))] transition-colors
-  hover:text-[hsl(var(--brand))]
-"
-          >Rules</Link>
-          <Link
-href="/docs/cli"
-class="
-  text-sm text-[hsl(var(--ink-soft))] transition-colors
-  hover:text-[hsl(var(--brand))]
-"
-          >CLI</Link>
-          <Link
-href="/docs/github-action"
-class="
-  text-sm text-[hsl(var(--ink-soft))] transition-colors
-  hover:text-[hsl(var(--brand))]
-"
-          >GitHub Action</Link>
-          <Link
-href="/docs/agent-skills"
-class="
-  text-sm text-[hsl(var(--ink-soft))] transition-colors
-  hover:text-[hsl(var(--brand))]
-"
-          >Agent Skills</Link>
-        </div>
-
-        <div class="flex flex-col gap-2">
-          <h3 class="
-            text-xs font-semibold tracking-wider text-[hsl(var(--ink-muted))]
-            uppercase
-          "
-          >Project</h3>
-          <Link
-href={GITHUB_URL}
-target="_blank"
-rel="noopener noreferrer"
-class="
-  text-sm text-[hsl(var(--ink-soft))] transition-colors
-  hover:text-[hsl(var(--brand))]
-"
-          >GitHub</Link>
-          <Link
-href={NPM_URL}
-target="_blank"
-rel="noopener noreferrer"
-class="
-  text-sm text-[hsl(var(--ink-soft))] transition-colors
-  hover:text-[hsl(var(--brand))]
-"
-          >npm</Link>
-          <Link
-href={CHANGELOG_URL}
-class="
-  text-sm text-[hsl(var(--ink-soft))] transition-colors
-  hover:text-[hsl(var(--brand))]
-"
-          >Changelog</Link>
-        </div>
-      </div>
+variant="unstyled"
+class="site-primary-action"
+      >
+        Run your first scan<span class="site-action-arrow"><Icon name="arrow-up-right" /></span>
+      </ButtonLink>
     </div>
-
-    <div class="
-      mt-10 flex flex-col items-center justify-between gap-3 border-t
-      border-[hsl(var(--line)/0.4)] pt-6
-      sm:flex-row
-    "
-    >
-      <p class="text-xs text-[hsl(var(--ink-muted))]">
-        &copy; {year} <Link
-href={AUTHOR_URL}
-target="_blank"
-rel="noopener noreferrer"
-class="
-  transition-colors
-  hover:text-[hsl(var(--brand))]
-"
-                      >{AUTHOR}</Link>. MIT License.
-      </p>
-      <p class="text-xs text-[hsl(var(--ink-muted))]">
-        Built with <Link
-href="https://lumen.santi020k.com"
-target="_blank"
-rel="noopener noreferrer"
-class="
-  transition-colors
-  hover:text-[hsl(var(--brand))]
-"
-                   >Lumen UI</Link>
-      </p>
+    <div class="site-footer-main">
+      <div class="site-footer-brand">
+        <Link href="/" variant="inherit" class="site-footer-brand-name"><LogoMark />{SITE_NAME}</Link>
+        <p>Deterministic diagnostics.<br />Healthier projects.</p>
+        <p class="site-footer-inspiration">Inspired by <Link href={REACT_DOCTOR_URL} newTab variant="inherit">react-doctor</Link>.</p>
+      </div>
+      <nav class="site-footer-navigation" aria-label="Footer">
+        {linkGroups.map(group => (
+          <div>
+            <h3>{group.title}</h3>
+            <ul>{group.items.map(item => <li><Link href={item.href} newTab={item.href.startsWith('https://')} variant="inherit">{item.label}</Link></li>)}</ul>
+          </div>
+        ))}
+      </nav>
+    </div>
+    <div class="site-footer-credits">
+      <p>&copy; {year} <Link href={AUTHOR_URL} newTab variant="inherit">{AUTHOR}</Link>. MIT License.</p>
+      <p>Made with <Link href="https://lumen.santi020k.com" newTab variant="inherit">Lumen UI<Icon name="arrow-up-right" /></Link></p>
     </div>
   </div>
 </footer>
-
-<style>
-  :global(.site-footer .ui-link) {
-    color: inherit;
-    font-weight: inherit;
-  }
-
-  :global(.site-footer .ui-link:hover) {
-    color: hsl(var(--brand));
-  }
-</style>

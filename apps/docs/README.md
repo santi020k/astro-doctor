@@ -5,10 +5,12 @@ Documentation website for [astro-doctor](https://github.com/santi020k/astro-doct
 ## Development
 
 ```bash
-pnpm dev          # Start dev server at localhost:4321
-pnpm build        # Build for production
-pnpm preview      # Preview production build
-pnpm check        # Run astro check (type checking)
+pnpm run dev           # Start dev server at localhost:4321
+pnpm run build         # Build and audit the production site
+pnpm run preview       # Preview the production build
+pnpm run check         # Run Astro type checks
+pnpm exec playwright install chromium
+pnpm run test:browser  # Build, then check routes and interactions in Chromium
 ```
 
 ## Deploy
@@ -42,3 +44,23 @@ The documentation uses `@santi020k/og` 1.2 presets and a route manifest with con
 image URLs. Generation fingerprints include copy, assets, renderer configuration and the
 library version, so regenerated cards invalidate social preview caches. Run the workspace
 build to regenerate cards and verify the built metadata, images and sitemap audit.
+
+## Design and motion
+
+The documentation uses Lumen v4 with Astro Doctor's orange and amber identity, charcoal dark
+surfaces, cream light canvas, and locally served Montserrat. The joined homepage identity tab,
+solid surfaces, open rows, and typography follow the shared Santiago website and theme direction.
+Reading pages use a compact header and a quieter sidebar. Keep colors in the semantic tokens in
+`src/styles/partials/tokens.css`; do not copy another project's brand palette.
+
+`Base.astro` loads Lumen styles and `UIPrimitives` once. Astro's `ClientRouter` handles page
+navigation. Lumen `ScrollReveal`, `Sheet`, `CodeTabs`, `Code`, and the public
+`runLumenViewTransition` helper supply interaction and motion. Reinitialize document-bound
+listeners on `astro:page-load`, close overlays and abort listeners before swaps, and preserve
+reduced-motion and no-JavaScript reading behavior. Use public props and `data-slot` hooks.
+
+The browser suite covers every route in light/dark themes at mobile/desktop sizes, accessibility,
+external link safety, theme persistence, package-manager keyboard behavior, clipboard commands,
+mobile navigation, narrow/enlarged text layouts, and reading without JavaScript. Set
+`DOCS_CAPTURE_DIR` to an absolute temporary directory to save full-page screenshots. Use
+`PLAYWRIGHT_CHROMIUM_CHANNEL=chrome` to run against installed Chrome during local development.

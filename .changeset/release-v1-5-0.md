@@ -11,3 +11,8 @@ Improve project discovery, diagnostic safety, and installed CLI setup:
 - Offer line suppression actions only where JavaScript frontmatter supports them.
 
 Refresh the pending dependency branches and compatible security fixes. Existing CLI flags and skill destinations remain supported.
+
+Refresh the documentation with Lumen v4, the project's orange brand palette, accessible mobile
+navigation, page and theme transitions, readable rule examples, and accurate score explanations.
+Remove unused documentation dependencies and code, expand unused-code checks to the docs, and add
+browser and dependency-security regression checks.

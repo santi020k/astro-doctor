@@ -2,7 +2,7 @@
 import CodeBlock from '@/components/code-block.astro'
 import Docs from '@/layouts/Docs.astro'
 
-import { Callout } from '@santi020k/lumen-astro'
+import { Callout, Table } from '@santi020k/lumen-astro'
 ---
 
 <Docs
@@ -10,13 +10,14 @@ import { Callout } from '@santi020k/lumen-astro'
   description="Use the Astro Doctor VS Code extension for inline diagnostics, hovers, quick fixes, status updates, and a health sidebar."
   editPath="apps/docs/src/pages/docs/vscode-extension.astro"
 >
-  <h1>VS Code Extension</h1>
-
-  <p>
-    The Astro Doctor VS Code extension brings the Astro Doctor language server into your editor. It
-    activates for <code>.astro</code> files, reports diagnostics as you type, shows rule context on
-    hover, and keeps the project health score visible while you work.
-  </p>
+  <header class="docs-page-header">
+    <h1>VS Code extension</h1>
+    <p class="docs-page-lead">
+      The Astro Doctor VS Code extension brings the Astro Doctor language server into your editor. It
+      activates for <code>.astro</code> files, reports diagnostics as you type, shows rule context on
+      hover, and keeps the project health score visible while you work.
+    </p>
+  </header>
 
   <h2>Install from Marketplace</h2>
 
@@ -53,7 +54,7 @@ import { Callout } from '@santi020k/lumen-astro'
     <code>packages/vscode-astro-doctor/astro-doctor.vsix</code>.
   </p>
 
-  <Callout class="callout callout-tip">
+  <Callout>
     <strong>Tip:</strong> The extension activates when you open an Astro file. If you only have
     TypeScript, JavaScript, or Markdown files open, VS Code may not start it yet.
   </Callout>
@@ -70,74 +71,78 @@ import { Callout } from '@santi020k/lumen-astro'
 
   <h2>Commands</h2>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Command</th>
-        <th>Use it for</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>Astro Doctor: Scan Workspace</code></td>
-        <td>Run a full workspace scan through the language server</td>
-      </tr>
-      <tr>
-        <td><code>Astro Doctor: Scan Current File</code></td>
-        <td>Re-check the active Astro file</td>
-      </tr>
-      <tr>
-        <td><code>Astro Doctor: Apply All Safe Fixes in File</code></td>
-        <td>Apply every safe automatic fix available for the active file</td>
-      </tr>
-      <tr>
-        <td><code>Astro Doctor: Restart Server</code></td>
-        <td>Restart the Astro Doctor language server</td>
-      </tr>
-      <tr>
-        <td><code>Astro Doctor: Show Output</code></td>
-        <td>Open the extension output channel for logs and startup errors</td>
-      </tr>
-      <tr>
-        <td><code>Astro Doctor: Open Documentation</code></td>
-        <td>Open the rule or project documentation from VS Code</td>
-      </tr>
-    </tbody>
-  </table>
+  <Table aria-label="VS Code extension commands" role="region" tabindex="0">
+    <table>
+      <thead>
+        <tr>
+          <th>Command</th>
+          <th>Use it for</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Astro Doctor: Scan Workspace</code></td>
+          <td>Run a full workspace scan through the language server</td>
+        </tr>
+        <tr>
+          <td><code>Astro Doctor: Scan Current File</code></td>
+          <td>Re-check the active Astro file</td>
+        </tr>
+        <tr>
+          <td><code>Astro Doctor: Apply All Safe Fixes in File</code></td>
+          <td>Apply every safe automatic fix available for the active file</td>
+        </tr>
+        <tr>
+          <td><code>Astro Doctor: Restart Server</code></td>
+          <td>Restart the Astro Doctor language server</td>
+        </tr>
+        <tr>
+          <td><code>Astro Doctor: Show Output</code></td>
+          <td>Open the extension output channel for logs and startup errors</td>
+        </tr>
+        <tr>
+          <td><code>Astro Doctor: Open Documentation</code></td>
+          <td>Open the rule or project documentation from VS Code</td>
+        </tr>
+      </tbody>
+    </table>
+  </Table>
 
   <h2>Settings</h2>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Setting</th>
-        <th>Default</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>astroDoctor.enable</code></td>
-        <td><code>true</code></td>
-        <td>Enable or disable Astro Doctor extension features.</td>
-      </tr>
-      <tr>
-        <td><code>astroDoctor.scanOnType</code></td>
-        <td><code>true</code></td>
-        <td>Re-scan from the unsaved buffer as you type. Disable to scan only on open and save.</td>
-      </tr>
-      <tr>
-        <td><code>astroDoctor.serverPath</code></td>
-        <td><code>""</code></td>
-        <td>Optional path to a custom <code>astro-doctor</code> executable.</td>
-      </tr>
-      <tr>
-        <td><code>astroDoctor.trace.server</code></td>
-        <td><code>"off"</code></td>
-        <td>Trace language server communication. Use <code>"messages"</code> or <code>"verbose"</code> when debugging.</td>
-      </tr>
-    </tbody>
-  </table>
+  <Table aria-label="VS Code extension settings" role="region" tabindex="0">
+    <table>
+      <thead>
+        <tr>
+          <th>Setting</th>
+          <th>Default</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>astroDoctor.enable</code></td>
+          <td><code>true</code></td>
+          <td>Enable or disable Astro Doctor extension features.</td>
+        </tr>
+        <tr>
+          <td><code>astroDoctor.scanOnType</code></td>
+          <td><code>true</code></td>
+          <td>Re-scan from the unsaved buffer as you type. Disable to scan only on open and save.</td>
+        </tr>
+        <tr>
+          <td><code>astroDoctor.serverPath</code></td>
+          <td><code>""</code></td>
+          <td>Optional path to a custom <code>astro-doctor</code> executable.</td>
+        </tr>
+        <tr>
+          <td><code>astroDoctor.trace.server</code></td>
+          <td><code>"off"</code></td>
+          <td>Trace language server communication. Use <code>"messages"</code> or <code>"verbose"</code> when debugging.</td>
+        </tr>
+      </tbody>
+    </table>
+  </Table>
 
   <h2>Language server resolution</h2>
 

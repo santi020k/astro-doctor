@@ -8,9 +8,18 @@ import { compiledContent as compileEslintPluginChangelog } from '../../../../../
 import { compiledContent as compileOxlintConfigChangelog } from '../../../../../packages/oxlint-config-astro-doctor/CHANGELOG.md'
 import { compiledContent as compileVsCodeExtensionChangelog } from '../../../../../packages/vscode-astro-doctor/CHANGELOG.md'
 
-const demoteDocumentTitle = async (compile: () => Promise<string>): Promise<string> => (
+const formatPackageChangelog = async (compile: () => Promise<string>, packageId: string): Promise<string> => (
   await compile()
-).replaceAll('<h1', '<h3').replaceAll('</h1>', '</h3>')
+)
+  .replaceAll('<h1', '<p class="changelog-source-title"')
+  .replaceAll('</h1>', '</p>')
+  .replaceAll('<h3', '<h4')
+  .replaceAll('</h3>', '</h4>')
+  .replaceAll('<h2', '<h3')
+  .replaceAll('</h2>', '</h3>')
+  .replaceAll(' id="', ` id="${packageId}-`)
+  .replaceAll(' href="#', ` href="#${packageId}-`)
+  .replaceAll(/<a (?=href="https?:\/\/)/g, '<a target="_blank" rel="noopener noreferrer" ')
 
 const [
   astroDoctorChangelog,
@@ -18,10 +27,10 @@ const [
   oxlintConfigChangelog,
   vsCodeExtensionChangelog
 ] = await Promise.all([
-  demoteDocumentTitle(compileAstroDoctorChangelog),
-  demoteDocumentTitle(compileEslintPluginChangelog),
-  demoteDocumentTitle(compileOxlintConfigChangelog),
-  demoteDocumentTitle(compileVsCodeExtensionChangelog)
+  formatPackageChangelog(compileAstroDoctorChangelog, 'astro-doctor'),
+  formatPackageChangelog(compileEslintPluginChangelog, 'eslint-plugin'),
+  formatPackageChangelog(compileOxlintConfigChangelog, 'oxlint-config'),
+  formatPackageChangelog(compileVsCodeExtensionChangelog, 'vscode-extension')
 ])
 ---
 
@@ -30,13 +39,14 @@ const [
   description="Release history for Astro Doctor packages and integrations."
   editPath="apps/docs/src/pages/docs/changelog.astro"
 >
-  <h1>Changelog</h1>
-
-  <p>
-    Release history for Astro Doctor and its integrations. This page is generated directly from
-    each package changelog and updates on the next documentation build after Changesets publishes a
-    version.
-  </p>
+  <header class="docs-page-header">
+    <h1>Changelog</h1>
+    <p class="docs-page-lead">
+      Release history for Astro Doctor and its integrations. This page is generated directly from
+      each package changelog and updates on the next documentation build after Changesets publishes a
+      version.
+    </p>
+  </header>
 
   <nav aria-label="Changelog packages">
     <ul>
@@ -96,6 +106,12 @@ const [
   .changelog-package {
     margin-block-start: 3rem;
     scroll-margin-top: 5rem;
+  }
+
+  .changelog-content :global(.changelog-source-title) {
+    color: hsl(var(--ink-soft));
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
   }
 
 </style>

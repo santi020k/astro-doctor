@@ -124,6 +124,35 @@ describe('LSP code actions', () => {
     expect(results[0]?.messages).toEqual([])
   })
 
+  test('does not insert suppression text inside a multiline template literal', async () => {
+    const content = '---\nconst text = `\n  ${process.env.SECRET}\n`\n---\n<div>{text}</div>'
+    const eslint = new ESLint({
+      overrideConfigFile: true,
+      overrideConfig: [{
+        ...astroDoctorPlugin.configs.recommended,
+        rules: { 'astro-doctor/no-process-env': 'error' }
+      }]
+    })
+    const results = await eslint.lintText(content, { filePath: 'index.astro' })
+    const message = results[0]?.messages.find(diagnostic => diagnostic.ruleId === 'astro-doctor/no-process-env')
+
+    expect(message).toBeDefined()
+    if (!message) throw new Error('Expected an environment diagnostic in the interpolation')
+
+    const actions = buildCodeActionsForDiagnostic('file:///workspace/index.astro', {
+      range: {
+        start: { line: message.line - 1, character: message.column - 1 },
+        end: { line: message.line - 1, character: message.column }
+      },
+      code: 'astro-doctor/no-process-env',
+      source: 'astro-doctor',
+      message: message.message
+    }, content)
+
+    expect(actions.some(action => action.title.startsWith('Disable '))).toBe(false)
+    expect(actions.some(action => action.title.startsWith('Open documentation'))).toBe(true)
+  })
+
   test.each([
     '<img src="/hero.png" />',
     '---\nconst broken = (\n---\n<img src="/hero.png" />'

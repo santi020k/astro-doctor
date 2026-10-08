@@ -6,6 +6,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*", "astro.config.ts", "*.ts"],
+  "include": ["src/**/*", "tests/**/*.ts", "astro.config.ts", "*.ts"],
   "exclude": ["node_modules", "dist"]
 }

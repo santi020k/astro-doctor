@@ -4,7 +4,8 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 
 export const isFrontmatterPosition = (content: string, position: Position): boolean => {
   try {
-    const frontmatter = parseForESLint(content).services.getAstroAst().frontmatter
+    const parsedDocument = parseForESLint(content)
+    const frontmatter = parsedDocument.services.getAstroAst().frontmatter
 
     if (!frontmatter) return false
 
@@ -12,7 +13,10 @@ export const isFrontmatterPosition = (content: string, position: Position): bool
     const offset = document.offsetAt(position)
     const lineStart = document.offsetAt({ line: position.line, character: 0 })
 
-    return lineStart >= frontmatter.program.start && offset < frontmatter.program.end
+    const containsLineStart = [...parsedDocument.ast.tokens, ...parsedDocument.ast.comments]
+      .some(token => token.range[0] < lineStart && token.range[1] > lineStart)
+
+    return !containsLineStart && lineStart >= frontmatter.program.start && offset < frontmatter.program.end
   } catch {
     return false
   }

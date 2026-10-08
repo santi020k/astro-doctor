@@ -60,3 +60,9 @@ jobs:
           pnpm run lint:knip &&
           pnpm run check:exports &&
           pnpm run check:packed-install
+
+      - name: Install documentation test browser
+        run: pnpm --filter @santi020k/astro-doctor-docs exec playwright install --with-deps chromium
+
+      - name: Check documentation routes and interactions
+        run: pnpm --filter @santi020k/astro-doctor-docs exec playwright test
