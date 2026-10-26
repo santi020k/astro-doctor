@@ -1,5 +1,9 @@
 # Astro Doctor for VS Code
 
+## 1.6.0
+
+No changes in this release.
+
 ## 1.5.0
 
 Bundle the 1.5.0 language-server improvements: consistent TypeScript frontmatter

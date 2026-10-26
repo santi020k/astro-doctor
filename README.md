@@ -441,3 +441,6 @@ ESLint configuration powered by [`@santi020k/eslint-config-basic`](https://githu
 MIT — [santi020k](https://santi020k.com)
 
 For confidential vulnerability reports, see [SECURITY.md](SECURITY.md).
+
+For pull-request selection, full-validation safeguards, and measured timings, see
+[affected CI validation](docs/affected-ci.md).
