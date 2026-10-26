@@ -12,13 +12,17 @@ const input = { event: 'pull_request', headRef: 'ci/example', files: ['apps/docs
 
 test('ordinary workspace edits can use affected validation', () => {
   assert.equal(requiresFullValidation(input), false)
+
+  assert.equal(requiresFullValidation({ ...input, files: ['packages/cli/index.ts', '.changeset/package-fix.md'] }), false)
+
+  assert.equal(requiresFullValidation({ ...input, files: ['.changeset/package-fix.md'] }), false)
 })
 
 test('release, push, manual, shared, unknown and dependency changes retain full validation', () => {
   for (const override of [
     { full: true }, { event: 'push' }, { event: 'workflow_dispatch' },
     { headRef: 'release/v1.6.0' }, { headRef: 'changeset-release/main' },
-    ...['pnpm-lock.yaml', 'turbo.json', 'scripts/check.mjs', '.github/workflows/ci.yml', 'new-area/file.ts', 'packages/cli/package.json', 'packages/cli/CHANGELOG.md'].map(file => ({ files: [file] })),
+    ...['pnpm-lock.yaml', 'turbo.json', '.changeset/config.json', '.changeset/nested/note.md', 'scripts/check.mjs', '.github/workflows/ci.yml', 'new-area/file.ts', 'packages/cli/package.json', 'packages/cli/CHANGELOG.md'].map(file => ({ files: [file] })),
   ]) assert.equal(requiresFullValidation({ ...input, ...override }), true)
 })
 
@@ -102,13 +106,22 @@ test('validated Turbo selection controls consumers and rejects incomplete graphs
     writeFileSync(join(directory, 'apps/docs/page.astro'), 'after')
 
     const planFor = graph => createPlan({ cwd: directory, base: 'HEAD', env: { ...environment, TEST_GRAPH: graph } })
-    const docsPlan = planFor(JSON.stringify({ packages: [docs] }))
+
+    assert.equal(planFor(JSON.stringify({ packages: ['//', docs] })).mode, 'full')
+
+    mkdirSync(join(directory, '.changeset'))
+
+    writeFileSync(join(directory, '.changeset/package-fix.md'), '---\n"@santi020k/astro-doctor": patch\n---\nRelease note.\n')
+
+    const docsPlan = planFor(JSON.stringify({ packages: ['//', docs] }))
 
     assert.equal(docsPlan.mode, 'affected')
 
     assert.equal(docsPlan.docs, true)
 
     assert.equal(docsPlan.packages, false)
+
+    assert.deepEqual(docsPlan.selected, [docs])
 
     assert.ok(docsPlan.commands[0].includes('--filter=@santi020k/astro-doctor...'))
 
@@ -121,6 +134,16 @@ test('validated Turbo selection controls consumers and rejects incomplete graphs
     for (const graph of ['invalid', '{}', '{"packages":[]}', '{"packages":["unknown"]}']) {
       assert.equal(planFor(graph).mode, 'full')
     }
+
+    writeFileSync(join(directory, 'apps/docs/page.astro'), 'before')
+
+    const notePlan = planFor(JSON.stringify({ packages: ['//'] }))
+
+    assert.equal(notePlan.mode, 'affected')
+
+    assert.deepEqual(notePlan.selected, [])
+
+    assert.equal(notePlan.docs, false)
   } finally {
     rmSync(directory, { recursive: true, force: true })
   }

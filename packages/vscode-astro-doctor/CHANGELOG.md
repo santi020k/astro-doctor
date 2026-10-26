@@ -1,5 +1,9 @@
 # Astro Doctor for VS Code
 
+## 1.7.0
+
+No changes in this release.
+
 ## 1.6.0
 
 No changes in this release.

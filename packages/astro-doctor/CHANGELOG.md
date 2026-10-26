@@ -1,5 +1,16 @@
 # @santi020k/astro-doctor
 
+## 1.7.0
+
+### Minor Changes
+
+- Preserve affected validation for ordinary package pull requests containing required Changeset notes. Validate the Turbo root marker without treating it as a workspace, retain full validation for shared configuration and releases, and benchmark package changes with their release metadata.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @santi020k/eslint-plugin-astro-doctor@1.7.0
+
 ## 1.6.0
 
 ### Minor Changes
