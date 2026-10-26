@@ -56,7 +56,19 @@ compiler/lint caches first, then measure one cold and two warm runs per mode.
 
 ## Release and recovery
 
-This rollout targets v1.6.0 and changes no CLI/configuration contracts. Vulnerable
+Changeset Markdown notes in `.changeset/` preserve affected selection. Their Turbo
+root marker is accepted only when a note is present and is excluded from workspace
+commands. Changeset configuration and unknown paths still force full validation.
+
+The v1.7.0 follow-up was benchmarked with an ESLint plugin source change and its
+required Changeset. Turbo selected the plugin, CLI, and VS Code consumers and
+excluded docs. Code checks took 26.46 s full versus 24.39 s affected with empty
+independent Turbo caches (7.8%). Warm medians were 7.83 s versus 7.63 s; that small
+difference is not meaningful evidence of a speedup. All six runs passed using the
+same method above. The main benefit for this case is avoiding unrelated browser
+work, which is excluded from these timings.
+
+The original v1.6.0 rollout changes no CLI/configuration contracts. Vulnerable
 transitive Vite, launch-editor, Storybook, Zod, Undici, and fast-uri resolutions
 were updated to compatible stable releases. fast-uri 3.x overrides now stay on
 the maintained 3.x security release instead of allowing an implicit major jump.
