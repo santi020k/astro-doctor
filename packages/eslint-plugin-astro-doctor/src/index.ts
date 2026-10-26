@@ -89,3 +89,5 @@ export {
   getAstroRuleDocUrl
 } from './astro-rules.js'
 export type { AstroDoctorRule, RuleCategory } from './types.js'
+
+// Verify affected selection with a required Changeset.
