@@ -1,5 +1,16 @@
 # @santi020k/astro-doctor
 
+## 1.6.0
+
+### Minor Changes
+
+- Use the existing Turbo dependency graph to validate affected workspaces on ordinary pull requests. Keep full validation for releases, shared configuration changes, and uncertain Git comparisons. Update vulnerable transitive dependencies within compatible release lines.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @santi020k/eslint-plugin-astro-doctor@1.6.0
+
 ## 1.5.0
 
 ### Minor Changes
