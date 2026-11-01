@@ -31,10 +31,10 @@
   },
   "devDependencies": {
     "@astrojs/check": "catalog:",
-    "@axe-core/playwright": "^4.13.0",
-    "@playwright/test": "^1.64.0",
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.64.1",
     "@santi020k/eslint-config-basic": "catalog:",
-    "@santi020k/og": "1.2.0",
+    "@santi020k/og": "1.2.1",
     "eslint": "catalog:",
     "typescript": "catalog:"
   },
