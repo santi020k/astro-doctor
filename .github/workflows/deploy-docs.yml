@@ -60,7 +60,7 @@ jobs:
 
       - name: Set up pnpm workspace
         if: steps.scope.outputs.relevant == 'true'
-        uses: santi020k/quality/actions/setup-pnpm@ffa37774f75b2b8e761fe3d71e7046cdb6694a69 # v1
+        uses: santi020k/quality/actions/setup-pnpm@208015ed792b633a1455201ae2f3dd8d9b7eb96c # v1
         with:
           node-version: 22
 
