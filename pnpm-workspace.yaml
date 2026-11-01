@@ -9,47 +9,47 @@ allowBuilds:
 catalog:
   diff: ^9.0.0
   "@arethetypeswrong/cli": ^0.18.5
-  "@astrojs/check": ^0.9.10
-  "@astrojs/compiler-binding-wasm32-wasi": 0.5.1
+  "@astrojs/check": ^0.9.12
+  "@astrojs/compiler-binding-wasm32-wasi": 0.5.2
   "@astrojs/sitemap": ^3.7.4
   "@changesets/changelog-github": ^1.0.1
   "@changesets/cli": ^3.0.3
   "@santi020k/commitprompt": ^1.1.0
-  "@santi020k/eslint-config-astro": ^3.1.5
-  "@santi020k/eslint-config-basic": 3.6.0
-  '@santi020k/eslint-config-extensions': ^3.1.4
-  "@santi020k/eslint-config-formats": ^3.1.4
-  "@santi020k/eslint-config-libraries": ^3.1.4
-  "@santi020k/eslint-config-testing": ^3.1.4
-  "@santi020k/eslint-config-tools": ^3.1.4
+  "@santi020k/eslint-config-astro": ^3.1.6
+  "@santi020k/eslint-config-basic": 3.6.2
+  '@santi020k/eslint-config-extensions': ^3.1.5
+  "@santi020k/eslint-config-formats": ^3.1.5
+  "@santi020k/eslint-config-libraries": ^3.1.6
+  "@santi020k/eslint-config-testing": ^3.1.6
+  "@santi020k/eslint-config-tools": ^3.1.5
   "@tailwindcss/vite": ^4.3.3
-  "@types/node": ^26.6.4
+  "@types/node": ^26.6.6
   "@types/semver": ^7.8.0
-  "@types/vscode": ^1.140.0
-  "@typescript-eslint/parser": ^8.71.1
-  "@vitest/coverage-v8": ^5.0.3
-  astro: ^7.3.7
+  "@types/vscode": ^1.144.0
+  "@typescript-eslint/parser": ^8.72.1
+  "@vitest/coverage-v8": ^5.0.5
+  astro: ^7.4.4
   astro-eslint-parser: ^3.2.0
   confbox: ^0.3.1
-  cspell: ^10.3.6
+  cspell: ^10.4.0
   esbuild: ^0.28.2
-  eslint: 10.12.0
+  eslint: 10.13.0
   eslint-plugin-astro: ^3.2.1
   glob: ^13.0.6
   husky: ^9.1.7
   jiti: ^2.7.0
-  knip: ^6.40.0
+  knip: ^6.43.0
   lint-staged: ^17.6.0
-  oxlint: ^1.87.0
+  oxlint: ^1.90.0
   semver: ^7.8.5
   tailwindcss: ^4.3.3
   turbo: ^2.11.7
   typescript: ^6.0.3
-  vitest: ^5.0.3
+  vitest: ^5.0.5
   vscode-languageclient: ^10.1.2
   vscode-languageserver: ^10.1.2
-  vscode-languageserver-textdocument: ^1.0.15
-  wrangler: ^4.148.0
+  vscode-languageserver-textdocument: ^1.0.16
+  wrangler: ^4.155.0
 minimumReleaseAgeExclude:
   - "@santi020k/eslint-config-typescript"
   - js-yaml@4.3.2
