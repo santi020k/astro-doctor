@@ -28,7 +28,7 @@ catalog:
   "@types/vscode": ^1.140.0
   "@typescript-eslint/parser": ^8.71.1
   "@vitest/coverage-v8": ^5.0.3
-  astro: ^7.3.7
+  astro: ^7.4.7
   astro-eslint-parser: ^3.2.0
   confbox: ^0.3.1
   cspell: ^10.3.6
