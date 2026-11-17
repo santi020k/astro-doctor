@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "global_inputs": [
+    "quality-impact.json",
+    ".quality-version",
+    ".github/",
+    "scripts/",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "turbo.json",
+    "eslint.config.mjs",
+    "tsconfig.json",
+    "skills/",
+    "packages/eslint-plugin-astro-doctor/package.json",
+    "packages/oxlint-config-astro-doctor/package.json",
+    "packages/vscode-astro-doctor/package.json",
+    "packages/astro-doctor/package.json",
+    "apps/docs/package.json"
+  ],
+  "ignored_inputs": [],
+  "nodes": {
+    "plugin": {
+      "inputs": [
+        "packages/eslint-plugin-astro-doctor/"
+      ],
+      "depends_on": [],
+      "command": "pnpm",
+      "args": [
+        "exec",
+        "turbo",
+        "run",
+        "build",
+        "typecheck",
+        "lint",
+        "test:coverage",
+        "check:exports",
+        "--filter=@santi020k/eslint-plugin-astro-doctor"
+      ]
+    },
+    "cli": {
+      "inputs": [
+        "packages/astro-doctor/"
+      ],
+      "depends_on": [
+        "plugin"
+      ],
+      "command": "pnpm",
+      "args": [
+        "exec",
+        "turbo",
+        "run",
+        "build",
+        "typecheck",
+        "lint",
+        "test:coverage",
+        "check:exports",
+        "--filter=@santi020k/astro-doctor"
+      ]
+    },
+    "oxlint": {
+      "inputs": [
+        "packages/oxlint-config-astro-doctor/"
+      ],
+      "depends_on": [],
+      "command": "pnpm",
+      "args": [
+        "exec",
+        "turbo",
+        "run",
+        "build",
+        "typecheck",
+        "lint",
+        "test:coverage",
+        "check:exports",
+        "--filter=@santi020k/oxlint-config-astro-doctor"
+      ]
+    },
+    "extension": {
+      "inputs": [
+        "packages/vscode-astro-doctor/"
+      ],
+      "depends_on": [
+        "cli",
+        "plugin"
+      ],
+      "command": "pnpm",
+      "args": [
+        "exec",
+        "turbo",
+        "run",
+        "build",
+        "typecheck",
+        "lint",
+        "test:coverage",
+        "check:exports",
+        "--filter=vscode-astro-doctor"
+      ]
+    },
+    "docs": {
+      "inputs": [
+        "apps/docs/"
+      ],
+      "depends_on": [
+        "cli",
+        "plugin",
+        "oxlint"
+      ],
+      "command": "pnpm",
+      "args": [
+        "exec",
+        "turbo",
+        "run",
+        "build",
+        "typecheck",
+        "lint",
+        "test:coverage",
+        "check:exports",
+        "--filter=@santi020k/astro-doctor-docs"
+      ]
+    }
+  }
+}

@@ -67,7 +67,7 @@ jobs:
 
       - name: Set up pnpm workspace
         if: steps.scope.outputs.relevant == 'true'
-        uses: santi020k/quality/actions/setup-pnpm@ffa37774f75b2b8e761fe3d71e7046cdb6694a69 # v1
+        uses: santi020k/quality/actions/setup-pnpm@ff490e9efbd5fdfbdb1e6c404f1741d04c57f585 # v2.0.0
         with:
           node-version: 22.x
           registry-url: https://registry.npmjs.org
