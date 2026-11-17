@@ -22,8 +22,45 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  impact-plan:
+    name: Quality v2 shadow plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          fetch-depth: 0
+      - name: Install pinned Quality
+        run: |
+          set -euo pipefail
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error --location \
+            https://raw.githubusercontent.com/santi020k/quality/ff490e9efbd5fdfbdb1e6c404f1741d04c57f585/install.sh \
+            --output "$RUNNER_TEMP/install-quality.sh"
+          QUALITY_INSTALL_DIR="$RUNNER_TEMP/quality-bin" sh "$RUNNER_TEMP/install-quality.sh" santi020k/quality v2.0.0
+          echo "$RUNNER_TEMP/quality-bin" >> "$GITHUB_PATH"
+      - name: Record committed-source impact
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == pull_request && "$HEAD_REF" != release/* && "$HEAD_REF" != changeset-release/* && -n "$BASE_SHA" ]]; then
+            quality impact plan --base "$BASE_SHA" --head HEAD --format json > "$RUNNER_TEMP/quality-impact.json"
+          else
+            quality impact plan --full --format json > "$RUNNER_TEMP/quality-impact.json"
+          fi
+      - name: Verify policy regression fixtures
+        run: node --test scripts/quality-impact.node-test.mjs
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: quality-impact-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/quality-impact.json
+          if-no-files-found: error
+          retention-days: 7
+
   validate:
-    name: Required checks
+    name: Workspace checks
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -38,9 +75,16 @@ jobs:
           fetch-depth: 0
 
       - name: Set up pnpm workspace
-        uses: santi020k/quality/actions/setup-pnpm@ffa37774f75b2b8e761fe3d71e7046cdb6694a69 # v1
+        uses: santi020k/quality/actions/setup-pnpm@ff490e9efbd5fdfbdb1e6c404f1741d04c57f585 # v2.0.0
         with:
-          node-version: 22.22.3
+          node-version: 22.23.4
+          task-cache-path: .turbo/cache
+          task-cache-key: astro-doctor-checks
+
+      - name: Bind task cache to the resolved runtime
+        shell: bash
+        run: |
+          echo "QUALITY_TASK_RUNTIME=$(node --version)-$(pnpm --version)-$(node -p 'process.platform + "/" + process.arch')" >> "$GITHUB_ENV"
 
       - name: Audit workspace dependencies
         run: pnpm audit --audit-level=moderate
@@ -72,3 +116,15 @@ jobs:
       - name: Check documentation routes and interactions
         if: steps.scope.outputs.docs == 'true'
         run: pnpm --filter @santi020k/astro-doctor-docs exec playwright test
+
+  gate:
+    name: Required checks
+    if: always()
+    needs: [validate, impact-plan]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require both validation and planning
+        env:
+          VALIDATION_RESULT: ${{ needs.validate.result }}
+          PLAN_RESULT: ${{ needs.impact-plan.result }}
+        run: test "$VALIDATION_RESULT" = success && test "$PLAN_RESULT" = success

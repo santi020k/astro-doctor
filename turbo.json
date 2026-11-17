@@ -1,11 +1,25 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalEnv": ["VITEST"],
-  "globalDependencies": ["skills/SKILL.md", "scripts/copy-agent-skill.mjs"],
+  "globalEnv": [
+    "VITEST",
+    "QUALITY_TASK_RUNTIME"
+  ],
+  "globalDependencies": [
+    "skills/SKILL.md",
+    "scripts/copy-agent-skill.mjs",
+    "tsconfig.base.json",
+    "tsconfig.eslint.json",
+    "eslint.config.js",
+    "scripts/check-package-exports.mjs"
+  ],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**"],
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist/**"
+      ],
       "outputLogs": "errors-only"
     },
     "dev": {
@@ -13,33 +27,49 @@
       "persistent": true
     },
     "typecheck": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "outputLogs": "errors-only"
     },
     "test": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "outputs": [],
       "outputLogs": "errors-only"
     },
     "test:coverage": {
-      "dependsOn": ["^build"],
-      "outputs": ["coverage/**"],
+      "dependsOn": [
+        "build"
+      ],
+      "outputs": [
+        "coverage/**"
+      ],
       "outputLogs": "errors-only"
     },
     "lint": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "outputLogs": "errors-only"
     },
     "lint:fix": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "outputLogs": "errors-only"
     },
     "check:exports": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "outputLogs": "errors-only"
     },
     "check": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "outputLogs": "errors-only"
     },
     "preview": {
@@ -53,14 +83,18 @@
       "outputLogs": "errors-only"
     },
     "//#lint:repo": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "outputLogs": "errors-only"
     },
     "clean": {
       "cache": false
     },
     "@santi020k/astro-doctor#test": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "outputs": [],
       "outputLogs": "errors-only",
       "inputs": [
@@ -71,8 +105,13 @@
       ]
     },
     "@santi020k/astro-doctor#test:coverage": {
-      "dependsOn": ["^build"],
-      "outputs": ["coverage/**"],
+      "dependsOn": [
+        "build",
+        "^build"
+      ],
+      "outputs": [
+        "coverage/**"
+      ],
       "outputLogs": "errors-only",
       "inputs": [
         "$TURBO_DEFAULT$",
@@ -80,6 +119,22 @@
         "$TURBO_ROOT$/.github/workflows/*.yml",
         "$TURBO_ROOT$/scripts/check-validated-commit.sh"
       ]
+    },
+    "@santi020k/astro-doctor-docs#build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "cache": false,
+      "outputs": [
+        "dist/**"
+      ],
+      "outputLogs": "errors-only"
+    },
+    "@santi020k/astro-doctor-docs#typecheck": {
+      "dependsOn": [
+        "build"
+      ],
+      "outputLogs": "errors-only"
     }
   },
   "futureFlags": {

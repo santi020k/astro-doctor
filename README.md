@@ -406,6 +406,9 @@ Use `--agent-hooks` to additionally write `.claude/skills/astro-doctor.md` and
 
 ## Development
 
+See [Quality v2 pipeline rollout](docs/quality-v2-rollout.md) for affected validation,
+parallel checks, cache boundaries and release qualification.
+
 ```bash
 pnpm install    # Install dependencies
 pnpm run build  # Build all packages
