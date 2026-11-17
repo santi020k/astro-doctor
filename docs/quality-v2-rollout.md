@@ -63,3 +63,8 @@ missing dependency, the new bundler's separate runtime 2 beta can satisfy the
 transitive peer and crash `astro check` with `bridge.setLastError`. Other
 consumers retain their own runtime versions. Remove the extension when an
 upstream release declares the matching runtime itself.
+
+Shared compiler and ESLint configuration and the root package-export checker are
+explicit Turbo inputs. A regression fixture runs the actual Turbo dry-run graph
+and verifies these edits invalidate cached checks while unrelated README edits
+retain the same task hashes. Full selection alone does not invalidate cached tasks.

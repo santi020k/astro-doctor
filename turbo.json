@@ -6,7 +6,11 @@
   ],
   "globalDependencies": [
     "skills/SKILL.md",
-    "scripts/copy-agent-skill.mjs"
+    "scripts/copy-agent-skill.mjs",
+    "tsconfig.base.json",
+    "tsconfig.eslint.json",
+    "eslint.config.js",
+    "scripts/check-package-exports.mjs"
   ],
   "tasks": {
     "build": {
