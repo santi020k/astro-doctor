@@ -47,7 +47,7 @@ jobs:
       - name: Set up pnpm workspace
         uses: santi020k/quality/actions/setup-pnpm@ff490e9efbd5fdfbdb1e6c404f1741d04c57f585 # v2.0.0
         with:
-          node-version: 22.22.3
+          node-version: 22.23.4
           task-cache-path: .turbo/cache
           task-cache-key: astro-doctor-checks
       - name: Bind task cache to the resolved runtime

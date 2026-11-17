@@ -1,5 +1,16 @@
 # @santi020k/astro-doctor
 
+## 1.8.0
+
+### Minor Changes
+
+- Adopt Quality v2 impact planning and persistent task caches, and schedule full workspace validation through one dependency-aware Turbo graph. Full release checks remain mandatory.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @santi020k/eslint-plugin-astro-doctor@1.8.0
+
 ## 1.7.0
 
 ### Minor Changes
