@@ -4,25 +4,10 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  HTTP_NOT_FOUND_STATUS,
-  HTTP_SERVER_ERROR_MIN_STATUS,
-  HTTP_TOO_MANY_REQUESTS_STATUS,
-  PUBLISH_VERIFY_INTERVAL_MS,
-  PUBLISH_VERIFY_MAX_ATTEMPTS,
-} from "./constants.ts";
+import { getPublishedVersion, waitForAllPublished } from "./registry-verification.mjs";
 
 const PACKAGES_DIRECTORY = new URL("../packages/", import.meta.url);
 const GITHUB_API_URL = "https://api.github.com";
-const NPM_REGISTRY_URL = "https://registry.npmjs.org";
-
-class NpmRegistryError extends Error {
-  constructor(status, packageName, version) {
-    super(`npm registry returned ${status} for ${packageName}@${version}`);
-
-    this.status = status;
-  }
-}
 
 const runCommand = async (command, argumentsList, workingDirectory) =>
   new Promise((resolve, reject) => {
@@ -87,56 +72,6 @@ const getCommandOutput = async (command, argumentsList, workingDirectory) =>
       );
     });
   });
-
-const getPackageVersionUrl = (packageName, version) =>
-  `${NPM_REGISTRY_URL}/${encodeURIComponent(packageName)}/${version}`;
-
-const getPublishedVersion = async (packageName, version) => {
-  const response = await fetch(getPackageVersionUrl(packageName, version));
-
-  if (response.ok) {
-    return response.json();
-  }
-
-  if (response.status === HTTP_NOT_FOUND_STATUS) {
-    return null;
-  }
-
-  throw new NpmRegistryError(response.status, packageName, version);
-};
-
-
-const isPublished = async (packageName, version) => Boolean(await getPublishedVersion(packageName, version));
-
-const isTransientRegistryError = (error) =>
-  error instanceof TypeError ||
-  (error instanceof NpmRegistryError &&
-    (error.status === HTTP_TOO_MANY_REQUESTS_STATUS ||
-      error.status >= HTTP_SERVER_ERROR_MIN_STATUS));
-
-const waitForPublished = async (packageName, version) => {
-  for (
-    let attempt = 1;
-    attempt <= PUBLISH_VERIFY_MAX_ATTEMPTS;
-    attempt += 1
-  ) {
-    try {
-      if (await isPublished(packageName, version)) {
-        return true;
-      }
-    } catch (error) {
-      if (!isTransientRegistryError(error)) {
-        throw error;
-      }
-    }
-
-    await new Promise((resolve) => {
-      setTimeout(resolve, PUBLISH_VERIFY_INTERVAL_MS);
-    });
-  }
-
-  return false;
-};
 
 const writeChangesetsEvent = async (packageName, version) => {
   const outputPath = process.env.CHANGESETS_OUTPUT;
@@ -297,6 +232,8 @@ const packageDirectories = await readdir(PACKAGES_DIRECTORY, {
   withFileTypes: true,
 });
 
+const releases = [];
+
 for (const packageDirectory of packageDirectories) {
   if (!packageDirectory.isDirectory()) {
     continue;
@@ -319,18 +256,26 @@ for (const packageDirectory of packageDirectories) {
 
   const packageName = packageJson.name;
   const version = packageJson.version;
+
+  releases.push({
+    packageName,
+    packagePath,
+    publishedVersion: await getPublishedVersion(packageName, version),
+    version,
+  });
+}
+
+const newReleases = releases.filter((release) => !release.publishedVersion);
+
+for (const release of newReleases) {
+  await publishPackage(path.resolve(release.packagePath.pathname));
+}
+
+await waitForAllPublished(newReleases);
+
+for (const { packageName, packagePath, publishedVersion, version } of releases) {
   const tag = `${packageName}@${version}`;
-  const publishedVersion = await getPublishedVersion(packageName, version);
   const versionIsPublished = Boolean(publishedVersion);
-
-  if (!versionIsPublished) {
-    await publishPackage(path.resolve(packagePath.pathname));
-
-    if (!(await waitForPublished(packageName, version))) {
-      throw new Error(`${packageName}@${version} was not found after publishing`);
-    }
-  }
-
   const tagCommit = await getGitTagCommit(tag);
   const releaseExists = await hasGitHubRelease(tag);
 
