@@ -24,17 +24,15 @@ gates retain full validation.
 
 ## Pipeline layout
 
-- `CI` runs once per pushed commit. The `Required checks` gate requires workspace
-  validation, the Quality plan, and the documentation browser job.
-- `Pull request metadata` owns the title and Changeset checks and is the only
-  workflow that reruns on title, description, or label edits. Add its
-  `Pull request metadata` job to branch protection to keep those checks required.
-- The live `Dependency audit` job is advisory on pull requests: a new upstream
-  advisory raises a warning annotation without failing the run. It still fails `CI` on
-  pushes to `main` and in release preflight, so publication and deployment stay
-  blocked until the advisory is resolved. `Dependency audit` also runs daily and
-  fails on new advisories. Dependency Review continues to block pull requests
-  that introduce vulnerable dependencies.
+- `CI` validates pushed commits and pull request title or label edits. Its
+  `Required checks` aggregate requires metadata, workspace validation, the Quality
+  plan, documentation browser checks, and the dependency audit.
+- Metadata validates pull request titles and Changesets before expensive jobs run.
+  Prepared release branches validate matching versions and changelog entries for
+  the coordinated package family, with no pending Changesets.
+- The live dependency audit blocks every pull request, main push, and reusable
+  release validation. A separate scheduled/manual audit adds monitoring; it does
+  not replace the required CI audit.
 - Publication verifies registry visibility for all packages concurrently after
   publishing them, polling each version-specific manifest with capped backoff
   inside the original five-minute limit.

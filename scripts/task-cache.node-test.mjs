@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { copyFileSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -22,7 +22,7 @@ test('shared compiler, lint and export inputs invalidate actual Turbo task hashe
   const tracked = execFileSync('git', ['ls-files', '-z'], { cwd: root, env: environment, encoding: 'utf8' }).split('\0').filter(Boolean)
 
   for (const file of tracked) {
-    if (!lstatSync(join(root, file)).isFile()) continue
+    if (!existsSync(join(root, file)) || !lstatSync(join(root, file)).isFile()) continue
 
     mkdirSync(dirname(join(directory, file)), { recursive: true })
 
@@ -33,10 +33,10 @@ test('shared compiler, lint and export inputs invalidate actual Turbo task hashe
 
   execFileSync('git', ['init', '--quiet'], { cwd: directory, env: environment })
 
-  const hashes = () => {
-    const output = execFileSync(process.execPath, [turbo, 'run', 'build', 'typecheck', 'lint', 'check:exports', '--dry=json'], {
+  const hashes = (extraEnvironment = {}) => {
+    const output = execFileSync(process.execPath, [turbo, 'run', 'build', 'typecheck', 'lint', 'check:exports', 'test', 'test:coverage', '--dry=json'], {
       cwd: directory,
-      env: environment,
+      env: { ...environment, ...extraEnvironment },
       encoding: 'utf8',
       maxBuffer: 16 * 1024 * 1024,
     })
@@ -76,6 +76,27 @@ test('shared compiler, lint and export inputs invalidate actual Turbo task hashe
 
     writeFileSync(path, original)
   }
+
+  const guard = join(directory, 'scripts/check-extension-release-source.sh')
+  const originalGuard = readFileSync(guard, 'utf8')
+
+  writeFileSync(guard, `${originalGuard}\n`)
+
+  const changedGuard = hashes()
+
+  for (const task of ['test', 'test:coverage']) {
+    const identifier = `@santi020k/astro-doctor#${task}`
+
+    assert.ok(before.has(identifier))
+
+    assert.notEqual(changedGuard.get(identifier), before.get(identifier))
+  }
+
+  writeFileSync(guard, originalGuard)
+
+  const changedRuntime = hashes({ QUALITY_TASK_RUNTIME: 'fixture-runtime-identity' })
+
+  for (const identifier of before.keys()) assert.notEqual(changedRuntime.get(identifier), before.get(identifier))
 
   const readme = join(directory, 'README.md')
 

@@ -101,7 +101,11 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/action.yml",
         "$TURBO_ROOT$/.github/workflows/*.yml",
-        "$TURBO_ROOT$/scripts/check-validated-commit.sh"
+        "$TURBO_ROOT$/scripts/check-validated-commit.sh",
+        "$TURBO_ROOT$/scripts/check-extension-release-source.sh",
+        "$TURBO_ROOT$/scripts/publish-packages.mjs",
+        "$TURBO_ROOT$/scripts/registry-verification.mjs",
+        "$TURBO_ROOT$/scripts/constants.ts"
       ]
     },
     "@santi020k/astro-doctor#test:coverage": {
@@ -117,7 +121,11 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/action.yml",
         "$TURBO_ROOT$/.github/workflows/*.yml",
-        "$TURBO_ROOT$/scripts/check-validated-commit.sh"
+        "$TURBO_ROOT$/scripts/check-validated-commit.sh",
+        "$TURBO_ROOT$/scripts/check-extension-release-source.sh",
+        "$TURBO_ROOT$/scripts/publish-packages.mjs",
+        "$TURBO_ROOT$/scripts/registry-verification.mjs",
+        "$TURBO_ROOT$/scripts/constants.ts"
       ]
     },
     "@santi020k/astro-doctor-docs#build": {

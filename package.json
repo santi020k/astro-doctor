@@ -12,7 +12,7 @@
     "test:coverage": "turbo run test:coverage && pnpm run check:dependency-security && pnpm run test:ci",
     "ci:check": "node scripts/ci-affected.mjs",
     "ci:plan": "node scripts/ci-affected.mjs --plan",
-    "test:ci": "node --test scripts/ci-affected.test.mjs scripts/task-cache.node-test.mjs scripts/registry-verification.node-test.mjs",
+    "test:ci": "node --test scripts/ci-affected.test.mjs scripts/task-cache.node-test.mjs scripts/registry-verification.node-test.mjs scripts/release-metadata.node-test.mjs",
     "lint": "pnpm run lint:repo && turbo run lint",
     "lint:repo": "eslint . --cache --no-warn-ignored --max-warnings=0",
     "lint:fix": "pnpm run lint:repo:fix && turbo run lint:fix",

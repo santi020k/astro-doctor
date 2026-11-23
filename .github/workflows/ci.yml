@@ -3,6 +3,7 @@ name: CI
 on:
   pull_request:
     branches: [main, "release/v*"]
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
   push:
     branches: [main]
   workflow_dispatch: {}
@@ -21,6 +22,43 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  metadata:
+    name: Pull request metadata
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Set up pnpm workspace
+        uses: santi020k/quality/actions/setup-pnpm@ff490e9efbd5fdfbdb1e6c404f1741d04c57f585 # v2.0.0
+        with:
+          node-version: 22.23.4
+
+      - name: Validate pull request title
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$PR_TITLE" | pnpm exec commitprompt validate --input -
+
+      - name: Verify consumed release metadata
+        if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/v')
+        env:
+          RELEASE_BRANCH: ${{ github.head_ref }}
+        run: node scripts/release-metadata.mjs "$RELEASE_BRANCH"
+
+      - name: Require a changeset
+        if: >-
+          github.event_name == 'pull_request' &&
+          !contains(github.event.pull_request.labels.*.name, 'skip-changelog') &&
+          !startsWith(github.head_ref, 'changeset-release/') &&
+          !startsWith(github.head_ref, 'release/v')
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: pnpm changeset status --since="$BASE_SHA"
+
   impact-plan:
     name: Quality v2 shadow plan
     runs-on: ubuntu-latest
@@ -59,6 +97,7 @@ jobs:
           retention-days: 7
 
   validate:
+    needs: metadata
     name: Workspace checks
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -89,6 +128,7 @@ jobs:
         run: pnpm run ci:check
 
   docs-e2e:
+    needs: metadata
     name: Documentation browser checks
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -156,7 +196,6 @@ jobs:
     name: Dependency audit
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    continue-on-error: ${{ github.event_name == 'pull_request' }}
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
@@ -169,22 +208,19 @@ jobs:
           install: "false"
 
       - name: Audit workspace dependencies
-        run: |
-          set -euo pipefail
-          if ! pnpm audit --audit-level=moderate; then
-            echo "::warning title=Dependency audit::pnpm audit reported advisories at moderate severity or higher. Pull requests are not blocked; pushes to main and release validation are."
-            exit 1
-          fi
+        run: pnpm audit --audit-level=moderate
 
   gate:
     name: Required checks
     if: always()
-    needs: [validate, impact-plan, docs-e2e]
+    needs: [metadata, validate, impact-plan, docs-e2e, audit]
     runs-on: ubuntu-latest
     steps:
       - name: Require validation, planning and documentation checks
         env:
+          METADATA_RESULT: ${{ needs.metadata.result }}
+          AUDIT_RESULT: ${{ needs.audit.result }}
           VALIDATION_RESULT: ${{ needs.validate.result }}
           PLAN_RESULT: ${{ needs.impact-plan.result }}
           DOCS_RESULT: ${{ needs.docs-e2e.result }}
-        run: test "$VALIDATION_RESULT" = success && test "$PLAN_RESULT" = success && test "$DOCS_RESULT" = success
+        run: test "$METADATA_RESULT" = success && test "$AUDIT_RESULT" = success && test "$VALIDATION_RESULT" = success && test "$PLAN_RESULT" = success && test "$DOCS_RESULT" = success
