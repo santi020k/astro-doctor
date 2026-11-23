@@ -218,7 +218,7 @@ describe('guarded package release metadata', () => {
         writeFileSync(join(directory, 'package.json'), JSON.stringify({ type: 'module', private: true }))
         writeFileSync(join(directory, 'packages/example/package.json'), JSON.stringify({ name: '@fixture/example', version: '0.0.1' }))
         writeFileSync(join(directory, 'packages/example/CHANGELOG.md'), '# Changelog\n\n## 0.0.1\n\nFixture release notes.\n\n## 0.0.0\n\nOld notes.\n')
-        for (const name of ['publish-packages.mjs', 'constants.ts', 'check-validated-commit.sh']) {
+        for (const name of ['publish-packages.mjs', 'registry-verification.mjs', 'constants.ts', 'check-validated-commit.sh']) {
           writeFileSync(join(directory, 'scripts', name), readFileSync(resolve(import.meta.dirname, '../../../scripts', name)))
         }
         execFileSync('git', ['init', '--initial-branch=main'], { cwd: directory })
@@ -253,7 +253,7 @@ describe('guarded package release metadata', () => {
 import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 globalThis.fetch = async (url, options = {}) => {
-  if (String(url).startsWith('https://registry.npmjs.org/')) return new Response(JSON.stringify({ gitHead: process.env.RELEASE_SCENARIO === 'published-no-sha' ? undefined : process.env.RELEASE_SCENARIO === 'published-other-sha' ? process.env.NEXT_MAIN : process.env.VALIDATED_COMMIT }));
+  if (String(url).startsWith('https://registry.npmjs.org/')) return new Response(JSON.stringify({ name: '@fixture/example', version: '0.0.1', gitHead: process.env.RELEASE_SCENARIO === 'published-no-sha' ? undefined : process.env.RELEASE_SCENARIO === 'published-other-sha' ? process.env.NEXT_MAIN : process.env.VALIDATED_COMMIT }));
   if (options.method === 'POST') {
     writeFileSync('release-post', options.body);
     return new Response('{}', { status: 201 });
@@ -288,9 +288,10 @@ await import('./scripts/publish-packages.mjs');
           JSON.parse(readFileSync(releasePath, 'utf8')) as { body: string, target_commitish: string } :
           undefined
 
+        expect(result.status).toBe(scenario === 'current' ? 0 : 1)
+
         expect(releaseBody?.body).toBe(scenario === 'current' ? 'Fixture release notes.' : undefined)
         expect(releaseBody?.target_commitish).toBe(scenario === 'current' ? first : undefined)
-        expect(result.status).toBe(scenario === 'current' ? 0 : 1)
         expect(existsSync(join(directory, 'tag-push'))).toBe(scenario === 'current' || scenario === 'advance-before-release')
         expect(existsSync(join(directory, 'release-post'))).toBe(scenario === 'current')
       } finally {
@@ -338,4 +339,57 @@ describe('editor recovery source validation', () => {
       rmSync(directory, { recursive: true, force: true })
     }
   }, GIT_WORKFLOW_TEST_TIMEOUT_MS)
+})
+
+describe('required CI gate', () => {
+  const workflow = getRecord(parseYAML(readFileSync(resolve(import.meta.dirname, '../../../.github/workflows/ci.yml'), 'utf8')))
+  const jobs = getRecord(workflow.jobs)
+  const gate = getRecord(jobs.gate)
+
+  test('metadata events and dependency audits remain required', () => {
+    expect(getRecord(getRecord(workflow.on).pull_request).types).toEqual(expect.arrayContaining(['edited', 'labeled', 'unlabeled']))
+    expect(gate.needs).toEqual(expect.arrayContaining(['metadata', 'audit']))
+    expect(getRecord(jobs.audit)).not.toHaveProperty('continue-on-error')
+  })
+
+  test.each(['METADATA_RESULT', 'AUDIT_RESULT', 'VALIDATION_RESULT', 'PLAN_RESULT', 'DOCS_RESULT'])('rejects missing or unsuccessful %s', resultName => {
+    const steps: unknown = gate.steps
+
+    if (!Array.isArray(steps)) throw new Error('Expected gate steps')
+
+    const command = getString(getRecord(steps[0]).run)
+    const environment = Object.fromEntries(['METADATA_RESULT', 'AUDIT_RESULT', 'VALIDATION_RESULT', 'PLAN_RESULT', 'DOCS_RESULT'].map(name => [name, 'success']))
+
+    expect(spawnSync('bash', ['-c', command], { env: { ...process.env, ...environment } }).status).toBe(0)
+
+    for (const result of ['', 'failure', 'cancelled', 'skipped']) {
+      expect(spawnSync('bash', ['-c', command], { env: { ...process.env, ...environment, [resultName]: result } }).status).not.toBe(0)
+    }
+  })
+})
+
+test('every cached workflow job binds the resolved runtime before running checks', () => {
+  for (const workflowName of ['ci', 'compatibility']) {
+    const workflow = getRecord(parseYAML(readFileSync(resolve(import.meta.dirname, `../../../.github/workflows/${workflowName}.yml`), 'utf8')))
+
+    for (const value of Object.values(getRecord(workflow.jobs))) {
+      const job = getRecord(value)
+
+      if (!Array.isArray(job.steps)) continue
+
+      const steps = job.steps.map((step: unknown) => getRecord(step))
+      const cacheSetup = steps.findIndex(step => isPlainObject(step.with) && typeof step.with['task-cache-path'] === 'string')
+
+      if (cacheSetup < 0) continue
+
+      const runtimeBinding = steps.findIndex(step => typeof step.run === 'string' && step.run.includes('QUALITY_TASK_RUNTIME='))
+
+      expect(runtimeBinding).toBe(cacheSetup + 1)
+      expect(steps[runtimeBinding]?.run).toContain('node --version')
+      expect(steps[runtimeBinding]?.run).toContain('pnpm --version')
+      expect(steps[runtimeBinding]?.run).toContain('process.platform')
+      expect(steps[runtimeBinding]?.run).toContain('process.arch')
+      expect(steps[runtimeBinding]?.run).toContain('$GITHUB_ENV')
+    }
+  }
 })

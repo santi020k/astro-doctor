@@ -181,3 +181,13 @@ test('foreign Git fixtures ignore inherited repository overrides', () => {
     rmSync(directory, { recursive: true, force: true })
   }
 })
+
+test('full validation schedules workspace tasks together and retains uncached repository gates', () => {
+  const plan = createPlan({ full: true })
+
+  assert.deepEqual(plan.commands[0], ['exec', 'turbo', 'run', 'build', 'typecheck', 'lint', 'test:coverage', 'check:exports'])
+
+  for (const script of ['lint:repo', 'check:dependency-security', 'test:ci', 'lint:knip', 'check:packed-install']) {
+    assert.ok(plan.commands.some(command => command[0] === 'run' && command[1] === script))
+  }
+})

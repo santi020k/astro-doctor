@@ -17,8 +17,25 @@ checks. CLI dependency builds remain prerequisites for repository-wide lint.
 Repository lint, dependency-security regressions, selector regressions, and Knip
 always run. Packed CLI/plugin installation runs when the CLI or its dependencies
 are affected. Documentation browser installation and tests run when docs are
-selected. The live dependency audit always runs in CI. Pre-push, compatibility,
-and publication gates retain full validation.
+selected, in a separate `Documentation browser checks` job that builds the docs
+in parallel with workspace validation and restores the browser from a cache keyed
+by the resolved Playwright version. Pre-push, compatibility, and publication
+gates retain full validation.
+
+## Pipeline layout
+
+- `CI` validates pushed commits and pull request title or label edits. Its
+  `Required checks` aggregate requires metadata, workspace validation, the Quality
+  plan, documentation browser checks, and the dependency audit.
+- Metadata validates pull request titles and Changesets before expensive jobs run.
+  Prepared release branches validate matching versions and changelog entries for
+  the coordinated package family, with no pending Changesets.
+- The live dependency audit blocks every pull request, main push, and reusable
+  release validation. A separate scheduled/manual audit adds monitoring; it does
+  not replace the required CI audit.
+- Publication verifies registry visibility for all packages concurrently after
+  publishing them, polling each version-specific manifest with capped backoff
+  inside the original five-minute limit.
 
 ## Benchmark
 
@@ -74,6 +91,6 @@ were updated to compatible stable releases. fast-uri 3.x overrides now stay on
 the maintained 3.x security release instead of allowing an implicit major jump.
 
 Rollback the CI optimization by running `pnpm run ci:check --full` unconditionally
-and enabling both documentation steps. Keep the dependency fixes. If a published
+and keeping the documentation browser job. Keep the dependency fixes. If a published
 package needs correction, ship a new patch version through the existing GitHub
 release workflow; never move an existing release tag.

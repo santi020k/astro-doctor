@@ -7,7 +7,11 @@ import { parseArgs } from 'node:util'
 const packageTasks = ['build', 'typecheck', 'lint', 'test:coverage', 'check:exports']
 const docsPackage = '@santi020k/astro-doctor-docs'
 const isReleaseNote = file => /^\.changeset\/[^/]+\.md$/u.test(file)
-const fullScripts = ['typecheck', 'lint', 'build', 'test:coverage', 'lint:knip', 'check:exports', 'check:packed-install']
+
+const fullCommands = [
+  ['exec', 'turbo', 'run', ...packageTasks],
+  ...['lint:repo', 'check:dependency-security', 'test:ci', 'lint:knip', 'check:packed-install'].map(script => ['run', script]),
+]
 
 export const gitEnvironment = (environment = process.env) => Object.fromEntries(Object.entries(environment).filter(([key]) => !key.startsWith('GIT_')))
 
@@ -42,7 +46,7 @@ export const changedFiles = (cwd, base) => {
   }
 }
 
-const fullPlan = reason => ({ mode: 'full', reason, docs: true, packages: true, commands: fullScripts.map(script => ['run', script]) })
+const fullPlan = reason => ({ mode: 'full', reason, docs: true, packages: true, commands: fullCommands })
 
 const readWorkspaces = (cwd, env) => {
   const rootDirectory = realpathSync(cwd)
