@@ -3,7 +3,6 @@ name: CI
 on:
   pull_request:
     branches: [main, "release/v*"]
-    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
   push:
     branches: [main]
   workflow_dispatch: {}
@@ -86,45 +85,106 @@ jobs:
         run: |
           echo "QUALITY_TASK_RUNTIME=$(node --version)-$(pnpm --version)-$(node -p 'process.platform + "/" + process.arch')" >> "$GITHUB_ENV"
 
-      - name: Audit workspace dependencies
-        run: pnpm audit --audit-level=moderate
+      - name: Validate repository
+        run: pnpm run ci:check
+
+  docs-e2e:
+    name: Documentation browser checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      QUALITY_CI_BASE: ${{ github.event.pull_request.base.sha }}
+      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Set up pnpm workspace
+        uses: santi020k/quality/actions/setup-pnpm@ff490e9efbd5fdfbdb1e6c404f1741d04c57f585 # v2.0.0
+        with:
+          node-version: 22.23.4
+          task-cache-path: .turbo/cache
+          task-cache-key: astro-doctor-docs-e2e
+
+      - name: Bind task cache to the resolved runtime
+        shell: bash
+        run: |
+          echo "QUALITY_TASK_RUNTIME=$(node --version)-$(pnpm --version)-$(node -p 'process.platform + "/" + process.arch')" >> "$GITHUB_ENV"
 
       - name: Plan repository checks
         id: scope
         run: pnpm run ci:plan
 
-      - name: Validate pull request title
-        if: github.event_name == 'pull_request'
-        env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
-        run: printf '%s\n' "$PR_TITLE" | pnpm exec commitprompt validate --input -
+      - name: Resolve documentation test browser version
+        if: steps.scope.outputs.docs == 'true'
+        id: playwright
+        run: |
+          set -euo pipefail
+          VERSION=$(pnpm --filter @santi020k/astro-doctor-docs exec node -p "require('@playwright/test/package.json').version")
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Require a changeset
-        if: >-
-          github.event_name == 'pull_request' &&
-          !contains(github.event.pull_request.labels.*.name, 'skip-changelog') &&
-          !startsWith(github.head_ref, 'changeset-release/')
-        run: pnpm changeset status --since="$QUALITY_CI_BASE"
-
-      - name: Validate repository
-        run: pnpm run ci:check
+      - name: Restore documentation test browser
+        if: steps.scope.outputs.docs == 'true'
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-chromium-${{ steps.playwright.outputs.version }}
 
       - name: Install documentation test browser
-        if: steps.scope.outputs.docs == 'true'
+        if: steps.scope.outputs.docs == 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm --filter @santi020k/astro-doctor-docs exec playwright install --with-deps chromium
+
+      - name: Install documentation test browser system dependencies
+        if: steps.scope.outputs.docs == 'true' && steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm --filter @santi020k/astro-doctor-docs exec playwright install-deps chromium
+
+      - name: Build documentation
+        if: steps.scope.outputs.docs == 'true'
+        run: pnpm exec turbo run build --filter=@santi020k/astro-doctor-docs...
 
       - name: Check documentation routes and interactions
         if: steps.scope.outputs.docs == 'true'
         run: pnpm --filter @santi020k/astro-doctor-docs exec playwright test
 
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+
+      - name: Set up pnpm
+        uses: santi020k/quality/actions/setup-pnpm@ff490e9efbd5fdfbdb1e6c404f1741d04c57f585 # v2.0.0
+        with:
+          node-version: 22.23.4
+          cache: "false"
+          install: "false"
+
+      - name: Audit workspace dependencies
+        run: |
+          set -euo pipefail
+          if ! pnpm audit --audit-level=moderate; then
+            echo "::warning title=Dependency audit::pnpm audit reported advisories at moderate severity or higher. Pull requests are not blocked; pushes to main and release validation are."
+            exit 1
+          fi
+
   gate:
     name: Required checks
     if: always()
-    needs: [validate, impact-plan]
+    needs: [validate, impact-plan, docs-e2e]
     runs-on: ubuntu-latest
     steps:
-      - name: Require both validation and planning
+      - name: Require validation, planning and documentation checks
         env:
           VALIDATION_RESULT: ${{ needs.validate.result }}
           PLAN_RESULT: ${{ needs.impact-plan.result }}
-        run: test "$VALIDATION_RESULT" = success && test "$PLAN_RESULT" = success
+          DOCS_RESULT: ${{ needs.docs-e2e.result }}
+        run: test "$VALIDATION_RESULT" = success && test "$PLAN_RESULT" = success && test "$DOCS_RESULT" = success

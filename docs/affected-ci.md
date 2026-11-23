@@ -17,8 +17,27 @@ checks. CLI dependency builds remain prerequisites for repository-wide lint.
 Repository lint, dependency-security regressions, selector regressions, and Knip
 always run. Packed CLI/plugin installation runs when the CLI or its dependencies
 are affected. Documentation browser installation and tests run when docs are
-selected. The live dependency audit always runs in CI. Pre-push, compatibility,
-and publication gates retain full validation.
+selected, in a separate `Documentation browser checks` job that builds the docs
+in parallel with workspace validation and restores the browser from a cache keyed
+by the resolved Playwright version. Pre-push, compatibility, and publication
+gates retain full validation.
+
+## Pipeline layout
+
+- `CI` runs once per pushed commit. The `Required checks` gate requires workspace
+  validation, the Quality plan, and the documentation browser job.
+- `Pull request metadata` owns the title and Changeset checks and is the only
+  workflow that reruns on title, description, or label edits. Add its
+  `Pull request metadata` job to branch protection to keep those checks required.
+- The live `Dependency audit` job is advisory on pull requests: a new upstream
+  advisory raises a warning annotation without failing the run. It still fails `CI` on
+  pushes to `main` and in release preflight, so publication and deployment stay
+  blocked until the advisory is resolved. `Dependency audit` also runs daily and
+  fails on new advisories. Dependency Review continues to block pull requests
+  that introduce vulnerable dependencies.
+- Publication verifies registry visibility for all packages concurrently after
+  publishing them, polling each version-specific manifest with capped backoff
+  inside the original five-minute limit.
 
 ## Benchmark
 
@@ -74,6 +93,6 @@ were updated to compatible stable releases. fast-uri 3.x overrides now stay on
 the maintained 3.x security release instead of allowing an implicit major jump.
 
 Rollback the CI optimization by running `pnpm run ci:check --full` unconditionally
-and enabling both documentation steps. Keep the dependency fixes. If a published
+and keeping the documentation browser job. Keep the dependency fixes. If a published
 package needs correction, ship a new patch version through the existing GitHub
 release workflow; never move an existing release tag.
