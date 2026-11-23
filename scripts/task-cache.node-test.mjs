@@ -8,6 +8,7 @@ import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 import { gitEnvironment } from './ci-affected.mjs'
+import { TURBO_DRY_RUN_MAX_BUFFER_BYTES } from './constants.ts'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const require = createRequire(import.meta.url)
@@ -38,7 +39,7 @@ test('shared compiler, lint and export inputs invalidate actual Turbo task hashe
       cwd: directory,
       env: { ...environment, ...extraEnvironment },
       encoding: 'utf8',
-      maxBuffer: 16 * 1024 * 1024,
+      maxBuffer: TURBO_DRY_RUN_MAX_BUFFER_BYTES,
     })
 
     const { tasks } = JSON.parse(output)
