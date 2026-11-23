@@ -148,6 +148,7 @@ jobs:
           bash scripts/check-validated-commit.sh --require-current
           git push --force origin refs/tags/v1
         env:
+          HUSKY: 0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build VS Code Extension dependencies
